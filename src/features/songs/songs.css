@@ -1,86 +1,78 @@
-.sg { background:#1f2026; border-radius:14px; padding:14px 16px; color:#e8e8ee; margin-top:12px }
-.sg h2 { margin:0 0 4px; font-size:18px }
-.sg .sub { color:#9a9bab; font-size:13px; margin:0 0 10px }
-.sg .tier { margin:8px 0 2px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#9a9bab }
-.sg .chips { display:flex; flex-wrap:wrap; gap:6px }
-.sg button { font:inherit; color:inherit; cursor:pointer }
-.sg .chip { background:#2a2b33; border:1px solid #3a3b46; border-radius:999px; padding:5px 12px; font-size:13px }
-.sg .chip:hover { border-color:#7c5cff }
-.sg .chip .pb { color:#ffc65d; margin-left:4px }
-.sg .bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 }
-.sg .seg { display:inline-flex; border:1px solid #3a3b46; border-radius:8px; overflow:hidden }
-.sg .seg button { background:#2a2b33; border:0; padding:5px 11px; font-size:13px }
-.sg .seg button.on { background:linear-gradient(90deg,#7c5cff,#ff5da2); color:#fff }
-.sg .go { background:linear-gradient(90deg,#7c5cff,#ff5da2); border:0; border-radius:8px; padding:6px 16px; font-weight:600; color:#fff }
-.sg .ghost { background:#2a2b33; border:1px solid #3a3b46; border-radius:8px; padding:5px 11px; font-size:13px }
-.sg label { font-size:13px; color:#c9cad6; display:inline-flex; align-items:center; gap:5px }
-.sg .stage { position:relative }
-.sg canvas { width:100%; display:block; border-radius:10px; background:#15161a }
-.sg .hud { display:flex; gap:16px; font-size:13px; color:#c9cad6; margin-top:6px; flex-wrap:wrap }
-.sg .hud b { color:#fff }
-.sg .msg { min-height:18px; color:#ffc65d; font-size:13px }
-.sg .card { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:rgba(21,22,26,.88); border-radius:10px; text-align:center; padding:12px }
-.sg .card .big { font-size:22px; font-weight:700; background:linear-gradient(90deg,#7c5cff,#ff5da2); -webkit-background-clip:text; background-clip:text; color:transparent }
-.sg .card .stars { font-size:26px; letter-spacing:4px; color:#ffc65d }
-.sg .chip.big { display:flex; flex-direction:column; align-items:flex-start; border-radius:12px; padding:8px 14px; background:linear-gradient(#2a2b33,#24252d) }
-.sg .chip .hk { color:#9a9bab; font-size:12px }
-.sg summary { list-style:revert }
-.sg .ms { margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #2e2f38 }
-.sg .chip.mine { display:inline-flex; align-items:center; gap:4px; padding:3px 8px }
-.sg .mini { background:transparent; border:0; font-size:12px; color:#9a9bab; padding:2px 5px; border-radius:6px }
-.sg .mini:hover { color:#fff }
-.sg .mini.play { color:#e8e8ee; font-size:13px }
-.sg .mini.danger { color:#ff5da2 }
-.sg .mini.sel { outline:2px solid #7c5cff }
-.sg .emojis { display:flex; gap:2px; flex-wrap:wrap }
-.sg .emojis .mini { font-size:20px }
-.sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background:#15161a; color:#e8e8ee; border:1px solid #3a3b46; border-radius:6px; padding:4px 8px; font:inherit; font-size:13px }
-.sg textarea { width:100%; box-sizing:border-box; font-family:monospace; font-size:11px }
-.sg .rec { background:#1a1b21; border-radius:10px; padding:8px 10px; margin-top:6px }
+/* Songs screen: lives inside .kg-screen, so it fills the height it is given and never scrolls the page. */
+.sg { position: relative; height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--text); }
+.sg button { font: inherit; cursor: pointer; }
+.sg .grow { flex: 1 1 auto; }
+.sg .sub { color: var(--text-dim); font-size: 13px; margin: 0; }
+.sg .gold { color: var(--gold); }
+.sg .btn, .sg .btn-ghost { min-height: 34px; padding: 4px 14px; font-size: 13px; }
+.sg .btn-ghost { color: var(--text); }
+.sg .btn-ghost.on { border-color: var(--gold); color: var(--gold); }
+.sg button:disabled { opacity: .5; cursor: default; }
+.sg label { font-size: 13px; color: var(--text); display: inline-flex; align-items: center; gap: 5px; }
+.sg .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sg .bar.c { justify-content: center; margin-top: 4px; }
+.sg .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; }
+.sg .seg button { background: transparent; border: 0; color: var(--text); min-height: 32px; padding: 4px 14px; font-size: 13px; font-weight: 700; }
+.sg .seg button.on { background: var(--grad-main); color: #fff; }
 
-/* ---- Round 3: Koog look ---- */
-.sg { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--sp-5); color: var(--text) }
-.sg h2 { font-size: 26px; font-weight: 900; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0 0 6px }
-.sg .sub { color: var(--text-dim); font-size: 15px }
-.sg .tier { margin: 22px 0 10px; font-size: 20px; font-weight: 900; letter-spacing: .01em; text-transform: none; color: var(--text); padding-left: 12px; border-left: 5px solid var(--purple) }
-.sg .tier.t-pop { border-image: linear-gradient(#ff5da2, #7c5cff) 1; text-shadow: 0 0 14px rgba(255, 93, 162, .6) }
-.sg .tier.t-bang { border-image: linear-gradient(#ffd76c, #ff7a1a) 1; text-shadow: 0 0 14px rgba(255, 150, 40, .55) }
-.sg .tier.t-easy, .sg .tier.t-medium, .sg .tier.t-flex { border-left-color: var(--cyan); font-size: 17px }
-.sg summary.tier { display: list-item; padding-left: 12px }
-.sg .chips { gap: 12px }
-.sg .chip.big { min-height: 96px; width: 250px; flex: 1 1 230px; max-width: 340px; border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px 14px 18px; gap: 4px; align-items: flex-start; text-align: left; position: relative; overflow: hidden; color: #fff; transition: transform .12s, box-shadow .15s }
-.sg .chip.big b { font-size: 19px; line-height: 1.2; font-weight: 800 }
-.sg .chip.big .hk { color: rgba(255, 255, 255, .88); font-size: 14px; line-height: 1.35 }
-.sg .chip.big .pb { margin: 4px 0 0; display: inline-block; background: rgba(0, 0, 0, .35); color: var(--gold); font-weight: 800; font-size: 14px; border-radius: var(--r-pill); padding: 2px 10px }
-.sg .chip.big:hover { transform: translateY(-2px) }
-.sg .chip.big.t-pop { background: linear-gradient(135deg, rgba(255, 93, 162, .55), rgba(124, 92, 255, .6)), #1c143a; box-shadow: 0 0 18px rgba(255, 93, 162, .35); border-color: rgba(255, 93, 162, .7) }
-.sg .chip.big.t-bang { background: linear-gradient(135deg, rgba(255, 106, 20, .6), rgba(255, 190, 60, .4)), #2a1408; box-shadow: 0 0 18px rgba(255, 140, 30, .35); border-color: rgba(255, 170, 60, .7) }
-.sg .chip.big.t-easy, .sg .chip.big.t-medium, .sg .chip.big.t-flex { background: linear-gradient(135deg, rgba(79, 216, 255, .28), rgba(124, 92, 255, .22)), #10223a; border-color: rgba(79, 216, 255, .5); min-height: 64px; box-shadow: none }
-.sg .chip.big.t-easy b, .sg .chip.big.t-medium b, .sg .chip.big.t-flex b { font-size: 16px }
-.sg .chip.big:hover { box-shadow: 0 0 24px rgba(255, 255, 255, .25) }
-/* small chips w/o hook (warm-ups) just contain title + pb inline */
-.sg .chip:not(.big), .sg .chip.mine { color: var(--text) }
-.sg .btn, .sg .btn-ghost { min-height: 40px; font-size: 15px; padding: 8px 20px; border-radius: var(--r-pill) }
-.sg .btn-ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text) }
-.sg .btn { border: 0; background: var(--grad-main); color: #fff }
-.sg .seg { border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface-2) }
-.sg .seg button { background: transparent; color: var(--text); min-height: 40px; padding: 8px 20px; font-size: 15px; font-weight: 700 }
-.sg .seg button.on { background: var(--grad-main) }
-.sg label { font-size: 15px; color: var(--text) }
-.sg .hud { font-size: 15px; color: var(--text-dim) }
-.sg .msg { font-size: 15px; color: var(--gold) }
-.sg .stage { padding: 6px; border-radius: var(--r-lg); background: linear-gradient(135deg, #ff5da2, #7c5cff, #4fd8ff); box-shadow: var(--glow), var(--shadow) }
-.sg canvas { border-radius: 16px; background: #0d0a20 }
-.sg .card { inset: 6px; border-radius: 16px; background: rgba(13, 10, 32, .9) }
-.sg .card .big { font-size: 26px }
-.sg .card .stars { color: var(--gold); text-shadow: 0 0 14px rgba(255, 215, 108, .6) }
-.sg .ms { border-bottom: 1px solid var(--border) }
-.sg .rec { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px }
-.sg .rec-btn { background: linear-gradient(135deg, #ff4d5e, #d4122f); box-shadow: 0 4px 14px rgba(255, 60, 80, .5); font-size: 17px; padding: 8px 26px }
-.sg .rec-btn.live { background: #fff; color: #b0102a; box-shadow: 0 0 0 3px #ff4d5e }
-.sg .mini { color: var(--text-dim); font-size: 14px; min-height: 32px }
-.sg .mini.play { color: var(--text); font-size: 15px }
-.sg .mini.danger { color: #ff8fc0 }
-.sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background: rgba(0, 0, 0, .35); color: var(--text); border: 1px solid var(--border); font-size: 15px; min-height: 36px }
-.sg textarea { font-size: 13px }
-@media (prefers-reduced-motion: reduce) { .sg .chip.big, .sg .chip.big:hover { transform: none; transition: none } }
+/* ---- browse ---- */
+.sg .browse { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.sg .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sg .tab { min-height: 32px; padding: 4px 14px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 700; }
+.sg .tab.on { background: var(--grad-main); border-color: transparent; color: #fff; }
+.sg .row { display: none; }
+.sg .row.on { display: block; }
+.sg .rl { display: none; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin: 0 0 6px 2px; }
+.sg .car { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding: 3px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.sg .card-s { flex: none; width: 180px; height: 84px; box-sizing: border-box; scroll-snap-align: start; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 2px; padding: 8px 12px; border-radius: var(--r-md); border: 1px solid var(--border); color: #fff; text-align: left; overflow: hidden; transition: transform .12s, box-shadow .15s; }
+.sg .card-s b { max-width: 100%; font-size: 15px; line-height: 1.2; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg .card-s .hk { max-width: 100%; font-size: 12px; line-height: 1.3; color: #fff; opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg .card-s .pb { background: rgba(0, 0, 0, .45); color: var(--gold); font-weight: 800; font-size: 12px; line-height: 1; border-radius: var(--r-pill); padding: 3px 9px; }
+.sg .card-s .pb.none { color: var(--text-dim); font-weight: 600; }
+.sg .card-s:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(255, 255, 255, .22); }
+.sg .card-s.t-pop { background: linear-gradient(135deg, rgba(255, 93, 162, .55), rgba(124, 92, 255, .6)), #1c143a; border-color: rgba(255, 93, 162, .7); }
+.sg .card-s.t-bang { background: linear-gradient(135deg, rgba(255, 106, 20, .6), rgba(255, 150, 40, .35)), #2a1408; border-color: rgba(255, 170, 60, .7); }
+.sg .card-s.t-easy, .sg .card-s.t-medium, .sg .card-s.t-flex { background: linear-gradient(135deg, rgba(79, 216, 255, .28), rgba(124, 92, 255, .22)), #10223a; border-color: rgba(79, 216, 255, .5); }
+/* taller screens: show every tier row, tabs are not needed */
+@media (min-height: 780px) {
+  .sg .row { display: block; }
+  .sg .rl { display: block; }
+  .sg .tab { display: none; }
+  .sg .browse { gap: 6px; }
+}
+
+/* ---- My Songs sheet ---- */
+.sg .rec-btn { background: linear-gradient(135deg, #ff4d5e, #d4122f); box-shadow: 0 4px 14px rgba(255, 60, 80, .5); }
+.sg .rec-btn.live { background: #fff; color: #b0102a; box-shadow: 0 0 0 3px #ff4d5e; }
+.sg .ms-sheet { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: var(--r-md); background: rgba(18, 12, 44, .97); border: 1px solid var(--border); }
+.sg .ms-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: none; }
+.sg .ms-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.sg .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sg .chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-pill); color: var(--text); }
+.sg .chip.mine { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 13px; }
+.sg .mini { background: transparent; border: 0; color: var(--text-dim); font-size: 13px; min-height: 30px; padding: 2px 6px; border-radius: 6px; }
+.sg .mini:hover { color: #fff; }
+.sg .mini.play { color: var(--text); font-size: 14px; }
+.sg .mini.danger { color: #ff8fc0; }
+.sg .mini.sel { outline: 2px solid var(--purple); }
+.sg .emojis { display: flex; gap: 2px; flex-wrap: wrap; }
+.sg .emojis .mini { font-size: 20px; }
+.sg .rec { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background: rgba(0, 0, 0, .35); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 14px; min-height: 32px; box-sizing: border-box; }
+.sg textarea { width: 100%; font-family: monospace; font-size: 12px; }
+.sg .msg { color: var(--gold); font-size: 14px; }
+
+/* ---- playing ---- */
+.sg .play { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.sg .play .bar { flex: none; }
+.sg .stage { position: relative; flex: 1; min-height: 180px; padding: 3px; border-radius: var(--r-md); background: linear-gradient(135deg, #ff5da2, #7c5cff, #4fd8ff); box-shadow: var(--glow); }
+.sg canvas { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); display: block; border-radius: 13px; background: #0d0a20; }
+.sg .ov { position: absolute; top: 9px; left: 9px; right: 9px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.sg .pill { background: rgba(13, 10, 32, .82); color: var(--text); font-size: 12px; line-height: 1.3; border-radius: var(--r-pill); padding: 3px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sg .pill b { color: #fff; }
+.sg .hint { position: absolute; left: 0; right: 0; top: 40%; display: flex; justify-content: center; pointer-events: none; }
+.sg .hint .pill { font-size: 14px; color: var(--gold); padding: 5px 14px; }
+.sg .card { position: absolute; inset: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; text-align: center; border-radius: 13px; background: rgba(13, 10, 32, .92); font-size: 14px; }
+.sg .card .big { font-size: 22px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sg .card .stars { font-size: 24px; letter-spacing: 4px; color: var(--gold); text-shadow: 0 0 14px rgba(255, 215, 108, .6); }
+@media (prefers-reduced-motion: reduce) { .sg .card-s, .sg .card-s:hover { transform: none; transition: none; } }

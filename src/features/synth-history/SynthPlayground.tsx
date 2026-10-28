@@ -119,37 +119,40 @@ export function SynthPlayground() {
 
   return (
     <div className="sp-root">
-      {!ready && <button className="sp-power" onClick={turnOn}>🔊 Turn on synth</button>}
-      <div className="sp-scope-wrap">
-        <canvas ref={canvasRef} className="sp-scope" width={640} height={140} />
+      <div className="sp-bar">
+        {!ready && <button className="sp-power" onClick={turnOn}>🔊 Turn on synth</button>}
         <label className="sp-listen">
           <input type="checkbox" checked={listen} onChange={e => { setListen(e.target.checked); if (!e.target.checked) { synth.panic(); setDown(new Set()) } }} disabled={!ready} />
           <span>Play my keyboard through this synth</span>
         </label>
       </div>
-      <div className="sp-panel">
-        {GROUPS.map(gr => (
-          <section key={gr.title} className="sp-group">
-            <h4>{gr.title}</h4>
-            <p className="sp-tip">{gr.tip}</p>
-            {gr.wave && (
-              <div className="sp-waves" role="group" aria-label="Wave shape">
-                {(['sawtooth', 'square', 'triangle', 'sine'] as Wave[]).map(w => (
-                  <button key={w} className={`sp-wave${params.wave === w ? ' sp-on' : ''}`} onClick={() => change({ wave: w })}>
-                    {w === 'sawtooth' ? 'Saw' : w[0].toUpperCase() + w.slice(1)}
-                  </button>
+      <div className="sp-front">
+        <div className="sp-panel">
+          {GROUPS.map(gr => (
+            <section key={gr.title} className={'sp-group sp-g-' + gr.title.toLowerCase()} title={gr.tip}>
+              <h4>{gr.title}</h4>
+              {gr.wave && (
+                <div className="sp-waves" role="group" aria-label="Wave shape">
+                  {(['sawtooth', 'square', 'triangle', 'sine'] as Wave[]).map(w => (
+                    <button key={w} className={`sp-wave${params.wave === w ? ' sp-on' : ''}`} onClick={() => change({ wave: w })}>
+                      {w === 'sawtooth' ? 'Saw' : w[0].toUpperCase() + w.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="sp-knobs" style={{ ['--c' as string]: gr.knobs.length === 4 ? 2 : 1 }}>
+                {gr.knobs.map(k => (
+                  <label key={k.key} className="sp-knob">
+                    <span className="sp-lab">{k.label}<b>{fmt(k)}</b></span>
+                    <input type="range" min={k.min} max={k.max} step={k.step} value={params[k.key] as number}
+                      onChange={e => change({ [k.key]: Number(e.target.value) } as Partial<SynthParams>)} />
+                  </label>
                 ))}
               </div>
-            )}
-            {gr.knobs.map(k => (
-              <label key={k.key} className="sp-knob">
-                <span className="sp-lab">{k.label}<b>{fmt(k)}</b></span>
-                <input type="range" min={k.min} max={k.max} step={k.step} value={params[k.key] as number}
-                  onChange={e => change({ [k.key]: Number(e.target.value) } as Partial<SynthParams>)} />
-              </label>
-            ))}
-          </section>
-        ))}
+            </section>
+          ))}
+        </div>
+        <canvas ref={canvasRef} className="sp-scope" width={300} height={150} />
       </div>
       <div className="sp-keys" style={{ ['--n' as string]: whites.length }}>
         {keys.map(n => {
@@ -160,7 +163,6 @@ export function SynthPlayground() {
           return keyEl(n, {}, false)
         })}
       </div>
-      {!ready && <p className="sp-hint">Press the button above to wake the synth up.</p>}
     </div>
   )
 }

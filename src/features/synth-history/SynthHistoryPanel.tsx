@@ -10,7 +10,6 @@ export function SynthHistoryPanel() {
   return (
     <section className="sh">
       <div className="sh-head">
-        <h2>🎛️ Synth History</h2>
         <div className="sh-tabs" role="tablist">
           {TABS.map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={'sh-tab' + (tab === t ? ' on' : '')} onClick={() => setTab(t)}>
@@ -18,9 +17,7 @@ export function SynthHistoryPanel() {
             </button>
           ))}
         </div>
-      </div>
-      <div className="sh-hint" style={{ fontSize: 15, opacity: 1, margin: '8px 0', padding: '10px 14px', borderRadius: 12, background: 'rgba(124,92,255,.16)', border: '1px dashed #7c5cff' }}>
-        🎛️ The Patch Lab now lives on the Play tab: open the visualizer's Patch drawer!
+        <span className="sh-chip" title="Open PLAY, then the visualizer's 🎛️ Patch button">🎛️ Patch Lab lives in PLAY → Patch</span>
       </div>
       {tab === 'Timeline' && <Timeline />}
       {tab === 'Playground' && <SynthPlayground />}

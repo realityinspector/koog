@@ -2,7 +2,7 @@
 
 > **Inspired by Moog, coded with Loog, it's... Koog!**
 
-Koog is a piano playground for kids that runs in the browser. Plug in any USB-MIDI keyboard and every note sets off fireworks. You also get challenges, songs to learn, a drum machine and a recorder. A live "behind the scenes" log explains how the app itself gets built.
+Koog is a smart synthesizer and piano playground for kids that runs in the browser. Plug in any USB-MIDI keyboard and every note sets off fireworks. You also get challenges, songs to learn, a drum machine and a recorder. A live "behind the scenes" log explains how the app itself gets built.
 
 **Why "Koog"?** Moog → Loog moves one letter back in the alphabet (M → L). Loog → Koog moves one more (L → K). It also sounds a bit like "code".
 
@@ -10,17 +10,18 @@ Koog is a piano playground for kids that runs in the browser. Plug in any USB-MI
 
 ## What's in it
 
-| | |
+Koog is laid out like one instrument: a big **display**, a rail of lit **mode buttons**, and a glowing **keybed** that mirrors your keyboard, between walnut end cheeks.
+
+| Mode | |
 |---|---|
-| **Visualizer** | Fireworks, ripples or rising bars. In-key notes burst gold; "spicy" out-of-key notes go smoky. Chord mandalas, streak rockets, 5 background themes. |
-| **Harmony HUD** | Pick a key or let Koog detect it. Shows an in-key meter, your streak and chord names. |
-| **Challenges** | 15 games: intervals, echo, black keys only, mirror mode, loud & soft, major or minor, a boss level and a daily challenge. Earns badges and personal bests. |
-| **Songs** | Public-domain pieces only, from Tetris (Korobeiniki) and The Entertainer to Für Elise. *Wait* mode pauses for you; *Flow* mode keeps the beat. |
-| **My Songs** | Record yourself and play it back as a falling-notes song. |
-| **Beat Machine** | 8 original grooves, all synthesized in the browser, plus a jam score. |
-| **Synth history** | How Moog and the analog synthesizer changed music. *(in progress)* |
-| **Build log + request bar** | Kids type feature requests. The build log explains each change in middle-school language: what a bug is, what shipping means, and so on. |
-| **Kid mode / Dad mode** | Each kid signs in with their own short code word. Dad mode shows the dev tools. *(in progress)* |
+| **PLAY** | The visualizer fills the display: fireworks, ripples, rising bars or 🔥 fire. In-key notes burst gold and out-of-key notes go "spicy". Smart readouts show the detected key, chord, in-key % and streak. |
+| **🎛️ Patch** (inside PLAY) | A Moog-style patch on the display: VCO → VCF → VCA, with ENV and a cable-patching game. The patch drives the visuals: the waveform sets particle shape, filter cutoff sets brightness, resonance adds halos, and release sets the trails. You can also play your keyboard through the synth. |
+| **SONGS** | 🎧 Koog Originals (original pop songs written for this project), 🔥 public-domain Bangers and warm-ups. *Wait* mode pauses for you; *Flow* mode keeps time with a backing beat. Includes a My Songs recorder. |
+| **CHALLENGE** | 15 games, including intervals, echo, black keys only, mirror mode, major or minor, a boss level and a daily challenge. Earns badges, personal bests and confetti. |
+| **BEATS** | 8 original grooves synthesized in the browser, plus a jam score. |
+| **SYNTH** | How Moog and the analog synthesizer changed music: a timeline from the 1920 theremin to Eurorack, a quiz, and a playable synth front panel. |
+| **LOG** | A live "behind the scenes" build log in middle-school language. Kids send feature requests with 💡 Idea and get replies as pop-ups. |
+| **Kid / Dad mode** | Each kid signs in with a short code word. Dad mode (press and hold) adds a DEV screen with MIDI, pre-flight and test tools. |
 
 ## Quick start
 

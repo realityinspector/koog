@@ -21,41 +21,42 @@ export function BuildLog() {
     return () => clearInterval(id)
   }, [latest.id, latest.body])
 
+  const [sel, setSel] = useState<number | null>(null)
+  const picked = sel === null ? null : entries.find((e) => e.id === sel) ?? null
+  const cur = picked ?? latest
+
   return (
     <section className="bl">
-      <div className="bl-head">
+      <div className="bl-top">
         <span className="bl-live">● LIVE</span>
-        <h2>Behind the scenes: this app is being built right now</h2>
+        <ol className="bl-stages">
+          {STAGES.map((s) => (
+            <li key={s.id} className={s.id === currentStage ? 'now' : ''} title={s.tip}>
+              {s.label}
+            </li>
+          ))}
+        </ol>
       </div>
-      <ol className="bl-stages">
-        {STAGES.map((s) => (
-          <li key={s.id} className={s.id === currentStage ? 'now' : ''} title={s.tip}>
-            {s.label}
-          </li>
-        ))}
-      </ol>
-      <article className="bl-latest" key={latest.id}>
+      <article className="bl-latest" key={cur.id}>
         <div className="bl-meta">
-          {latest.time} · <span className={`bl-tag ${latest.stage}`}>{latest.stage}</span>
+          {picked ? 'Earlier' : 'Newest'} · {cur.time} · <span className={`bl-tag ${cur.stage}`}>{cur.stage}</span>
         </div>
-        <h3>{latest.title}</h3>
+        <h3>{cur.title}</h3>
         <p>
-          {latest.body.slice(0, shown)}
-          <span className="bl-cursor">▌</span>
+          {picked ? cur.body : latest.body.slice(0, shown)}
+          {!picked && <span className="bl-cursor">▌</span>}
         </p>
       </article>
-      <details className="bl-older">
-        <summary>Earlier updates ({older.length})</summary>
-        {older.map((e) => (
-          <div key={e.id} className="bl-item">
-            <div className="bl-meta">
-              {e.time} · <span className={`bl-tag ${e.stage}`}>{e.stage}</span>
-            </div>
-            <strong>{e.title}</strong>
-            <p>{e.body}</p>
-          </div>
-        ))}
-      </details>
+      {older.length > 0 && (
+        <div className="bl-strip" role="list" aria-label="Earlier updates">
+          {picked && <button className="bl-chip bl-new" onClick={() => setSel(null)}>↩ Newest</button>}
+          {older.map((e) => (
+            <button key={e.id} role="listitem" className={'bl-chip' + (e.id === sel ? ' on' : '')} onClick={() => setSel(e.id === sel ? null : e.id)} aria-pressed={e.id === sel}>
+              <span className={`bl-tag ${e.stage}`}>{e.stage}</span> {e.title}
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

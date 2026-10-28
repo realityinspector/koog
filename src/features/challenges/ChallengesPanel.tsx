@@ -15,7 +15,7 @@ export function ChallengesPanel() {
   const sound = useChallengeStore((s) => s.sound)
   const { start, quit, setSound, tick } = useChallengeStore.getState()
   const [levels, setLevels] = useState<Record<string, number>>({})
-  const [open, setOpen] = useState(true)
+  const [pick, setPick] = useState<string>(CHALLENGES[0].id)
 
   useEffect(() => {
     if (!active) return
@@ -33,12 +33,12 @@ export function ChallengesPanel() {
     return (
       <section className="ch ch-run">
         <div className="ch-head">
-          <h2>{active.def.emoji} {active.def.title} <small>{active.def.levels[active.level]}</small></h2>
+          <div className="ch-run-t">{active.def.emoji} {active.def.title} <small>{active.def.levels[active.level]}</small></div>
           <div className="ch-actions">
             {['echo', 'detective', 'majmin', 'boss', 'daily'].includes(active.def.id) ? (
               <label className="ch-toggle"><input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} /> soft beeps</label>
             ) : null}
-            <button className="ch-btn ghost" onClick={quit}>Stop</button>
+            <button className="btn-ghost" onClick={quit}>Stop</button>
           </div>
         </div>
         <div className="ch-big">{v.status}</div>
@@ -67,58 +67,55 @@ export function ChallengesPanel() {
           {result.newBadge && <> · Badge earned: <b className="ch-pb">{def.emoji} {result.newBadge}</b></>}
         </p>
         <div className="ch-actions">
-          <button className="ch-btn" onClick={() => start(result.defId, result.level)}>Go again</button>
-          <button className="ch-btn ghost" onClick={quit}>Pick another</button>
+          <button className="btn" onClick={() => start(result.defId, result.level)}>Go again</button>
+          <button className="btn-ghost" onClick={quit}>Pick another</button>
         </div>
       </section>
     )
   }
 
   // ---------- picker ----------
+  const sel = CHALLENGES.find((c) => c.id === pick) ?? CHALLENGES[0]
+  const selBest = bests[`${sel.id}:${lvl(sel.id)}`]
   return (
-    <section className="ch">
-      <div className="ch-head">
-        <h2>Challenges <small>{earned}/{CHALLENGES.length} badges</small></h2>
-        <button className="ch-btn ghost" onClick={() => setOpen(!open)}>{open ? 'Hide' : 'Show'}</button>
+    <section className="ch ch-pick">
+      <div className="ch-grid" role="list">
+        {CHALLENGES.map((c) => {
+          const bd = badges[c.id]
+          return (
+            <button
+              key={c.id}
+              role="listitem"
+              className={'ch-tile' + (c.id === sel.id ? ' on' : '') + (bd ? ' got' : '') + (bd === 2 ? ' gold' : '')}
+              onClick={() => setPick(c.id)}
+              title={c.badge}
+            >
+              <span className="ch-tile-em">{c.emoji}</span>
+              <span className="ch-tile-t">{c.title}</span>
+              <span className="ch-tile-s">{bd ? (bd === 2 ? '★ gold' : '✓ badge') : stars(c.difficulty)}</span>
+            </button>
+          )
+        })}
       </div>
-      {open && (
-        <>
-          <div className="ch-grid">
-            {CHALLENGES.map((c) => {
-              const b = bests[`${c.id}:${lvl(c.id)}`]
-              return (
-                <div className="ch-card" key={c.id}>
-                  <div className="ch-card-top">
-                    <span className="ch-emoji">{c.emoji}</span>
-                    <span className="ch-diff" title="Difficulty">{stars(c.difficulty)}</span>
-                  </div>
-                  <h3>{c.title}</h3>
-                  <p>{c.desc}</p>
-                  {c.levels.length > 1 && (
-                    <div className="ch-levels">
-                      {c.levels.map((l, i) => (
-                        <button key={l} className={'ch-chip' + (i === lvl(c.id) ? ' on' : '')} onClick={() => setLevels({ ...levels, [c.id]: i })}>{l}</button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="ch-card-foot">
-                    <button className="ch-btn" onClick={() => start(c.id, lvl(c.id))}>Start</button>
-                    {b !== undefined && <span className="ch-best">Best {b}</span>}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="ch-shelf">
-            <span className="ch-shelf-t">Badges</span>
-            {CHALLENGES.map((c) => (
-              <span key={c.id} className={'ch-badge' + (badges[c.id] ? ' got' : '') + (badges[c.id] === 2 ? ' gold' : '')} title={`${c.badge}${badges[c.id] ? '' : ' (finish ' + c.title + ')'}`}>
-                {c.emoji}
-              </span>
+      <div className="ch-detail">
+        <span className="ch-detail-em">{sel.emoji}</span>
+        <div className="ch-detail-txt">
+          <b>{sel.title} <i>{stars(sel.difficulty)}</i></b>
+          <span>{sel.desc}</span>
+        </div>
+        {sel.levels.length > 1 && (
+          <div className="ch-levels">
+            {sel.levels.map((l, i) => (
+              <button key={l} className={'ch-chip' + (i === lvl(sel.id) ? ' on' : '')} onClick={() => setLevels({ ...levels, [sel.id]: i })}>{l}</button>
             ))}
           </div>
-        </>
-      )}
+        )}
+        <div className="ch-detail-go">
+          {selBest !== undefined && <span className="ch-best">Best {selBest}</span>}
+          <button className="btn" onClick={() => start(sel.id, lvl(sel.id))}>▶ Start</button>
+        </div>
+      </div>
+      <div className="ch-count">{earned}/{CHALLENGES.length} badges</div>
     </section>
   )
 }

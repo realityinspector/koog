@@ -1,63 +1,48 @@
-.sh{background:#1f2026;border-radius:14px;padding:12px 16px;margin-top:12px;color:#e9e9f0}
+.sh{color:var(--text);display:flex;flex-direction:column;gap:10px;min-height:100%}
 .sh-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.sh h2{margin:0;font-size:1.05rem}
 .sh-tabs{display:flex;gap:6px}
-.sh-tab{background:#2c2d36;color:#cfcfda;border:0;border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
-.sh-tab.on{background:linear-gradient(90deg,#7c5cff,#ff5da2);color:#fff}
-.sh-hint{font-size:.78rem;opacity:.6;margin:10px 0 0}
-.sh-rail{display:flex;gap:12px;overflow-x:auto;padding:22px 4px 12px;align-items:flex-start;position:relative;scroll-snap-type:x proximity}
-.sh-rail::before{content:"";position:absolute;left:0;right:0;top:14px;height:2px;background:linear-gradient(90deg,#7c5cff,#ff5da2);opacity:.5}
-.sh-card{position:relative;flex:0 0 150px;scroll-snap-align:start;text-align:left;background:#15161a;color:inherit;border:1px solid #2c2d36;border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:4px;font:inherit;transition:flex-basis .2s,border-color .15s}
-.sh-card:hover{border-color:#7c5cff}
-.sh-card.open{flex-basis:300px;border-color:#ff5da2}
-.sh-dot{position:absolute;top:-14px;left:14px;width:10px;height:10px;border-radius:50%;background:#ff5da2;box-shadow:0 0 0 3px #1f2026}
-.sh-year{font-size:.72rem;letter-spacing:1px;color:#ff5da2;font-weight:700}
-.sh-emoji{font-size:1.5rem}
-.sh-card h3{margin:0;font-size:.92rem}
-.sh-more{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.sh-body{font-size:.8rem;line-height:1.4;opacity:.85}
-.sh-try{font-size:.78rem;line-height:1.4;background:#2c2d36;border-radius:8px;padding:6px 8px;color:#ffcc4d}
-.sh-quiz{margin-top:10px;border-top:1px solid #2c2d36;padding-top:10px}
-.sh-quiz h3{margin:0 0 8px;font-size:.95rem}
-.sh-q{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-.sh-q small{opacity:.6}
-.sh-opt{background:#2c2d36;color:#e9e9f0;border:1px solid transparent;border-radius:999px;padding:5px 12px;font-size:.8rem;cursor:pointer}
-.sh-opt:hover:not(:disabled){border-color:#7c5cff}
-.sh-opt.right{background:#1f6b45;color:#fff}
-.sh-opt.wrong{background:#7a2a3d;color:#fff}
+.sh-tab{min-height:40px;padding:6px 18px;font-size:14px;font-weight:700;border-radius:999px;cursor:pointer;background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+.sh-tab.on{background:var(--grad-main);border-color:transparent;color:#fff}
+.sh-chip{font-size:12px;color:var(--text-dim);padding:6px 12px;border-radius:999px;border:1px dashed var(--purple);background:rgba(124,92,255,.14)}
+.sh-small{min-height:40px;padding:6px 16px;font-size:14px}
+.sh-hint{font-size:13px;color:var(--text-dim)}
+/* timeline */
+.sh-tl{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+.sh-tl-bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sh-tl-main{display:flex;gap:12px;align-items:stretch;flex:1;min-height:0}
+.sh-rail{flex:1 1 0;min-width:0;display:flex;gap:10px;overflow-x:auto;padding:22px 4px 10px;align-items:flex-start;position:relative;scrollbar-width:thin;scroll-snap-type:x proximity}
+.sh-rail::before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:4px;background:linear-gradient(90deg,#ffd76c,#ff7a1a,#a06cff,#4fd8ff);opacity:.8}
+.sh-card{position:relative;flex:0 0 128px;min-height:104px;scroll-snap-align:start;text-align:left;color:#fff;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;font:inherit;--era:#ffd76c;background:linear-gradient(160deg,rgba(255,215,108,.28),rgba(90,60,20,.5)),#1e1608;transition:border-color .15s,box-shadow .15s}
+.sh-card:hover{border-color:var(--era)}
+.sh-card.open{border-color:var(--era);box-shadow:0 0 18px color-mix(in srgb,var(--era) 55%,transparent)}
+.era-60{--era:#ff9a3c}.era-70{--era:#b99cff}.era-80{--era:#4fd8ff}
+.sh-card.era-60{background:linear-gradient(160deg,rgba(255,130,30,.4),rgba(90,30,5,.55)),#231005}
+.sh-card.era-70{background:linear-gradient(160deg,rgba(160,108,255,.42),rgba(40,14,90,.6)),#170c35}
+.sh-card.era-80{background:linear-gradient(160deg,rgba(79,216,255,.3),rgba(10,30,70,.6)),#081a2e}
+.sh-dot{position:absolute;top:-16px;left:14px;width:12px;height:12px;border-radius:50%;background:var(--era);box-shadow:0 0 10px var(--era),0 0 0 3px #1a1233}
+.sh-year{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--era)}
+.sh-emoji{font-size:1.5rem;line-height:1.2}
+.sh-card h3{margin:0;font-size:13px;line-height:1.2}
+.sh-side{position:relative;flex:0 0 clamp(260px,34%,400px);overflow:auto;padding:12px 14px;border-radius:var(--r-md);background:rgba(0,0,0,.38);border:1px solid var(--era);--era:#ffd76c;scrollbar-width:thin;display:flex;flex-direction:column;gap:8px}
+.sh-side-h{display:flex;gap:10px;align-items:center;padding-right:40px}
+.sh-side-h>span{font-size:2rem}
+.sh-side-h small{color:var(--era);font-weight:800;font-size:12px}
+.sh-side-h h3{margin:0;font-size:16px}
+.sh-x{position:absolute;top:4px;right:4px;width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--text);font-size:16px;cursor:pointer}
+.sh-x:hover{background:var(--surface-3)}
+.sh-body{margin:0;font-size:14px;line-height:1.45}
+.sh-try{margin:0;font-size:13px;line-height:1.4;background:rgba(0,0,0,.4);color:var(--gold);border-radius:var(--r-sm);padding:8px 10px}
+/* quiz */
+.sh-quizbox{display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center}
+.sh-quiz-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:16px}
+.sh-qs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.sh-q{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:var(--r-md);background:rgba(0,0,0,.28);border:1px solid var(--border)}
+.sh-q small{color:var(--text-dim);font-size:13px;text-align:center}
+.sh-opt{min-height:44px;padding:8px 14px;font-size:14px;font-weight:700;border-radius:var(--r-md);background:var(--surface-3);border:2px solid var(--border);color:var(--text);cursor:pointer}
+.sh-opt:hover:not(:disabled){border-color:var(--cyan)}
 .sh-opt:disabled{cursor:default}
-.sh-score{color:#ffcc4d;font-weight:600;margin:4px 0 0}
-.sh-reset{background:#2c2d36;color:#cfcfda;border:0;border-radius:999px;padding:2px 10px;cursor:pointer;margin-left:6px}
-
-/* ---- Round 3: Koog look ---- */
-.sh { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--sp-4) var(--sp-5); color: var(--text) }
-.sh h2 { font-size: 1.5rem; font-weight: 900; text-transform: none; letter-spacing: 0; color: var(--text) }
-.sh-tab { min-height: 40px; padding: 8px 18px; font-size: 15px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text) }
-.sh-tab.on { background: var(--grad-main); border-color: transparent }
-.sh-hint { font-size: 15px; opacity: 1; color: var(--text-dim) }
-.sh-rail { gap: 14px; padding-top: 26px }
-.sh-rail::before { height: 4px; border-radius: 4px; background: linear-gradient(90deg, #ffd76c, #ff7a1a, #a06cff, #4fd8ff); opacity: .8 }
-.sh-card { flex-basis: 180px; min-height: 130px; border-radius: var(--r-md); padding: 14px 16px; gap: 6px; color: #fff; border: 1px solid var(--border); --era: #ffd76c; background: linear-gradient(160deg, rgba(255, 215, 108, .28), rgba(90, 60, 20, .5)), #1e1608 }
-.sh-card.open { flex-basis: 340px; border-color: var(--era); box-shadow: 0 0 22px color-mix(in srgb, var(--era) 50%, transparent) }
-.sh-card:hover { border-color: var(--era) }
-.sh-card.era-60 { --era: #ff9a3c; background: linear-gradient(160deg, rgba(255, 130, 30, .4), rgba(90, 30, 5, .55)), #231005 }
-.sh-card.era-70 { --era: #b99cff; background: linear-gradient(160deg, rgba(160, 108, 255, .42), rgba(40, 14, 90, .6)), #170c35 }
-.sh-card.era-80 { --era: #4fd8ff; background: linear-gradient(160deg, rgba(79, 216, 255, .3), rgba(10, 30, 70, .6)), #081a2e; box-shadow: 0 0 14px rgba(79, 216, 255, .25) }
-.sh-dot { background: var(--era); box-shadow: 0 0 10px var(--era), 0 0 0 3px #1a1233; width: 14px; height: 14px; top: -17px }
-.sh-year { color: var(--era); font-size: 15px; letter-spacing: .5px }
-.sh-emoji { font-size: 2rem }
-.sh-card h3 { font-size: 17px; line-height: 1.25 }
-.sh-body { font-size: 16px; line-height: 1.6; opacity: 1; color: #fff }
-.sh-try { font-size: 15px; line-height: 1.55; background: rgba(0, 0, 0, .4); color: var(--gold); border-radius: var(--r-sm); padding: 10px 12px }
-.sh-quiz { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px }
-.sh-quiz h3 { font-size: 1.3rem; font-weight: 900 }
-.sh-q { gap: 12px; margin-bottom: 12px }
-.sh-q small { opacity: 1; color: var(--text-dim); font-size: 15px }
-.sh-opt { min-height: 48px; padding: 10px 22px; font-size: 16px; font-weight: 700; border-radius: var(--r-md); background: var(--surface-3); border: 2px solid var(--border); color: var(--text); box-shadow: 0 4px 0 rgba(0, 0, 0, .35); transition: transform .1s }
-.sh-opt:hover:not(:disabled) { border-color: var(--cyan); transform: translateY(-1px) }
-.sh-opt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .35) }
-.sh-opt.right { background: #1a7a4c; border-color: var(--mint) }
-.sh-opt.wrong { background: #8a2540; border-color: #ff8fa8 }
-.sh-score { font-size: 17px; color: var(--gold) }
-.sh-reset { min-height: 36px; padding: 6px 16px; font-size: 15px; font-weight: 700; background: var(--surface-3); color: var(--text) }
-@media (prefers-reduced-motion: reduce) { .sh-opt, .sh-opt:hover:not(:disabled), .sh-opt:active:not(:disabled) { transform: none } }
+.sh-opt.right{background:#1a7a4c;border-color:var(--mint)}
+.sh-opt.wrong{background:#8a2540;border-color:#ff8fa8}
+.sh-score{color:var(--gold);font-weight:700;font-size:15px}
+.sh-reset{min-height:36px;padding:4px 14px;font-size:14px;font-weight:700;background:var(--surface-3);color:var(--text);border:1px solid var(--border);border-radius:999px;cursor:pointer;margin-left:6px}
+@media (prefers-reduced-motion:reduce){.sh-card{transition:none}}

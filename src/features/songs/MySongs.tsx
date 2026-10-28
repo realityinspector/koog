@@ -9,7 +9,7 @@ const SILENCE_MS = 8000
 interface Props { mine: Song[]; setMine: (l: Song[]) => void; onPick: (id: string) => void }
 
 export function MySongs({ mine, setMine, onPick }: Props) {
-  const [open, setOpen] = useState(false)
+  const [sheet, setSheet] = useState<'none' | 'list' | 'rec'>('none')
   const [bpm, setBpm] = useState(100)
   const [countIn, setCountIn] = useState(true)
   const [phase, setPhase] = useState<'idle' | 'count' | 'rec' | 'review'>('idle')
@@ -98,73 +98,90 @@ export function MySongs({ mine, setMine, onPick }: Props) {
   }
   const exportText = JSON.stringify(mine.map(({ id, title, year, bpm, hook, notes }) => ({ id, title, year, bpm, hook, notes })))
 
+  const busy = phase === 'count' || phase === 'rec'
+  const close = () => { if (!busy) setSheet('none') }
+
   return (
-    <div className="ms">
-      <div className="tier">🎙️ My Songs</div>
-      <p className="sub">Know a song by ear? Record it here to practise it.</p>
-      <div className="chips">
-        {mine.map((s) => (
-          <span key={s.id} className="chip mine">
-            {renId === s.id ? (
+    <>
+      <button className={'btn rec-btn' + (busy ? ' live' : '')} onClick={() => setSheet('rec')}>{busy ? '● Recording' : '● Record'}</button>
+      <button className="btn-ghost" onClick={() => setSheet('list')}>My Songs ({mine.length})</button>
+      {sheet !== 'none' && (
+        <div className="ms-sheet" role="dialog" aria-label="My Songs">
+          <div className="ms-head">
+            <b>{sheet === 'rec' ? '🎙️ Record a song' : '🎙️ My Songs'}</b>
+            <span className="grow" />
+            {sheet === 'rec' ? <button className="btn-ghost" disabled={busy} onClick={() => setSheet('list')}>My Songs ({mine.length})</button>
+              : <button className="btn-ghost" onClick={() => setSheet('rec')}>● Record</button>}
+            {sheet === 'list' && <button className="btn-ghost" onClick={() => setShowIO(!showIO)}>Export / Import</button>}
+            <button className="btn-ghost" disabled={busy} onClick={close}>✕ Close</button>
+          </div>
+          <div className="ms-body">
+            {err && <div className="msg">{err}</div>}
+            {sheet === 'list' && (
               <>
-                <input value={renVal} maxLength={40} autoFocus onChange={(e) => setRenVal(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') doRename(s.id) }} />
-                <button className="mini" onClick={() => doRename(s.id)}>OK</button>
-              </>
-            ) : delId === s.id ? (
-              <>
-                <span>Delete "{s.title}"?</span>
-                <button className="mini danger" onClick={() => { setMine(mine.filter((m) => m.id !== s.id)); setDelId(null) }}>Yes</button>
-                <button className="mini" onClick={() => setDelId(null)}>No</button>
-              </>
-            ) : (
-              <>
-                <button className="mini play" onClick={() => onPick(s.id)}>{s.hook} {s.title}</button>
-                <button className="mini" title="Rename" onClick={() => { setRenId(s.id); setRenVal(s.title) }}>rename</button>
-                <button className="mini" title="Delete" onClick={() => setDelId(s.id)}>x</button>
+                <div className="chips">
+                  {mine.map((s) => (
+                    <span key={s.id} className="chip mine">
+                      {renId === s.id ? (
+                        <>
+                          <input value={renVal} maxLength={40} autoFocus onChange={(e) => setRenVal(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') doRename(s.id) }} />
+                          <button className="mini" onClick={() => doRename(s.id)}>OK</button>
+                        </>
+                      ) : delId === s.id ? (
+                        <>
+                          <span>Delete "{s.title}"?</span>
+                          <button className="mini danger" onClick={() => { setMine(mine.filter((m) => m.id !== s.id)); setDelId(null) }}>Yes</button>
+                          <button className="mini" onClick={() => setDelId(null)}>No</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="mini play" onClick={() => { setSheet('none'); onPick(s.id) }}>{s.hook} {s.title}</button>
+                          <button className="mini" title="Rename" onClick={() => { setRenId(s.id); setRenVal(s.title) }}>rename</button>
+                          <button className="mini" title="Delete" onClick={() => setDelId(s.id)}>x</button>
+                        </>
+                      )}
+                    </span>
+                  ))}
+                  {!mine.length && <span className="sub">Nothing here yet. Know a song by ear? Tap Record.</span>}
+                </div>
+                {showIO && (
+                  <div className="rec">
+                    <div className="sub">Backup: copy this text and keep it somewhere safe.</div>
+                    <textarea readOnly rows={2} value={exportText} onFocus={(e) => e.currentTarget.select()} />
+                    <div className="sub">Restore: paste exported text here.</div>
+                    <textarea rows={2} value={importText} onChange={(e) => setImportText(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+                    <button className="btn-ghost" onClick={doImport}>Import</button>
+                  </div>
+                )}
               </>
             )}
-          </span>
-        ))}
-        {!mine.length && <span className="sub" style={{ margin: 0 }}>Nothing here yet.</span>}
-      </div>
-      <div className="bar">
-        <button className="ghost btn-ghost" onClick={() => setOpen(!open)}>{open ? 'Hide recorder' : '+ Record a song'}</button>
-        <button className="ghost btn-ghost" onClick={() => setShowIO(!showIO)}>Export / Import</button>
-      </div>
-      {err && <div className="msg">{err}</div>}
-      {open && (
-        <div className="rec">
-          {phase === 'review' && take ? (
-            <>
-              <div className="sub">Got {take.filter((n) => n.note != null).length} notes. Name it and pick an emoji.</div>
-              <div className="bar">
-                <input placeholder="Song title" value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-                <button className="go btn" onClick={save}>Save</button>
-                <button className="ghost btn-ghost" onClick={() => { setTake(null); setPhase('idle') }}>Discard</button>
-              </div>
-              <div className="emojis">{EMOJI.map((e) => <button key={e} className={'mini' + (e === emoji ? ' sel' : '')} onClick={() => setEmoji(e)}>{e}</button>)}</div>
-            </>
-          ) : (
-            <div className="bar">
-              <label>bpm <input type="number" min={40} max={220} value={bpm} disabled={phase !== 'idle'} onChange={(e) => setBpm(Math.max(40, Math.min(220, +e.target.value || 100)))} style={{ width: 60 }} onKeyDown={(e) => e.stopPropagation()} /></label>
-              <label><input type="checkbox" checked={countIn} disabled={phase !== 'idle'} onChange={(e) => setCountIn(e.target.checked)} /> Count-in</label>
-              {phase === 'idle' ? <button className="go btn rec-btn" onClick={record}>● Record</button> : <button className="go btn rec-btn live" onClick={stop}>■ Stop</button>}
-              <span className="sub" style={{ margin: 0 }}>
-                {phase === 'count' ? `Count-in: ${count}` : phase === 'rec' ? 'Recording... play it, then press Stop (or just pause for 8 seconds).' : 'Play the melody; chords become their top note.'}
-              </span>
-            </div>
-          )}
+            {sheet === 'rec' && (
+              phase === 'review' && take ? (
+                <div className="rec">
+                  <div className="sub">Got {take.filter((n) => n.note != null).length} notes. Name it and pick an emoji.</div>
+                  <div className="bar">
+                    <input placeholder="Song title" value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+                    <button className="btn" onClick={save}>Save</button>
+                    <button className="btn-ghost" onClick={() => { setTake(null); setPhase('idle') }}>Discard</button>
+                  </div>
+                  <div className="emojis">{EMOJI.map((e) => <button key={e} className={'mini' + (e === emoji ? ' sel' : '')} onClick={() => setEmoji(e)}>{e}</button>)}</div>
+                </div>
+              ) : (
+                <div className="rec">
+                  <div className="bar">
+                    <label>bpm <input type="number" min={40} max={220} value={bpm} disabled={phase !== 'idle'} onChange={(e) => setBpm(Math.max(40, Math.min(220, +e.target.value || 100)))} style={{ width: 70 }} onKeyDown={(e) => e.stopPropagation()} /></label>
+                    <label><input type="checkbox" checked={countIn} disabled={phase !== 'idle'} onChange={(e) => setCountIn(e.target.checked)} /> Count-in</label>
+                    {phase === 'idle' ? <button className="btn rec-btn" onClick={record}>● Record</button> : <button className="btn rec-btn live" onClick={stop}>■ Stop</button>}
+                  </div>
+                  <div className="sub">
+                    {phase === 'count' ? `Count-in: ${count}` : phase === 'rec' ? 'Recording... play it, then press Stop (or just pause for 8 seconds).' : 'Play the melody; chords become their top note.'}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
         </div>
       )}
-      {showIO && (
-        <div className="rec">
-          <div className="sub">Backup: copy this text and keep it somewhere safe.</div>
-          <textarea readOnly rows={3} value={exportText} onFocus={(e) => e.currentTarget.select()} />
-          <div className="sub">Restore: paste exported text here.</div>
-          <textarea rows={3} value={importText} onChange={(e) => setImportText(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-          <button className="ghost btn-ghost" onClick={doImport}>Import</button>
-        </div>
-      )}
-    </div>
+    </>
   )
 }

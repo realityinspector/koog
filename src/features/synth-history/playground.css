@@ -1,48 +1,32 @@
-.sp-root { display: flex; flex-direction: column; gap: 14px; color: #f3e9d2; }
-.sp-power { font-size: 1.4rem; font-weight: 700; padding: 18px 28px; border-radius: 16px; border: 0; cursor: pointer;
-  background: linear-gradient(#ffb347, #e8761a); color: #2a1200; box-shadow: 0 4px 0 #8a3f08; }
-.sp-power:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a3f08; }
-.sp-scope-wrap { display: flex; flex-direction: column; gap: 8px; }
-.sp-scope { width: 100%; height: auto; border-radius: 12px; border: 2px solid #1d3a26; background: #06130a; }
-.sp-listen { display: flex; gap: 8px; align-items: center; font-weight: 600; cursor: pointer; }
-.sp-listen input { width: 20px; height: 20px; }
-.sp-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
-  background: #2b1d12; border: 3px solid #5a3b22; border-radius: 14px; padding: 12px; }
-.sp-group { background: #3a2819; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-.sp-group h4 { margin: 0; letter-spacing: .12em; font-size: .8rem; color: #ffb347; }
-.sp-tip { margin: 0; font-size: .8rem; line-height: 1.35; opacity: .85; }
-.sp-waves { display: flex; gap: 6px; flex-wrap: wrap; }
-.sp-wave { padding: 6px 10px; border-radius: 8px; border: 2px solid #6b4a2c; background: #241509; color: inherit; cursor: pointer; font-weight: 600; }
-.sp-wave.sp-on { background: #ffb347; color: #2a1200; border-color: #ffb347; }
-.sp-knob { display: flex; flex-direction: column; gap: 2px; }
-.sp-lab { display: flex; justify-content: space-between; font-size: .85rem; }
-.sp-lab b { color: #4dff8f; font-variant-numeric: tabular-nums; font-weight: 600; }
-.sp-knob input { width: 100%; accent-color: #ffb347; }
-.sp-keys { position: relative; display: flex; height: 150px; user-select: none; touch-action: none; }
-.sp-key { cursor: pointer; }
-.sp-white { flex: 1; background: #f7f1e3; border: 1px solid #222; border-radius: 0 0 6px 6px; }
-.sp-white.sp-down { background: #ffb347; }
-.sp-black { position: absolute; top: 0; width: 4.4%; height: 62%; background: #111; border-radius: 0 0 5px 5px; z-index: 2; }
-.sp-black.sp-down { background: #e8761a; }
-.sp-hint { margin: 0; opacity: .7; font-size: .85rem; }
-
-/* ---- Round 3: synth front panel ---- */
-.sp-root { color: #fbf1da; font-size: 15px }
-.sp-power { min-height: 56px; box-shadow: 0 4px 0 #8a3f08, 0 0 20px rgba(255, 150, 40, .5) }
-.sp-scope { border-color: #2c6b40; box-shadow: 0 0 18px rgba(77, 255, 143, .25), inset 0 0 20px rgba(0, 0, 0, .6) }
-.sp-listen { font-size: 15px; min-height: 40px }
-.sp-panel { background: linear-gradient(180deg, #34353d, #1d1e24); border: 3px solid #5b5d68; border-radius: 18px; padding: 16px; gap: 16px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .12), 0 10px 30px rgba(0, 0, 0, .5); position: relative }
-.sp-panel::before, .sp-panel::after { content: ""; position: absolute; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #bbb, #444); }
-.sp-panel::before { left: 8px } .sp-panel::after { right: 8px }
-.sp-group { background: linear-gradient(180deg, #2a2118, #3d2a18); border: 1px solid #7a5530; border-radius: 12px; padding: 14px 14px 12px; box-shadow: inset 0 0 14px rgba(0, 0, 0, .45) }
-.sp-group h4 { font-size: 15px; font-weight: 900; letter-spacing: .16em; color: #ffc65d; border-bottom: 2px solid #ffb347; padding-bottom: 6px; text-transform: uppercase }
-.sp-tip { font-size: 14px; line-height: 1.45; opacity: 1; color: #f0e2c4 }
-.sp-wave { min-height: 40px; padding: 6px 14px; font-size: 15px; color: #fbf1da }
-.sp-lab { font-size: 15px; font-weight: 600 }
-.sp-lab b { color: #5dff9a; font-size: 15px }
-.sp-knob { gap: 4px; padding: 2px 0 }
-.sp-knob input { -webkit-appearance: none; appearance: none; height: 12px; border-radius: 8px; background: linear-gradient(90deg, #ffb347, #ff5da2, #7c5cff); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6); padding: 0; margin: 8px 0; cursor: pointer }
-.sp-knob input::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--cyan) 55%, #1a7fa8); border: 2px solid #0b2535; box-shadow: 0 0 12px var(--cyan), 0 3px 6px rgba(0, 0, 0, .6) }
-.sp-knob input::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--cyan) 55%, #1a7fa8); border: 2px solid #0b2535; box-shadow: 0 0 12px var(--cyan) }
-.sp-knob input::-moz-range-track { height: 12px; border-radius: 8px; background: linear-gradient(90deg, #ffb347, #ff5da2, #7c5cff) }
-.sp-hint { font-size: 15px; opacity: 1; color: var(--text-dim) }
+.sp-root{display:flex;flex-direction:column;gap:10px;color:#fbf1da;font-size:14px;flex:1;min-height:0}
+.sp-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sp-power{min-height:44px;font-size:1rem;font-weight:800;padding:8px 20px;border-radius:999px;border:0;cursor:pointer;background:linear-gradient(#ffb347,#e8761a);color:#2a1200;box-shadow:0 3px 0 #8a3f08,0 0 16px rgba(255,150,40,.5)}
+.sp-power:active{transform:translateY(2px)}
+.sp-listen{display:flex;gap:8px;align-items:center;font-weight:600;cursor:pointer;min-height:40px;font-size:14px}
+.sp-listen input{width:20px;height:20px;accent-color:#ffb347}
+.sp-front{display:flex;gap:12px;align-items:stretch;flex:1;min-height:0}
+.sp-panel{flex:1 1 0;min-width:0;display:flex;gap:8px;flex-wrap:wrap;align-content:flex-start;background:linear-gradient(180deg,#34353d,#1d1e24);border:2px solid #5b5d68;border-radius:14px;padding:10px;box-shadow:inset 0 2px 0 rgba(255,255,255,.12)}
+.sp-group{flex:1 1 130px;background:linear-gradient(180deg,#2a2118,#3d2a18);border:1px solid #7a5530;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 12px rgba(0,0,0,.45)}
+.sp-g-envelope{flex-grow:2;flex-basis:230px}
+.sp-g-glide,.sp-g-volume{flex-basis:100px}
+.sp-group h4{margin:0;font-size:12px;font-weight:900;letter-spacing:.16em;color:#ffc65d;border-bottom:2px solid #ffb347;padding-bottom:3px}
+.sp-waves{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.sp-wave{min-height:40px;padding:2px 6px;font-size:13px;border-radius:8px;border:2px solid #6b4a2c;background:#241509;color:#fbf1da;cursor:pointer;font-weight:600}
+.sp-wave.sp-on{background:#ffb347;color:#2a1200;border-color:#ffb347}
+.sp-knobs{display:grid;grid-template-columns:repeat(var(--c,1),minmax(0,1fr));gap:2px 12px}
+.sp-knob{display:flex;flex-direction:column;gap:0}
+.sp-lab{display:flex;justify-content:space-between;gap:6px;font-size:12px;font-weight:600}
+.sp-lab b{color:#5dff9a;font-variant-numeric:tabular-nums;font-weight:600}
+.sp-knob input{-webkit-appearance:none;appearance:none;height:10px;border-radius:8px;background:linear-gradient(90deg,#ffb347,#ff5da2,#7c5cff);box-shadow:inset 0 2px 4px rgba(0,0,0,.6);padding:0;margin:11px 0;cursor:pointer;width:100%}
+.sp-knob input::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--cyan) 55%,#1a7fa8);border:2px solid #0b2535;box-shadow:0 0 10px var(--cyan),0 3px 6px rgba(0,0,0,.6)}
+.sp-knob input::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--cyan) 55%,#1a7fa8);border:2px solid #0b2535;box-shadow:0 0 10px var(--cyan)}
+.sp-knob input::-moz-range-track{height:10px;border-radius:8px;background:linear-gradient(90deg,#ffb347,#ff5da2,#7c5cff)}
+.sp-scope{flex:0 0 clamp(170px,22%,300px);width:clamp(170px,22%,300px);height:auto;min-height:100px;align-self:stretch;border-radius:12px;border:2px solid #2c6b40;background:#06130a;box-shadow:0 0 14px rgba(77,255,143,.25),inset 0 0 20px rgba(0,0,0,.6)}
+.sp-keys{position:relative;display:none;height:96px;flex:none;user-select:none;touch-action:none}
+@media (min-height:760px){.sp-keys{display:flex}}
+.sp-key{cursor:pointer}
+.sp-white{flex:1;background:#f7f1e3;border:1px solid #222;border-radius:0 0 6px 6px}
+.sp-white.sp-down{background:#ffb347}
+.sp-black{position:absolute;top:0;width:4.4%;height:62%;background:#111;border-radius:0 0 5px 5px;z-index:2}
+.sp-black.sp-down{background:#e8761a}
+@media (prefers-reduced-motion:reduce){.sp-power:active{transform:none}}

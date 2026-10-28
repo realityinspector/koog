@@ -15,8 +15,6 @@ type Phase = 'ready' | 'playing' | 'listening' | 'done'
 interface N { midi: number; start: number; beats: number; st: 0 | 1 | 2; hitAt: number }
 interface Result { score: number; acc: number; stars: number; hits: number; total: number; best: boolean }
 
-const CH = 230 // falling area height (css px)
-const KH = 64 // keyboard height
 const PPB = 60 // pixels per beat
 const LEAD = 2 // lead-in beats in flow mode
 const BEST_KEY = 'songs.best.v1' // saved per kid
@@ -61,7 +59,7 @@ function newGame(song: Song): Game {
     pressed: new Set(), phase: 'ready', doneAt: 0, endBeat: lastN.start + lastN.beats }
 }
 
-function layout(song: Song, W: number) {
+function layout(song: Song, W: number, CH: number, KH: number) {
   const ms = song.notes.filter((n) => n.note != null).map((n) => n.note as number)
   let lo = Math.min(...ms), hi = Math.max(...ms)
   while (isBlack(lo)) lo--
@@ -77,7 +75,7 @@ function layout(song: Song, W: number) {
     return (whites.indexOf(m - 1) + 1) * ww - bw / 2
   }
   const wOf = (m: number) => (isBlack(m) ? bw : ww)
-  return { lo, hi, whites, ww, bw, xOf, wOf }
+  return { lo, hi, whites, ww, bw, xOf, wOf, ch: CH, kh: KH }
 }
 
 export function SongsPanel() {
@@ -254,11 +252,13 @@ export function SongsPanel() {
     if (!cv) return
     const ctx = cv.getContext('2d')!
     let raf = 0
-    let lay = layout(song, 600), W = 600, dpr = 1
+    let lay = layout(song, 600, 230, 64), W = 600, dpr = 1
     const resize = () => {
       W = cv.clientWidth || 600; dpr = window.devicePixelRatio || 1
-      cv.width = Math.round(W * dpr); cv.height = Math.round((CH + KH) * dpr)
-      lay = layout(song, W)
+      const H = Math.max(140, cv.clientHeight || 294)
+      const KH = Math.max(44, Math.min(96, Math.round(H * 0.24)))
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr)
+      lay = layout(song, W, H - KH, KH)
     }
     resize()
     const ro = new ResizeObserver(resize); ro.observe(cv)
@@ -295,24 +295,25 @@ export function SongsPanel() {
     const m = Math.max(b?.score ?? 0, f?.score ?? 0)
     return m ? m : 0
   }
-  const tiers: Tier[] = ['bang', 'easy', 'medium', 'flex']
   const curBest = song ? bests[song.id + ':' + mode] : undefined
+  const [tab, setTab] = useState<'pop' | 'bang' | 'warm'>('pop')
+  const rows: { id: 'pop' | 'bang' | 'warm'; label: string; tabLabel: string; tiers: Tier[] }[] = [
+    { id: 'pop', label: TIER_LABEL.pop, tabLabel: '🎧 Originals', tiers: ['pop'] },
+    { id: 'bang', label: '🔥 ' + TIER_LABEL.bang, tabLabel: '🔥 Bangers', tiers: ['bang'] },
+    { id: 'warm', label: 'Warm-ups', tabLabel: 'Warm-ups', tiers: ['easy', 'medium', 'flex'] },
+  ]
+  const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
+  const total = song ? song.notes.filter((n) => n.note != null).length : 0
 
   return (
     <section className="sg">
-      <h2>Songs</h2>
-      {!song && <p className="sub">Pick a banger. Notes fall, you play them. Wait mode never rushes you.</p>}
       {song ? (
-        <>
+        <div className="play">
           <div className="bar">
-            <button className="ghost btn-ghost" onClick={() => { setSongId(null) }}>All songs</button>
-            <b>{song.title}</b>
-            <span className="sub" style={{ margin: 0 }}>{song.origin}, {song.year} · {keyName(song.key)} · {song.bpm} bpm</span>
-          </div>
-          <div className="bar">
+            <button className="btn-ghost" onClick={() => setSongId(null)}>← All songs</button>
             <span className="seg">
-              <button className={mode === 'wait' ? 'on' : ''} onClick={() => { setMode('wait'); }}>Wait</button>
-              <button className={mode === 'flow' ? 'on' : ''} onClick={() => { setMode('flow'); }}>Flow</button>
+              <button className={mode === 'wait' ? 'on' : ''} onClick={() => setMode('wait')}>Wait</button>
+              <button className={mode === 'flow' ? 'on' : ''} onClick={() => setMode('flow')}>Flow</button>
             </span>
             {mode === 'flow' && (
               <label>Speed
@@ -323,69 +324,68 @@ export function SongsPanel() {
             {mode === 'flow' && (
               <button className={'btn-ghost' + (beatOn ? ' on' : '')} aria-pressed={beatOn} onClick={() => setBeat(!beatOn)}>🥁 Backing beat: {beatOn ? 'on' : 'off'}</button>
             )}
-            <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Note names</label>
-            <button className="ghost btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
-            <button className="go btn" onClick={start}>{phase === 'playing' ? 'Restart' : 'Play'}</button>
+            <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Names</label>
+            <span className="grow" />
+            <button className="btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
+            <button className="btn" onClick={start}>{phase === 'playing' ? 'Restart' : 'Play'}</button>
           </div>
           <div className="stage">
-            <canvas ref={canvasRef} style={{ height: CH + KH }} />
+            <canvas ref={canvasRef} />
+            <div className="ov">
+              <span className="pill ttl"><b>{song.title}</b> · {keyName(song.key)} · {song.bpm} bpm</span>
+              <span className="pill stats">
+                Score <b>{ui.score}</b> · Streak <b>{ui.combo}</b> · <b>{ui.hits}/{total}</b>
+                {liveAcc != null && <> · Acc <b>{liveAcc}%</b></>}
+                {curBest && <> · Best <b>{curBest.score}</b> ({Math.round(curBest.acc * 100)}%)</>}
+              </span>
+            </div>
+            {(phase === 'ready' || ui.msg) && !result && (
+              <div className="hint"><span className="pill">{phase === 'ready' ? (mode === 'wait' ? 'Press Play. The song waits for you.' : 'Press Play. Count-in, then follow the beat.') : ui.msg}</span></div>
+            )}
             {result && (
               <div className="card">
                 <div className="stars">{'★'.repeat(result.stars)}{'☆'.repeat(3 - result.stars)}</div>
                 <div className="big">{result.stars === 3 ? 'Absolutely cooked that.' : result.stars === 2 ? 'Smooth. Run it back?' : 'Song complete. Round two hits different.'}</div>
-                <div>Score <b>{result.score}</b> · Accuracy <b>{Math.round(result.acc * 100)}%</b></div>
-                <div style={{ color: '#ffc65d' }}>{result.best ? 'New personal best!' : curBest ? `Personal best: ${curBest.score}` : 'First score on the board.'}</div>
-                <div className="bar">
-                  <button className="go btn" onClick={start}>Again</button>
-                  <button className="ghost btn-ghost" onClick={() => setSongId(null)}>Pick another</button>
+                <div>Score <b>{result.score}</b> · Accuracy <b>{Math.round(result.acc * 100)}%</b> · <span className="gold">{result.best ? 'New personal best!' : curBest ? `Best ${curBest.score}` : 'First score on the board.'}</span></div>
+                <div className="bar c">
+                  <button className="btn" onClick={start}>Again</button>
+                  <button className="btn-ghost" onClick={() => setSongId(null)}>Pick another</button>
                 </div>
               </div>
             )}
           </div>
-          <div className="hud">
-            <span>Score <b>{ui.score}</b></span>
-            <span>Streak <b>{ui.combo}</b></span>
-            <span>Notes <b>{ui.hits}/{song.notes.filter((n) => n.note != null).length}</b></span>
-            {curBest && <span>Best <b>{curBest.score}</b> ({Math.round(curBest.acc * 100)}%)</span>}
-          </div>
-          <div className="msg">{phase === 'ready' ? (mode === 'wait' ? 'Press Play. The song waits for you.' : 'Press Play. Two-beat count-in, then follow the beat.') : ui.msg}</div>
-        </>
+        </div>
       ) : (
-        <>
-          <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
-          {(['pop', 'bang'] as Tier[]).map((tr) => (<div key={tr}>
-          <div className={"tier t-" + tr}>{TIER_LABEL[tr]}</div>
-          <div className="chips">
-            {SONGS.filter((s) => s.tier === tr).map((s) => (
-              <button key={s.id} className={"chip big t-" + tr} onClick={() => setSongId(s.id)}>
-                <b>{s.title}</b>{bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : null}
-                <span className="hk">{s.hook}</span>
-              </button>
+        <div className="browse">
+          <div className="tabs">
+            {rows.map((r) => (
+              <button key={r.id} className={'tab t-' + r.id + (tab === r.id ? ' on' : '')} aria-pressed={tab === r.id} onClick={() => setTab(r.id)}>{r.tabLabel}</button>
             ))}
+            <span className="grow" />
+            <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
           </div>
-          </div>))}
-          <details style={{ marginTop: 10 }}>
-            <summary className="tier" style={{ cursor: 'pointer' }}>Warm-up and classics</summary>
-            {tiers.filter((t) => t !== 'bang' && t !== 'pop').map((t) => (
-              <div key={t}>
-                <div className={"tier t-" + t}>{TIER_LABEL[t]}</div>
-                <div className="chips">
-                  {SONGS.filter((s) => s.tier === t).map((s) => (
-                    <button key={s.id} className={"chip big t-" + t} onClick={() => setSongId(s.id)}>
-                      {s.title}{bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : null}
-                    </button>
-                  ))}
-                </div>
+          {rows.map((r) => (
+            <div key={r.id} className={'row' + (tab === r.id ? ' on' : '')}>
+              <div className="rl">{r.label}</div>
+              <div className="car">
+                {SONGS.filter((s) => r.tiers.includes(s.tier)).map((s) => (
+                  <button key={s.id} className={'card-s t-' + s.tier} onClick={() => setSongId(s.id)}>
+                    <b>{s.title}</b>
+                    <span className="hk">{s.hook}</span>
+                    {bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : <span className="pb none">★ —</span>}
+                  </button>
+                ))}
               </div>
-            ))}
-          </details>
-        </>
+            </div>
+          ))}
+        </div>
       )}
     </section>
   )
 }
 
 function draw(ctx: CanvasRenderingContext2D, game: Game, lay: ReturnType<typeof layout>, W: number, dpr: number, song: Song, o: { mode: Mode; names: boolean }) {
+  const CH = lay.ch, KH = lay.kh
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, W, CH + KH)
   ctx.fillStyle = '#15161a'; ctx.fillRect(0, 0, W, CH + KH)

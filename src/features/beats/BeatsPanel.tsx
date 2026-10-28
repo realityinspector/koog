@@ -57,11 +57,6 @@ export function BeatsPanel() {
 
   return (
     <section className="bt-panel" aria-label="Beat machine">
-      <header className="bt-head">
-        <h2>Beat Machine</h2>
-        <span className="bt-sub">Original grooves. Pick one, press play, jam on top.</span>
-      </header>
-
       <div className="bt-grooves" role="radiogroup" aria-label="Grooves">
         {GROOVES.map((x) => (
           <button key={x.id} role="radio" aria-checked={x.id === g.id} title={x.blurb}
@@ -71,20 +66,17 @@ export function BeatsPanel() {
         ))}
       </div>
 
-      <div className="bt-row">
+      <div className="bt-xport">
         {S.playing
           ? <button className="bt-stop" onClick={stop}>■ STOP</button>
-          : <button className="bt-play" onClick={start}>▶ Play {g.name}</button>}
+          : <button className="bt-play" onClick={start}>▶ Play</button>}
         <div className="bt-steps" aria-hidden="true">
           {Array.from({ length: 16 }, (_, i) => (
             <span key={i} ref={(el) => { dots.current[i] = el }} className={'bt-dot' + (i % 4 === 0 ? ' bt-beat' : '')} />
           ))}
         </div>
-      </div>
-
-      <div className="bt-ctrls">
         <label className="bt-ctl">
-          <span>Tempo <b>{bpm()}</b> bpm</span>
+          <span>Tempo <b>{bpm()}</b></span>
           <input type="range" min={-20} max={20} value={S.bpmAdj} onChange={(e) => setBpmAdj(+e.target.value)} />
         </label>
         <label className="bt-ctl">
@@ -94,20 +86,16 @@ export function BeatsPanel() {
         <div className="bt-toggles">
           <label><input type="checkbox" checked={S.bass} onChange={(e) => setLayer('bass', e.target.checked)} /> Bass</label>
           <label><input type="checkbox" checked={S.chords} onChange={(e) => setLayer('chords', e.target.checked)} /> Chords</label>
-          <label><input type="checkbox" checked={S.pent} onChange={(e) => setPent(e.target.checked)} /> Can't-miss mode</label>
+          <label title="Five notes only. Every one sounds good."><input type="checkbox" checked={S.pent} onChange={(e) => setPent(e.target.checked)} /> Can't-miss</label>
         </div>
       </div>
-
-      <p className="bt-key">
-        Key: <b>{keyName(key)}</b>. Jam using <b>{safe.join(' ')}</b>: can't go wrong.
-        {S.pent ? ' (Five notes only. Every one sounds good.)' : ''}
-      </p>
 
       <div className="bt-score">
         <span className="bt-lbl">Jam score</span>
         <div className="bt-bar"><div ref={fill} className="bt-fill" /></div>
         <span ref={rank} className="bt-rank">{S.playing ? RANKS[0] : 'Press play, then hit in-key notes on the beat'}</span>
         <span ref={combo} className="bt-combo" />
+        <span className="bt-key">Key <b>{keyName(key)}</b> · safe notes <b>{safe.join(' ')}</b></span>
       </div>
     </section>
   )
