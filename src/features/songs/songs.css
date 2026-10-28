@@ -76,3 +76,18 @@
 .sg .card .big { font-size: 22px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .sg .card .stars { font-size: 24px; letter-spacing: 4px; color: var(--gold); text-shadow: 0 0 14px rgba(255, 215, 108, .6); }
 @media (prefers-reduced-motion: reduce) { .sg .card-s, .sg .card-s:hover { transform: none; transition: none; } }
+
+/* ---- sing-along / karaoke ---- */
+.sg .sing-chip { min-height: 32px; padding: 4px 14px; border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 700; }
+.sg .sing-chip.on { background: var(--grad-main); border-color: transparent; color: #fff; }
+.sg .row.empty { display: none !important; }
+.sg .card-s { position: relative; }
+.sg .card-s .mic { position: absolute; top: 6px; right: 8px; font-size: 14px; line-height: 1; }
+.sg .ly { position: absolute; left: 10px; right: 10px; bottom: calc(max(44px, min(96px, 24%)) + 12px); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 12px 6px; border-radius: 14px; background: rgba(13, 10, 32, .8); pointer-events: none; text-align: center; font-size: clamp(20px, 4.4vh, 32px); line-height: 1.25; font-weight: 800; }
+.sg .ly-l { max-width: 100%; }
+.sg .ly-l.nxt { font-size: .72em; color: rgba(255, 255, 255, .78); font-weight: 700; }
+.sg .sy { display: inline-block; color: #fff; transition: color .12s, transform .12s, text-shadow .12s; }
+.sg .sy.we { margin-right: .28em; }
+.sg .ly-l.cur .sy.sung { color: #6fe3ff; }
+.sg .ly-l.cur .sy.now { color: var(--gold); transform: scale(1.14); text-shadow: 0 0 12px rgba(255, 215, 108, .65); }
+@media (prefers-reduced-motion: reduce) { .sg .sy { transition: none; } .sg .ly-l.cur .sy.now { transform: none; } }

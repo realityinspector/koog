@@ -4,25 +4,30 @@
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { inKey, pc, type Key } from '../../music/theory'
 import { DEFAULT_PARAMS, type SynthParams } from '../synth-history/params'
+import { createGhosts } from './ghosts'
+import { createSparkles } from './sparkle'
+import { drawNebula } from './galaxy'
 
-export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire'
+export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost'
 
 // Background themes (request #7: "brighter and more fun"). Colours drift slowly, never flash.
-export type Theme = 'rainbow' | 'candy' | 'ocean' | 'sunset' | 'night'
+export type Theme = 'rainbow' | 'candy' | 'ocean' | 'sunset' | 'night' | 'galaxy'
 export const THEMES: { id: Theme; label: string }[] = [
   { id: 'rainbow', label: '🌈 Rainbow' },
   { id: 'candy', label: '🍬 Candy' },
   { id: 'ocean', label: '🌊 Ocean' },
   { id: 'sunset', label: '🌅 Sunset' },
   { id: 'night', label: '🌙 Night' },
+  { id: 'galaxy', label: '🦄 Galaxy' },
 ]
 // [top hue, bottom hue, saturation, top lightness, bottom lightness, drift speed]
 const THEME_DEF: Record<Theme, [number, number, number, number, number, number]> = {
-  rainbow: [280, 200, 70, 24, 30, 0.12],
-  candy: [320, 270, 75, 30, 36, 0.02],
-  ocean: [190, 230, 75, 22, 30, 0.02],
-  sunset: [20, 320, 80, 30, 26, 0.02],
-  night: [240, 240, 35, 6, 8, 0],
+  rainbow: [280, 200, 88, 40, 46, 0.12],
+  candy: [320, 270, 92, 50, 54, 0.02],
+  ocean: [190, 230, 92, 38, 46, 0.02],
+  sunset: [20, 320, 94, 48, 42, 0.02],
+  night: [240, 250, 60, 17, 22, 0],
+  galaxy: [320, 175, 92, 42, 38, 0.03],
 }
 
 export interface Engine {
@@ -31,6 +36,8 @@ export interface Engine {
   setMode(mode: Mode): void
   setEmoji(on: boolean): void
   setTheme(theme: Theme): void
+  /** twinkling star + glitter layer (not in ghost mode, which has its own stars) */
+  setSparkle(on: boolean): void
   /** the synth patch drives the look: wave=shape, cutoff=brightness, resonance=halo, attack/release=bloom/linger, detune=ghost, glide=streaks */
   setPatch(p: SynthParams): void
   destroy(): void
@@ -204,6 +211,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   const emojis: Emoji[] = []
   const laneGrad = new Map<string, CanvasGradient>()
   let emojiOn = false
+  let sparkleOn = true
   let theme: Theme = 'rainbow'
   let drift = 0
   let tint = 0 // nudged by played notes
@@ -211,6 +219,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   let bgFrame = 0
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
   const calm = reduced ? 0.5 : 1
+  const ghosts = createGhosts(reduced)
+  const sparkles = createSparkles(reduced)
   let streak = 0
   let quality = 1 // 0.35..1, drops automatically when frames get slow
   let lastFrame = performance.now()
@@ -379,6 +389,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     canvas.width = Math.round(w * dpr)
     canvas.height = Math.round(h * dpr)
     fireFloor = null
+    ghosts.resize(w, h)
+    sparkles.resize(w, h)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = '#0b0b16'
     ctx.fillRect(0, 0, w, h)
@@ -454,12 +466,16 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
         const xs = [...held.values()]
         fireball(xs.reduce((a, q) => a + q.x, 0) / xs.length, h - 90, () => (xs.some((q) => q.kind === 'spicy') ? 1 + (rnd() < 0.5 ? 1 : 0) : rnd() < 0.3 ? 3 : 0))
       }
+    } else if (mode === 'ghost') {
+      held.set(note, { x, y: h, hue, velocity: v, kind })
+      ghosts.noteOn(note, x, v, kind)
     } else {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5 })
     }
     labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue })
     if (labels.length > 24) labels.shift()
+    if (sparkleOn && mode !== 'ghost') sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
     emojiFor(note, v, kind)
     patchFx(note, kind, hue, v)
   }
@@ -503,6 +519,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   function noteOff(note: number) {
     const was = held.get(note)
     held.delete(note)
+    ghosts.noteOff(note)
     if (was && mode === 'fire') {
       // release: a few embers drift up and a puff of smoke
       for (let i = 0; i < Math.round(5 * calm * quality); i++) spark(was.x + (rnd() - 0.5) * 20, h - 30, palFor(was.kind), true)
@@ -525,15 +542,19 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       drift = (drift + speed * (reduced ? 0.3 : 1)) % 360
       // rebuild the gradient every few frames (cheap) as the hue drifts
       if (!bgGrad || ++bgFrame % 6 === 0) {
-        const a = mode === 'rise' ? 0.35 : 0.16
+        const a = mode === 'rise' ? 0.38 : 0.2
         const off = drift + tint
         bgGrad = ctx.createLinearGradient(0, 0, w * 0.3, h)
         bgGrad.addColorStop(0, `hsla(${h1 + off},${sat}%,${l1}%,${a})`)
         bgGrad.addColorStop(0.55, `hsla(${(h1 + h2) / 2 + off + 20},${sat}%,${(l1 + l2) / 2}%,${a})`)
         bgGrad.addColorStop(1, `hsla(${h2 + off},${sat}%,${l2}%,${a})`)
       }
-      ctx.fillStyle = bgGrad
-      ctx.fillRect(0, 0, w, h)
+      if (mode === 'ghost') ghosts.drawBackdrop(ctx, now)
+      else {
+        ctx.fillStyle = bgGrad
+        ctx.fillRect(0, 0, w, h)
+        if (theme === 'galaxy') drawNebula(ctx, now, w, h, reduced)
+      }
       // fire mode: darken (translucent, even, never a flash) so the flames pop; theme tint still shows through
       if (mode === 'fire') {
         ctx.fillStyle = 'rgba(10,3,4,0.26)'
@@ -554,6 +575,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       ctx.drawImage(dot(m.hue, false), m.x - r, m.y - r, r * 2, r * 2)
     }
     ctx.globalAlpha = 1
+    if (mode === 'ghost') sparkles.draw(ctx, now, quality, false, 0.55)
+    else if (sparkleOn) sparkles.draw(ctx, now, quality, true, 1)
 
     // key backdrop: faint glowing lanes where the safe notes live
     {
@@ -601,7 +624,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
 
     // held notes: soft glow + constellation lines between everything being held (chords!)
-    const hs = mode === 'fire' ? [] : [...held.values()]
+    const hs = mode === 'fire' || mode === 'ghost' ? [] : [...held.values()]
     if (mode === 'fire') emitFire()
     if (hs.length > 1) {
       ctx.lineWidth = 1.5
@@ -711,6 +734,10 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
     ctx.globalAlpha = 1
     drawFire(now)
+    if (mode === 'ghost') {
+      ghosts.draw(ctx, now, quality)
+      ctx.globalCompositeOperation = 'lighter'
+    }
 
     ctx.lineCap = 'round'
     for (let i = streaks.length - 1; i >= 0; i--) {
@@ -810,7 +837,11 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     setMode(m) {
       mode = m
       held.clear()
+      ghosts.clear()
       for (const b of bars) b.held = false
+    },
+    setSparkle(on) {
+      sparkleOn = on
     },
     setTheme(t) {
       theme = t

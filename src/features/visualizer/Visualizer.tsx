@@ -21,6 +21,7 @@ const MODES: { id: Mode; label: string }[] = [
   { id: 'ripples', label: 'Ripples' },
   { id: 'rise', label: 'Rising bars' },
   { id: 'fire', label: '🔥 Fire' },
+  { id: 'ghost', label: '👻 Ghosts' },
 ]
 
 export function Visualizer() {
@@ -36,6 +37,9 @@ export function Visualizer() {
   })
   const [octave, setOctave] = useState(0)
   const [emoji, setEmoji] = useState(false)
+  const [sparkle, setSparkle] = useState(() => {
+    try { return localStorage.getItem('koog.viz.sparkle') !== '0' } catch { return true }
+  })
   const [theme, setTheme] = useState<Theme>('rainbow')
   const [patchOpen, setPatchOpen] = useState(() => {
     try { return localStorage.getItem('koog.viz.patch') === '1' } catch { return false }
@@ -48,6 +52,7 @@ export function Visualizer() {
     eng.setMode(mode)
     eng.setEmoji(emoji)
     eng.setTheme(theme)
+    eng.setSparkle(sparkle)
     const synth = getSynth()
     eng.setPatch(synth.params)
     const offParams = synth.onParams?.((p) => eng.setPatch(p))
@@ -68,6 +73,10 @@ export function Visualizer() {
   }, [mode])
   useEffect(() => engine.current?.setEmoji(emoji), [emoji])
   useEffect(() => engine.current?.setTheme(theme), [theme])
+  useEffect(() => {
+    engine.current?.setSparkle(sparkle)
+    try { localStorage.setItem('koog.viz.sparkle', sparkle ? '1' : '0') } catch { /* ignore */ }
+  }, [sparkle])
   useEffect(() => {
     try { localStorage.setItem('koog.viz.patch', patchOpen ? '1' : '0') } catch { /* ignore */ }
   }, [patchOpen])
@@ -111,11 +120,12 @@ export function Visualizer() {
       <canvas ref={canvas} className="viz-canvas" />
       <div className="viz-bar">
         {MODES.map((m) => (
-          <button key={m.id} className={(m.id === mode ? 'on' : '') + (m.id === 'fire' ? ' fire' : '')} onClick={() => setMode(m.id)}>
+          <button key={m.id} className={(m.id === mode ? 'on' : '') + (m.id === 'fire' ? ' fire' : '') + (m.id === 'ghost' ? ' ghost' : '')} onClick={() => setMode(m.id)}>
             {m.label}
           </button>
         ))}
         <button className={emoji ? 'on' : ''} onClick={() => setEmoji((e) => !e)}>Emoji 😜</button>
+        <button className={sparkle ? 'on' : ''} onClick={() => setSparkle((x) => !x)} aria-pressed={sparkle} title="Sparkles">✨</button>
         <button onClick={nextTheme} title="Change background">{THEMES.find((x) => x.id === theme)?.label}</button>
         <button className={patchOpen ? 'on' : ''} onClick={() => setPatchOpen((o) => !o)} aria-expanded={patchOpen}>🎛️ Patch</button>
         <button onClick={fullscreen}>Fullscreen</button>

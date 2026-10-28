@@ -224,4 +224,11 @@ export const entries: Entry[] = [
     title: '🎛️ Koog is now an instrument',
     body: 'Big redesign. Koog stopped being a long web page and became ONE instrument, like a real synthesizer: a big display, a rail of glowing mode buttons, and a keybed at the bottom, with wooden side panels like classic Moog synths. Designers call this a "skeuomorphic" design (great spelling-bee word): it borrows the look of a real-world object so you instantly know how to use it. The Patch Lab moved INTO the display. Open 🎛️ Patch and change the waveform, and the sparks change shape: sine = soft orbs, square = pixels, sawtooth = shards. Close the filter and everything goes dark and muffled. You\'re seeing the sound.',
   },
+  {
+    id: 31,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '👻🎤✨ Ghosts, karaoke and sparkles (requests #13–15)',
+    body: 'Three of your requests in one go, built by two AI helpers working at the same time on different files so they never bumped into each other. Engineers call that "parallel work". Each ghost is drawn ONCE into a hidden picture, then copied onto the screen hundreds of times, which is much faster than drawing it fresh every frame. Karaoke: every note in a song now carries a syllable, and the words light up using the SAME counter the game uses to track your notes. One source of truth means the words can never drift out of sync. Lyrics for the Koog Originals are brand new. Old songs like Jingle Bells use their real words, which are public domain.',
+  },
 ]

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { onNote } from '../../music/notes'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { noteName, pc as pcOf, keyName } from '../../music/theory'
-import { SONGS, TIER_LABEL, type Song, type Tier } from './songs'
+import { SONGS, TIER_LABEL, hasLyrics, type Song, type Tier } from './songs'
 import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
 import { pload, psave } from '../../profile/profile'
@@ -25,6 +25,27 @@ const GROOVE_FOR: Record<string, string> = {
 }
 function loadBeat(): Record<string, boolean> {
   try { const v = JSON.parse(localStorage.getItem(BEAT_KEY) ?? '{}'); return v && typeof v === 'object' ? v : {} } catch { return {} }
+}
+const LYR_KEY = 'koog.songs.lyrics'
+function loadLy(): boolean {
+  try { return localStorage.getItem(LYR_KEY) !== 'off' } catch { return true }
+}
+interface Syl { i: number; text: string; join: boolean }
+// sounding notes only, in the same order as Game.notes, so index i matches game.idx
+function buildLyrics(song: Song): { lines: Syl[][]; lineOf: number[] } | null {
+  if (!hasLyrics(song)) return null
+  const lines: Syl[][] = [[]]; const lineOf: number[] = []
+  let i = 0
+  for (const n of song.notes) {
+    if (n.note == null) continue
+    const raw = n.lyric ?? ''
+    lines[lines.length - 1].push({ i, text: raw.replace(/\/+$/, '').replace(/-$/, ''), join: /-$/.test(raw.replace(/\/+$/, '')) })
+    lineOf.push(lines.length - 1)
+    if (raw.endsWith('/')) lines.push([])
+    i++
+  }
+  if (!lines[lines.length - 1].length) lines.pop()
+  return { lines, lineOf }
 }
 const hueOf = (m: number) => ((pcOf(m) * 7) % 12) * 30
 const isBlack = (m: number) => [1, 3, 6, 8, 10].includes(pcOf(m))
@@ -83,6 +104,10 @@ export function SongsPanel() {
   const [mode, setMode] = useState<Mode>('wait')
   const [speed, setSpeed] = useState(0.8)
   const [names, setNames] = useState(true)
+  const [lyOn, setLyOn] = useState(loadLy)
+  const [lyIdx, setLyIdx] = useState(-1)
+  const [sing, setSing] = useState(false)
+  const toggleLy = () => { const v = !lyOn; setLyOn(v); try { localStorage.setItem(LYR_KEY, v ? 'on' : 'off') } catch { /* ignore */ } }
   const [phase, setPhase] = useState<Phase>('ready')
   const [ui, setUi] = useState({ score: 0, combo: 0, hits: 0, msg: '' })
   const [result, setResult] = useState<Result | null>(null)
@@ -91,6 +116,7 @@ export function SongsPanel() {
   const setMine = (l: Song[]) => { setMineState(l); saveMine(l) }
   const song = mine.find((s) => s.id === songId) ?? SONGS.find((s) => s.id === songId) ?? null
 
+  const lyr = useMemo(() => (song ? buildLyrics(song) : null), [song])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const g = useRef<Game | null>(null)
   const opt = useRef({ mode, speed, names })
@@ -252,6 +278,7 @@ export function SongsPanel() {
     if (!cv) return
     const ctx = cv.getContext('2d')!
     let raf = 0
+    let lastLy = -2
     let lay = layout(song, 600, 230, 64), W = 600, dpr = 1
     const resize = () => {
       W = cv.clientWidth || 600; dpr = window.devicePixelRatio || 1
@@ -284,6 +311,15 @@ export function SongsPanel() {
         game.cursor = ((now - game.startMs) * song.bpm) / 60000 - 1
         if (game.cursor > game.endBeat + 0.5) { game.phase = 'ready'; game.cursor = game.notes[0].start - 1.5; setPhase('ready') }
       }
+      // karaoke index: the same note index the game uses (wait: idx; flow/listen: the note at the cursor)
+      let li = -1
+      if (game.phase === 'done') li = game.notes.length
+      else if (game.phase === 'playing' && o.mode === 'wait') li = game.idx
+      else if (game.phase === 'playing' || game.phase === 'listening') {
+        for (let k = 0; k < game.notes.length && game.notes[k].start <= game.cursor + 0.05; k++) li = k
+        if (game.cursor > game.endBeat) li = game.notes.length
+      }
+      if (li !== lastLy) { lastLy = li; setLyIdx(li) }
       draw(ctx, game, lay, W, dpr, song, o)
     }
     raf = requestAnimationFrame(frame)
@@ -303,6 +339,8 @@ export function SongsPanel() {
     { id: 'warm', label: 'Warm-ups', tabLabel: 'Warm-ups', tiers: ['easy', 'medium', 'flex'] },
   ]
   const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
+  const listFor = (r: { tiers: Tier[] }) => SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))
+  const effTab = sing && !listFor(rows.find((r) => r.id === tab)!).length ? (rows.find((r) => listFor(r).length)?.id ?? tab) : tab
   const total = song ? song.notes.filter((n) => n.note != null).length : 0
 
   return (
@@ -324,6 +362,7 @@ export function SongsPanel() {
             {mode === 'flow' && (
               <button className={'btn-ghost' + (beatOn ? ' on' : '')} aria-pressed={beatOn} onClick={() => setBeat(!beatOn)}>🥁 Backing beat: {beatOn ? 'on' : 'off'}</button>
             )}
+            {lyr && <button className={'btn-ghost' + (lyOn ? ' on' : '')} aria-pressed={lyOn} onClick={toggleLy}>🎤 Lyrics</button>}
             <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Names</label>
             <span className="grow" />
             <button className="btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
@@ -331,6 +370,18 @@ export function SongsPanel() {
           </div>
           <div className="stage">
             <canvas ref={canvasRef} />
+            {lyr && lyOn && (() => {
+              const cl = lyr.lineOf[Math.max(0, Math.min(lyIdx, lyr.lineOf.length - 1))] ?? 0
+              const row = (line: Syl[]) => line.map((t) => (
+                <span key={t.i} className={'sy' + (t.i < lyIdx ? ' sung' : t.i === lyIdx ? ' now' : '') + (t.join ? '' : ' we')}>{t.text}</span>
+              ))
+              return (
+                <div className="ly" aria-label="Lyrics">
+                  <div className="ly-l cur">{row(lyr.lines[cl])}</div>
+                  {lyr.lines[cl + 1] && <div className="ly-l nxt">{row(lyr.lines[cl + 1])}</div>}
+                </div>
+              )
+            })()}
             <div className="ov">
               <span className="pill ttl"><b>{song.title}</b> · {keyName(song.key)} · {song.bpm} bpm</span>
               <span className="pill stats">
@@ -359,17 +410,19 @@ export function SongsPanel() {
         <div className="browse">
           <div className="tabs">
             {rows.map((r) => (
-              <button key={r.id} className={'tab t-' + r.id + (tab === r.id ? ' on' : '')} aria-pressed={tab === r.id} onClick={() => setTab(r.id)}>{r.tabLabel}</button>
+              <button key={r.id} className={'tab t-' + r.id + (effTab === r.id ? ' on' : '')} aria-pressed={effTab === r.id} onClick={() => setTab(r.id)}>{r.tabLabel}</button>
             ))}
+            <button className={'sing-chip' + (sing ? ' on' : '')} aria-pressed={sing} onClick={() => setSing(!sing)}>🎤 Sing-along</button>
             <span className="grow" />
             <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
           </div>
           {rows.map((r) => (
-            <div key={r.id} className={'row' + (tab === r.id ? ' on' : '')}>
+            <div key={r.id} className={'row' + (effTab === r.id ? ' on' : '') + (listFor(r).length ? '' : ' empty')}>
               <div className="rl">{r.label}</div>
               <div className="car">
-                {SONGS.filter((s) => r.tiers.includes(s.tier)).map((s) => (
+                {listFor(r).map((s) => (
                   <button key={s.id} className={'card-s t-' + s.tier} onClick={() => setSongId(s.id)}>
+                    {hasLyrics(s) && <span className="mic" title="Sing-along" aria-label="Has lyrics">🎤</span>}
                     <b>{s.title}</b>
                     <span className="hk">{s.hook}</span>
                     {bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : <span className="pb none">★ —</span>}

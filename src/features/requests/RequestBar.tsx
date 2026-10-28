@@ -32,8 +32,11 @@ function RequestToasts({ list }: { list: Req[] }) {
     }
   }, [list, seen])
   if (!seen) return null
-  const fresh = list.filter((r) => r.status !== 'new' && seen[r.id] !== sig(r)).slice(-3)
-  if (!fresh.length) return null
+  // Only finished or answered requests pop up, one at a time (newest first), so they don't pile up.
+  const pending = list.filter((r) => (r.status === 'done' || r.status === 'later') && seen[r.id] !== sig(r))
+  if (!pending.length) return null
+  const fresh = [pending[pending.length - 1]]
+  const more = pending.length - 1
   const dismiss = (r: Req) => {
     const next = { ...seen, [r.id]: sig(r) }
     setSeen(next)
@@ -45,7 +48,7 @@ function RequestToasts({ list }: { list: Req[] }) {
         <div key={r.id} className={`rq-toast ${r.status}`}>
           <div className="rq-toast-hd"><span className={`rq-status ${r.status}`}>{LABEL[r.status] ?? r.status}</span> {r.text}</div>
           {r.reply && <div className="rq-toast-reply">{r.reply}</div>}
-          <button onClick={() => dismiss(r)}>Nice 👍</button>
+          <button onClick={() => dismiss(r)}>Nice 👍{more > 0 ? ` (${more} more)` : ''}</button>
         </div>
       ))}
     </div>,

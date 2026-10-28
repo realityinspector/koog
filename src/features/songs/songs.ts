@@ -1,7 +1,9 @@
 // Public-domain melodies as data. Pure module, no state.
 import type { Key } from '../../music/theory'
 
-export interface SongNote { note: number | null; beats: number } // null = rest
+// lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
+// note (joined when shown). Trailing "/" = a new lyric line starts after this syllable. Rests never carry a lyric.
+export interface SongNote { note: number | null; beats: number; lyric?: string } // null = rest
 export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex'
 export interface Song {
   id: string; title: string; origin: string; year: string
@@ -27,7 +29,7 @@ const min = (tonic: number): Key => ({ tonic, scale: 'minor' })
 
 export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex' }
 
-export const SONGS: Song[] = [
+const BASE: Song[] = [
   { id: 'pop-static', title: 'Static in My Headphones', origin: 'Koog Original', year: '2026', key: min(4), bpm: 124, tier: 'pop', hook: 'Sad but loud. Smash the build, then scream the hook.',
     notes: seq('R:.5 E4:.5 G4:.5 B4:1 A4:.5 G4:.5 E4:.5 R:.5 E4:.5 G4:.5 B4:1 C5:.5 B4:1 C5:1 B4:.5 A4:.5 G4:1 E4:.5 D4:.5 E4:.5 E4 E4 E4 E4 E4 G4 G4 R:2 E5:1 B4:.5 B4:.5 G4:1 E4:1 D5:1 B4:.5 B4:.5 A4:1 G4:1 E5:1 B4:.5 B4:.5 G4:.5 A4:.5 B4:1 E4:3') },
   { id: 'pop-funk', title: 'Slap Bass Sundae', origin: 'Koog Original', year: '2026', key: min(9), bpm: 108, tier: 'pop', hook: 'Keep it bouncy. The rests are the groove.',
@@ -103,3 +105,42 @@ export const SONGS: Song[] = [
   { id: 'oldmac', title: 'Old MacDonald Had a Farm', origin: 'Traditional', year: '1917', key: maj(0), bpm: 120, tier: 'easy', hook: 'with a moo moo here',
     notes: seq('C4:1 C4 C4 G3 A3 A3 G3:2 E4:1 E4 D4 D4 C4:2 C4:1 C4 C4 G3 A3 A3 G3:2 E4:1 E4 D4 D4 C4:2') },
 ]
+
+// Lyrics live here as text (whitespace-separated syllables; see SongNote.lyric) and are attached to the sounding
+// notes. Public-domain words only, or original Koog words. A song whose syllable count does not match its
+// notes is left without lyrics rather than misaligned.
+const LYRICS: Record<string, string> = {
+  twinkle: `Twin- kle twin- kle lit- tle star/ how I won- der what you are/ up a- bove the world so high/ like a dia- mond in the sky/ Twin- kle twin- kle lit- tle star/ how I won- der what you are/`,
+  mary: `Ma- ry had a lit- tle lamb/ lit- tle lamb lit- tle lamb/ Ma- ry had a lit- tle lamb its fleece was white as snow/`,
+  buns: `Hot cross buns/ hot cross buns/ one a pen- ny two a pen- ny/ hot cross buns/`,
+  saints: `Oh when the saints/ oh when the saints/ oh when the saints go march- ing in/ Lord I want to be in that num- ber/ oh when the saints go march- ing in/`,
+  susanna: `Oh I come from Al- a- bam- a with my ban- jo on my knee/`,
+  jingle: `Jin- gle bells/ jin- gle bells/ jin- gle all the way/ oh what fun it is to ride in a one horse o- pen sleigh hey/`,
+  yankee: `Yan- kee Doo- dle went to town a- rid- ing on a po- ny/ stuck a fea- ther in his cap and called it mac- a- ro- ni/`,
+  oldmac: `Old Mac- Don- ald had a farm/ E- I- E- I- O/ on his farm he had a cow/ E- I- E- I- O/`,
+  wewish: `We wish you a mer- ry Christ- mas/ we wish you a mer- ry Christ- mas/ we wish you a mer- ry Christ- mas/ and a hap- py new year/`,
+  deckhalls: `Deck the halls with boughs of hol- ly/ fa la la la la la la la la/`,
+  bday: `Hap- py birth- day to you/ hap- py birth- day to you/ hap- py birth- day dear bud- dy/ hap- py birth- day to you/`,
+  cucaracha: `La cu- ca- ra- cha/ la cu- ca- ra- cha/ ya no pue- de ca- mi- nar/`,
+  ode: `Freu- de schö- ner Göt- ter- fun- ken/ Toch- ter aus E- ly- si- um/ Wir be- tre- ten feu- er- trun- ken/ Himm- li- sche dein Hei- lig- tum/`,
+  lune: `Au clair de la lu- ne/ mon a- mi Pier- rot/`,
+  // Koog Originals: new words written for this project
+  'pop-static': `Sta- tic in my head- phones/ Turn it up un- til the whole world goes qui- et/ I'm turn- ing it up up up up/ Drown- ing out the day/ loud- er than my brain/ turn me up and I'll be fine/`,
+  'pop-funk': `Scoop dou- ble hot fudge slap that bass line make it sweet/ Scoop can- dy swirl- ing ev- ery bite gets the groove/ Ba- na- na split ba- na- na split oh yeah/ sun- dae/ cher- ry on top now we all groove yeah/`,
+  'pop-edm': `Three two one go/ feel the beat hit/ hands up high now/ Ne- on lights the sky/ ev- ery heart is high/ drop it drop it drop/ shake the whole ground/ now we fly/`,
+  'pop-lofi': `Rain on the win- dow/ pen- cil in my hand/ frac- tions look like clouds/ tea is get- ting cold/ tap tap on the glass/ page by page the prob- lems melt a- way/ al- most done/`,
+  'pop-boss': `Tick tick tick the dra- gon wakes/ Cog- wheels spin- ning in its wings/ Climb- ing up the tow- er stairs/ Ev- ery gear starts to roar/ fi- nal form let's go/ Don't you back down now/ time to be brave/ we out- play the dra- gon/ win/`,
+  'pop-dance': `Spin- ning un- der lights glit- ter in my hair/ Float- ing off the floor come on feel it now/ Glit- ter- ball glit- ter- ball spin spin/ Lift me up I'm feel- ing light/ now grav- i- ty can't bring us down/`,
+  'pop-spooky': `Tip toe down creak- y floor shh/ Wig- gle wig- gle wig- gle pump- kins glow- ing ghosts say boo/ Spook- y spook- y spook- y/ hop/ join the ghost- ly hall- way par- ty we hop hop/`,
+  'pop-hyper': `Su- gar bounc- ing off walls/ So- da fizz in my shoes/ Can- dy fly- ing past stars/ can't sit still at all/ Fast- er fast- er fast- er fast- er/ don't you blink or you'll miss all the fun/`,
+}
+
+export const SONGS: Song[] = BASE.map((s) => {
+  const txt = LYRICS[s.id]
+  if (!txt) return s
+  const syl = txt.trim().split(/\s+/)
+  if (syl.length !== s.notes.filter((n) => n.note != null).length) return s
+  let i = 0
+  return { ...s, notes: s.notes.map((n) => (n.note == null ? n : { ...n, lyric: syl[i++] })) }
+})
+export const hasLyrics = (s: Song) => s.notes.some((n) => n.lyric != null)

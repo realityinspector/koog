@@ -24,3 +24,4 @@
 
 .viz-bar button.fire.on { background: linear-gradient(#ff9d2e, #e8431a); color: #fff; box-shadow: 0 0 12px #ff7a1a; }
 .viz-bar { z-index: 6 }
+.viz-bar button.ghost.on { background: linear-gradient(135deg, #8e7bff, #52e0c4); color: #fff; box-shadow: 0 0 12px rgba(160, 150, 255, 0.7); }
