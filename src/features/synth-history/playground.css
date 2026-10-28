@@ -1,0 +1,27 @@
+.sp-root { display: flex; flex-direction: column; gap: 14px; color: #f3e9d2; }
+.sp-power { font-size: 1.4rem; font-weight: 700; padding: 18px 28px; border-radius: 16px; border: 0; cursor: pointer;
+  background: linear-gradient(#ffb347, #e8761a); color: #2a1200; box-shadow: 0 4px 0 #8a3f08; }
+.sp-power:active { transform: translateY(3px); box-shadow: 0 1px 0 #8a3f08; }
+.sp-scope-wrap { display: flex; flex-direction: column; gap: 8px; }
+.sp-scope { width: 100%; height: auto; border-radius: 12px; border: 2px solid #1d3a26; background: #06130a; }
+.sp-listen { display: flex; gap: 8px; align-items: center; font-weight: 600; cursor: pointer; }
+.sp-listen input { width: 20px; height: 20px; }
+.sp-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+  background: #2b1d12; border: 3px solid #5a3b22; border-radius: 14px; padding: 12px; }
+.sp-group { background: #3a2819; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.sp-group h4 { margin: 0; letter-spacing: .12em; font-size: .8rem; color: #ffb347; }
+.sp-tip { margin: 0; font-size: .8rem; line-height: 1.35; opacity: .85; }
+.sp-waves { display: flex; gap: 6px; flex-wrap: wrap; }
+.sp-wave { padding: 6px 10px; border-radius: 8px; border: 2px solid #6b4a2c; background: #241509; color: inherit; cursor: pointer; font-weight: 600; }
+.sp-wave.sp-on { background: #ffb347; color: #2a1200; border-color: #ffb347; }
+.sp-knob { display: flex; flex-direction: column; gap: 2px; }
+.sp-lab { display: flex; justify-content: space-between; font-size: .85rem; }
+.sp-lab b { color: #4dff8f; font-variant-numeric: tabular-nums; font-weight: 600; }
+.sp-knob input { width: 100%; accent-color: #ffb347; }
+.sp-keys { position: relative; display: flex; height: 150px; user-select: none; touch-action: none; }
+.sp-key { cursor: pointer; }
+.sp-white { flex: 1; background: #f7f1e3; border: 1px solid #222; border-radius: 0 0 6px 6px; }
+.sp-white.sp-down { background: #ffb347; }
+.sp-black { position: absolute; top: 0; width: 4.4%; height: 62%; background: #111; border-radius: 0 0 5px 5px; z-index: 2; }
+.sp-black.sp-down { background: #e8761a; }
+.sp-hint { margin: 0; opacity: .7; font-size: .85rem; }

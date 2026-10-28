@@ -1,0 +1,26 @@
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: #15161a; color: #e8e8ec; }
+main { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+h1 { font-size: 22px; margin: 0 0 16px; }
+section { background: #1f2026; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #8b8d98; margin: 0 0 8px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #c44; }
+.dot.on { background: #4c6; }
+button, input { font: inherit; padding: 4px 10px; }
+input { width: 100%; box-sizing: border-box; }
+ul { list-style: none; margin: 0; padding: 0; font-variant-numeric: tabular-nums; }
+li { padding: 2px 0; }
+
+/* Request #7: brighter, more fun background. Slow colour drift (60s loop), no flashing. */
+body {
+  background: linear-gradient(135deg, #2a1650, #12305a, #4a1546, #123f4a, #2a1650);
+  background-size: 400% 400%;
+  background-attachment: fixed;
+  animation: bg-drift 60s ease-in-out infinite;
+}
+@keyframes bg-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@media (prefers-reduced-motion: reduce) { body { animation: none; } }
+section { background: rgba(31, 32, 38, 0.82); backdrop-filter: blur(6px); }

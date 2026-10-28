@@ -1,0 +1,33 @@
+.pf-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; font-size: 13px; }
+.pf-who { display: flex; align-items: center; gap: 10px; color: #e8e8ec; }
+.pf-who b { font-size: 15px; color: #ffd76c; }
+.pf-mode { display: flex; align-items: center; gap: 8px; }
+.pf-mode button, .pf-chips button, .pf-new button, .pf-manage button {
+  border: 1px solid #3a3b55; background: #23243a; color: #e8e8ec; border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit;
+}
+.pf-tag { color: #ffb86c; font-weight: 600; }
+.pf-dad { padding: 6px 10px; border: 1px dashed #ffb86c66; border-radius: 12px; }
+.pf-link { background: none; border: 0; color: #9d8cff; text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
+.pf-hold { position: relative; overflow: hidden; opacity: 0.75; }
+.pf-hold::after { content: ''; position: absolute; inset: 0; width: 0; background: #ffb86c55; }
+.pf-hold.on::after { width: 100%; transition: width var(--hold) linear; }
+
+.pf-who-card, .pf-manage { background: rgba(31, 32, 38, 0.82); backdrop-filter: blur(8px); border: 1px solid #3a3b55; border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; }
+.pf-who-card h2 { margin: 0 0 10px; font-size: 22px; background: linear-gradient(90deg, #ffd76c, #ff5da2, #7c5cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.pf-chips button { font-size: 18px; padding: 8px 18px; background: linear-gradient(135deg, #3b2f7a, #6a2f6e); border-color: #7c5cff; }
+.pf-chips button:hover { filter: brightness(1.2); }
+.pf-new { display: flex; gap: 8px; }
+.pf-new input { flex: 1; min-width: 0; background: #15161c; border: 1px solid #3a3b55; color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 16px; outline: none; }
+.pf-new input:focus { border-color: #7c5cff; }
+.pf-new button { background: linear-gradient(90deg, #7c5cff, #ff5da2); border: 0; font-weight: 700; }
+.pf-new button:disabled { opacity: 0.4; cursor: default; }
+.pf-err { color: #ff9b9b; font-size: 13px; margin-top: 6px; }
+.pf-claim { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 13px; color: #d6d7de; }
+.pf-note { color: #9a9cab; font-size: 12px; margin: 10px 0 6px; }
+.pf-manage h2 { margin: 0 0 8px; font-size: 16px; }
+.pf-manage ul { list-style: none; padding: 0; margin: 0; }
+.pf-manage li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+.pf-manage button { padding: 3px 10px; font-size: 12px; }
+.pf-claim { justify-content: flex-start; }
+.pf-claim input { width: auto; flex: none; margin: 0; }

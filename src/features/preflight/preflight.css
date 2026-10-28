@@ -1,0 +1,4 @@
+.pf ul { margin-top: 8px; font-size: 13px; }
+.pf-tag { display: inline-block; min-width: 40px; font-weight: 600; font-size: 11px; }
+.pf-pass { color: #4c6; } .pf-warn { color: #e0b030; } .pf-fail { color: #e55; }
+.pf-d { color: #8b8d98; }

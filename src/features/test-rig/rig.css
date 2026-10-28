@@ -1,0 +1,10 @@
+.rig { border: 1px solid #333; padding: 10px; border-radius: 6px; font-size: 13px; }
+.rig h2 { margin: 0 0 8px; font-size: 16px; }
+.rig h3 { margin: 10px 0 4px; font-size: 13px; opacity: .8; }
+.rig .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.rig .warn { color: #e8b04a; font-size: 12px; }
+.rig .mute { font-size: 15px; font-weight: 700; padding: 6px 18px; }
+.rig .mute.on { background: #a33; color: #fff; }
+.rig .panic { background: #a33; color: #fff; font-weight: 700; padding: 6px 14px; }
+.rig .log { height: 160px; overflow: auto; font: 11px ui-monospace, Menlo, monospace; border: 1px solid #333; padding: 4px; white-space: pre; }
+.rig pre { font: 11px ui-monospace, Menlo, monospace; margin: 0; white-space: pre-wrap; }

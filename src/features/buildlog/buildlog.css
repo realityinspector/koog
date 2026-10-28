@@ -1,0 +1,20 @@
+.bl { border: 1px solid #2f3040; background: linear-gradient(160deg, #1f2030, #1a1b22); }
+.bl-head { display: flex; align-items: center; gap: 10px; }
+.bl-head h2 { margin: 0; }
+.bl-live { color: #ff5d73; font-size: 11px; font-weight: 700; letter-spacing: .08em; animation: bl-pulse 2s ease-in-out infinite; }
+@keyframes bl-pulse { 50% { opacity: .45; } }
+.bl-stages { display: flex; gap: 6px; list-style: none; padding: 0; margin: 12px 0; counter-reset: s; }
+.bl-stages li { flex: 1; text-align: center; padding: 6px 0; border-radius: 6px; background: #2a2b36; color: #8b8d98; font-size: 13px; font-weight: 600; cursor: help; }
+.bl-stages li.now { background: linear-gradient(90deg, #7c5cff, #ff5da2); color: #fff; }
+.bl-latest { animation: bl-in .4s ease-out; }
+@keyframes bl-in { from { opacity: 0; transform: translateY(6px); } }
+.bl-latest h3 { margin: 4px 0; font-size: 18px; }
+.bl-latest p { margin: 0; color: #d6d7de; min-height: 3em; }
+.bl-cursor { color: #ff5da2; animation: bl-pulse 1s steps(1) infinite; }
+.bl-meta { font-size: 12px; color: #8b8d98; }
+.bl-tag { text-transform: uppercase; font-weight: 700; letter-spacing: .05em; }
+.bl-tag.plan { color: #6cb6ff; } .bl-tag.build { color: #ffb86c; } .bl-tag.test { color: #6cffa8; } .bl-tag.ship { color: #ff6cd2; }
+.bl-older { margin-top: 12px; font-size: 14px; }
+.bl-older summary { cursor: pointer; color: #8b8d98; }
+.bl-item { padding: 8px 0; border-top: 1px solid #2a2b36; }
+.bl-item p { margin: 2px 0 0; color: #b9bac4; }

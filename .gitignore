@@ -1,0 +1,12 @@
+node_modules
+dist
+.dev-server.log
+.requests-server.log
+.DS_Store
+
+# Local, per-family data. Never published.
+requests.json
+backups/
+RESTART.md
+private/
+*.log

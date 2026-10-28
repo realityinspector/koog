@@ -1,0 +1,39 @@
+.sg { background:#1f2026; border-radius:14px; padding:14px 16px; color:#e8e8ee; margin-top:12px }
+.sg h2 { margin:0 0 4px; font-size:18px }
+.sg .sub { color:#9a9bab; font-size:13px; margin:0 0 10px }
+.sg .tier { margin:8px 0 2px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#9a9bab }
+.sg .chips { display:flex; flex-wrap:wrap; gap:6px }
+.sg button { font:inherit; color:inherit; cursor:pointer }
+.sg .chip { background:#2a2b33; border:1px solid #3a3b46; border-radius:999px; padding:5px 12px; font-size:13px }
+.sg .chip:hover { border-color:#7c5cff }
+.sg .chip .pb { color:#ffc65d; margin-left:4px }
+.sg .bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 }
+.sg .seg { display:inline-flex; border:1px solid #3a3b46; border-radius:8px; overflow:hidden }
+.sg .seg button { background:#2a2b33; border:0; padding:5px 11px; font-size:13px }
+.sg .seg button.on { background:linear-gradient(90deg,#7c5cff,#ff5da2); color:#fff }
+.sg .go { background:linear-gradient(90deg,#7c5cff,#ff5da2); border:0; border-radius:8px; padding:6px 16px; font-weight:600; color:#fff }
+.sg .ghost { background:#2a2b33; border:1px solid #3a3b46; border-radius:8px; padding:5px 11px; font-size:13px }
+.sg label { font-size:13px; color:#c9cad6; display:inline-flex; align-items:center; gap:5px }
+.sg .stage { position:relative }
+.sg canvas { width:100%; display:block; border-radius:10px; background:#15161a }
+.sg .hud { display:flex; gap:16px; font-size:13px; color:#c9cad6; margin-top:6px; flex-wrap:wrap }
+.sg .hud b { color:#fff }
+.sg .msg { min-height:18px; color:#ffc65d; font-size:13px }
+.sg .card { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:rgba(21,22,26,.88); border-radius:10px; text-align:center; padding:12px }
+.sg .card .big { font-size:22px; font-weight:700; background:linear-gradient(90deg,#7c5cff,#ff5da2); -webkit-background-clip:text; background-clip:text; color:transparent }
+.sg .card .stars { font-size:26px; letter-spacing:4px; color:#ffc65d }
+.sg .chip.big { display:flex; flex-direction:column; align-items:flex-start; border-radius:12px; padding:8px 14px; background:linear-gradient(#2a2b33,#24252d) }
+.sg .chip .hk { color:#9a9bab; font-size:12px }
+.sg summary { list-style:revert }
+.sg .ms { margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #2e2f38 }
+.sg .chip.mine { display:inline-flex; align-items:center; gap:4px; padding:3px 8px }
+.sg .mini { background:transparent; border:0; font-size:12px; color:#9a9bab; padding:2px 5px; border-radius:6px }
+.sg .mini:hover { color:#fff }
+.sg .mini.play { color:#e8e8ee; font-size:13px }
+.sg .mini.danger { color:#ff5da2 }
+.sg .mini.sel { outline:2px solid #7c5cff }
+.sg .emojis { display:flex; gap:2px; flex-wrap:wrap }
+.sg .emojis .mini { font-size:20px }
+.sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background:#15161a; color:#e8e8ee; border:1px solid #3a3b46; border-radius:6px; padding:4px 8px; font:inherit; font-size:13px }
+.sg textarea { width:100%; box-sizing:border-box; font-family:monospace; font-size:11px }
+.sg .rec { background:#1a1b21; border-radius:10px; padding:8px 10px; margin-top:6px }

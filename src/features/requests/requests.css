@@ -1,0 +1,15 @@
+.rq { margin-bottom: 16px; }
+.rq-form { display: flex; align-items: center; gap: 8px; background: #23243a; border: 1px solid #3a3b55; border-radius: 999px; padding: 4px 4px 4px 14px; }
+.rq-form:focus-within { border-color: #7c5cff; box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.25); }
+.rq-icon { font-size: 16px; }
+.rq-form input { flex: 1; background: transparent; border: 0; color: #e8e8ec; outline: none; padding: 6px 0; }
+.rq-form input::placeholder { color: #8b8d98; }
+.rq-form button { border: 0; border-radius: 999px; padding: 6px 16px; font-weight: 600; color: #fff; background: linear-gradient(90deg, #7c5cff, #ff5da2); cursor: pointer; }
+.rq-form button:disabled { opacity: 0.4; cursor: default; }
+.rq-off { font-size: 12px; color: #ff8a8a; margin: 6px 14px 0; }
+.rq-list { margin: 8px 6px 0; font-size: 13px; }
+.rq-list li { padding: 3px 0; }
+.rq-status { font-weight: 700; margin-right: 8px; white-space: nowrap; }
+.rq-status.new { color: #6cb6ff; } .rq-status.building { color: #ffb86c; } .rq-status.done { color: #6cffa8; } .rq-status.later { color: #b9bac4; }
+.rq-text { color: #d6d7de; }
+.rq-reply { color: #b7a6ff; margin: 2px 0 0 4px; font-style: italic; }

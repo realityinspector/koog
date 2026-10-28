@@ -1,0 +1,185 @@
+// The live "behind the scenes" log. Add an entry here and it appears on the page instantly.
+// No self-accept on purpose: edits bubble up to BuildLog.tsx so it re-renders with new entries.
+
+export type Stage = 'plan' | 'build' | 'test' | 'ship'
+
+export interface Entry {
+  id: number
+  time: string
+  stage: Stage
+  title: string
+  body: string
+}
+
+export const currentStage: Stage = 'ship'
+
+export const entries: Entry[] = [
+  {
+    id: 1,
+    time: '5:20 PM',
+    stage: 'plan',
+    title: 'Step 0: find the hardware',
+    body: 'First job: check the piano is actually plugged in. The Mac sees it as "USB MIDI". That generic name is how it introduces itself over the cable.',
+  },
+  {
+    id: 2,
+    time: '5:25 PM',
+    stage: 'plan',
+    title: 'How your piano talks',
+    body: 'Every key you press sends a tiny message of 3 numbers. [144, 60, 100] means "note ON, middle C, hit pretty hard". This language is called MIDI. It was invented in 1983 and nearly every music device still speaks it.',
+  },
+  {
+    id: 3,
+    time: '5:28 PM',
+    stage: 'build',
+    title: 'The page that never refreshes',
+    body: 'This page uses a trick called Hot Module Replacement (HMR). When code is saved, only the changed piece gets swapped in, like changing a tyre while the car is still driving. Your notes and settings stay put.',
+  },
+  {
+    id: 4,
+    time: '5:31 PM',
+    stage: 'plan',
+    title: 'Splitting up the work',
+    body: 'One AI (Claude) is the lead. It hired helper AIs, each with one job: research the keyboard, build a sound tester, build a pre-flight checklist, and research songs and how people learn piano. Same idea as a group project, but everyone works at the same time.',
+  },
+  {
+    id: 5,
+    time: '5:33 PM',
+    stage: 'test',
+    title: 'Pre-flight checklist',
+    body: 'Pilots run a checklist before every takeoff, so we built one too. In 1.5 seconds it checks: piano plugged in, server running, code has no type errors, volume not too loud. Result: 6 pass, 1 warning (Mac volume a bit high).',
+  },
+  {
+    id: 6,
+    time: '5:34 PM',
+    stage: 'build',
+    title: 'Safety first',
+    body: 'The sound tester has a volume ceiling, a limiter (an automatic "too loud!" squasher), and a PANIC button that silences everything. It only ever sends safe, standard messages to your piano.',
+  },
+  {
+    id: 7,
+    time: '5:36 PM',
+    stage: 'build',
+    title: 'Building the visualizer (the thing above!)',
+    body: 'The screen redraws 60 times every second. Each note launches particles: the colour comes from which note it is, and the size and height come from how hard you hit it. Colours follow the "circle of fifths", so notes that sound good together get matching colours. Play a chord and watch the lines connect.',
+  },
+  {
+    id: 8,
+    time: '5:37 PM',
+    stage: 'test',
+    title: 'Found a bug, fixed a bug',
+    body: 'Real talk: this very log had a bug. New updates got saved, but the page kept showing the old list, because one file said "I\'ll handle my own updates" and then didn\'t tell anyone. Deleted one line, fixed. Then a robot test pressed C, E and G on the computer keyboard to check the bars appear. They did. Professional developers spend lots of their time on exactly this: test, find the bug, fix it, test again.',
+  },
+  {
+    id: 9,
+    time: '5:38 PM',
+    stage: 'build',
+    title: 'Try this',
+    body: 'Hit the buttons top-right: Fireworks, Ripples, Rising bars. Play soft, then hard, and watch the size change. Hold three notes at once and see them link up. Fullscreen makes it huge. Every new update to this app will pop up right here while you play.',
+  },
+  {
+    id: 10,
+    time: '5:39 PM',
+    stage: 'build',
+    title: 'New: an idea box (top of the page)',
+    body: 'Type a feature request in the bar at the very top and hit Enter. It goes straight to Claude, and you\'ll see its status change from "Got it" to "Building" to "Done". In real companies this is called a feature request, and engineers use it to decide what to build next. You\'re basically the product manager now.',
+  },
+  {
+    id: 11,
+    time: '5:40 PM',
+    stage: 'plan',
+    title: 'The swarm: 4 teams, up to 20 AIs',
+    body: 'Claude just launched 4 team leads, and each can hire up to 4 helpers. Team A: a "harmony brain" that knows if you\'re playing in key. Team B: fireworks that go golden when you\'re in key and smoky-purple on "spicy" notes. Team C: challenges (scale climbs, Simon-style echo, speed runs). Team D: songs to play along with. To stop them crashing into each other, each team owns its own folder of files, and they share a few common building blocks that Claude wrote first. That shared part is called an API contract.',
+  },
+  {
+    id: 12,
+    time: '5:41 PM',
+    stage: 'ship',
+    title: 'Shipped: harmony brain + in-key fireworks',
+    body: 'Teams A and B are done! The bar above the visualizer shows your key, how in-key you are, your streak (x2 at 8, x3 at 16, ON FIRE at 32), and the name of any chord you hold. The keys glowing purple on the strip are the "safe" ones, and pink is home base (the tonic). Fireworks now go full colour for in-key notes, golden for the home note, and smoky purple for spicy ones. Get a streak of 8+ and rockets start launching. Hold a 3-note chord to grow a mandala. Stuck? Hit "Can\'t-miss: black" and play only black keys. Everything sounds good.',
+  },
+  {
+    id: 13,
+    time: '5:42 PM',
+    stage: 'ship',
+    title: 'Your first feature request: shipped in 2 minutes',
+    body: 'Request #1, "please add emojis", is DONE. Here\'s what happened: your message landed in a file called requests.json, Claude got an alert, read the visualizer code, added an emoji layer (each emoji is drawn, rotated and faded 60 times a second), checked it compiled, and tested it with a robot keypress. Spicy notes shoot 🌶️, home notes get 👑, chords make 🌈, and big streaks bring 🔥🚀. Also, a best streak of 68?! That\'s more than double ON FIRE. Request #2 (songs) is already being built by Team D.',
+  },
+  {
+    id: 14,
+    time: '5:45 PM',
+    stage: 'ship',
+    title: 'Shipped: Challenges + Songs (all 4 teams done!)',
+    body: 'Scroll down below the visualizer. CHALLENGES has 7 games: Scale Climber, Stay in Key, Echo Me (Simon-style), Chord Builder, 15-second Speed Run, Note Detective and Interval Jumper. Finish one for a silver badge, or nail it perfectly for gold. SONGS has 15 tunes from Hot Cross Buns up to Für Elise and Hall of the Mountain King. Notes fall onto a keyboard, and in Wait mode the song pauses until you hit the right one. Fun fact: every song is in the public domain, meaning it\'s old enough that nobody owns it anymore, so anyone can use it for free. Request #2: done.',
+  },
+  {
+    id: 15,
+    time: '5:45 PM',
+    stage: 'test',
+    title: 'Plot twist: the AIs can\'t hear',
+    body: 'Here\'s something real about AI coding: none of the helper AIs can press keys on your piano or hear the speakers. They check their work by compiling it (TypeScript catches typos and mismatched types) and by simulating key presses. So YOU are the real tester. If a song sounds off or a challenge acts weird, type it in the idea box up top, e.g. "Amazing Grace sounds wrong in bar 2". That\'s called a bug report, and it\'s the most useful thing a tester can send.',
+  },
+  {
+    id: 16,
+    time: '5:48 PM',
+    stage: 'test',
+    title: 'Debugging your lag reports (#3 and #4): a detective story',
+    body: 'You reported "slows down with many notes" and "songs are glitchy". Here\'s how the hunt went. Clue 1: a robot played 16 notes every 0.1s and the screen dropped to 8 frames per second (smooth is 60). Clue 2: it was slow even with nothing playing. Clue 3: a stopwatch on every panel showed the visualizer was the hog, so the songs panel was glitchy only because the visualizer starved it. First fix: draw each glowing dot once and stamp copies, instead of painting thousands from scratch. BUT it was still slow, because the page was secretly still running the OLD drawing code. The live-update trick swapped the file but never restarted the drawing loop. Final fix: a one-line rule that says "if the engine code changes, restart the engine". Result: a steady 60 fps. Lesson: when a fix doesn\'t work, check that your fix is actually running!',
+  },
+  {
+    id: 17,
+    time: '5:48 PM',
+    stage: 'ship',
+    title: 'Emojis: off (request #5)',
+    body: 'Product manager changed her mind. That happens constantly in real software, which is why we built emojis as a toggle. They\'re off now, and the Emoji button on the visualizer brings them back any time.',
+  },
+  {
+    id: 18,
+    time: '6:00 PM',
+    stage: 'ship',
+    title: 'Brighter backgrounds (request #7)',
+    body: 'The page background is now a giant gradient that slowly slides around (one loop every 60 seconds). The visualizer has 5 themes: Rainbow, Candy, Ocean, Sunset and Night. Rainbow is the smart one: every note you play nudges the background toward that note\'s colour, so the music literally paints the sky. Design detail: the colours drift slowly on purpose. Fast flashing can hurt people\'s eyes or even trigger seizures, so good developers keep it under 3 flashes per second. Also spotted: all 7 badges earned and 97% on When the Saints. Respect.',
+  },
+  {
+    id: 19,
+    time: '6:03 PM',
+    stage: 'ship',
+    title: '8 new challenges (request #6)',
+    body: 'You cleared all 7 badges, so the challenges team built 8 more. 🥁 Rhythm Copy: tap the beat pattern. 🖤 Black Keys Only. 🪞 Mirror Mode: flip notes around D. 🔊 Loud & Soft: your piano knows how hard you press (that\'s called velocity, a number from 1 to 127). 🎭 Major or Minor?: train your ear (turn on beeps). 🌊 Glissando Dash: sweep the white keys. 👾 Boss Level: 5 random tasks back to back. 📅 Daily Challenge: uses the date as a "seed", so it\'s the same all day and new tomorrow. Because the engine was built to be reusable, each new challenge only took a few lines. That\'s why programmers spend time on good structure early.',
+  },
+  {
+    id: 20,
+    time: '6:07 PM',
+    stage: 'ship',
+    title: '🔥 Bangers (request #8)',
+    body: 'Lullabies demoted! The new Bangers section has the Tetris theme (actually a Russian folk song called Korobeiniki, about 160 years old), The Entertainer, Turkish March, Bach\'s spooky Toccata, Beethoven\'s 5th (da-da-da-DUM), Eine kleine Nachtmusik and Flight of the Bumblebee. Why no Taylor Swift? Copyright: new songs belong to their writers, and you need permission (a licence) to put them in an app. In the US, songs become public domain about 95 years after they come out, which is why "Singin\' in the Rain" (1929) just became free in 2025. The AI also skipped songs it wasn\'t 100% sure of the notes for. Good engineers say "I don\'t know" instead of guessing.',
+  },
+  {
+    id: 21,
+    time: '6:10 PM',
+    stage: 'ship',
+    title: '🎙️ My Songs: record your own (request #9, part 1)',
+    body: 'We can\'t ship songs like 7 Years or Thriller, but YOU can work out any song by ear. Hit "+ Record a song" in the Songs panel and play. The app records every note with its timing, then "quantizes" it: it snaps each note to the nearest half-beat, like autocorrect for rhythm. It picks the melody (the top note of chords), works out the key, and turns it into a falling-notes song you can practise in Wait or Flow mode. Your songs save on this computer. Part 2, a Beat Machine with upbeat grooves, is still being built.',
+  },
+  {
+    id: 22,
+    time: '6:12 PM',
+    stage: 'ship',
+    title: '🥁 Beat Machine (request #9, part 2)',
+    body: 'Right under the visualizer: 8 original grooves including Disco Night, Funk Strut, Boom Bap, Rock Anthem, Lo-fi Chill and Dance Floor Sprint. No drum recordings are used. Every kick, snare and hi-hat is built from math in real time: a kick is a low sine wave that quickly drops in pitch, and a hi-hat is filtered random noise. A "lookahead scheduler" books each drum hit 0.12 seconds in advance, so the beat stays rock-steady even when the computer is busy. Pick a groove, hit Play, jam with the safe notes it shows, and climb the jam score from "Warming up" to "Certified groove goblin". Heads up: it plays through the Mac speakers, so start with the volume low.',
+  },
+  {
+    id: 23,
+    time: '6:15 PM',
+    stage: 'ship',
+    title: 'Saved for tonight 💾',
+    body: 'Session 1 is a wrap: 9 of your feature requests shipped, 8 AI teammates, 23 log entries, and a best streak of 357. Everything got saved with "git", a time machine for code that remembers every version, so nothing can get lost. Your badges and high scores are saved in this browser too, with a backup copy. Next time it starts with one command and picks up exactly here. Good night, product manager.',
+  },
+  {
+    id: 24,
+    time: 'Next morning',
+    stage: 'ship',
+    title: '🚀 Meet Koog: open source + your own sign-in',
+    body: 'Big day. The app has a new name, Koog: Moog (the famous synth company) → one letter back is Loog → one more letter back is Koog, and it sounds like "code". It is now "open source": the code goes on GitHub, where anyone in the world can read it, learn from it and build their own version, under the MIT licence (basically "use it, just keep our name on it"). Before publishing, we scrubbed it for private info. Good engineers never put personal details in public code. New: type your own code word under "Who\'s playing?" and your badges are yours alone, so siblings can\'t mess up your scores. It\'s not a password, just a name tag. There\'s also a Dad mode that hides the grown-up tools from Kid mode. And a new 🎛️ Synth History panel: a timeline from the 1920 theremin to today, a playable Moog-style synth with real knobs, and a Patch Lab where you plug virtual cables like a modular synth.',
+  },
+]

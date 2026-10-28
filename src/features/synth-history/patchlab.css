@@ -1,0 +1,29 @@
+.pl{background:rgba(31,32,38,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid #2c2d36;border-radius:14px;padding:14px 16px;margin-top:12px;color:#e9e9f0}
+.pl h2{margin:0 0 4px;font-size:1.05rem}
+.pl h3{margin:14px 0 6px;font-size:.95rem}
+.pl-sub{margin:0 0 8px;font-size:.85rem;opacity:.75}
+.pl-svg{width:100%;height:auto;background:#0e0f12;border-radius:10px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.pl-mod{cursor:pointer}
+.pl-mod rect{fill:#1f2026;stroke:#3a3b46;stroke-width:2;transition:stroke .15s}
+.pl-mod:hover rect,.pl-mod.sel rect{stroke:#7c5cff}
+.pl-mod text{fill:#e9e9f0;font-weight:700;font-size:16px;text-anchor:middle;pointer-events:none}
+.pl-mod .pl-sm{font-weight:400;font-size:10px;fill:#9a9aab}
+.pl-jack{fill:#15161a;stroke:#aaa;stroke-width:2;cursor:pointer}
+.pl-jack:hover{stroke:#fff;fill:#2c2d36}
+.pl-jack.on{stroke:#ffcc4d;fill:#ffcc4d}
+.pl-cable{fill:none;stroke-width:5;stroke-linecap:round}
+.pl-mcable{fill:none;stroke-width:3;stroke-linecap:round;stroke-dasharray:7 6;opacity:.8}
+.pl-info,.pl-msg{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:#15161a;font-size:.88rem;min-height:1.2em}
+.pl-msg.ok{background:linear-gradient(90deg,#7c5cff,#ff5da2);color:#fff;font-weight:700}
+.pl-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.pl-btn{background:linear-gradient(90deg,#7c5cff,#ff5da2);color:#fff;border:0;border-radius:999px;padding:6px 16px;font-weight:600;cursor:pointer}
+.pl-btn.ghost{background:#2c2d36;color:#cfcfda}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.pl-card{background:#15161a;border:1px solid #2c2d36;border-radius:12px;padding:10px 12px;text-align:left;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px;font:inherit}
+.pl-card:hover{border-color:#7c5cff}
+.pl-card.on{border-color:#ff5da2;box-shadow:0 0 0 1px #ff5da2}
+.pl-card b{font-size:.92rem}
+.pl-card span{font-size:.76rem;opacity:.72}
+.pl-soon{margin-top:14px;padding:12px 14px;border-radius:12px;border:1px dashed #7c5cff;background:rgba(124,92,255,.1)}
+.pl-soon h3{margin:0 0 4px}
+.pl-soon p{margin:0;font-size:.85rem;opacity:.85}
