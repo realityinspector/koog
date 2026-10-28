@@ -316,18 +316,20 @@ export function SongsPanel() {
       ) : (
         <>
           <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
-          <div className="tier">{TIER_LABEL.bang}</div>
+          {(['pop', 'bang'] as Tier[]).map((tr) => (<div key={tr}>
+          <div className="tier">{TIER_LABEL[tr]}</div>
           <div className="chips">
-            {SONGS.filter((s) => s.tier === 'bang').map((s) => (
+            {SONGS.filter((s) => s.tier === tr).map((s) => (
               <button key={s.id} className="chip big" onClick={() => setSongId(s.id)}>
                 <b>{s.title}</b>{bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : null}
                 <span className="hk">{s.hook}</span>
               </button>
             ))}
           </div>
+          </div>))}
           <details style={{ marginTop: 10 }}>
             <summary className="tier" style={{ cursor: 'pointer' }}>Warm-up and classics</summary>
-            {tiers.filter((t) => t !== 'bang').map((t) => (
+            {tiers.filter((t) => t !== 'bang' && t !== 'pop').map((t) => (
               <div key={t}>
                 <div className="tier">{TIER_LABEL[t]}</div>
                 <div className="chips">

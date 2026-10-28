@@ -24,3 +24,35 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { body { animation: none; } }
 section { background: rgba(31, 32, 38, 0.82); backdrop-filter: blur(6px); }
+
+/* ---- Koog design tokens ---- */
+:root {
+  --purple: #7c5cff; --pink: #ff5da2; --gold: #ffd76c; --cyan: #4fd8ff; --mint: #6cffa8;
+  --grad-main: linear-gradient(135deg, #7c5cff, #ff5da2);
+  --grad-gold: linear-gradient(135deg, #ffd76c, #ffb86c);
+  --grad-cool: linear-gradient(135deg, #4fd8ff, #7c5cff);
+  --grad-rainbow: linear-gradient(135deg, #ffd76c, #ff5da2, #7c5cff, #4fd8ff);
+  --surface: rgba(28, 20, 58, 0.72);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --surface-3: rgba(255, 255, 255, 0.13);
+  --border: rgba(255, 255, 255, 0.16);
+  --text: #f4f2ff; --text-dim: #c9c4e6;
+  --r-sm: 10px; --r-md: 16px; --r-lg: 22px; --r-pill: 999px;
+  --shadow: 0 8px 28px rgba(8, 4, 30, 0.38);
+  --glow: 0 0 22px rgba(124, 92, 255, 0.45);
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px;
+  --focus: 3px solid #4fd8ff;
+}
+body { color: var(--text); }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+h2 { color: var(--text-dim); }
+.btn, .btn-ghost { min-height: 40px; border-radius: var(--r-pill); padding: 8px 20px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .15s; }
+.btn { border: 0; color: #fff; background: var(--grad-main); box-shadow: 0 4px 14px rgba(124, 92, 255, 0.45); }
+.btn-ghost { color: var(--text); background: var(--surface-2); border: 1px solid var(--border); }
+.btn:hover, .btn-ghost:hover { transform: translateY(-1px); }
+.btn-ghost:hover { background: var(--surface-3); }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .btn:hover, .btn-ghost:hover { transform: none; }
+}

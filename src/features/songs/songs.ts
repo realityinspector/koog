@@ -2,7 +2,7 @@
 import type { Key } from '../../music/theory'
 
 export interface SongNote { note: number | null; beats: number } // null = rest
-export type Tier = 'bang' | 'easy' | 'medium' | 'flex'
+export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex'
 export interface Song {
   id: string; title: string; origin: string; year: string
   key: Key; bpm: number; tier: Tier; notes: SongNote[]; hook?: string; mine?: boolean
@@ -25,9 +25,25 @@ function seq(s: string, def = 1): SongNote[] {
 const maj = (tonic: number): Key => ({ tonic, scale: 'major' })
 const min = (tonic: number): Key => ({ tonic, scale: 'minor' })
 
-export const TIER_LABEL: Record<Tier, string> = { bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex' }
+export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex' }
 
 export const SONGS: Song[] = [
+  { id: 'pop-static', title: 'Static in My Headphones', origin: 'Koog Original', year: '2026', key: min(4), bpm: 124, tier: 'pop', hook: 'Sad but loud. Smash the build, then scream the hook.',
+    notes: seq('R:.5 E4:.5 G4:.5 B4:1 A4:.5 G4:.5 E4:.5 R:.5 E4:.5 G4:.5 B4:1 C5:.5 B4:1 C5:1 B4:.5 A4:.5 G4:1 E4:.5 D4:.5 E4:.5 E4 E4 E4 E4 E4 G4 G4 R:2 E5:1 B4:.5 B4:.5 G4:1 E4:1 D5:1 B4:.5 B4:.5 A4:1 G4:1 E5:1 B4:.5 B4:.5 G4:.5 A4:.5 B4:1 E4:3') },
+  { id: 'pop-funk', title: 'Slap Bass Sundae', origin: 'Koog Original', year: '2026', key: min(9), bpm: 108, tier: 'pop', hook: 'Keep it bouncy. The rests are the groove.',
+    notes: seq('A3:.5 R:.25 A3:.25 C4:.5 R:.5 D4:.5 E4:.5 R:.25 G4:.75 A4:.5 G4:.5 E4:.5 R:.5 D4:.5 E4:.5 C4:1 A3:.5 R:.25 A3:.25 C4:.5 R:.5 D4:.5 E4:.5 R:.25 A4:.75 G4:.5 E4:.5 D4:.5 C4:.5 A3:1 R:1 E4:.25 E4 E4 E4 E4 E4 E4 E4 G4:.5 A4:.5 R:1 A4:.5 A4:.5 R:.5 C5:.5 A4:.5 G4:.5 E4:1 D4:.5 E4:.5 C4:.5 D4:.5 A3:2') },
+  { id: 'pop-edm', title: 'Neon Skyline Drop', origin: 'Koog Original', year: '2026', key: maj(0), bpm: 128, tier: 'pop', hook: 'Sounds like a stadium. Build it up, breathe, then hit the drop.',
+    notes: seq('C4:.5 C4 C4 C4 E4:.25 E4 E4 E4 G4:.25 G4 G4 G4 R:1 E5:1 E5:.5 D5:.5 C5:1 G4:1 D5:1 D5:.5 C5:.5 B4:1 G4:1 C5:1 C5:.5 B4:.5 A4:1 E4:1 A4:1 C5:.5 A4:.5 G4:2 E5:.5 D5:.5 C5:3') },
+  { id: 'pop-lofi', title: 'Rainy Window Homework', origin: 'Koog Original', year: '2026', key: maj(5), bpm: 96, tier: 'pop', hook: 'Slow, soft and cozy. Let the notes sit.',
+    notes: seq('R:.5 A4:.5 C5:1 E5:.5 C5:.5 A4:1 R:.5 A4:.5 D5:1 C5:.5 A4:.5 F4:1 R:.5 G4:.5 Bb4:1 A4:.5 G4:.5 D4:1 R:.5 E4:.5 G4:1 A4:.5 G4:.5 E4:1 R:.5 A4:.5 C5:1 E5:.5 C5:.5 A4:1 R:.5 A4:.5 D5:1 E5:.5 D5:.5 C5:1 A4:1 G4:.5 A4:.5 C5:1 R:1 A4:.5 G4:.5 F4:3') },
+  { id: 'pop-boss', title: 'Clockwork Dragon (Final Form)', origin: 'Koog Original', year: '2026', key: min(2), bpm: 120, tier: 'pop', hook: 'Boss fight! Hammer the low D, then roar.',
+    notes: seq('D4:.5 D4 D4 F4 D4 D4 A4:1 D4:.5 D4 D4 F4 D4 D4 Bb4:1 A4:.5 G4 F4 E4 D4 E4 F4:1 E4:.5 F4 G4 A4 Bb4:1 A4:1 A4:.25 A4 A4 A4 A4 R:1 D5:1 C5:.5 Bb4:.5 A4:1 F4:1 G4:.5 A4:.5 Bb4:1 A4:1 G4:.5 E4:.5 D5:.5 A4:.5 F4:.5 D4:.5 D4:2') },
+  { id: 'pop-dance', title: 'Glitterball Gravity', origin: 'Koog Original', year: '2026', key: maj(7), bpm: 120, tier: 'pop', hook: 'Dance-floor energy. Land the big high G.',
+    notes: seq('R:.5 B4:.5 B4:.5 D5:1 B4:.5 G4:1 R:.5 C5:.5 C5:.5 E5:1 C5:.5 G4:1 R:.5 B4:.5 D5:.5 G5:1 D5:.5 B4:1 A4:.5 A4:.5 B4:.5 A4:.5 F#4:1 R:1 B4:.25 B4 B4 B4 B4 B4 B4 B4 R:1 G5:1 G5:.5 D5:.5 B4:1 D5:1 E5:1 D5:.5 C5:.5 B4:1 G4:1 A4:.5 B4:.5 A4:.5 F#4:.5 G4:2') },
+  { id: 'pop-spooky', title: 'Haunted Hallway Hop', origin: 'Koog Original', year: '2026', key: min(9), bpm: 104, tier: 'pop', hook: 'Creepy fun. Tiptoe in, then shriek on the high notes.',
+    notes: seq('A3:.5 R:.5 C4:.5 R:.5 E4:.5 R:.5 Eb4:1 A3:.5 R:.5 C4:.5 R:.5 E4:.5 R:.5 F4:1 A4:.25 G#4 A4 G#4 A4:1 E4:1 C4:1 B3:.5 C4:.5 B3:.5 A3:.5 A3:2 E4:.25 E4 E4 E4 E4 E4 R:1 A4:.5 R:.5 A4:.5 E4:.5 C5:.5 B4:.5 A4:.5 G#4:.5 A4:.5 E4:.5 C4:.5 A3:.5 A3:2') },
+  { id: 'pop-hyper', title: 'Sugar Rush Hyperpop', origin: 'Koog Original', year: '2026', key: maj(5), bpm: 128, tier: 'pop', hook: 'Bouncy octave hops. Do not blink.',
+    notes: seq('F4:.5 C5:.5 R:.5 C5:.5 F4:.5 C5:.5 A4:1 G4:.5 D5:.5 R:.5 D5:.5 G4:.5 D5:.5 Bb4:1 A4:.5 E5:.5 R:.5 E5:.5 A4:.5 E5:.5 C5:1 Bb4:.5 A4:.5 G4:.5 F4:.5 C4:2 C5:.25 C5 C5 C5 C5 C5 C5 C5 R:1.5 F5:1 F5:.5 C5:.5 D5:1 C5:1 Bb4:1 A4:.5 G4:.5 F4:2') },
   { id: 'buns', title: 'Hot Cross Buns', origin: 'Traditional', year: 'c. 1760', key: maj(0), bpm: 100, tier: 'easy',
     notes: seq('E4:1 D4 C4:2 E4:1 D4 C4:2 C4:.5 C4 C4 C4 D4 D4 D4 D4 E4:1 D4 C4:2') },
   { id: 'mary', title: 'Mary Had a Little Lamb', origin: 'Traditional', year: '1830', key: maj(0), bpm: 104, tier: 'easy',

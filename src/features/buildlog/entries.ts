@@ -196,4 +196,18 @@ export const entries: Entry[] = [
     title: '🧭 New layout: tabs instead of endless scrolling',
     body: 'The app got too tall, so we gave it tabs like a real app: Play, Challenges, Songs, Synth History and Behind the scenes. Designers call this "information architecture", which just means deciding where stuff lives so people can find it. Hidden tabs keep running in the background, so a song won\'t stop when you peek at another tab. The 💡 Idea button is at the top right now, and when Claude replies to your idea, a pop-up tells you.',
   },
+  {
+    id: 27,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🎧 8 brand-new pop songs (your request #12)',
+    body: 'Radio pop songs belong to the people who wrote them, so we wrote our OWN. When you make something new, you automatically own its copyright. Our songs are open source, so anyone can play them. Songwriter tricks we used: a short catchy "motif" (a 2-bar idea) repeated with a twist, "syncopation" (notes that land between the beats, which makes pop feel bouncy), and a build-up of repeated notes, a tiny silence, then the hook. That\'s the "drop". Try Neon Skyline Drop or Clockwork Dragon (Final Form).',
+  },
+  {
+    id: 28,
+    time: 'Morning',
+    stage: 'ship',
+    title: '✨ A design system',
+    body: 'Every panel was built by a different AI helper, so they all looked a bit different. Real apps fix that with a "design system": one shared set of colours, corner roundness, shadows and button styles that every screen uses. Change the purple in ONE place and the whole app updates. The challenges are now colourful cards, earned badges get a rainbow border, the streak counter pops like a game score, and the Beat Machine has chunky drum pads.',
+  },
 ]

@@ -7,7 +7,7 @@ export interface SynthEvent {
   sort: number
 }
 
-export const EVENTS: SynthEvent[] = [
+const RAW: SynthEvent[] = [
   { year: '1920', sort: 1920, emoji: '👋', title: 'The theremin',
     body: 'Soviet inventor Leon Theremin built an instrument you play without touching it. Your hand moves near two antennas, one for pitch and one for volume, and eerie sound floats out of thin air.',
     hook: 'Electronic music started with waving your hands. Try sliding the Pitch control in the Playground and imagine doing it with no keys at all.' },
@@ -68,3 +68,6 @@ export const QUIZ: QuizQ[] = [
   { a: 'MIDI standard', b: 'Prophet-5', yearA: 1983, yearB: 1978 },
   { a: 'The theremin', b: 'Moog\'s modular synth', yearA: 1920, yearB: 1964 },
 ]
+
+/** In date order, whatever order they're written in above. */
+export const EVENTS: SynthEvent[] = [...RAW].sort((a, b) => a.sort - b.sort)
