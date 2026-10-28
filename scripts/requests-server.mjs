@@ -33,13 +33,16 @@ createServer((req, res) => {
     })
     req.on('end', () => {
       try {
-        const text = String(JSON.parse(body).text ?? '').trim().slice(0, 500)
+        const data = JSON.parse(body)
+        const text = String(data.text ?? '').trim().slice(0, 500)
+        // which kid sent it (their profile code word), if signed in
+        const from = /^[a-z][a-z0-9]{0,11}$/.test(String(data.from ?? '')) ? String(data.from) : undefined
         if (!text) return res.writeHead(400).end()
         const list = load()
-        const item = { id: (list.at(-1)?.id ?? 0) + 1, text, status: 'new', reply: '', at: new Date().toISOString() }
+        const item = { id: (list.at(-1)?.id ?? 0) + 1, text, ...(from && { from }), status: 'new', reply: '', at: new Date().toISOString() }
         list.push(item)
         save(list)
-        console.log(`REQUEST #${item.id}: ${text}`)
+        console.log(`REQUEST #${item.id}${from ? ` (from ${from})` : ''}: ${text}`)
         res.writeHead(201, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify(item))
       } catch {

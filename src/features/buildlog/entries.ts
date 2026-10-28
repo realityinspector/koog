@@ -182,4 +182,18 @@ export const entries: Entry[] = [
     title: '🚀 Meet Koog: open source + your own sign-in',
     body: 'Big day. The app has a new name, Koog: Moog (the famous synth company) → one letter back is Loog → one more letter back is Koog, and it sounds like "code". It is now "open source": the code goes on GitHub, where anyone in the world can read it, learn from it and build their own version, under the MIT licence (basically "use it, just keep our name on it"). Before publishing, we scrubbed it for private info. Good engineers never put personal details in public code. New: type your own code word under "Who\'s playing?" and your badges are yours alone, so siblings can\'t mess up your scores. It\'s not a password, just a name tag. There\'s also a Dad mode that hides the grown-up tools from Kid mode. And a new 🎛️ Synth History panel: a timeline from the 1920 theremin to today, a playable Moog-style synth with real knobs, and a Patch Lab where you plug virtual cables like a modular synth.',
   },
+  {
+    id: 25,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🔥 Fire mode (your request #11)',
+    body: 'Real fire is hot gas glowing: white-yellow where it\'s hottest, then orange, then red, then smoke as it cools. The visualizer copies that. Each flame is a tiny pre-drawn picture (a "sprite") that rises, shrinks and changes colour as it "cools". Hundreds of them stacked with "additive blending" (brightness adds up, like overlapping flashlights) look like a real blaze. Held keys keep burning. Out-of-key notes burn green and blue because in real chemistry, copper burns green and potassium burns purple. We timed it: about 1 millisecond per frame, and a smooth screen needs under 16.',
+  },
+  {
+    id: 26,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🧭 New layout: tabs instead of endless scrolling',
+    body: 'The app got too tall, so we gave it tabs like a real app: Play, Challenges, Songs, Synth History and Behind the scenes. Designers call this "information architecture", which just means deciding where stuff lives so people can find it. Hidden tabs keep running in the background, so a song won\'t stop when you peek at another tab. The 💡 Idea button is at the top right now, and when Claude replies to your idea, a pop-up tells you.',
+  },
 ]

@@ -1,15 +1,56 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { isGuest, useProfile } from '../../profile/profile'
 import './requests.css'
 
 const API = 'http://127.0.0.1:5174/requests'
 
-interface Req { id: number; text: string; status: 'new' | 'building' | 'done' | 'later'; reply: string }
+interface Req { id: number; text: string; from?: string; status: 'new' | 'building' | 'done' | 'later'; reply: string }
 
 const LABEL: Record<Req['status'], string> = {
   new: 'Got it 📬',
   building: 'Building 🔨',
   done: 'Done ✅',
   later: 'Saved for later 💾',
+}
+
+const SEEN = 'koog.rq.seen'
+const sig = (r: Req) => r.status + '|' + r.reply
+function loadSeen(): Record<number, string> | null {
+  try { const s = localStorage.getItem(SEEN); return s ? JSON.parse(s) : null } catch { return null }
+}
+
+/** Pops up when Claude updates a request, so she sees replies without opening the Idea box. */
+function RequestToasts({ list }: { list: Req[] }) {
+  const [seen, setSeen] = useState(loadSeen)
+  useEffect(() => {
+    // first visit ever: treat what's there now as already seen
+    if (seen === null && list.length) {
+      const all = Object.fromEntries(list.map((r) => [r.id, sig(r)]))
+      setSeen(all)
+      try { localStorage.setItem(SEEN, JSON.stringify(all)) } catch { /* ignore */ }
+    }
+  }, [list, seen])
+  if (!seen) return null
+  const fresh = list.filter((r) => r.status !== 'new' && seen[r.id] !== sig(r)).slice(-3)
+  if (!fresh.length) return null
+  const dismiss = (r: Req) => {
+    const next = { ...seen, [r.id]: sig(r) }
+    setSeen(next)
+    try { localStorage.setItem(SEEN, JSON.stringify(next)) } catch { /* ignore */ }
+  }
+  return createPortal(
+    <div className="rq-toasts" aria-live="polite">
+      {fresh.map((r) => (
+        <div key={r.id} className={`rq-toast ${r.status}`}>
+          <div className="rq-toast-hd"><span className={`rq-status ${r.status}`}>{LABEL[r.status] ?? r.status}</span> {r.text}</div>
+          {r.reply && <div className="rq-toast-reply">{r.reply}</div>}
+          <button onClick={() => dismiss(r)}>Nice 👍</button>
+        </div>
+      ))}
+    </div>,
+    document.body,
+  )
 }
 
 export function RequestBar() {
@@ -38,8 +79,9 @@ export function RequestBar() {
     const t = text.trim()
     if (!t || sending) return
     setSending(true)
+    const who = useProfile.getState().active
     try {
-      const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t }) })
+      const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: t, from: isGuest(who) ? undefined : who }) })
       const item = (await r.json()) as Req
       setList((l) => [...l, item])
       setText('')
@@ -54,6 +96,7 @@ export function RequestBar() {
 
   return (
     <div className="rq">
+      <RequestToasts list={list} />
       <form onSubmit={submit} className="rq-form">
         <span className="rq-icon">💡</span>
         <input
@@ -70,6 +113,7 @@ export function RequestBar() {
           {recent.map((r) => (
             <li key={r.id}>
               <span className={`rq-status ${r.status}`}>{LABEL[r.status] ?? r.status}</span>
+              {r.from && <span className="rq-from">{r.from}:</span>}
               <span className="rq-text">{r.text}</span>
               {r.reply && <div className="rq-reply">Claude: {r.reply}</div>}
             </li>

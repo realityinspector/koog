@@ -4,7 +4,7 @@
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { inKey, pc, type Key } from '../../music/theory'
 
-export type Mode = 'fireworks' | 'ripples' | 'rise'
+export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire'
 
 // Background themes (request #7: "brighter and more fun"). Colours drift slowly, never flash.
 export type Theme = 'rainbow' | 'candy' | 'ocean' | 'sunset' | 'night'
@@ -83,6 +83,38 @@ function dot(hue: number, dull: boolean) {
   return c
 }
 
+// Fire mode: flame puff sprites, pre-rendered once per (palette, heat stage) and stamped with drawImage.
+// Palettes: 0 gold (in key), 1 green (copper), 2 blue (spicy), 3 white-hot (tonic). Stage 0 = hottest, 7 = smoke.
+const FSTAGES = 8
+const FPAL: number[][][] = [
+  [[58, 100, 94], [48, 100, 70], [38, 100, 58], [26, 100, 52], [14, 100, 46], [4, 85, 36], [0, 20, 22], [0, 0, 14]],
+  [[140, 100, 94], [130, 100, 72], [125, 95, 55], [145, 90, 45], [165, 80, 35], [190, 60, 28], [200, 20, 20], [0, 0, 14]],
+  [[190, 100, 95], [196, 100, 75], [208, 100, 60], [222, 95, 50], [240, 80, 40], [255, 60, 30], [260, 20, 20], [0, 0, 14]],
+  [[60, 60, 99], [55, 100, 90], [48, 100, 72], [36, 100, 60], [24, 100, 50], [10, 90, 40], [0, 20, 22], [0, 0, 14]],
+]
+const FSIZE = 48
+const fireSprites: HTMLCanvasElement[] = []
+function flameSpr(pal: number, stage: number) {
+  const id = pal * FSTAGES + stage
+  let c = fireSprites[id]
+  if (!c) {
+    c = document.createElement('canvas')
+    c.width = c.height = FSIZE
+    const g = c.getContext('2d')!
+    const [hh, ss, ll] = FPAL[pal][stage]
+    const grad = g.createRadialGradient(FSIZE / 2, FSIZE / 2, 0, FSIZE / 2, FSIZE / 2, FSIZE / 2)
+    grad.addColorStop(0, `hsla(${hh},${ss}%,${ll}%,1)`)
+    grad.addColorStop(0.4, `hsla(${hh},${ss}%,${ll}%,0.5)`)
+    grad.addColorStop(1, `hsla(${hh},${ss}%,${ll}%,0)`)
+    g.fillStyle = grad
+    g.fillRect(0, 0, FSIZE, FSIZE)
+    fireSprites[id] = c
+  }
+  return c
+}
+interface Flame { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; pal: number; ph: number; lift: number; spark?: boolean }
+const MAX_FLAMES = 850
+
 // Drawing emoji text every frame is slow too, so rasterize each one once.
 const SPRITE = 64
 const sprites = new Map<string, HTMLCanvasElement>()
@@ -152,6 +184,113 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
   }
 
+  // ---- Fire mode state ----
+  const flames: Flame[] = []
+  const flashes: { x: number; life: number }[] = []
+  let fireFloor: CanvasGradient | null = null
+  let floorG = 0
+  let ignite = 0 // 1 -> 0 over ~2.5s: the whole floor is burning
+  let lastIgnite = 0
+  let lastBall = 0
+  const fireScale = () => Math.min(1.6, Math.max(0.6, h / 700))
+  const rnd = Math.random
+  function addFlame(x: number, y: number, vx: number, vy: number, max: number, size: number, pal: number, lift = 0.02, spark = false) {
+    if (flames.length >= MAX_FLAMES * quality) return
+    flames.push({ x, y, vx, vy, life: 0, max, size, pal, ph: rnd() * 6.28, lift, spark })
+  }
+  const palFor = (kind?: Kind) => (kind === 'spicy' ? 1 + (rnd() < 0.5 ? 1 : 0) : kind === 'tonic' && rnd() < 0.55 ? 3 : 0)
+  function spark(x: number, y: number, pal: number, long = false) {
+    addFlame(x, y, (rnd() - 0.5) * 1.6, -(2 + rnd() * 3.5) * fireScale(), (long ? 90 : 55) + rnd() * 50, 2.5 + rnd() * 2.5, pal, 0.012, true)
+  }
+  function fireball(x: number, y: number, pal: (() => number)) {
+    const n = Math.round(28 * calm * quality)
+    const hsc = fireScale()
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (rnd() - 0.5) * Math.PI * 1.7
+      const sp = (1.5 + rnd() * 4) * hsc
+      addFlame(x + (rnd() - 0.5) * 20, y, Math.cos(a) * sp, Math.sin(a) * sp, 30 + rnd() * 22, (17 + rnd() * 15) * Math.min(1.3, hsc), pal(), 0.012)
+    }
+    for (let i = 0; i < Math.round(8 * calm); i++) spark(x, y, pal(), true)
+  }
+  function emitFire() {
+    const hsc = fireScale()
+    const crowd = held.size > 4 ? Math.sqrt(4 / held.size) : 1
+    const q = quality * calm
+    for (const s of held.values()) {
+      const ton = s.kind === 'tonic'
+      const v = s.velocity
+      const rate = (0.9 + v * 1.8) * (ton ? 1.5 : 1) * crowd * q
+      const n = Math.floor(rate) + (rnd() < rate % 1 ? 1 : 0)
+      const spread = ton ? 14 : 8 + v * 8
+      for (let i = 0; i < n; i++) {
+        addFlame(
+          s.x + (rnd() - 0.5) * spread * 2, h - 6, (rnd() - 0.5) * 0.8,
+          -(3 + v * 5) * hsc * (ton ? 1.5 : 1) * (0.7 + rnd() * 0.6) * (reduced ? 0.7 : 1),
+          (28 + v * 18) * (ton ? 1.45 : 1) * (0.8 + rnd() * 0.4),
+          (11 + v * 13) * (ton ? 1.4 : 1) * (0.8 + rnd() * 0.4) * Math.min(1.3, hsc),
+          palFor(s.kind),
+        )
+      }
+      if (rnd() < 0.22 * q) spark(s.x + (rnd() - 0.5) * spread * 2, h - 20, palFor(s.kind))
+    }
+    if (ignite > 0) {
+      ignite = Math.max(0, ignite - 1 / 150)
+      const n = Math.round(5 * ignite * q)
+      for (let i = 0; i < n; i++) addFlame(rnd() * w, h - 6, (rnd() - 0.5) * 0.6, -(2.5 + rnd() * 3.5) * hsc, 30 + rnd() * 16, (11 + rnd() * 9) * Math.min(1.3, hsc), rnd() < 0.25 ? 3 : 0)
+      if (rnd() < 0.3 * q) spark(rnd() * w, h - 20, 0)
+    }
+  }
+  function drawFire(now: number) {
+    const ft = now / 1000
+    // warm floor glow: grows with the number of held notes (and floor ignition)
+    floorG += (Math.min(1, held.size / 6) + ignite * 0.8 - floorG) * 0.06
+    if (floorG > 0.02) {
+      if (!fireFloor) {
+        fireFloor = ctx.createLinearGradient(0, h, 0, h * 0.6)
+        fireFloor.addColorStop(0, 'hsla(28,100%,55%,0.45)')
+        fireFloor.addColorStop(0.5, 'hsla(14,100%,45%,0.15)')
+        fireFloor.addColorStop(1, 'hsla(8,100%,40%,0)')
+      }
+      ctx.globalAlpha = Math.min(1, floorG)
+      ctx.fillStyle = fireFloor
+      ctx.fillRect(0, h * 0.6, w, h * 0.4)
+    }
+    for (const s of held.values()) {
+      const g = 70 + s.velocity * 80 + (s.kind === 'tonic' ? 40 : 0)
+      ctx.globalAlpha = 0.3
+      ctx.drawImage(flameSpr(s.kind === 'spicy' ? 2 : s.kind === 'tonic' ? 3 : 0, 2), s.x - g, h - g * 0.6, g * 2, g * 1.2)
+    }
+    for (let i = flashes.length - 1; i >= 0; i--) {
+      const f = flashes[i]
+      const t = 1 - ++f.life / 16
+      if (t <= 0) { flashes.splice(i, 1); continue }
+      const r = 70 + (1 - t) * 90
+      ctx.globalAlpha = t * 0.85
+      ctx.drawImage(flameSpr(3, 0), f.x - r, h - 70 - r, r * 2, r * 2)
+    }
+    for (let i = flames.length - 1; i >= 0; i--) {
+      const p = flames[i]
+      p.life++
+      const age = p.life / p.max
+      if (age >= 1) { flames[i] = flames[flames.length - 1]; flames.pop(); continue }
+      p.vx = p.vx * 0.94 + Math.sin(p.y * 0.02 + ft * 6 + p.ph) * (p.spark ? 0.22 : 0.1)
+      p.vy = p.vy * 0.99 - p.lift
+      p.x += p.vx
+      p.y += p.vy
+      const flick = 0.8 + 0.2 * Math.sin(p.life * 0.9 + p.ph)
+      if (p.spark) {
+        const r = p.size * 2 * (1 - age * 0.5)
+        ctx.globalAlpha = (1 - age) * flick
+        ctx.drawImage(flameSpr(p.pal, Math.min(4, Math.floor(age * 5))), p.x - r, p.y - r, r * 2, r * 2)
+      } else {
+        const r = p.size * (1 - age * 0.65)
+        ctx.globalAlpha = Math.pow(1 - age, 0.6) * 0.5 * flick
+        ctx.drawImage(flameSpr(p.pal, Math.min(FSTAGES - 1, Math.floor(age * FSTAGES))), p.x - r, p.y - r * 1.3, r * 2, r * 2.6)
+      }
+    }
+    ctx.globalAlpha = 1
+  }
+
   let dpr = 1
   const resize = () => {
     dpr = Math.min(1.5, window.devicePixelRatio || 1)
@@ -160,6 +299,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     h = r.height
     canvas.width = Math.round(w * dpr)
     canvas.height = Math.round(h * dpr)
+    fireFloor = null
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = '#0b0b16'
     ctx.fillRect(0, 0, w, h)
@@ -219,6 +359,22 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       for (let k = 0; k < nr; k++) {
         rings.push({ x, y, r: 4 + k * -14, vr: (1.2 + v * 2.5) * (sp ? 0.7 : 1), life: 0, max: (110 + v * 60) * (sp ? 0.7 : 1), hue: sp ? spicyHue : kind === 'tonic' ? 45 : hue, width: 1.5 + v * 4 - k, sat: sp ? 12 : undefined, wob: sp && !reduced ? 1 : undefined })
       }
+    } else if (mode === 'fire') {
+      held.set(note, { x, y: h, hue, velocity: v, kind })
+      const ton = kind === 'tonic'
+      const hsc = fireScale()
+      const n = Math.round((8 + v * 14) * (ton ? 1.6 : 1) * calm * quality)
+      for (let i = 0; i < n; i++) {
+        addFlame(x + (rnd() - 0.5) * 22, h - 6, (rnd() - 0.5) * 1.6, -(4 + v * 6) * hsc * (ton ? 1.5 : 1) * (0.6 + rnd() * 0.6), 30 + rnd() * 20, (12 + v * 14) * Math.min(1.3, hsc), palFor(kind))
+      }
+      if (ton && flashes.length < 6) flashes.push({ x, life: 0 })
+      const t = performance.now()
+      if (kind !== 'spicy' && streak >= 12 && streak % 12 === 0 && t - lastIgnite > 3000) { ignite = 1; lastIgnite = t }
+      if (held.size >= 3 && t - lastBall > 700) {
+        lastBall = t
+        const xs = [...held.values()]
+        fireball(xs.reduce((a, q) => a + q.x, 0) / xs.length, h - 90, () => (xs.some((q) => q.kind === 'spicy') ? 1 + (rnd() < 0.5 ? 1 : 0) : rnd() < 0.3 ? 3 : 0))
+      }
     } else {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5 })
@@ -250,7 +406,14 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   }
 
   function noteOff(note: number) {
+    const was = held.get(note)
     held.delete(note)
+    if (was && mode === 'fire') {
+      // release: a few embers drift up and a puff of smoke
+      for (let i = 0; i < Math.round(5 * calm * quality); i++) spark(was.x + (rnd() - 0.5) * 20, h - 30, palFor(was.kind), true)
+      addFlame(was.x, h - 30, 0, -1.5, 40, 16, 0)
+      if (flames.length) flames[flames.length - 1].life = 22
+    }
     for (const b of bars) if (b.note === note && b.held) b.held = false
   }
 
@@ -276,6 +439,11 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       }
       ctx.fillStyle = bgGrad
       ctx.fillRect(0, 0, w, h)
+      // fire mode: darken (translucent, even, never a flash) so the flames pop; theme tint still shows through
+      if (mode === 'fire') {
+        ctx.fillStyle = 'rgba(10,3,4,0.26)'
+        ctx.fillRect(0, 0, w, h)
+      }
     }
     ctx.globalCompositeOperation = 'lighter'
 
@@ -338,7 +506,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
 
     // held notes: soft glow + constellation lines between everything being held (chords!)
-    const hs = [...held.values()]
+    const hs = mode === 'fire' ? [] : [...held.values()]
+    if (mode === 'fire') emitFire()
     if (hs.length > 1) {
       ctx.lineWidth = 1.5
       for (let i = 0; i < hs.length; i++) {
@@ -438,6 +607,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       ctx.drawImage(dot(p.hue, dull), p.x - r, p.y - r, r * 2, r * 2)
     }
     ctx.globalAlpha = 1
+    drawFire(now)
 
     for (let i = rings.length - 1; i >= 0; i--) {
       const r = rings[i]

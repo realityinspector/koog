@@ -18,13 +18,20 @@ const MODES: { id: Mode; label: string }[] = [
   { id: 'fireworks', label: 'Fireworks' },
   { id: 'ripples', label: 'Ripples' },
   { id: 'rise', label: 'Rising bars' },
+  { id: 'fire', label: '🔥 Fire' },
 ]
 
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<Engine | null>(null)
-  const [mode, setMode] = useState<Mode>('fireworks')
+  const [mode, setMode] = useState<Mode>(() => {
+    try {
+      const m = localStorage.getItem('koog.viz.mode')
+      if (m && MODES.some((x) => x.id === m)) return m as Mode
+    } catch { /* storage blocked: fine */ }
+    return 'fireworks'
+  })
   const [octave, setOctave] = useState(0)
   const [emoji, setEmoji] = useState(false)
   const [theme, setTheme] = useState<Theme>('rainbow')
@@ -46,7 +53,10 @@ export function Visualizer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createEngine])
 
-  useEffect(() => engine.current?.setMode(mode), [mode])
+  useEffect(() => {
+    engine.current?.setMode(mode)
+    try { localStorage.setItem('koog.viz.mode', mode) } catch { /* ignore */ }
+  }, [mode])
   useEffect(() => engine.current?.setEmoji(emoji), [emoji])
   useEffect(() => engine.current?.setTheme(theme), [theme])
   const nextTheme = () => setTheme((t) => THEMES[(THEMES.findIndex((x) => x.id === t) + 1) % THEMES.length].id)
@@ -89,7 +99,7 @@ export function Visualizer() {
       <canvas ref={canvas} className="viz-canvas" />
       <div className="viz-bar">
         {MODES.map((m) => (
-          <button key={m.id} className={m.id === mode ? 'on' : ''} onClick={() => setMode(m.id)}>
+          <button key={m.id} className={(m.id === mode ? 'on' : '') + (m.id === 'fire' ? ' fire' : '')} onClick={() => setMode(m.id)}>
             {m.label}
           </button>
         ))}

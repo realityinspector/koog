@@ -13,3 +13,12 @@
 .rq-status.new { color: #6cb6ff; } .rq-status.building { color: #ffb86c; } .rq-status.done { color: #6cffa8; } .rq-status.later { color: #b9bac4; }
 .rq-text { color: #d6d7de; }
 .rq-reply { color: #b7a6ff; margin: 2px 0 0 4px; font-style: italic; }
+.rq-from { color: #ffd76c; font-weight: 600; margin-right: 6px; }
+.rq-toasts { position: fixed; right: 16px; bottom: 16px; z-index: 50; display: flex; flex-direction: column; gap: 10px; max-width: min(380px, calc(100vw - 32px)); }
+.rq-toast { background: rgba(30, 24, 60, 0.95); backdrop-filter: blur(10px); border: 1px solid #7c5cff; border-radius: 14px; padding: 12px 14px; color: #e8e8ec; font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); animation: rq-in .35s ease-out; }
+.rq-toast.done { border-color: #6cffa8; }
+.rq-toast-hd { font-weight: 600; }
+.rq-toast-reply { color: #cbbfff; margin: 6px 0 8px; line-height: 1.35; }
+.rq-toast button { border: 0; border-radius: 999px; padding: 5px 14px; font-weight: 700; color: #fff; background: linear-gradient(90deg, #7c5cff, #ff5da2); cursor: pointer; }
+@keyframes rq-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rq-toast { animation: none; } }

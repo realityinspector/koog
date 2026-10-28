@@ -1,0 +1,29 @@
+:root { --ks-pink: #ff5da2; --ks-violet: #7c5cff; --ks-gold: #ffd76c; --ks-cyan: #4fd8ff; }
+.ks-app { min-height: 100vh; }
+.ks-header { position: sticky; top: 0; z-index: 50; background: rgba(24, 14, 52, 0.78); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.12); box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+.ks-header-in { max-width: 1100px; margin: 0 auto; padding: 8px 16px 4px; display: flex; align-items: center; gap: 14px; }
+.ks-logo { font-size: 30px; font-weight: 900; letter-spacing: -0.02em; background: linear-gradient(90deg, var(--ks-gold), var(--ks-pink), var(--ks-violet), var(--ks-cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 8px rgba(255,93,162,0.4)); }
+.ks-hdr-mid { flex: 1; min-width: 0; }
+.ks-hdr-mid .pf-bar { margin: 0; }
+.ks-idea { border: 0; border-radius: 999px; padding: 10px 18px; font-size: 16px; font-weight: 700; color: #2a1650; background: linear-gradient(90deg, var(--ks-gold), #ffb86c); cursor: pointer; box-shadow: 0 3px 12px rgba(255,215,108,0.35); transition: transform .12s; }
+.ks-idea:hover { transform: translateY(-1px) scale(1.04); }
+.ks-idea.on { background: #fff; }
+.ks-idea-pop { max-width: 1100px; margin: 0 auto; padding: 4px 16px 10px; max-height: 60vh; overflow: auto; }
+.ks-tabs { max-width: 1100px; margin: 0 auto; padding: 4px 16px 10px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.ks-tabs::-webkit-scrollbar { display: none; }
+.ks-tab { flex: none; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: #e8e8ec; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .15s, transform .12s; }
+.ks-tab:hover { background: rgba(255,255,255,0.15); }
+.ks-tab:focus-visible, .ks-idea:focus-visible { outline: 3px solid var(--ks-cyan); outline-offset: 2px; }
+.ks-tab.on { background: linear-gradient(135deg, var(--ks-violet), var(--ks-pink)); border-color: transparent; color: #fff; box-shadow: 0 4px 16px rgba(124,92,255,0.5); transform: translateY(-1px); }
+.ks-tab-ic { font-size: 22px; }
+.ks-main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.ks-panel[hidden] { display: none; }
+.ks-panel > section { border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; }
+@media (max-width: 640px) {
+  .ks-logo { font-size: 24px; }
+  .ks-idea span { display: none; }
+  .ks-tab { padding: 8px 12px; }
+  .ks-tab-lb { font-size: 14px; }
+  .ks-header-in { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .ks-tab, .ks-idea { transition: none; } .ks-idea:hover, .ks-tab.on { transform: none; } }
