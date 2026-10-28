@@ -1,0 +1,9 @@
+.kc-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9998; }
+.kc-toast-wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 9999; padding: 16px; }
+.kc-toast { display: flex; align-items: center; gap: 16px; max-width: 90vw; padding: 24px 36px; border-radius: 28px; font-size: clamp(22px, 5vw, 38px); font-weight: 800; color: #fff; text-align: center;
+  background: linear-gradient(135deg, #7c5cff, #ff5da2); border: 3px solid #ffd76c; box-shadow: 0 12px 48px rgba(124,92,255,0.6); animation: kc-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
+.kc-toast.gold { background: linear-gradient(135deg, #b8860b, #ffd76c); color: #2a1d00; }
+.kc-toast.best { font-size: clamp(18px, 4vw, 28px); padding: 18px 28px; }
+.kc-emoji { font-size: 1.4em; }
+@keyframes kc-pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kc-toast { animation: none; } .kc-canvas { display: none; } }

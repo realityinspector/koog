@@ -128,8 +128,8 @@ export function MySongs({ mine, setMine, onPick }: Props) {
         {!mine.length && <span className="sub" style={{ margin: 0 }}>Nothing here yet.</span>}
       </div>
       <div className="bar">
-        <button className="ghost" onClick={() => setOpen(!open)}>{open ? 'Hide recorder' : '+ Record a song'}</button>
-        <button className="ghost" onClick={() => setShowIO(!showIO)}>Export / Import</button>
+        <button className="ghost btn-ghost" onClick={() => setOpen(!open)}>{open ? 'Hide recorder' : '+ Record a song'}</button>
+        <button className="ghost btn-ghost" onClick={() => setShowIO(!showIO)}>Export / Import</button>
       </div>
       {err && <div className="msg">{err}</div>}
       {open && (
@@ -139,8 +139,8 @@ export function MySongs({ mine, setMine, onPick }: Props) {
               <div className="sub">Got {take.filter((n) => n.note != null).length} notes. Name it and pick an emoji.</div>
               <div className="bar">
                 <input placeholder="Song title" value={title} maxLength={40} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-                <button className="go" onClick={save}>Save</button>
-                <button className="ghost" onClick={() => { setTake(null); setPhase('idle') }}>Discard</button>
+                <button className="go btn" onClick={save}>Save</button>
+                <button className="ghost btn-ghost" onClick={() => { setTake(null); setPhase('idle') }}>Discard</button>
               </div>
               <div className="emojis">{EMOJI.map((e) => <button key={e} className={'mini' + (e === emoji ? ' sel' : '')} onClick={() => setEmoji(e)}>{e}</button>)}</div>
             </>
@@ -148,7 +148,7 @@ export function MySongs({ mine, setMine, onPick }: Props) {
             <div className="bar">
               <label>bpm <input type="number" min={40} max={220} value={bpm} disabled={phase !== 'idle'} onChange={(e) => setBpm(Math.max(40, Math.min(220, +e.target.value || 100)))} style={{ width: 60 }} onKeyDown={(e) => e.stopPropagation()} /></label>
               <label><input type="checkbox" checked={countIn} disabled={phase !== 'idle'} onChange={(e) => setCountIn(e.target.checked)} /> Count-in</label>
-              {phase === 'idle' ? <button className="go" onClick={record}>Record</button> : <button className="go" onClick={stop}>Stop</button>}
+              {phase === 'idle' ? <button className="go btn rec-btn" onClick={record}>● Record</button> : <button className="go btn rec-btn live" onClick={stop}>■ Stop</button>}
               <span className="sub" style={{ margin: 0 }}>
                 {phase === 'count' ? `Count-in: ${count}` : phase === 'rec' ? 'Recording... play it, then press Stop (or just pause for 8 seconds).' : 'Play the melody; chords become their top note.'}
               </span>
@@ -162,7 +162,7 @@ export function MySongs({ mine, setMine, onPick }: Props) {
           <textarea readOnly rows={3} value={exportText} onFocus={(e) => e.currentTarget.select()} />
           <div className="sub">Restore: paste exported text here.</div>
           <textarea rows={3} value={importText} onChange={(e) => setImportText(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
-          <button className="ghost" onClick={doImport}>Import</button>
+          <button className="ghost btn-ghost" onClick={doImport}>Import</button>
         </div>
       )}
     </div>

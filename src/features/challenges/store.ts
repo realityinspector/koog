@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { onProfileChange, pload, psave } from '../../profile/profile'
+import { celebrate } from '../celebrate/celebrate'
 import { CHALLENGES, type ChallengeDef, type Engine, type Finish } from './defs'
 
 export interface Result extends Finish { defId: string; level: number; best: number; isBest: boolean; newBadge: string | null }
@@ -55,6 +56,8 @@ function make() {
         const had = badges[a.def.id] ?? 0
         let newBadge: string | null = null
         if (want > had) { badges[a.def.id] = want; newBadge = want === 2 ? `${a.def.badge} (gold)` : a.def.badge }
+        if (newBadge) celebrate({ kind: newBadge.includes('(gold)') ? 'gold' : 'badge', title: 'New badge: ' + newBadge, emoji: newBadge.includes('(gold)') ? '🥇' : '🏅' })
+        else if (isBest && prev !== undefined) celebrate({ kind: 'best', title: 'New personal best!', emoji: '⭐' })
         save('challenges.bests', bests); save('challenges.badges', badges)
         restoreKey()
         set({ active: null, bests, badges, rev: get().rev + 1,

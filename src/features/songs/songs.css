@@ -37,3 +37,50 @@
 .sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background:#15161a; color:#e8e8ee; border:1px solid #3a3b46; border-radius:6px; padding:4px 8px; font:inherit; font-size:13px }
 .sg textarea { width:100%; box-sizing:border-box; font-family:monospace; font-size:11px }
 .sg .rec { background:#1a1b21; border-radius:10px; padding:8px 10px; margin-top:6px }
+
+/* ---- Round 3: Koog look ---- */
+.sg { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--sp-5); color: var(--text) }
+.sg h2 { font-size: 26px; font-weight: 900; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0 0 6px }
+.sg .sub { color: var(--text-dim); font-size: 15px }
+.sg .tier { margin: 22px 0 10px; font-size: 20px; font-weight: 900; letter-spacing: .01em; text-transform: none; color: var(--text); padding-left: 12px; border-left: 5px solid var(--purple) }
+.sg .tier.t-pop { border-image: linear-gradient(#ff5da2, #7c5cff) 1; text-shadow: 0 0 14px rgba(255, 93, 162, .6) }
+.sg .tier.t-bang { border-image: linear-gradient(#ffd76c, #ff7a1a) 1; text-shadow: 0 0 14px rgba(255, 150, 40, .55) }
+.sg .tier.t-easy, .sg .tier.t-medium, .sg .tier.t-flex { border-left-color: var(--cyan); font-size: 17px }
+.sg summary.tier { display: list-item; padding-left: 12px }
+.sg .chips { gap: 12px }
+.sg .chip.big { min-height: 96px; width: 250px; flex: 1 1 230px; max-width: 340px; border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px 14px 18px; gap: 4px; align-items: flex-start; text-align: left; position: relative; overflow: hidden; color: #fff; transition: transform .12s, box-shadow .15s }
+.sg .chip.big b { font-size: 19px; line-height: 1.2; font-weight: 800 }
+.sg .chip.big .hk { color: rgba(255, 255, 255, .88); font-size: 14px; line-height: 1.35 }
+.sg .chip.big .pb { margin: 4px 0 0; display: inline-block; background: rgba(0, 0, 0, .35); color: var(--gold); font-weight: 800; font-size: 14px; border-radius: var(--r-pill); padding: 2px 10px }
+.sg .chip.big:hover { transform: translateY(-2px) }
+.sg .chip.big.t-pop { background: linear-gradient(135deg, rgba(255, 93, 162, .55), rgba(124, 92, 255, .6)), #1c143a; box-shadow: 0 0 18px rgba(255, 93, 162, .35); border-color: rgba(255, 93, 162, .7) }
+.sg .chip.big.t-bang { background: linear-gradient(135deg, rgba(255, 106, 20, .6), rgba(255, 190, 60, .4)), #2a1408; box-shadow: 0 0 18px rgba(255, 140, 30, .35); border-color: rgba(255, 170, 60, .7) }
+.sg .chip.big.t-easy, .sg .chip.big.t-medium, .sg .chip.big.t-flex { background: linear-gradient(135deg, rgba(79, 216, 255, .28), rgba(124, 92, 255, .22)), #10223a; border-color: rgba(79, 216, 255, .5); min-height: 64px; box-shadow: none }
+.sg .chip.big.t-easy b, .sg .chip.big.t-medium b, .sg .chip.big.t-flex b { font-size: 16px }
+.sg .chip.big:hover { box-shadow: 0 0 24px rgba(255, 255, 255, .25) }
+/* small chips w/o hook (warm-ups) just contain title + pb inline */
+.sg .chip:not(.big), .sg .chip.mine { color: var(--text) }
+.sg .btn, .sg .btn-ghost { min-height: 40px; font-size: 15px; padding: 8px 20px; border-radius: var(--r-pill) }
+.sg .btn-ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text) }
+.sg .btn { border: 0; background: var(--grad-main); color: #fff }
+.sg .seg { border-radius: var(--r-pill); border: 1px solid var(--border); background: var(--surface-2) }
+.sg .seg button { background: transparent; color: var(--text); min-height: 40px; padding: 8px 20px; font-size: 15px; font-weight: 700 }
+.sg .seg button.on { background: var(--grad-main) }
+.sg label { font-size: 15px; color: var(--text) }
+.sg .hud { font-size: 15px; color: var(--text-dim) }
+.sg .msg { font-size: 15px; color: var(--gold) }
+.sg .stage { padding: 6px; border-radius: var(--r-lg); background: linear-gradient(135deg, #ff5da2, #7c5cff, #4fd8ff); box-shadow: var(--glow), var(--shadow) }
+.sg canvas { border-radius: 16px; background: #0d0a20 }
+.sg .card { inset: 6px; border-radius: 16px; background: rgba(13, 10, 32, .9) }
+.sg .card .big { font-size: 26px }
+.sg .card .stars { color: var(--gold); text-shadow: 0 0 14px rgba(255, 215, 108, .6) }
+.sg .ms { border-bottom: 1px solid var(--border) }
+.sg .rec { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px }
+.sg .rec-btn { background: linear-gradient(135deg, #ff4d5e, #d4122f); box-shadow: 0 4px 14px rgba(255, 60, 80, .5); font-size: 17px; padding: 8px 26px }
+.sg .rec-btn.live { background: #fff; color: #b0102a; box-shadow: 0 0 0 3px #ff4d5e }
+.sg .mini { color: var(--text-dim); font-size: 14px; min-height: 32px }
+.sg .mini.play { color: var(--text); font-size: 15px }
+.sg .mini.danger { color: #ff8fc0 }
+.sg input[type=text], .sg input:not([type]), .sg input[type=number], .sg textarea { background: rgba(0, 0, 0, .35); color: var(--text); border: 1px solid var(--border); font-size: 15px; min-height: 36px }
+.sg textarea { font-size: 13px }
+@media (prefers-reduced-motion: reduce) { .sg .chip.big, .sg .chip.big:hover { transform: none; transition: none } }

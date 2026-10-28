@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Celebration } from '../features/celebrate/Celebration'
 import './layout.css'
 
-export type TabDef = { id: string; icon: string; label: string; dev?: boolean; node: ReactNode }
+export type TabDef = { id: string; icon: string; label: string; dev?: boolean; badge?: string | number; node: ReactNode }
 
 const KEY = 'koog.tab'
 function loadTab(): string {
@@ -72,6 +73,7 @@ export function AppShell({ header, top, tabs }: { header: ReactNode; top: ReactN
             >
               <span className="ks-tab-ic" aria-hidden="true">{t.icon}</span>
               <span className="ks-tab-lb">{t.label}</span>
+              {t.badge != null && t.badge !== 0 && <span className="ks-tab-badge" aria-label={`${t.badge} earned`}>{t.badge}</span>}
             </button>
           ))}
         </div>
@@ -90,6 +92,7 @@ export function AppShell({ header, top, tabs }: { header: ReactNode; top: ReactN
           </div>
         ))}
       </main>
+      <Celebration />
     </div>
   )
 }

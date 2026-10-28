@@ -15,11 +15,11 @@
 .viz-canvas { display: block; width: 100%; height: 100%; }
 .viz-bar { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .viz-bar button {
-  background: rgba(255, 255, 255, 0.08); color: #e8e8ec; border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 13px;
+  background: rgba(28, 20, 58, 0.72); color: #f4f2ff; border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; font-size: 14px; font-weight: 700; backdrop-filter: blur(8px);
 }
 .viz-bar button:hover { background: rgba(255, 255, 255, 0.16); }
-.viz-bar button.on { background: #e8e8ec; color: #15161a; }
+.viz-bar button.on { background: linear-gradient(135deg, #7c5cff, #ff5da2); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(124, 92, 255, 0.45); }
 .viz-hint { position: absolute; left: 14px; bottom: 12px; font-size: 13px; color: rgba(232, 232, 236, 0.6); pointer-events: none; }
 
 .viz-bar button.fire.on { background: linear-gradient(#ff9d2e, #e8431a); color: #fff; box-shadow: 0 0 12px #ff7a1a; }

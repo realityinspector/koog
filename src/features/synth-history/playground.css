@@ -25,3 +25,24 @@
 .sp-black { position: absolute; top: 0; width: 4.4%; height: 62%; background: #111; border-radius: 0 0 5px 5px; z-index: 2; }
 .sp-black.sp-down { background: #e8761a; }
 .sp-hint { margin: 0; opacity: .7; font-size: .85rem; }
+
+/* ---- Round 3: synth front panel ---- */
+.sp-root { color: #fbf1da; font-size: 15px }
+.sp-power { min-height: 56px; box-shadow: 0 4px 0 #8a3f08, 0 0 20px rgba(255, 150, 40, .5) }
+.sp-scope { border-color: #2c6b40; box-shadow: 0 0 18px rgba(77, 255, 143, .25), inset 0 0 20px rgba(0, 0, 0, .6) }
+.sp-listen { font-size: 15px; min-height: 40px }
+.sp-panel { background: linear-gradient(180deg, #34353d, #1d1e24); border: 3px solid #5b5d68; border-radius: 18px; padding: 16px; gap: 16px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .12), 0 10px 30px rgba(0, 0, 0, .5); position: relative }
+.sp-panel::before, .sp-panel::after { content: ""; position: absolute; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #bbb, #444); }
+.sp-panel::before { left: 8px } .sp-panel::after { right: 8px }
+.sp-group { background: linear-gradient(180deg, #2a2118, #3d2a18); border: 1px solid #7a5530; border-radius: 12px; padding: 14px 14px 12px; box-shadow: inset 0 0 14px rgba(0, 0, 0, .45) }
+.sp-group h4 { font-size: 15px; font-weight: 900; letter-spacing: .16em; color: #ffc65d; border-bottom: 2px solid #ffb347; padding-bottom: 6px; text-transform: uppercase }
+.sp-tip { font-size: 14px; line-height: 1.45; opacity: 1; color: #f0e2c4 }
+.sp-wave { min-height: 40px; padding: 6px 14px; font-size: 15px; color: #fbf1da }
+.sp-lab { font-size: 15px; font-weight: 600 }
+.sp-lab b { color: #5dff9a; font-size: 15px }
+.sp-knob { gap: 4px; padding: 2px 0 }
+.sp-knob input { -webkit-appearance: none; appearance: none; height: 12px; border-radius: 8px; background: linear-gradient(90deg, #ffb347, #ff5da2, #7c5cff); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6); padding: 0; margin: 8px 0; cursor: pointer }
+.sp-knob input::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--cyan) 55%, #1a7fa8); border: 2px solid #0b2535; box-shadow: 0 0 12px var(--cyan), 0 3px 6px rgba(0, 0, 0, .6) }
+.sp-knob input::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--cyan) 55%, #1a7fa8); border: 2px solid #0b2535; box-shadow: 0 0 12px var(--cyan) }
+.sp-knob input::-moz-range-track { height: 12px; border-radius: 8px; background: linear-gradient(90deg, #ffb347, #ff5da2, #7c5cff) }
+.sp-hint { font-size: 15px; opacity: 1; color: var(--text-dim) }

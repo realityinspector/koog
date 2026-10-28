@@ -15,6 +15,7 @@
 .ks-tab:hover { background: rgba(255,255,255,0.15); }
 .ks-tab:focus-visible, .ks-idea:focus-visible { outline: 3px solid var(--ks-cyan); outline-offset: 2px; }
 .ks-tab.on { background: linear-gradient(135deg, var(--ks-violet), var(--ks-pink)); border-color: transparent; color: #fff; box-shadow: 0 4px 16px rgba(124,92,255,0.5); transform: translateY(-1px); }
+.ks-tab-badge { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: #ffd76c; color: #2a1d00; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
 .ks-tab-ic { font-size: 22px; }
 .ks-main { max-width: 1100px; margin: 0 auto; padding: 16px; }
 .ks-panel[hidden] { display: none; }

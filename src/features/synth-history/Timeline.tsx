@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { EVENTS, QUIZ } from './timelineData'
 
+const era = (y: number) => (y < 1960 ? 'era-early' : y < 1970 ? 'era-60' : y < 1980 ? 'era-70' : 'era-80')
+
 export function Timeline() {
   const [open, setOpen] = useState<number | null>(null)
   const [answers, setAnswers] = useState<Record<number, 'a' | 'b'>>({})
@@ -15,7 +17,7 @@ export function Timeline() {
           <button
             key={i}
             role="listitem"
-            className={'sh-card' + (open === i ? ' open' : '')}
+            className={'sh-card ' + era(e.sort) + (open === i ? ' open' : '')}
             onClick={() => setOpen(open === i ? null : i)}
             aria-expanded={open === i}
           >

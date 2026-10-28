@@ -210,4 +210,11 @@ export const entries: Entry[] = [
     title: '✨ A design system',
     body: 'Every panel was built by a different AI helper, so they all looked a bit different. Real apps fix that with a "design system": one shared set of colours, corner roundness, shadows and button styles that every screen uses. Change the purple in ONE place and the whole app updates. The challenges are now colourful cards, earned badges get a rainbow border, the streak counter pops like a game score, and the Beat Machine has chunky drum pads.',
   },
+  {
+    id: 29,
+    time: 'Late morning',
+    stage: 'ship',
+    title: '🎉 Confetti + colour-coded songs',
+    body: 'Earn a badge or beat your best score and confetti rains down. Game designers call this "juice": little rewards that make doing something feel good. The Challenges tab now shows how many badges you have. Songs got colour codes, pink for Koog Originals and fire-orange for Bangers, because your brain finds colours faster than words. The synth timeline is colour-coded by decade too.',
+  },
 ]

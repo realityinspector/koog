@@ -28,3 +28,36 @@
 .sh-opt:disabled{cursor:default}
 .sh-score{color:#ffcc4d;font-weight:600;margin:4px 0 0}
 .sh-reset{background:#2c2d36;color:#cfcfda;border:0;border-radius:999px;padding:2px 10px;cursor:pointer;margin-left:6px}
+
+/* ---- Round 3: Koog look ---- */
+.sh { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--sp-4) var(--sp-5); color: var(--text) }
+.sh h2 { font-size: 1.5rem; font-weight: 900; text-transform: none; letter-spacing: 0; color: var(--text) }
+.sh-tab { min-height: 40px; padding: 8px 18px; font-size: 15px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text) }
+.sh-tab.on { background: var(--grad-main); border-color: transparent }
+.sh-hint { font-size: 15px; opacity: 1; color: var(--text-dim) }
+.sh-rail { gap: 14px; padding-top: 26px }
+.sh-rail::before { height: 4px; border-radius: 4px; background: linear-gradient(90deg, #ffd76c, #ff7a1a, #a06cff, #4fd8ff); opacity: .8 }
+.sh-card { flex-basis: 180px; min-height: 130px; border-radius: var(--r-md); padding: 14px 16px; gap: 6px; color: #fff; border: 1px solid var(--border); --era: #ffd76c; background: linear-gradient(160deg, rgba(255, 215, 108, .28), rgba(90, 60, 20, .5)), #1e1608 }
+.sh-card.open { flex-basis: 340px; border-color: var(--era); box-shadow: 0 0 22px color-mix(in srgb, var(--era) 50%, transparent) }
+.sh-card:hover { border-color: var(--era) }
+.sh-card.era-60 { --era: #ff9a3c; background: linear-gradient(160deg, rgba(255, 130, 30, .4), rgba(90, 30, 5, .55)), #231005 }
+.sh-card.era-70 { --era: #b99cff; background: linear-gradient(160deg, rgba(160, 108, 255, .42), rgba(40, 14, 90, .6)), #170c35 }
+.sh-card.era-80 { --era: #4fd8ff; background: linear-gradient(160deg, rgba(79, 216, 255, .3), rgba(10, 30, 70, .6)), #081a2e; box-shadow: 0 0 14px rgba(79, 216, 255, .25) }
+.sh-dot { background: var(--era); box-shadow: 0 0 10px var(--era), 0 0 0 3px #1a1233; width: 14px; height: 14px; top: -17px }
+.sh-year { color: var(--era); font-size: 15px; letter-spacing: .5px }
+.sh-emoji { font-size: 2rem }
+.sh-card h3 { font-size: 17px; line-height: 1.25 }
+.sh-body { font-size: 16px; line-height: 1.6; opacity: 1; color: #fff }
+.sh-try { font-size: 15px; line-height: 1.55; background: rgba(0, 0, 0, .4); color: var(--gold); border-radius: var(--r-sm); padding: 10px 12px }
+.sh-quiz { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px }
+.sh-quiz h3 { font-size: 1.3rem; font-weight: 900 }
+.sh-q { gap: 12px; margin-bottom: 12px }
+.sh-q small { opacity: 1; color: var(--text-dim); font-size: 15px }
+.sh-opt { min-height: 48px; padding: 10px 22px; font-size: 16px; font-weight: 700; border-radius: var(--r-md); background: var(--surface-3); border: 2px solid var(--border); color: var(--text); box-shadow: 0 4px 0 rgba(0, 0, 0, .35); transition: transform .1s }
+.sh-opt:hover:not(:disabled) { border-color: var(--cyan); transform: translateY(-1px) }
+.sh-opt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .35) }
+.sh-opt.right { background: #1a7a4c; border-color: var(--mint) }
+.sh-opt.wrong { background: #8a2540; border-color: #ff8fa8 }
+.sh-score { font-size: 17px; color: var(--gold) }
+.sh-reset { min-height: 36px; padding: 6px 16px; font-size: 15px; font-weight: 700; background: var(--surface-3); color: var(--text) }
+@media (prefers-reduced-motion: reduce) { .sh-opt, .sh-opt:hover:not(:disabled), .sh-opt:active:not(:disabled) { transform: none } }

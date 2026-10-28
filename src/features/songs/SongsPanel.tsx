@@ -6,6 +6,7 @@ import { SONGS, TIER_LABEL, type Song, type Tier } from './songs'
 import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
 import { pload, psave } from '../../profile/profile'
+import { celebrate } from '../celebrate/celebrate'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -128,6 +129,7 @@ export function SongsPanel() {
     const prev = b[k]
     const isBest = !prev || game.score > prev.score
     if (isBest) { b[k] = { score: game.score, acc }; saveBest(b); setBests(b) }
+    if (isBest && prev) celebrate({ kind: 'best', title: 'New personal best: ' + song.title, emoji: '⭐' })
     setResult({ score: game.score, acc, stars, hits: game.hits, total, best: isBest && !!prev })
     setPhase('done')
   }, [song])
@@ -271,7 +273,7 @@ export function SongsPanel() {
       {song ? (
         <>
           <div className="bar">
-            <button className="ghost" onClick={() => { setSongId(null) }}>All songs</button>
+            <button className="ghost btn-ghost" onClick={() => { setSongId(null) }}>All songs</button>
             <b>{song.title}</b>
             <span className="sub" style={{ margin: 0 }}>{song.origin}, {song.year} · {keyName(song.key)} · {song.bpm} bpm</span>
           </div>
@@ -287,8 +289,8 @@ export function SongsPanel() {
               </label>
             )}
             <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Note names</label>
-            <button className="ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
-            <button className="go" onClick={start}>{phase === 'playing' ? 'Restart' : 'Play'}</button>
+            <button className="ghost btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
+            <button className="go btn" onClick={start}>{phase === 'playing' ? 'Restart' : 'Play'}</button>
           </div>
           <div className="stage">
             <canvas ref={canvasRef} style={{ height: CH + KH }} />
@@ -299,8 +301,8 @@ export function SongsPanel() {
                 <div>Score <b>{result.score}</b> · Accuracy <b>{Math.round(result.acc * 100)}%</b></div>
                 <div style={{ color: '#ffc65d' }}>{result.best ? 'New personal best!' : curBest ? `Personal best: ${curBest.score}` : 'First score on the board.'}</div>
                 <div className="bar">
-                  <button className="go" onClick={start}>Again</button>
-                  <button className="ghost" onClick={() => setSongId(null)}>Pick another</button>
+                  <button className="go btn" onClick={start}>Again</button>
+                  <button className="ghost btn-ghost" onClick={() => setSongId(null)}>Pick another</button>
                 </div>
               </div>
             )}
@@ -317,10 +319,10 @@ export function SongsPanel() {
         <>
           <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
           {(['pop', 'bang'] as Tier[]).map((tr) => (<div key={tr}>
-          <div className="tier">{TIER_LABEL[tr]}</div>
+          <div className={"tier t-" + tr}>{TIER_LABEL[tr]}</div>
           <div className="chips">
             {SONGS.filter((s) => s.tier === tr).map((s) => (
-              <button key={s.id} className="chip big" onClick={() => setSongId(s.id)}>
+              <button key={s.id} className={"chip big t-" + tr} onClick={() => setSongId(s.id)}>
                 <b>{s.title}</b>{bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : null}
                 <span className="hk">{s.hook}</span>
               </button>
@@ -331,10 +333,10 @@ export function SongsPanel() {
             <summary className="tier" style={{ cursor: 'pointer' }}>Warm-up and classics</summary>
             {tiers.filter((t) => t !== 'bang' && t !== 'pop').map((t) => (
               <div key={t}>
-                <div className="tier">{TIER_LABEL[t]}</div>
+                <div className={"tier t-" + t}>{TIER_LABEL[t]}</div>
                 <div className="chips">
                   {SONGS.filter((s) => s.tier === t).map((s) => (
-                    <button key={s.id} className="chip" onClick={() => setSongId(s.id)}>
+                    <button key={s.id} className={"chip big t-" + t} onClick={() => setSongId(s.id)}>
                       {s.title}{bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : null}
                     </button>
                   ))}
