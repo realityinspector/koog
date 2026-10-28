@@ -45,6 +45,8 @@ export function SynthPlayground() {
     setParams({ ...synth.params })
   }, [synth])
 
+  useEffect(() => synth.onParams?.(() => setParams({ ...synth.params })), [synth])
+
   const turnOn = async () => { await synth.unlock(); setReady(synth.ready) }
 
   const press = useCallback((n: number, vel = 100) => { synth.noteOn(n, vel); setDown(d => new Set(d).add(n)) }, [synth])

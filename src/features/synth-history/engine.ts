@@ -11,7 +11,7 @@ interface Voice {
   note: number; oscs: OscillatorNode[]; f1: BiquadFilterNode; f2: BiquadFilterNode; cut: ConstantSourceNode; vca: GainNode
   t: number; released: boolean; timer: number; vel: number
 }
-interface Shared { ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams }
+interface Shared { ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void> }
 
 const hot = import.meta.hot
 const S: Shared = hot ? (hot.data.synth ??= { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }) : { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }
@@ -37,6 +37,7 @@ function sanitize(p: SynthParams): SynthParams {
   }
 }
 S.params = sanitize(S.params)
+S.subs ??= new Set()
 
 const applyLevel = () => {
   if (!S.ctx || !S.master) return
@@ -114,6 +115,7 @@ const synth: SynthEngine = {
   setParams(p) {
     S.params = sanitize({ ...S.params, ...p })
     applyLevel()
+    for (const fn of [...S.subs!]) { try { fn(S.params) } catch { /* listener error: ignore */ } }
     const c = S.ctx; if (!c) return
     const t = c.currentTime
     for (const v of S.voices) {
@@ -131,6 +133,7 @@ const synth: SynthEngine = {
     applyLevel()
   },
   analyser: () => S.analyser ?? null,
+  onParams(fn) { S.subs!.add(fn); return () => { S.subs!.delete(fn) } },
   noteOn(note, velocity) {
     const c = S.ctx
     if (!c || !S.master || c.state !== 'running' || note < 0 || note > 127) return

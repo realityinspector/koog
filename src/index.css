@@ -56,3 +56,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .btn:hover, .btn-ghost:hover { transform: none; }
 }
+
+/* ---- Instrument shell ---- */
+html, body { margin: 0; }
+body { min-height: 100dvh; }
+@media (min-width: 1024px) and (min-height: 640px) { html, body, #root { height: 100dvh; overflow: hidden; } }
+/* panels inside instrument screens should not nest cards in cards */
+.kg-screen:not([data-id='dev']) .kg-screen-body > section { background: none; border: 0; box-shadow: none; margin: 0; }

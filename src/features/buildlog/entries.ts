@@ -217,4 +217,11 @@ export const entries: Entry[] = [
     title: '🎉 Confetti + colour-coded songs',
     body: 'Earn a badge or beat your best score and confetti rains down. Game designers call this "juice": little rewards that make doing something feel good. The Challenges tab now shows how many badges you have. Songs got colour codes, pink for Koog Originals and fire-orange for Bangers, because your brain finds colours faster than words. The synth timeline is colour-coded by decade too.',
   },
+  {
+    id: 30,
+    time: 'Noon',
+    stage: 'ship',
+    title: '🎛️ Koog is now an instrument',
+    body: 'Big redesign. Koog stopped being a long web page and became ONE instrument, like a real synthesizer: a big display, a rail of glowing mode buttons, and a keybed at the bottom, with wooden side panels like classic Moog synths. Designers call this a "skeuomorphic" design (great spelling-bee word): it borrows the look of a real-world object so you instantly know how to use it. The Patch Lab moved INTO the display. Open 🎛️ Patch and change the waveform, and the sparks change shape: sine = soft orbs, square = pixels, sawtooth = shards. Close the filter and everything goes dark and muffled. You\'re seeing the sound.',
+  },
 ]

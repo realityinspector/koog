@@ -37,3 +37,14 @@
 .pf-who-card { position: fixed; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100vw - 32px)); max-height: 90vh; overflow: auto; box-sizing: border-box; background: rgba(28, 20, 60, 0.96); border-radius: 22px; padding: 22px 24px; box-shadow: 0 0 0 100vmax rgba(10, 5, 30, 0.6), 0 20px 60px rgba(0,0,0,0.5); }
 .pf-who-card h2 { font-size: 28px; text-transform: none; letter-spacing: 0; }
 @media (max-width: 640px) { .pf-tag { display: none; } }
+
+/* Top-strip presentation (instrument) */
+.kg-strip .pf-bar { flex-wrap: nowrap; gap: 8px; margin: 0; font-size: 12px; justify-content: flex-start; }
+.kg-strip .pf-who { gap: 8px; padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, .35); box-shadow: inset 0 1px 4px rgba(0, 0, 0, .6); white-space: nowrap; }
+.kg-strip .pf-who b { color: var(--gold); }
+.kg-strip .pf-link { color: #b9b0ff; font-size: 11px; }
+.kg-strip .pf-mode { margin-left: auto; }
+.kg-strip .pf-mode button { border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; letter-spacing: .06em; background: linear-gradient(180deg, #2c2748, #1b1832); border: 1px solid rgba(255, 255, 255, .14); color: #e0dcf7; }
+.kg-strip .pf-dad { border: 0; padding: 0; }
+.kg-strip .pf-tag { color: #ffc98f; font-size: 11px; }
+@media (max-width: 700px) { .kg-strip .pf-link { display: none; } }

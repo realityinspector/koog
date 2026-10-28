@@ -23,3 +23,4 @@
 .viz-hint { position: absolute; left: 14px; bottom: 12px; font-size: 13px; color: rgba(232, 232, 236, 0.6); pointer-events: none; }
 
 .viz-bar button.fire.on { background: linear-gradient(#ff9d2e, #e8431a); color: #fff; box-shadow: 0 0 12px #ff7a1a; }
+.viz-bar { z-index: 6 }

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
 import { createEngine, THEMES, type Engine, type Mode, type Theme } from './engine'
+import { getSynth } from '../synth-history/engine'
+import { PatchDrawer } from './PatchDrawer'
 import './visualizer.css'
 
 // Computer-keyboard fallback so it works even before MIDI is allowed.
@@ -35,6 +37,9 @@ export function Visualizer() {
   const [octave, setOctave] = useState(0)
   const [emoji, setEmoji] = useState(false)
   const [theme, setTheme] = useState<Theme>('rainbow')
+  const [patchOpen, setPatchOpen] = useState(() => {
+    try { return localStorage.getItem('koog.viz.patch') === '1' } catch { return false }
+  })
   const connected = useAppStore((s) => s.midiConnected)
 
   useEffect(() => {
@@ -43,9 +48,13 @@ export function Visualizer() {
     eng.setMode(mode)
     eng.setEmoji(emoji)
     eng.setTheme(theme)
+    const synth = getSynth()
+    eng.setPatch(synth.params)
+    const offParams = synth.onParams?.((p) => eng.setPatch(p))
     const unsub = onNote((n) => (n.on ? eng.noteOn(n.note, n.velocity) : eng.noteOff(n.note)))
     return () => {
       unsub()
+      offParams?.()
       eng.destroy()
     }
     // createEngine is a dep on purpose: when engine.ts is edited, HMR gives a new
@@ -59,6 +68,9 @@ export function Visualizer() {
   }, [mode])
   useEffect(() => engine.current?.setEmoji(emoji), [emoji])
   useEffect(() => engine.current?.setTheme(theme), [theme])
+  useEffect(() => {
+    try { localStorage.setItem('koog.viz.patch', patchOpen ? '1' : '0') } catch { /* ignore */ }
+  }, [patchOpen])
   const nextTheme = () => setTheme((t) => THEMES[(THEMES.findIndex((x) => x.id === t) + 1) % THEMES.length].id)
 
   useEffect(() => {
@@ -105,8 +117,10 @@ export function Visualizer() {
         ))}
         <button className={emoji ? 'on' : ''} onClick={() => setEmoji((e) => !e)}>Emoji 😜</button>
         <button onClick={nextTheme} title="Change background">{THEMES.find((x) => x.id === theme)?.label}</button>
+        <button className={patchOpen ? 'on' : ''} onClick={() => setPatchOpen((o) => !o)} aria-expanded={patchOpen}>🎛️ Patch</button>
         <button onClick={fullscreen}>Fullscreen</button>
       </div>
+      {patchOpen && <PatchDrawer onClose={() => setPatchOpen(false)} />}
       <div className="viz-hint">
         {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: A W S E D F T G Y H U J K (Z / X change octave)'}
       </div>

@@ -3,6 +3,7 @@
 
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { inKey, pc, type Key } from '../../music/theory'
+import { DEFAULT_PARAMS, type SynthParams } from '../synth-history/params'
 
 export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire'
 
@@ -30,6 +31,8 @@ export interface Engine {
   setMode(mode: Mode): void
   setEmoji(on: boolean): void
   setTheme(theme: Theme): void
+  /** the synth patch drives the look: wave=shape, cutoff=brightness, resonance=halo, attack/release=bloom/linger, detune=ghost, glide=streaks */
+  setPatch(p: SynthParams): void
   destroy(): void
 }
 
@@ -37,13 +40,14 @@ const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // Hue walks the circle of fifths, so notes that sound good together get related colours.
 const hueFor = (note: number) => (((note % 12) * 7) % 12) * 30
 
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean }
+interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean; nb?: boolean }
 type Kind = 'tonic' | 'in' | 'spicy'
 interface Rocket { x: number; y: number; vy: number; ty: number; hue: number }
 interface Bloom { x: number; y: number; r: number; life: number; max: number; hue: number; n: number }
 interface Ring { x: number; y: number; r: number; vr: number; life: number; max: number; hue: number; width: number; sat?: number; wob?: number }
 interface Bar { note: number; x: number; top: number; bottom: number; hue: number; held: boolean; width: number; alpha: number; kind?: Kind }
 interface Label { text: string; x: number; y: number; life: number; hue: number }
+interface Streak { x1: number; y1: number; x2: number; y2: number; life: number; max: number; hue: number }
 interface Held { x: number; y: number; hue: number; velocity: number; kind?: Kind }
 
 const MAX_PARTICLES = 1100
@@ -80,6 +84,52 @@ function dot(hue: number, dull: boolean) {
     g.fillRect(0, 0, DOT, DOT)
     dots.set(id, c)
   }
+  return c
+}
+
+// Patch-driven particle sprites: shape per synth wave, softness per filter cutoff.
+// shape 0 sine (round glow), 1 triangle, 2 square, 3 sawtooth (shards). level 0 muffled, 1 normal, 2 crisp.
+const pdots = new Map<number, HTMLCanvasElement>()
+function pdot(shape: number, level: number, hue: number, dull: boolean) {
+  if (shape === 0 && level === 1) return dot(hue, dull)
+  const hb = ((Math.round(hue / 15) % 24) + 24) % 24
+  const id = ((shape * 3 + level) * 24 + hb) * 2 + (dull ? 1 : 0)
+  let c = pdots.get(id)
+  if (c) return c
+  c = document.createElement('canvas')
+  c.width = c.height = DOT
+  const g = c.getContext('2d')!
+  const h = hb * 15, sat = dull ? 14 : 95, m = DOT / 2
+  const lit = (dull ? 60 : 70) + (level === 2 ? 14 : level === 0 ? -8 : 0)
+  const grad = g.createRadialGradient(m, m, 0, m, m, m)
+  const a0 = level === 0 ? 0.7 : 1
+  grad.addColorStop(0, `hsla(${h},${sat}%,${dull ? 60 : 88}%,${a0})`)
+  grad.addColorStop(level === 2 ? 0.22 : 0.35, `hsla(${h},${sat}%,${dull ? 45 : 65}%,${level === 0 ? 0.5 : 0.8})`)
+  grad.addColorStop(1, `hsla(${h},${sat}%,50%,0)`)
+  g.fillStyle = grad
+  g.globalAlpha = shape === 0 ? 1 : level === 0 ? 0.55 : 0.4
+  g.fillRect(0, 0, DOT, DOT)
+  g.globalAlpha = 1
+  if (shape > 0) {
+    g.shadowColor = `hsla(${h},${sat}%,65%,1)`
+    g.shadowBlur = level === 0 ? 7 : level === 2 ? 1 : 4
+    g.fillStyle = `hsla(${h},${sat}%,${lit}%,${level === 0 ? 0.75 : 1})`
+    g.beginPath()
+    const R = level === 0 ? 11 : 9
+    if (shape === 1) { g.moveTo(m, m - R); g.lineTo(m + R * 0.95, m + R * 0.7); g.lineTo(m - R * 0.95, m + R * 0.7); g.closePath() }
+    else if (shape === 2) g.rect(m - R * 0.7, m - R * 0.7, R * 1.4, R * 1.4)
+    else {
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 - Math.PI / 2, rr = i % 2 ? 2.2 : 13
+        const x = m + Math.cos(a) * rr, y = m + Math.sin(a) * rr
+        i ? g.lineTo(x, y) : g.moveTo(x, y)
+      }
+      g.closePath()
+    }
+    g.fill()
+  }
+  if (pdots.size > 600) pdots.clear()
+  pdots.set(id, c)
   return c
 }
 
@@ -174,7 +224,36 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     if (pc(note) === k.tonic) return 'tonic'
     return inKey(note, k) ? 'in' : 'spicy'
   }
-  const pushP = (p: Particle) => { if (particles.length < MAX_PARTICLES * quality) particles.push(p) }
+  // ---- Synth patch -> look. Defaults (DEFAULT_PARAMS) leave every factor neutral. ----
+  let shape = 0, level = 1, sizeMul = 1, alphaMul = 1, patched = false
+  let halo = 0, atkFrames = 0, linger = 1, ghost = 0, ghostDir = 1, glideAmt = 0
+  const streaks: Streak[] = []
+  let lastPos: { x: number; y: number; t: number } | null = null
+  function setPatch(p: SynthParams) {
+    const d = DEFAULT_PARAMS
+    const isDef = p.wave === d.wave && p.detune === d.detune && p.cutoff === d.cutoff && p.resonance === d.resonance && p.attack === d.attack && p.release === d.release && p.glide === d.glide
+    // Untouched default patch keeps the classic soft glow. Once she starts patching,
+    // sawtooth shows as shards and stays that way (no flip-flopping as other knobs move).
+    if (!isDef) patched = true
+    shape = p.wave === 'sine' ? 0 : p.wave === 'triangle' ? 1 : p.wave === 'square' ? 2 : patched ? 3 : 0
+    const k = Math.max(-1, Math.min(1, Math.log2(Math.max(40, p.cutoff) / d.cutoff) / 3))
+    level = k < -0.3 ? 0 : k > 0.3 ? 2 : 1
+    sizeMul = 1 + Math.max(0, -k) * 0.6
+    alphaMul = 1 + k * 0.3
+    halo = Math.max(0, Math.min(1, (p.resonance - 6) / 14))
+    atkFrames = Math.min(72, Math.max(0, p.attack - d.attack) * 60)
+    linger = Math.max(0.6, Math.min(2.2, 1 + 0.5 * Math.log2(Math.max(0.01, p.release) / d.release)))
+    const dt = Math.abs(p.detune) - 7
+    ghost = dt > 1 ? Math.min(1, dt / 40) : 0
+    ghostDir = p.detune < 0 ? -1 : 1
+    glideAmt = p.glide > 0.02 ? Math.min(1, p.glide / 0.3) : 0
+  }
+  const pushP = (p: Particle) => {
+    if (particles.length >= MAX_PARTICLES * quality) return
+    if (linger !== 1) p.max = Math.round(p.max * linger)
+    if (atkFrames > 1 && !p.nb) p.max += atkFrames
+    particles.push(p)
+  }
   function burst(x: number, y: number, hue: number, n: number, speed: number, extra: Partial<Particle> = {}) {
     n = Math.round(n * calm * quality)
     for (let i = 0; i < n; i++) {
@@ -382,6 +461,22 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue })
     if (labels.length > 24) labels.shift()
     emojiFor(note, v, kind)
+    patchFx(note, kind, hue, v)
+  }
+
+  // Resonance halo + glide streak, on top of whatever the mode drew.
+  function patchFx(note: number, kind: Kind, hue: number, v: number) {
+    const pos = held.get(note) ?? { x: xFor(note), y: h - 20 }
+    const fireSoft = mode === 'fire' ? 0.5 : 1
+    if (halo > 0.1 && !reduced && rings.length < 60 * quality) {
+      rings.push({ x: pos.x, y: pos.y, r: 4, vr: 2 + v * 2, life: 0, max: 40 + halo * 40, hue: kind === 'tonic' ? 45 : hue + 25, width: (2 + halo * 4) * fireSoft })
+      if (halo > 0.5 && mode !== 'fire') rings.push({ x: pos.x, y: pos.y, r: -8, vr: 2 + v * 2, life: 0, max: 60 + halo * 30, hue: hue - 25, width: 1.5 + halo * 2 })
+    }
+    const now = performance.now()
+    if (glideAmt > 0 && lastPos && now - lastPos.t < 1500 && streaks.length < 8 && lastPos.x !== pos.x) {
+      streaks.push({ x1: lastPos.x, y1: lastPos.y, x2: pos.x, y2: pos.y, life: 0, max: (25 + glideAmt * 60) * (reduced ? 0.6 : 1) * fireSoft, hue })
+    }
+    lastPos = { x: pos.x, y: pos.y, t: now }
   }
 
   function spawnEmoji(x: number, y: number, set: string[], n: number, v: number) {
@@ -493,7 +588,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       const r = rockets[i]
       r.y += r.vy
       r.vy *= 0.985
-      pushP({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: 25, size: 2, hue: r.hue, tw: 1 })
+      pushP({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: 25, size: 2, hue: r.hue, tw: 1, nb: true })
       ctx.fillStyle = `hsl(${r.hue},100%,85%)`
       ctx.beginPath()
       ctx.arc(r.x, r.y, 3, 0, Math.PI * 2)
@@ -600,14 +695,36 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       if (t <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue }
       if (p.wob) p.x += Math.sin(p.life * 0.5 + i) * 0.6
       const tw = p.tw !== undefined ? 0.55 + 0.45 * Math.sin(p.life * 0.35 + p.tw) : 1
-      if (p.trail && quality > 0.7 && p.life % 3 === 0 && particles.length < MAX_PARTICLES * 0.8 * quality) pushP({ x: p.x, y: p.y, vx: 0, vy: 0.2, life: 0, max: 18, size: p.size * 0.6, hue: p.hue + 20, tw: p.tw })
+      if (p.trail && quality > 0.7 && p.life % 3 === 0 && particles.length < MAX_PARTICLES * 0.8 * quality) pushP({ x: p.x, y: p.y, vx: 0, vy: 0.2, life: 0, max: 18, size: p.size * 0.6, hue: p.hue + 20, tw: p.tw, nb: true })
       const dull = p.sat !== undefined
-      const r = 2.2 * p.size * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6)
-      ctx.globalAlpha = dull ? t * 0.8 : t * tw
-      ctx.drawImage(dot(p.hue, dull), p.x - r, p.y - r, r * 2, r * 2)
+      const grow = atkFrames > 1 && !p.nb && p.life < atkFrames ? p.life / atkFrames : 1
+      const r = 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
+      const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow)
+      ctx.globalAlpha = al
+      const spr = pdot(shape, level, p.hue, dull)
+      ctx.drawImage(spr, p.x - r, p.y - r, r * 2, r * 2)
+      if (ghost > 0 && quality > 0.6 && !p.nb) {
+        const off = (2 + ghost * 7) * ghostDir
+        ctx.globalAlpha = al * 0.45
+        ctx.drawImage(spr, p.x - r + off, p.y - r - off * 0.4, r * 2, r * 2)
+      }
     }
     ctx.globalAlpha = 1
     drawFire(now)
+
+    ctx.lineCap = 'round'
+    for (let i = streaks.length - 1; i >= 0; i--) {
+      const s = streaks[i]
+      const t = 1 - ++s.life / s.max
+      if (t <= 0) { streaks.splice(i, 1); continue }
+      ctx.strokeStyle = `hsla(${s.hue},95%,72%,${t * 0.55})`
+      ctx.lineWidth = 2 + t * 5
+      ctx.beginPath()
+      ctx.moveTo(s.x1, s.y1)
+      ctx.lineTo(s.x1 + (s.x2 - s.x1) * Math.min(1, (1 - t) * 4 + 0.15), s.y1 + (s.y2 - s.y1) * Math.min(1, (1 - t) * 4 + 0.15))
+      ctx.stroke()
+    }
+    ctx.lineCap = 'butt'
 
     for (let i = rings.length - 1; i >= 0; i--) {
       const r = rings[i]
@@ -699,6 +816,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       theme = t
       bgGrad = null
     },
+    setPatch,
     setEmoji(on) {
       emojiOn = on
       if (!on) emojis.length = 0

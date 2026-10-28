@@ -1,0 +1,42 @@
+.pd { position: absolute; top: 0; right: 0; bottom: 0; width: min(340px, 92%); z-index: 5; overflow-y: auto; padding: 104px 12px 14px;
+  background: rgba(14, 9, 34, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-left: 1px solid var(--border, rgba(255,255,255,.16));
+  color: var(--text, #f4f2ff); animation: pd-in .22s ease-out; box-sizing: border-box; }
+@keyframes pd-in { from { transform: translateX(100%); opacity: 0 } to { transform: none; opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .pd { animation: none } }
+.pd-head { position: absolute; top: 62px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 17px }
+.pd-x { display: none; background: rgba(255,255,255,.1); color: inherit; border: 1px solid var(--border, rgba(255,255,255,.16)); border-radius: 999px; width: 40px; height: 40px; cursor: pointer; font-size: 16px }
+.pd-sub { margin: 0 0 8px; font-size: 13px; color: var(--text-dim, #c9c4e6) }
+.pd h4 { margin: 14px 0 6px; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; color: var(--text-dim, #c9c4e6) }
+.pd-svg { width: 100%; height: auto; background: radial-gradient(circle at 50% 40%, #1a1438, #08060f); border: 1px solid #4a3f7a; border-radius: 10px; user-select: none; -webkit-user-select: none }
+.pd-mod { cursor: pointer }
+.pd-mod rect { fill: #272046; stroke: #5b4d9a; stroke-width: 1.5 }
+.pd-mod:hover rect, .pd-mod.sel rect { stroke: #4fd8ff }
+.pd-mod .pd-bar { stroke: none }
+.pd-mod text { fill: #f4f2ff; font-size: 13px; font-weight: 800; text-anchor: middle; pointer-events: none }
+.pd-acable { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: round; opacity: .55; stroke-dasharray: 2 6; animation: pd-flow 1.2s linear infinite }
+.pd-acable.faint { opacity: .15; animation: none }
+@keyframes pd-flow { to { stroke-dashoffset: -16 } }
+@media (prefers-reduced-motion: reduce) { .pd-acable { animation: none } }
+.pd-mcable { fill: none; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 5 4; opacity: .9 }
+.pd-cable { fill: none; stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 4px currentColor) }
+.pd-jack { fill: #0c0a18; stroke: #c9c4e6; stroke-width: 2; cursor: pointer }
+.pd-jack:hover { stroke: #4fd8ff }
+.pd-jack.on { stroke: #ffd76c; fill: #ffd76c }
+.pd-info, .pd-msg { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.35); font-size: 13px; line-height: 1.45 }
+.pd-msg.ok { background: linear-gradient(90deg, #7c5cff, #ff5da2); font-weight: 700 }
+.pd-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap }
+.pd button.pd-pill, .pd button.pd-wave, .pd button.pd-preset { background: rgba(255,255,255,.08); color: inherit; border: 1px solid var(--border, rgba(255,255,255,.16)); border-radius: 999px; padding: 6px 12px; min-height: 36px; font-size: 13px; font-weight: 700; cursor: pointer }
+.pd button.pd-pill.on, .pd button.pd-wave.on, .pd button.pd-preset.on { background: linear-gradient(135deg, #7c5cff, #ff5da2); border-color: transparent }
+.pd-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.pd button.pd-preset { border-radius: 12px; text-align: left; padding: 6px 8px; font-size: 12px; line-height: 1.2 }
+.pd-waves { display: flex; gap: 6px; margin-bottom: 4px }
+.pd button.pd-wave { flex: 1; padding: 6px 4px }
+.pd-knob { display: block; margin-top: 8px }
+.pd-knob span { display: flex; gap: 6px; align-items: baseline; font-size: 13px; font-weight: 700 }
+.pd-knob i { font-style: normal; font-weight: 400; font-size: 11px; color: var(--text-dim, #c9c4e6) }
+.pd-knob b { margin-left: auto; font-size: 12px; color: #ffd76c }
+.pd-knob input { width: 100%; accent-color: #ff5da2; min-height: 28px }
+.pd button.pd-hear { width: 100%; margin-top: 14px; min-height: 44px; border-radius: 12px; border: 1px solid var(--border, rgba(255,255,255,.16)); background: rgba(255,255,255,.08); color: inherit; font-weight: 800; font-size: 14px; cursor: pointer }
+.pd button.pd-hear.on { background: linear-gradient(135deg, #4dd6a0, #4fd8ff); color: #08101a; border-color: transparent }
+.pd-fine { margin: 6px 0 0; font-size: 12px; color: var(--text-dim, #c9c4e6) }
+@media (max-width: 480px) { .pd-presets { grid-template-columns: 1fr } }

@@ -7,6 +7,7 @@ import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
 import { pload, psave } from '../../profile/profile'
 import { celebrate } from '../celebrate/celebrate'
+import { startBacking, stopBacking } from '../beats/engine'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -19,6 +20,14 @@ const KH = 64 // keyboard height
 const PPB = 60 // pixels per beat
 const LEAD = 2 // lead-in beats in flow mode
 const BEST_KEY = 'songs.best.v1' // saved per kid
+const BEAT_KEY = 'koog.songs.beat'
+const GROOVE_FOR: Record<string, string> = {
+  'pop-static': 'rock', 'pop-funk': 'funk', 'pop-edm': 'sprint', 'pop-lofi': 'lofi', 'pop-boss': 'rock',
+  'pop-dance': 'disco', 'pop-spooky': 'boombap', 'pop-hyper': 'sprint',
+}
+function loadBeat(): Record<string, boolean> {
+  try { const v = JSON.parse(localStorage.getItem(BEAT_KEY) ?? '{}'); return v && typeof v === 'object' ? v : {} } catch { return {} }
+}
 const hueOf = (m: number) => ((pcOf(m) * 7) % 12) * 30
 const isBlack = (m: number) => [1, 3, 6, 8, 10].includes(pcOf(m))
 
@@ -89,9 +98,23 @@ export function SongsPanel() {
   const opt = useRef({ mode, speed, names })
   opt.current = { mode, speed, names }
   const audio = useRef<AudioContext | null>(null)
+  const [beatPref, setBeatPref] = useState(loadBeat)
+  const beatOn = song ? (beatPref[song.tier] ?? song.tier === 'pop') : false
+  const setBeat = (on: boolean) => {
+    if (!song) return
+    const n = { ...beatPref, [song.tier]: on }
+    setBeatPref(n)
+    try { localStorage.setItem(BEAT_KEY, JSON.stringify(n)) } catch { /* ignore */ }
+  }
+  const beatOnRef = useRef(beatOn)
+  beatOnRef.current = beatOn
+  const beatActive = mode === 'flow' && beatOn
+  useEffect(() => { if (!beatActive) stopBacking() }, [beatActive])
+  useEffect(() => () => stopBacking(), [])
   const prevKey = useRef<ReturnType<typeof useHarmonyStore.getState>['key'] | null>(null)
 
   const stopAudio = useCallback(() => {
+    stopBacking()
     try { audio.current?.close() } catch { /* ignore */ }
     audio.current = null
   }, [])
@@ -121,6 +144,7 @@ export function SongsPanel() {
   const finish = useCallback((game: Game) => {
     if (!song) return
     game.phase = 'done'
+    stopBacking()
     const total = game.notes.length
     const acc = opt.current.mode === 'wait' ? game.firstTry / total : game.hits / total
     const stars = acc >= 0.9 ? 3 : acc >= 0.7 ? 2 : 1
@@ -142,6 +166,14 @@ export function SongsPanel() {
     if (opt.current.mode === 'flow') game.cursor = -LEAD
     g.current = game
     stopAudio(); setResult(null); setPhase('playing'); setUi({ score: 0, combo: 0, hits: 0, msg: '' })
+    if (opt.current.mode === 'flow' && beatOnRef.current) {
+      // beat 0 of the song = startMs + LEAD beats at the effective tempo (same clock as the falling notes)
+      const eff = opt.current.speed * song.bpm
+      const beatMs = 60000 / eff
+      const lastN = game.notes[game.notes.length - 1]
+      startBacking({ bpm: eff, grooveId: GROOVE_FOR[song.id] ?? 'pop', startAtMs: game.startMs, leadBeats: LEAD,
+        endAtMs: game.startMs + (LEAD + lastN.start + lastN.beats + 1) * beatMs })
+    }
   }, [song, stopAudio])
 
   const listen = useCallback(() => {
@@ -287,6 +319,9 @@ export function SongsPanel() {
                 <input type="range" min={50} max={100} step={5} value={Math.round(speed * 100)} disabled={phase === 'playing'}
                   onChange={(e) => setSpeed(+e.target.value / 100)} /> {Math.round(speed * 100)}%
               </label>
+            )}
+            {mode === 'flow' && (
+              <button className={'btn-ghost' + (beatOn ? ' on' : '')} aria-pressed={beatOn} onClick={() => setBeat(!beatOn)}>🥁 Backing beat: {beatOn ? 'on' : 'off'}</button>
             )}
             <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Note names</label>
             <button className="ghost btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>

@@ -43,4 +43,6 @@ export interface SynthEngine {
   unlock(): Promise<void>
   /** latest output samples for a scope, or null */
   analyser(): AnalyserNode | null
+  /** subscribe to param changes; returns unsubscribe */
+  onParams?(fn: (p: SynthParams) => void): () => void
 }

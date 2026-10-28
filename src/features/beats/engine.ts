@@ -270,12 +270,94 @@ export function setGain(v: number) {
 export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on; emit() }
 export function setPent(on: boolean) { S.pent = on; if (S.playing) applyKey(); S.recent = []; emit() }
 
+// ---- backing drums for Songs Flow mode (own AudioContext, reuses the drum voices above) ----
+export const BACKING_GAIN_SCALE = 0.6
+interface Backing {
+  ctx: AudioContext; master: GainNode; noise: AudioBuffer; timer: ReturnType<typeof setTimeout> | null
+  groove: Groove; startAtMs: number; stepMs: number; leadSteps: number; endAtMs: number; k: number
+}
+const hotB = hot?.data as { backing?: Backing | null } | undefined
+let B: Backing | null = hotB?.backing ?? null
+const saveB = () => { if (hotB) hotB.backing = B }
+
+function backingTick(b: Backing) {
+  if (B !== b) return
+  const nowMs = performance.now()
+  if (nowMs > b.endAtMs) { stopBacking(); return }
+  const toCtx = (ms: number) => b.ctx.currentTime + (ms - nowMs) / 1000
+  const g = b.groove
+  // temporarily point the shared voices at the backing context (synchronous, restored in finally)
+  const sv = { ctx: S.ctx, master: S.master, noise: S.noise }
+  S.ctx = b.ctx; S.master = b.master; S.noise = b.noise
+  try {
+    for (;;) {
+      const i = (8 + b.k) % 16 // song beat 0 (k = leadSteps) lands on pattern step 8+8 = 0
+      const swing = i % 2 ? g.swing * b.stepMs : 0
+      const ms = b.startAtMs + b.k * b.stepMs + swing
+      if (ms > nowMs + LOOKAHEAD * 1000) break
+      const t = toCtx(ms)
+      if (t >= b.ctx.currentTime) {
+        const v = 0.85 + Math.random() * 0.15
+        if (b.k < b.leadSteps) {
+          if (b.k % 4 === 0) hat(t, 1, false) // count-in: hat on each lead-in beat
+        } else {
+          if (hit(g.kick, i)) kick(t, v)
+          if (hit(g.snare, i)) snare(t, v)
+          if (hit(g.clap, i)) clap(t, v)
+          if (hit(g.hat, i)) hat(t, g.hat[i] === 'o' ? 0.8 : i % 4 === 0 ? 1 : 0.6 * v, g.hat[i] === 'o')
+        }
+      }
+      b.k++
+    }
+  } finally { S.ctx = sv.ctx; S.master = sv.master; S.noise = sv.noise }
+  b.timer = setTimeout(() => backingTick(b), TICK_MS)
+}
+
+/** Start a drum groove locked to a performance.now() timeline. Call from a user gesture.
+ *  startAtMs = performance.now() time of the count-in's first beat; bpm = effective bpm;
+ *  song beat 0 = startAtMs + leadBeats beats. endAtMs auto-stops as a safety net. */
+export function startBacking(o: { bpm: number; grooveId: string; startAtMs: number; leadBeats: number; endAtMs: number; volume?: number }) {
+  stopBacking()
+  try {
+    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    const ctx = new Ctor()
+    void ctx.resume().catch(() => {})
+    const comp = ctx.createDynamicsCompressor()
+    comp.threshold.value = -18; comp.knee.value = 10; comp.ratio.value = 12
+    comp.attack.value = 0.003; comp.release.value = 0.15
+    const master = ctx.createGain()
+    master.gain.value = Math.min(o.volume ?? DEFAULT_GAIN * BACKING_GAIN_SCALE, MAX_GAIN * BACKING_GAIN_SCALE)
+    master.connect(comp).connect(ctx.destination)
+    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    const groove = GROOVES.find((x) => x.id === o.grooveId) ?? GROOVES.find((x) => x.id === 'rock') ?? GROOVES[0]
+    const b: Backing = { ctx, master, noise: buf, timer: null, groove, startAtMs: o.startAtMs,
+      stepMs: 60000 / o.bpm / 4, leadSteps: Math.round(o.leadBeats * 4), endAtMs: o.endAtMs, k: 0 }
+    B = b; saveB()
+    backingTick(b)
+  } catch { B = null; saveB() }
+}
+
+export function stopBacking() {
+  const b = B
+  B = null; saveB()
+  if (!b) return
+  if (b.timer) clearTimeout(b.timer)
+  try {
+    b.master.gain.cancelScheduledValues(b.ctx.currentTime)
+    b.master.gain.setTargetAtTime(0, b.ctx.currentTime, 0.01)
+  } catch { /* ignore */ }
+  setTimeout(() => { try { b.master.disconnect() } catch { /* ignore */ } void b.ctx.close().catch(() => {}) }, 120)
+}
+export const isBackingOn = () => B !== null
+
 // ---- lifecycle ----
 const onHide = () => stop()
 ;(hot?.data.beatsOffHide as (() => void) | undefined)?.()
 window.addEventListener('pagehide', onHide)
 if (hot) {
   hot.data.beatsOffHide = () => window.removeEventListener('pagehide', onHide)
-  hot.dispose(() => { stop(); window.removeEventListener('pagehide', onHide) })
+  hot.dispose(() => { stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
   hot.accept()
 }

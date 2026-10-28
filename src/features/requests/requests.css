@@ -22,3 +22,6 @@
 .rq-toast button { border: 0; border-radius: 999px; padding: 5px 14px; font-weight: 700; color: #fff; background: linear-gradient(90deg, #7c5cff, #ff5da2); cursor: pointer; }
 @keyframes rq-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .rq-toast { animation: none; } }
+
+/* keep toasts above the rail + keybed */
+.rq-toasts { bottom: calc(var(--kg-key-h, 100px) + var(--kg-rail-h, 80px) + 40px); }

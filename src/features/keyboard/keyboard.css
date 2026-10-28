@@ -1,0 +1,27 @@
+.kb { padding: var(--sp-3) var(--sp-4); }
+.kb-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 44px; }
+.kb-chord { font-size: 32px; font-weight: 800; background: var(--grad-rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0; transition: opacity .35s; }
+.kb-chord.on { opacity: 1; }
+.kb-toggle { font-size: 13px; color: var(--text-dim); cursor: pointer; white-space: nowrap; }
+.kb-toggle input { width: auto; margin-right: 4px; }
+.kb-strip { position: relative; height: 120px; user-select: none; touch-action: none; border-radius: var(--r-sm); }
+.kb-key { position: absolute; top: 0; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; transition: transform .08s, background .12s, box-shadow .12s; transform-origin: top; }
+.kb-key.white { height: 100%; background: #f4f2ff; border: 1px solid #8a84b0; border-radius: 0 0 6px 6px; color: #3a3560; z-index: 1; padding-bottom: 4px; }
+.kb-key.black { height: 62%; background: #1b1633; border: 1px solid #000; border-radius: 0 0 4px 4px; z-index: 2; }
+.kb-key.held { transform: translateY(2px); background: hsl(var(--h) 90% 62%); box-shadow: 0 0 18px hsl(var(--h) 95% 60% / .8); }
+.kb-key.spicy { background: #ffb06c; box-shadow: 0 0 14px rgba(255, 150, 80, .6); }
+.kb-key.held.spicy { background: hsl(var(--h) 90% 62%); }
+.kb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); opacity: .85; margin-bottom: 2px; }
+.kb-key.black .kb-dot { margin-bottom: 6px; }
+.kb-home { font-size: 14px; line-height: 1; }
+.kb-label { font-size: 11px; font-weight: 700; pointer-events: none; }
+.kb-key > * { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .kb-key { box-shadow: none !important; } .kb-key.held { box-shadow: none !important; } }
+
+/* keybed look: ivory keys with a soft felt shadow, ebony blacks with a sheen */
+.kg-keybed .kb-key.white { background: linear-gradient(180deg, #f7f4ff 0%, #ebe7fb 85%, #d9d3f2 100%); border-color: #5d5780; box-shadow: inset 0 -4px 6px rgba(80, 70, 130, .18); }
+.kg-keybed .kb-key.black { background: linear-gradient(180deg, #2a2447 0%, #0f0b22 70%, #1d1838 100%); box-shadow: 0 3px 5px rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .08); }
+.kg-keybed .kb-key.held { background: hsl(var(--h) 90% 62%); }
+.kg-keybed .kb-key.held.white, .kg-keybed .kb-key.held.black { background: hsl(var(--h) 90% 62%); }
+.kg-keybed .kb-key.spicy { background: #ffb06c; }
+.kg-keybed .kb-key.held.spicy { background: hsl(var(--h) 90% 62%); }
