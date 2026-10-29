@@ -14,7 +14,7 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 
 | Mode | |
 |---|---|
-| **PLAY** | The visualizer fills the display: fireworks, ripples, rising bars or 🔥 fire. In-key notes burst gold and out-of-key notes go "spicy". Smart readouts show the detected key, chord, in-key % and streak. |
+| **PLAY** | The visualizer fills the display: fireworks, ripples, rising bars, 🔥 fire, 👻 ghosts, 💌 mail (each note's letter pops out of an envelope), 🎉 confetti or 🧟 zombies. New scenes plug in through a small interface in `src/features/visualizer/scenes.ts`. In-key notes burst gold and out-of-key notes go "spicy". Smart readouts show the detected key, chord, in-key % and streak. |
 | **🎛️ Patch** (inside PLAY) | A Moog-style patch on the display: VCO → VCF → VCA, with ENV and a cable-patching game. The patch drives the visuals: the waveform sets particle shape, filter cutoff sets brightness, resonance adds halos, and release sets the trails. You can also play your keyboard through the synth. |
 | **🤖 Smart Band** (inside PLAY) | Turn it on and play a melody. It guesses the chord your notes fit, follows your tempo, and plays pad, bass and light drums along with you. It uses a small readable rule set in `src/features/smartband/harmonizer.ts`, not a black box. |
 | **🧩 Patch Quests** (in the Patch drawer) | Guided synth-patching lessons, such as "make it dark", "make it scream" and "slide like a theremin". Each one tells you what to watch in the visuals as the sound changes. |

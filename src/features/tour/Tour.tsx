@@ -23,6 +23,9 @@ export function Tour() {
   const [i, setI] = useState(0)
   const [rect, setRect] = useState<R | null>(null)
   const [cardH, setCardH] = useState(180)
+  // the strip isn't in the DOM yet during the first render, so find it after mount
+  const [strip, setStrip] = useState<Element | null>(null)
+  useEffect(() => setStrip(document.querySelector('.kg-strip')), [])
   const card = useRef<HTMLDivElement>(null)
   const guest = isGuest(active)
 
@@ -77,7 +80,6 @@ export function Tour() {
     <button className="tour-replay" onClick={() => { setI(0); setOpen(true) }} hidden={open} title="Replay the tour" aria-label="Replay the tour">❓</button>
   )
   // Lives in the instrument's top strip, next to 💡 Idea (falls back to floating if the strip isn't there).
-  const strip = document.querySelector('.kg-strip')
   const replay = strip ? createPortal(btn, strip) : btn
   if (!open) return replay
 

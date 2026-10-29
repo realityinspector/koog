@@ -252,4 +252,11 @@ export const entries: Entry[] = [
     title: '〰️ LFO cables + a welcome tour',
     body: 'Real modular-synth patching! An LFO is a "Low Frequency Oscillator": a wave too slow to hear as a note, so instead it WIGGLES another knob for you. In 🎛️ Patch, click the LFO jack, then plug it into pitch (vibrato, the wobbly opera voice), the filter (wah-wah, the classic wobble bass) or volume (tremolo, the helicopter chop). The visuals wobble in time too. Two new quests: Wobble Bass and Opera Singer. Also new: a 5-step tour for each new player (hi, robot and thenerd 👋). Replay it any time with ❓ at the top.',
   },
+  {
+    id: 35,
+    time: 'Morning',
+    stage: 'ship',
+    title: '💌🎉🧟 Mail, Confetti and Zombies (requests #17 and #18)',
+    body: 'Three new settings in VISUAL, built by three AI helpers at the same time. 💌 Mail: every note mails an envelope that pops open with that note\'s LETTER, so you learn the note names while you play (out-of-key notes come back "Return to sender"). 🎉 Confetti: every note is a confetti cannon, and the confetti piles up on the floor. 🧟 Zombies: goofy zombies climb out of a graveyard, groan the note name ("C… brains…"), lose their heads on spicy notes, and all dance when you play a chord. The engineering trick: before building them, we wrote a "plug-in" contract, a short list of things every scene must be able to do (start a note, stop a note, draw). Each helper built against that contract, so the three scenes snapped in without anyone touching the same file. Big apps like games and browsers use plug-ins the same way.',
+  },
 ]

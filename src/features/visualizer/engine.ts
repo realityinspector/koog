@@ -7,8 +7,12 @@ import { DEFAULT_PARAMS, type SynthParams } from '../synth-history/params'
 import { createGhosts } from './ghosts'
 import { createSparkles } from './sparkle'
 import { drawNebula } from './galaxy'
+import type { Scene } from './scenes'
+import { createConfetti } from './confetti'
+import { createMail } from './mail'
+import { createZombies } from './zombies'
 
-export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost'
+export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost' | 'mail' | 'confetti' | 'zombie'
 
 // Background themes (request #7: "brighter and more fun"). Colours drift slowly, never flash.
 export type Theme = 'rainbow' | 'candy' | 'ocean' | 'sunset' | 'night' | 'galaxy'
@@ -221,6 +225,10 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   const calm = reduced ? 0.5 : 1
   const ghosts = createGhosts(reduced)
   const sparkles = createSparkles(reduced)
+  // plug-in scenes (requests #17, #18): each one owns its own drawing; see scenes.ts
+  const scenes: Partial<Record<Mode, Scene>> = { mail: createMail(reduced), confetti: createConfetti(reduced), zombie: createZombies(reduced) }
+  const sceneList = Object.values(scenes) as Scene[]
+  let lastSceneChord = 0
   let streak = 0
   let quality = 1 // 0.35..1, drops automatically when frames get slow
   let lastFrame = performance.now()
@@ -393,6 +401,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     fireFloor = null
     ghosts.resize(w, h)
     sparkles.resize(w, h)
+    for (const sc of sceneList) sc.resize(w, h)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = '#0b0b16'
     ctx.fillRect(0, 0, w, h)
@@ -471,13 +480,20 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     } else if (mode === 'ghost') {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       ghosts.noteOn(note, x, v, kind)
+    } else if (scenes[mode]) {
+      const sc = scenes[mode]!
+      held.set(note, { x, y: h - 60, hue, velocity: v, kind })
+      sc.noteOn(note, x, v, kind, hue, NAMES[note % 12])
+      const t = performance.now()
+      const hv = [...held.values()]
+      if (hv.length >= 3 && t - lastSceneChord > 600 && hv.every((q) => q.kind !== 'spicy')) { lastSceneChord = t; sc.chord?.(hv.map((q) => q.x)) }
     } else {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5 })
     }
-    labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue })
+    if (mode !== 'mail' && mode !== 'zombie') labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue })
     if (labels.length > 24) labels.shift()
-    if (sparkleOn && mode !== 'ghost') sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
+    if (sparkleOn && mode !== 'ghost' && !scenes[mode]?.ownBackdrop) sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
     emojiFor(note, v, kind)
     patchFx(note, kind, hue, v)
   }
@@ -522,6 +538,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     const was = held.get(note)
     held.delete(note)
     ghosts.noteOff(note)
+    for (const sc of sceneList) sc.noteOff(note)
     if (was && mode === 'fire') {
       // release: a few embers drift up and a puff of smoke
       for (let i = 0; i < Math.round(5 * calm * quality); i++) spark(was.x + (rnd() - 0.5) * 20, h - 30, palFor(was.kind), true)
@@ -544,7 +561,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       drift = (drift + speed * (reduced ? 0.3 : 1)) % 360
       // rebuild the gradient every few frames (cheap) as the hue drifts
       if (!bgGrad || ++bgFrame % 6 === 0) {
-        const a = mode === 'rise' ? 0.38 : 0.2
+        const a = mode === 'rise' ? 0.38 : scenes[mode] ? 0.6 : 0.2
         const off = drift + tint
         bgGrad = ctx.createLinearGradient(0, 0, w * 0.3, h)
         bgGrad.addColorStop(0, `hsla(${h1 + off},${sat}%,${l1}%,${a})`)
@@ -552,6 +569,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
         bgGrad.addColorStop(1, `hsla(${h2 + off},${sat}%,${l2}%,${a})`)
       }
       if (mode === 'ghost') ghosts.drawBackdrop(ctx, now)
+      else if (scenes[mode]?.ownBackdrop) scenes[mode]!.drawBackdrop?.(ctx, now)
       else {
         ctx.fillStyle = bgGrad
         ctx.fillRect(0, 0, w, h)
@@ -577,7 +595,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       ctx.drawImage(dot(m.hue, false), m.x - r, m.y - r, r * 2, r * 2)
     }
     ctx.globalAlpha = 1
-    if (mode === 'ghost') sparkles.draw(ctx, now, quality, false, 0.55)
+    if (mode === 'ghost' || scenes[mode]?.ownBackdrop) sparkles.draw(ctx, now, quality, false, 0.55)
     else if (sparkleOn) sparkles.draw(ctx, now, quality, true, 1)
 
     // key backdrop: faint glowing lanes where the safe notes live
@@ -626,7 +644,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
 
     // held notes: soft glow + constellation lines between everything being held (chords!)
-    const hs = mode === 'fire' || mode === 'ghost' ? [] : [...held.values()]
+    const hs = mode === 'fire' || mode === 'ghost' || scenes[mode] ? [] : [...held.values()]
     if (mode === 'fire') emitFire()
     if (hs.length > 1) {
       ctx.lineWidth = 1.5
@@ -746,6 +764,13 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       ghosts.draw(ctx, now, quality)
       ctx.globalCompositeOperation = 'lighter'
     }
+    const scene = scenes[mode]
+    if (scene) {
+      ctx.globalCompositeOperation = 'source-over'
+      scene.draw(ctx, now, quality)
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.globalAlpha = 1
+    }
 
     ctx.lineCap = 'round'
     for (let i = streaks.length - 1; i >= 0; i--) {
@@ -846,6 +871,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       mode = m
       held.clear()
       ghosts.clear()
+      for (const sc of sceneList) sc.clear()
       for (const b of bars) b.held = false
     },
     setSparkle(on) {

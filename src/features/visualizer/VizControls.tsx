@@ -8,6 +8,9 @@ export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'rise', icon: '📊', label: 'Rising bars' },
   { id: 'fire', icon: '🔥', label: 'Fire' },
   { id: 'ghost', icon: '👻', label: 'Ghosts' },
+  { id: 'mail', icon: '💌', label: 'Mail' },
+  { id: 'confetti', icon: '🎉', label: 'Confetti' },
+  { id: 'zombie', icon: '🧟', label: 'Zombies' },
 ]
 
 const SWATCH: Record<Theme, string> = {
