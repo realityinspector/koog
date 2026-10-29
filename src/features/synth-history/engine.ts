@@ -1,17 +1,20 @@
 // Moog-style subtractive synth engine. SAFETY: master hard cap 0.15, limiter, Q clamp, stuck-note guard.
-import { DEFAULT_PARAMS, type SynthEngine, type SynthParams, type Wave } from './params'
+import { DEFAULT_PARAMS, type LfoShape, type LfoTarget, type SynthEngine, type SynthParams, type Wave } from './params'
 
 export const MASTER_CAP = 0.15
 export const MAX_VOICES = 8
 export const MAX_Q = 20 // biquad Q is in dB: 20 dB = ~10x peak
 const STUCK_MS = 8000
 const WAVES: Wave[] = ['sawtooth', 'square', 'triangle', 'sine']
+const LFO_SHAPES: LfoShape[] = ['sine', 'triangle', 'square']
+const LFO_TARGETS: LfoTarget[] = ['none', 'pitch', 'filter', 'amp']
 
 interface Voice {
-  note: number; oscs: OscillatorNode[]; f1: BiquadFilterNode; f2: BiquadFilterNode; cut: ConstantSourceNode; vca: GainNode
+  note: number; oscs: OscillatorNode[]; f1: BiquadFilterNode; f2: BiquadFilterNode; cut: ConstantSourceNode; vca: GainNode; trem?: GainNode
   t: number; released: boolean; timer: number; vel: number
 }
-interface Shared { ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void> }
+interface Lfo { osc: OscillatorNode; pitchG: GainNode; filtG: GainNode; ampG: GainNode }
+interface Shared { lfo?: Lfo; ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void> }
 
 const hot = import.meta.hot
 const S: Shared = hot ? (hot.data.synth ??= { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }) : { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }
@@ -34,6 +37,10 @@ function sanitize(p: SynthParams): SynthParams {
     release: clamp(p.release, 0.01, 4),
     glide: clamp(p.glide, 0, 0.5),
     level: clamp(p.level, 0, 1),
+    lfoRate: clamp(p.lfoRate ?? DEFAULT_PARAMS.lfoRate, 0.1, 12),
+    lfoShape: LFO_SHAPES.includes(p.lfoShape) ? p.lfoShape : 'sine',
+    lfoDepth: clamp(p.lfoDepth ?? 0, 0, 1),
+    lfoTarget: LFO_TARGETS.includes(p.lfoTarget) ? p.lfoTarget : 'none',
   }
 }
 S.params = sanitize(S.params)
@@ -42,6 +49,32 @@ S.subs ??= new Set()
 const applyLevel = () => {
   if (!S.ctx || !S.master) return
   S.master.gain.setTargetAtTime(MASTER_CAP * S.params.level, S.ctx.currentTime, 0.02)
+}
+
+/** One shared LFO feeding three depth-scaled gains. Gains are 0 unless their target is patched. */
+function ensureLfo() {
+  const c = S.ctx
+  if (!c || S.lfo) return
+  const osc = c.createOscillator(); osc.frequency.value = S.params.lfoRate
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 30 // softens square edges: no clicks
+  const pitchG = c.createGain(), filtG = c.createGain(), ampG = c.createGain()
+  pitchG.gain.value = 0; filtG.gain.value = 0; ampG.gain.value = 0
+  osc.connect(lp); lp.connect(pitchG); lp.connect(filtG); lp.connect(ampG)
+  osc.start()
+  S.lfo = { osc, pitchG, filtG, ampG }
+  applyLfo()
+}
+
+function applyLfo() {
+  const c = S.ctx, l = S.lfo
+  if (!c || !l) return
+  const p = S.params, t = c.currentTime, on = p.lfoTarget
+  l.osc.type = p.lfoShape
+  l.osc.frequency.setTargetAtTime(p.lfoRate, t, 0.03)
+  l.pitchG.gain.setTargetAtTime(on === 'pitch' ? 50 * p.lfoDepth : 0, t, 0.03) // cents
+  l.filtG.gain.setTargetAtTime(on === 'filter' ? p.cutoff * 0.8 * p.lfoDepth : 0, t, 0.03) // Hz
+  l.ampG.gain.setTargetAtTime(on === 'amp' ? 0.25 * p.lfoDepth : 0, t, 0.03)
+  for (const v of S.voices) if (v.trem) v.trem.gain.setTargetAtTime(on === 'amp' ? 1 - 0.25 * p.lfoDepth : 1, t, 0.03)
 }
 
 function release(v: Voice, fast = false) {
@@ -60,6 +93,11 @@ function release(v: Voice, fast = false) {
   window.setTimeout(() => {
     S.voices = S.voices.filter(x => x !== v)
     try { v.vca.disconnect() } catch { /* noop */ }
+    try { v.trem?.disconnect() } catch { /* noop */ }
+    const l = S.lfo
+    if (l) for (const o of v.oscs) { try { l.pitchG.disconnect(o.detune) } catch { /* noop */ } }
+    if (l) for (const f of [v.f1, v.f2]) { try { l.filtG.disconnect(f.frequency) } catch { /* noop */ } }
+    try { l?.ampG.disconnect(v.trem!.gain) } catch { /* noop */ }
   }, (r + 0.15) * 1000)
 }
 
@@ -102,9 +140,13 @@ function makeVoice(note: number, vel: number): Voice {
   const cut = c.createConstantSource(); cut.offset.value = p.cutoff
   cut.connect(f1.frequency); cut.connect(f2.frequency); cut.start(t)
   const vca = c.createGain(); vca.gain.value = 0
-  o1.connect(m); o2.connect(m); m.connect(f1); f1.connect(f2); f2.connect(vca); vca.connect(S.master!)
+  ensureLfo()
+  const trem = c.createGain(); trem.gain.value = p.lfoTarget === 'amp' ? 1 - 0.25 * p.lfoDepth : 1 // can only reduce level
+  o1.connect(m); o2.connect(m); m.connect(f1); f1.connect(f2); f2.connect(vca); vca.connect(trem); trem.connect(S.master!)
+  const l = S.lfo
+  if (l) { l.pitchG.connect(o1.detune); l.pitchG.connect(o2.detune); l.filtG.connect(f1.frequency); l.filtG.connect(f2.frequency); l.ampG.connect(trem.gain) }
   o1.start(t); o2.start(t)
-  const v: Voice = { note, oscs: [o1, o2], f1, f2, cut, vca, t: performance.now(), released: false, timer: 0, vel }
+  const v: Voice = { note, oscs: [o1, o2], f1, f2, cut, vca, trem, t: performance.now(), released: false, timer: 0, vel }
   v.timer = window.setTimeout(() => release(v), STUCK_MS)
   return v
 }
@@ -115,6 +157,7 @@ const synth: SynthEngine = {
   setParams(p) {
     S.params = sanitize({ ...S.params, ...p })
     applyLevel()
+    applyLfo()
     for (const fn of [...S.subs!]) { try { fn(S.params) } catch { /* listener error: ignore */ } }
     const c = S.ctx; if (!c) return
     const t = c.currentTime

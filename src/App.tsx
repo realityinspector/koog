@@ -16,6 +16,7 @@ import { Instrument, type ModeDef } from './layout/Instrument'
 import { ProfileBar, ProfileManager, WhoIsPlaying } from './profile/ProfileBar'
 import { useChallengeStore } from './features/challenges/store'
 import { useProfile } from './profile/profile'
+import { Tour } from './features/tour/Tour'
 
 export function App() {
   const mode = useProfile((s) => s.mode)
@@ -41,6 +42,7 @@ export function App() {
     <>
       <Instrument strip={<ProfileBar />} idea={<RequestBar />} display={<Visualizer />} overlay={<SmartReadout />} keybed={<PianoStrip />} modes={modes} />
       <WhoIsPlaying />
+      <Tour />
     </>
   )
 }

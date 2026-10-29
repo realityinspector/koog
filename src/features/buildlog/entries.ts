@@ -245,4 +245,11 @@ export const entries: Entry[] = [
     title: '🔊 On-screen keys make sound now',
     body: 'Bug report from the boss: clicking the keys on the screen didn\'t make any sound. They lit up the visuals, but nothing came out of the speakers. Now they play through the Koog synth, so whatever you set in 🎛️ Patch is what you hear. While fixing it we found a sneaky second bug: the on-screen keys and the computer keyboard each counted their notes "-1, -2, -3…" separately. When two notes got the same number, the app thought it had already seen the second one and ignored it. The fix is one shared counter. Engineers call this an "ID collision", and it\'s a classic.',
   },
+  {
+    id: 34,
+    time: 'Evening',
+    stage: 'ship',
+    title: '〰️ LFO cables + a welcome tour',
+    body: 'Real modular-synth patching! An LFO is a "Low Frequency Oscillator": a wave too slow to hear as a note, so instead it WIGGLES another knob for you. In 🎛️ Patch, click the LFO jack, then plug it into pitch (vibrato, the wobbly opera voice), the filter (wah-wah, the classic wobble bass) or volume (tremolo, the helicopter chop). The visuals wobble in time too. Two new quests: Wobble Bass and Opera Singer. Also new: a 5-step tour for each new player (hi, robot and thenerd 👋). Replay it any time with ❓ at the top.',
+  },
 ]

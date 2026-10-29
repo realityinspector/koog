@@ -71,6 +71,22 @@ export const QUESTS: Quest[] = [
     check: (p) => p.wave === 'sine' && p.cutoff >= 600 && p.cutoff <= 3000,
   },
   {
+    id: 'wobble', emoji: '🌊', name: 'Wobble Bass',
+    goal: 'Patch the LFO to the filter (VCF). Rate 2 to 6 Hz, depth over 50%, cutoff under 1200 Hz.',
+    hint: 'In the Sound tab, click the LFO jack, then the jack on top of VCF. Then use the LFO knobs. The LFO opens and closes the filter over and over: wah-wah!',
+    watch: 'Watch the sparks gently pulse bright and dim in time with the wobble.',
+    cheer: 'WUB WUB! That slow filter wobble is the heart of dubstep and funk bass.',
+    check: (p) => p.lfoTarget === 'filter' && p.lfoRate >= 2 && p.lfoRate <= 6 && p.lfoDepth > 0.5 && p.cutoff < 1200,
+  },
+  {
+    id: 'opera', emoji: '🎭', name: 'Opera Singer',
+    goal: 'Patch the LFO to the pitch (VCO). Rate 4.5 to 7 Hz, depth 20% to 60%.',
+    hint: 'Real singers wobble their pitch about 5 or 6 times a second. That is vibrato! Click the LFO jack, then the jack on top of VCO.',
+    watch: 'Watch the sparks shimmer a little from side to side.',
+    cheer: 'Bravo! A touch of vibrato makes a plain buzz sound like a person singing.',
+    check: (p) => p.lfoTarget === 'pitch' && p.lfoRate >= 4.5 && p.lfoRate <= 7 && p.lfoDepth >= 0.2 && p.lfoDepth <= 0.6,
+  },
+  {
     id: 'boss', emoji: '👑', name: 'Boss level: your own sound',
     goal: 'Build any sound you like, give it a name, then press the button.',
     hint: 'Mix everything you learned: wave shape, filter, envelope, detune, glide. There is no wrong answer.',

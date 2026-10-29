@@ -3,7 +3,7 @@ import { onNote } from '../../music/notes'
 import { isLocalNote } from '../../music/localNotes'
 import { getSynth } from '../synth-history/engine'
 import { PRESETS } from '../synth-history/presets'
-import type { SynthParams, Wave } from '../synth-history/params'
+import type { LfoShape, LfoTarget, SynthParams, Wave } from '../synth-history/params'
 import { QuestsPanel } from './QuestsPanel'
 import './patchdrawer.css'
 
@@ -26,9 +26,15 @@ const topPt = (id: Id, dx: number) => ({ x: byId(id).x + W * dx, y: byId(id).y }
 const botPt = (id: Id) => ({ x: byId(id).x + W / 2, y: byId(id).y + H })
 type P = { x: number; y: number }
 const vcable = (a: P, b: P) => `M${a.x},${a.y} C${a.x},${a.y + 26} ${b.x},${b.y - 26} ${b.x},${b.y}`
+// LFO patch points: one input jack on top of each module the LFO can wiggle
+const LFO_JACKS: { t: Exclude<LfoTarget, 'none'>; to: Id; dx: number; label: string; says: string }[] = [
+  { t: 'pitch', to: 'VCO', dx: 0.35, label: 'pitch', says: 'vibrato, the wobbly singer voice' },
+  { t: 'filter', to: 'VCF', dx: 0.3, label: 'cutoff', says: 'wah-wah, the classic dubstep / funk wobble' },
+  { t: 'amp', to: 'VCA', dx: 0.2, label: 'volume', says: 'tremolo, the helicopter chop' },
+]
+const LFO_COLOR = '#4dc3ff'
+const SHAPES: { s: LfoShape; label: string }[] = [{ s: 'sine', label: 'Sine' }, { s: 'triangle', label: 'Tri' }, { s: 'square', label: 'Square' }]
 const MODCABLES: { from: Id; to: Id; dx: number; color: string }[] = [
-  { from: 'LFO', to: 'VCO', dx: 0.35, color: '#4dc3ff' },
-  { from: 'LFO', to: 'VCF', dx: 0.35, color: '#4dc3ff' },
   { from: 'ENV', to: 'VCF', dx: 0.75, color: '#ff9f43' },
   { from: 'ENV', to: 'VCA', dx: 0.5, color: '#ff9f43' },
 ]
@@ -47,6 +53,7 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<'sound' | 'quests'>('sound')
   const [game, setGame] = useState(false)
   const [from, setFrom] = useState<Id | null>(null)
+  const [armed, setArmed] = useState(false)
   const [links, setLinks] = useState<string[]>([])
   const [msg, setMsg] = useState('Click an output jack, then the input jack it flows into.')
 
@@ -86,6 +93,17 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
   }
   const resetGame = () => { setLinks([]); setFrom(null); setMsg('Reset! Click an output jack, then an input jack.') }
 
+  const lfoT = params.lfoTarget ?? 'none'
+  const lfoJack = LFO_JACKS.find((j) => j.t === lfoT)
+  const unpatch = () => { set({ lfoTarget: 'none' }); setArmed(false) }
+  const clickLfoOut = () => { if (lfoT !== 'none') unpatch(); else setArmed((a) => !a) }
+  const clickLfoIn = (t: Exclude<LfoTarget, 'none'>) => {
+    if (lfoT === t) { unpatch(); return }
+    if (!armed && lfoT === 'none') return
+    set({ lfoTarget: t, ...((params.lfoDepth ?? 0) < 0.05 ? { lfoDepth: 0.5 } : {}) })
+    setArmed(false)
+  }
+
   const stop = (e: React.SyntheticEvent) => e.stopPropagation()
 
   return (
@@ -106,6 +124,16 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
         {MODCABLES.map((c) => (
           <path key={c.from + c.to} className="pd-mcable" stroke={c.color} d={vcable(botPt(c.from), topPt(c.to, c.dx))} />
         ))}
+        {lfoJack && (() => {
+          const a = botPt('LFO'), b = topPt(lfoJack.to, lfoJack.dx)
+          const path = vcable(a, b)
+          return (
+            <g className="pd-lfo-patch" onClick={unpatch}>
+              <path className="pd-lfocable" d={path} />
+              <path d={path} className="pd-lfohit"><title>Click to unplug</title></path>
+            </g>
+          )
+        })()}
         {AUDIO.slice(0, 3).map((id, i) => {
           const a = outPt(id), b = inPt(AUDIO[i + 1])
           return <path key={id} className={'pd-acable' + (game ? ' faint' : '')} d={`M${a.x},${a.y} L${b.x},${b.y}`} />
@@ -122,6 +150,13 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
             <text x={m.x + W / 2} y={m.y + 25}>{m.label}</text>
           </g>
         ))}
+        <g>
+          <circle className={'pd-jack lfo' + (armed || lfoT !== 'none' ? ' on' : '')} cx={botPt('LFO').x} cy={botPt('LFO').y} r={6} role="button" aria-label="LFO output jack" onClick={clickLfoOut}><title>LFO out</title></circle>
+          {LFO_JACKS.map((j) => {
+            const pt = topPt(j.to, j.dx)
+            return <circle key={j.t} className={'pd-jack lfo' + (armed ? ' ready' : '') + (lfoT === j.t ? ' on' : '')} cx={pt.x} cy={pt.y} r={6} role="button" aria-label={`LFO to ${j.label}`} onClick={() => clickLfoIn(j.t)}><title>{j.label}</title></circle>
+          })}
+        </g>
         {game && AUDIO.map((id) => (
           <g key={id}>
             {id !== 'OUT' && <circle className={'pd-jack' + (from === id ? ' on' : '')} cx={outPt(id).x} cy={outPt(id).y} r={7} onClick={() => clickJack('out', id)} />}
@@ -173,6 +208,22 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
         <input type="range" min={-50} max={50} step={1} value={params.detune} onPointerUp={blur} onChange={(e) => set({ detune: Number(e.target.value) })} /></label>
       <label className="pd-knob"><span>Glide <i>streaks</i><b>{params.glide.toFixed(2)} s</b></span>
         <input type="range" min={0} max={0.5} step={0.01} value={params.glide} onPointerUp={blur} onChange={(e) => set({ glide: Number(e.target.value) })} /></label>
+
+      <h4>LFO wobble</h4>
+      <div className="pd-msg pd-lfomsg" aria-live="polite">
+        {lfoJack ? <>🔌 Patched to <b>{lfoJack.label}</b>: {lfoJack.says}. Click the cable to unplug.</>
+          : armed ? 'Now click a jack on top of VCO, VCF or VCA.' : 'Click the LFO jack (under the LFO box), then a jack on top of VCO, VCF or VCA.'}
+      </div>
+      <div className="pd-waves" role="group" aria-label="LFO shape">
+        {SHAPES.map((x) => (
+          <button key={x.s} className={'pd-wave' + (params.lfoShape === x.s ? ' on' : '')} onClick={() => set({ lfoShape: x.s })}>{x.label}</button>
+        ))}
+      </div>
+      <label className="pd-knob"><span>LFO rate <i>wobble speed</i><b>{(params.lfoRate ?? 5).toFixed(1)} Hz</b></span>
+        <input type="range" min={0.1} max={12} step={0.1} value={params.lfoRate ?? 5} onPointerUp={blur} onChange={(e) => set({ lfoRate: Number(e.target.value) })} /></label>
+      <label className="pd-knob"><span>LFO depth <i>how much</i><b>{Math.round((params.lfoDepth ?? 0) * 100)}%</b></span>
+        <input type="range" min={0} max={1} step={0.01} value={params.lfoDepth ?? 0} onPointerUp={blur} onChange={(e) => set({ lfoDepth: Number(e.target.value) })} /></label>
+
 
       <button className={'pd-hear' + (hear ? ' on' : '')} aria-pressed={hear} onClick={() => void toggleHear()}>
         🔊 Hear it through the synth: {hear ? 'ON' : 'OFF'}

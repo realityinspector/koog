@@ -1,0 +1,27 @@
+.tour-spot { position: fixed; z-index: 90; border-radius: 16px; pointer-events: none; box-shadow: 0 0 0 100vmax rgba(10, 5, 30, 0.72); transition: top .25s, left .25s, width .25s, height .25s; }
+.tour-spot::after { content: ''; position: absolute; inset: -4px; border-radius: 20px; border: 2px solid var(--gold); animation: tour-pulse 1.6s ease-out infinite; }
+.tour-spot.none { box-shadow: none; background: rgba(10, 5, 30, 0.72); inset: 0; width: auto; height: auto; border-radius: 0; }
+.tour-spot.none::after { display: none; }
+.tour-block { position: fixed; inset: 0; z-index: 89; }
+.tour-card { position: fixed; z-index: 91; box-sizing: border-box; width: min(340px, calc(100vw - 24px)); background: #241a4a; color: var(--text); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-4); box-shadow: var(--shadow), var(--glow); transition: top .25s, left .25s; }
+.tour-card h3 { margin: 0 0 var(--sp-2); font-size: 1.05rem; color: var(--gold); }
+.tour-card p { margin: 0 0 var(--sp-3); font-size: .95rem; line-height: 1.4; }
+.tour-row { display: flex; align-items: center; gap: var(--sp-2); }
+.tour-dots { display: flex; gap: 6px; flex: 1; justify-content: center; }
+.tour-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-3); }
+.tour-dots i.on { background: var(--gold); }
+.tour-btn { font: inherit; font-size: .9rem; color: var(--text); background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 6px 12px; cursor: pointer; }
+.tour-btn.go { background: var(--gold); color: #1b1230; border-color: transparent; font-weight: 700; }
+.tour-btn:disabled { opacity: .45; cursor: default; }
+.tour-btn:focus-visible { outline: var(--focus); outline-offset: 2px; }
+.tour-skip { background: none; border: 0; color: var(--text-dim); text-decoration: underline; }
+.tour-replay { position: fixed; z-index: 40; left: 12px; bottom: 150px; font: inherit; font-size: .85rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 6px 12px; cursor: pointer; }
+.tour-replay:hover { background: var(--surface-3); }
+.tour-replay:focus-visible { outline: var(--focus); outline-offset: 2px; }
+@keyframes tour-pulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot, .tour-card { transition: none; }
+  .tour-spot::after { animation: none; }
+}
+/* In the top strip: a small round button right of 💡 Idea */
+.kg-strip .tour-replay { position: static; flex: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }

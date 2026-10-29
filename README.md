@@ -53,7 +53,7 @@ Koog only ships music that is public domain in the US: published in 1930 or earl
 
 ## Roadmap
 
-- **Eventually: teach modular synthesizer patches too.** Oscillators, filters, envelopes and patch cables. Patch Quests is the first step; next come real patch-cable routing and LFO modulation.
+- **Eventually: teach modular synthesizer patches too.** Oscillators, filters, envelopes and patch cables. Patch Quests and LFO patching (vibrato, wah and tremolo, routed with a cable) are the first steps. Next up: more modules and free-form cable routing.
 - Measure real keyboards (range, velocity curve, latency) and adapt songs to fit.
 - Check every song by ear. Some were transcribed from memory.
 

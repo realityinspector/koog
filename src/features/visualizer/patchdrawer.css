@@ -58,3 +58,13 @@
 .pq-name input { flex: 1; min-width: 0; min-height: 36px; border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,.3)); background: rgba(0,0,0,.4); color: inherit; padding: 0 10px; font-size: 14px }
 .pd button.pq-go { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #4dd6a0; color: #08101a; font-weight: 800; cursor: pointer }
 .pd button.pq-go:disabled { opacity: .5; cursor: default }
+
+.pd-jack.lfo { stroke: #4dc3ff }
+.pd-jack.lfo.ready { stroke: #ffd76c; animation: pd-pulse 1s ease-in-out infinite }
+.pd-jack.lfo.on { fill: #4dc3ff; stroke: #fff }
+@keyframes pd-pulse { 50% { stroke-width: 4 } }
+.pd-lfo-patch { cursor: pointer }
+.pd-lfocable { fill: none; stroke: #4dc3ff; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 8 5; filter: drop-shadow(0 0 4px #4dc3ff); animation: pd-flow 0.8s linear infinite }
+.pd-lfohit { fill: none; stroke: transparent; stroke-width: 14 }
+@media (prefers-reduced-motion: reduce) { .pd-lfocable, .pd-jack.lfo.ready { animation: none } }
+.pd-lfomsg { margin-top: 0; margin-bottom: 6px }

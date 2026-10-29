@@ -238,6 +238,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   let shape = 0, level = 1, sizeMul = 1, alphaMul = 1, patched = false
   let halo = 0, atkFrames = 0, linger = 1, ghost = 0, ghostDir = 1, glideAmt = 0
   const streaks: Streak[] = []
+  let lfoTgt: 'none' | 'pitch' | 'filter' | 'amp' = 'none', lfoHz = 5, lfoDep = 0
   let lastPos: { x: number; y: number; t: number } | null = null
   function setPatch(p: SynthParams) {
     const d = DEFAULT_PARAMS
@@ -256,6 +257,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     const dt = Math.abs(p.detune) - 7
     ghost = dt > 1 ? Math.min(1, dt / 40) : 0
     ghostDir = p.detune < 0 ? -1 : 1
+    lfoTgt = p.lfoTarget ?? 'none'; lfoHz = p.lfoRate ?? 5; lfoDep = p.lfoDepth ?? 0
     glideAmt = p.glide > 0.02 ? Math.min(1, p.glide / 0.3) : 0
   }
   const pushP = (p: Particle) => {
@@ -707,6 +709,11 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       }
     }
 
+    // LFO look (visual time only): smooth sine, brightness pulse capped at 3 Hz, off for reduced motion
+    const lfoOn = lfoTgt !== 'none' && lfoDep > 0 && !reduced
+    const lfoSec = performance.now() / 1000
+    const lfoSin = lfoOn ? Math.sin(lfoSec * Math.PI * 2 * (lfoTgt === 'filter' ? Math.min(3, lfoHz) : lfoHz)) : 0
+    const lfoPh = lfoSec * Math.PI * 2 * lfoHz
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i]
       p.life++
@@ -721,11 +728,12 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       if (p.trail && quality > 0.7 && p.life % 3 === 0 && particles.length < MAX_PARTICLES * 0.8 * quality) pushP({ x: p.x, y: p.y, vx: 0, vy: 0.2, life: 0, max: 18, size: p.size * 0.6, hue: p.hue + 20, tw: p.tw, nb: true })
       const dull = p.sat !== undefined
       const grow = atkFrames > 1 && !p.nb && p.life < atkFrames ? p.life / atkFrames : 1
-      const r = 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
-      const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow)
+      const r = (lfoTgt === 'amp' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1) * 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
+      const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow * (lfoTgt === 'filter' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1))
+      const shim = lfoTgt === 'pitch' && lfoOn ? Math.sin(lfoPh + p.y * 0.02) * 4 * lfoDep : 0
       ctx.globalAlpha = al
       const spr = pdot(shape, level, p.hue, dull)
-      ctx.drawImage(spr, p.x - r, p.y - r, r * 2, r * 2)
+      ctx.drawImage(spr, p.x - r + shim, p.y - r, r * 2, r * 2)
       if (ghost > 0 && quality > 0.6 && !p.nb) {
         const off = (2 + ghost * 7) * ghostDir
         ctx.globalAlpha = al * 0.45

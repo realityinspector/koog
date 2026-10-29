@@ -3,6 +3,9 @@
 
 export type Wave = 'sawtooth' | 'square' | 'triangle' | 'sine'
 
+export type LfoShape = 'sine' | 'triangle' | 'square'
+export type LfoTarget = 'none' | 'pitch' | 'filter' | 'amp'
+
 /** One "patch": the settings of a simple Moog-style subtractive synth voice. */
 export interface SynthParams {
   wave: Wave
@@ -23,11 +26,17 @@ export interface SynthParams {
   glide: number
   /** output level 0..1, scaled under a hard safety cap inside the engine */
   level: number
+  /** shared LFO: speed in Hz (0.1..12), shape, how much (0..1) and where it is patched */
+  lfoRate: number
+  lfoShape: LfoShape
+  lfoDepth: number
+  lfoTarget: LfoTarget
 }
 
 export const DEFAULT_PARAMS: SynthParams = {
   wave: 'sawtooth', detune: 7, cutoff: 1800, resonance: 4, filterEnv: 2500,
   attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.3, glide: 0, level: 0.6,
+  lfoRate: 5, lfoShape: 'sine', lfoDepth: 0, lfoTarget: 'none',
 }
 
 /** The engine API that the playground and patch lab share (implemented in engine.ts). */
