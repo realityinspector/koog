@@ -238,4 +238,11 @@ export const entries: Entry[] = [
     title: '🤖 Smart Band + 🧩 Patch Quests',
     body: 'Koog has a BAND now. Tap 🤖 BAND, then play a melody. It listens to your notes, guesses which chord fits (it scores every chord in your key by how many of your notes it contains, and only switches on the first beat of a bar so it doesn\'t jump around), and works out your speed by measuring the gaps between your notes. Then it plays bass and chords along with you. That\'s a "smart" algorithm: no magic, just clear rules that are good at guessing. Also new: 🧩 Quests in the Patch drawer teach real synth patching. "Make it dark", "make it scream", "slide like a theremin"… and you can SEE each sound change in the visuals.',
   },
+  {
+    id: 33,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🔊 On-screen keys make sound now',
+    body: 'Bug report from the boss: clicking the keys on the screen didn\'t make any sound. They lit up the visuals, but nothing came out of the speakers. Now they play through the Koog synth, so whatever you set in 🎛️ Patch is what you hear. While fixing it we found a sneaky second bug: the on-screen keys and the computer keyboard each counted their notes "-1, -2, -3…" separately. When two notes got the same number, the app thought it had already seen the second one and ignored it. The fix is one shared counter. Engineers call this an "ID collision", and it\'s a classic.',
+  },
 ]

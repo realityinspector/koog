@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { onNote } from '../../music/notes'
+import { isLocalNote } from '../../music/localNotes'
 import { getSynth } from './engine'
 import type { SynthParams, Wave } from './params'
 import './playground.css'
@@ -58,7 +59,7 @@ export function SynthPlayground() {
   // MIDI keyboard -> synth, only while toggle on
   useEffect(() => {
     if (!listen) return
-    const off = onNote(e => { if (e.on) press(e.note, e.velocity); else lift(e.note) })
+    const off = onNote(e => { if (isLocalNote(e)) return; if (e.on) press(e.note, e.velocity); else lift(e.note) })
     return () => { off(); synth.panic(); setDown(new Set()) }
   }, [listen, press, lift, synth])
 

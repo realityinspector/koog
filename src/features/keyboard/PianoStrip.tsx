@@ -2,15 +2,13 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { useHarmonyStore, judge } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
+import { playLocal } from '../../music/localNotes'
 import { buildLayout, noteHue, snapRange, type KeyShape } from './layout'
 import './keyboard.css'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-let fakeId = 0
-function push(ev: Omit<NoteEvent, 'id' | 'name'>) {
-  const full: NoteEvent = { ...ev, id: -(++fakeId), name: NAMES[ev.note % 12] + (Math.floor(ev.note / 12) - 1) }
-  useAppStore.setState((s) => ({ recentNotes: [full, ...s.recentNotes].slice(0, 12) }))
-}
+// Clicked keys go through the shared local-note path: shared ids + they make sound.
+const push = (ev: { note: number; velocity: number; on: boolean }) => playLocal(ev.note, ev.velocity, ev.on)
 
 function loadRange(): [number, number] {
   try {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onNote } from '../../music/notes'
+import { isLocalNote } from '../../music/localNotes'
 import { getSynth } from '../synth-history/engine'
 import { PRESETS } from '../synth-history/presets'
 import type { SynthParams, Wave } from '../synth-history/params'
@@ -54,7 +55,8 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
   // keyboard -> synth, only while the toggle is ON
   useEffect(() => {
     if (!hear) return
-    const off = onNote((e) => { if (e.on) synth.noteOn(e.note, e.velocity); else synth.noteOff(e.note) })
+    // on-screen/computer-key notes already sound by themselves (see music/localNotes.ts)
+    const off = onNote((e) => { if (isLocalNote(e)) return; if (e.on) synth.noteOn(e.note, e.velocity); else synth.noteOff(e.note) })
     return () => { off(); synth.panic() }
   }, [hear, synth])
   useEffect(() => () => synth.panic(), [synth])

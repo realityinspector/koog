@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
+import { playLocal } from '../../music/localNotes'
 import { createEngine, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
 import { PatchDrawer } from './PatchDrawer'
@@ -9,13 +10,8 @@ import './visualizer.css'
 
 // Computer-keyboard fallback so it works even before MIDI is allowed.
 const KEYS = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', ';', "'"]
-let fakeId = 0
-
-function push(ev: Omit<NoteEvent, 'id' | 'name'>) {
-  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-  const full: NoteEvent = { ...ev, id: -(++fakeId), name: names[ev.note % 12] + (Math.floor(ev.note / 12) - 1) }
-  useAppStore.setState((s) => ({ recentNotes: [full, ...s.recentNotes].slice(0, 12) }))
-}
+// Computer-keyboard notes share the local-note path with the on-screen keys (shared ids + sound).
+const push = (ev: { note: number; velocity: number; on: boolean }) => playLocal(ev.note, ev.velocity, ev.on)
 
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
