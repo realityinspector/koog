@@ -36,9 +36,9 @@ export function renderBackground(w: number, h: number, dpr: number, lanes: Lane[
   }
   // a friendly sleepy moon
   const mr = Math.max(14, Math.min(horizonY * 0.28, 38)), mx = w * 0.3, my = horizonY * 0.6
-  const glow = g.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 2.6)
-  glow.addColorStop(0, 'rgba(255,240,180,.38)'); glow.addColorStop(1, 'rgba(255,240,180,0)')
-  g.fillStyle = glow; g.fillRect(mx - mr * 3, my - mr * 3, mr * 6, mr * 6)
+  const glow = g.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 3.4)
+  glow.addColorStop(0, 'rgba(255,240,180,.5)'); glow.addColorStop(1, 'rgba(255,240,180,0)')
+  g.fillStyle = glow; g.fillRect(mx - mr * 3.5, my - mr * 3.5, mr * 7, mr * 7)
   g.fillStyle = '#fff1b8'; g.beginPath(); g.arc(mx, my, mr, 0, TAU); g.fill()
   g.fillStyle = 'rgba(210,190,120,.45)'
   for (const [dx, dy, r] of [[-0.35, -0.3, 0.2], [0.3, 0.2, 0.16], [-0.1, 0.45, 0.12]]) { g.beginPath(); g.arc(mx + dx * mr, my + dy * mr, r * mr, 0, TAU); g.fill() }
@@ -141,6 +141,13 @@ export function renderBackground(w: number, h: number, dpr: number, lanes: Lane[
   const mist = g.createLinearGradient(0, horizonY, 0, horizonY + (h - horizonY) * 0.45)
   mist.addColorStop(0, 'rgba(100,95,170,.9)'); mist.addColorStop(1, 'rgba(100,95,170,0)')
   g.fillStyle = mist; g.fillRect(0, horizonY, w, (h - horizonY) * 0.45)
+
+  // moonlight pooled on the far ground, so the lanes glow where the moon is
+  const pool = g.createRadialGradient(mx, horizonY + 6, 0, mx, horizonY + 6, Math.max(120, w * 0.22))
+  pool.addColorStop(0, 'rgba(255,240,190,.22)'); pool.addColorStop(1, 'rgba(255,240,190,0)')
+  g.save(); g.beginPath(); g.rect(0, horizonY, w, h - horizonY); g.clip()
+  g.globalCompositeOperation = 'lighter'; g.fillStyle = pool; g.fillRect(0, horizonY, w, h - horizonY)
+  g.restore()
 
   // the "keys" edge: where the zombies bite
   const edge = g.createLinearGradient(0, h - 26, 0, h)

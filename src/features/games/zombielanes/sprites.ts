@@ -9,7 +9,7 @@ export const SKINS: Skin[] = [
   { skin: '#78d6b0', dark: '#43a587', shirt: '#4fa8ff', shirtD: '#3279cf', pants: '#6a4a85', hair: '#2f6f8f' },
   { skin: '#cfe05a', dark: '#9db237', shirt: '#b46cff', shirtD: '#8545cf', pants: '#3f5a7a', hair: '#7a4a24' },
 ]
-export const EXTRAS = 4
+export const EXTRAS = 6
 /** design boxes (units). The sprite is drawn scaled by `k` px per unit. Feet sit near the bottom edge. */
 export const ZW = 100, ZH = 162, ZFEET = 152
 export const KW = 150, KH = 196, KFEET = 188
@@ -55,7 +55,7 @@ export class Sprites {
     const k = this.k
     return this.cached(this.z, `z${skin}.${extra}.${frame}.${crown ? 1 : 0}`, ZW * k, ZH * k, (g) => {
       g.scale(k, k)
-      drawZombie(g, SKINS[skin], extra, frame, crown)
+      drawZombie(g, SKINS[skin], extra, frame, crown, skin)
     })
   }
 
@@ -148,6 +148,45 @@ export class Sprites {
     })
   }
 
+  /** a tall soft column of coloured light for a lane (1 px wide, stretched). Cached per hue. */
+  laneGlow(hue: number) {
+    const hh = Math.round(hue / 10) * 10
+    return this.cached(this.fx, 'lane' + hh, 4, 128, (g) => {
+      const gr = g.createLinearGradient(0, 0, 0, 128)
+      gr.addColorStop(0, `hsla(${hh},90%,70%,0)`)
+      gr.addColorStop(0.6, `hsla(${hh},90%,66%,.35)`)
+      gr.addColorStop(1, `hsla(${hh},95%,72%,.9)`)
+      g.fillStyle = gr; g.fillRect(0, 0, 4, 128)
+    })
+  }
+
+  /** a wisp of ground mist */
+  fog() {
+    const w = 260 * this.dpr, h = 44 * this.dpr
+    return this.cached(this.fx, 'fog', w, h, (g) => {
+      g.translate(w / 2, h / 2); g.scale(1, h / w)
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, w / 2)
+      gr.addColorStop(0, 'rgba(190,185,240,.5)'); gr.addColorStop(0.6, 'rgba(160,155,225,.22)'); gr.addColorStop(1, 'rgba(150,145,220,0)')
+      g.fillStyle = gr; g.fillRect(-w / 2, -w / 2, w, w)
+    })
+  }
+
+  /** a tiny friendly bat silhouette, wings up (0) or down (1) */
+  bat(frame: number) {
+    const d = this.dpr, w = 30 * d, h = 18 * d
+    return this.cached(this.fx, 'bat' + frame, w, h, (g) => {
+      g.scale(d, d); g.translate(15, 9)
+      g.fillStyle = '#1c1740'
+      const up = frame === 0 ? -7 : 5
+      g.beginPath(); g.ellipse(0, 1, 3.6, 4.6, 0, 0, TAU); g.fill()
+      for (const s of [-1, 1]) {
+        g.beginPath(); g.moveTo(s * 2, -1); g.quadraticCurveTo(s * 9, up - 3, s * 14, up + 2); g.quadraticCurveTo(s * 10, 1 + up * 0.2, s * 7, 3); g.quadraticCurveTo(s * 5, 0, s * 2, 4); g.closePath(); g.fill()
+      }
+      g.beginPath(); g.moveTo(-2.6, -3); g.lineTo(-2, -7); g.lineTo(0, -4); g.lineTo(2, -7); g.lineTo(2.6, -3); g.closePath(); g.fill()
+      g.fillStyle = '#ffe14a'; g.fillRect(-2, -1.5, 1.3, 1.3); g.fillRect(0.8, -1.5, 1.3, 1.3)
+    })
+  }
+
   mound() {
     const w = 96 * this.dpr, h = 30 * this.dpr
     return this.cached(this.fx, 'mound', w, h, (g) => {
@@ -161,7 +200,7 @@ export class Sprites {
 
 // ---------------- art ----------------
 
-function drawZombie(g: CanvasRenderingContext2D, S: Skin, extra: number, frame: number, crown: boolean) {
+function drawZombie(g: CanvasRenderingContext2D, S: Skin, extra: number, frame: number, crown: boolean, outfit: number) {
   g.save()
   g.translate(0, 12)
   g.lineCap = 'round'; g.lineJoin = 'round'
@@ -170,12 +209,14 @@ function drawZombie(g: CanvasRenderingContext2D, S: Skin, extra: number, frame: 
   for (let i = 0; i < 2; i++) {
     const lx = 32 + i * 21, ly = 96 + lift[i]
     g.fillStyle = S.pants; rr(g, lx, ly, 15, 38, 5); g.fill()
+    g.fillStyle = 'rgba(0,0,20,.22)'; rr(g, lx + 9, ly + 2, 6, 36, 4); g.fill()
+    g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(lx + 2, ly + 4, 2.5, 26)
     g.fillStyle = '#2d2540'
     g.beginPath(); g.ellipse(lx + 7.5 + (i ? 2 : -2), 136 + lift[i], 11, 5.5, 0, 0, TAU); g.fill()
   }
   // arms reach out to the sign
   for (const s of [-1, 1]) {
-    const sx = 50 + s * 21, sy = 70, hx = 50 + s * 42, hy = 92
+    const sx = 50 + s * 21, sy = 70, hx = 50 + s * 42, hy = 92 + (frame === 0 ? s : -s) * 2
     const mx = sx + (hx - sx) * 0.5, my = sy + (hy - sy) * 0.5
     g.strokeStyle = S.shirt; g.lineWidth = 11
     g.beginPath(); g.moveTo(sx, sy); g.lineTo(mx, my); g.stroke()
@@ -192,11 +233,28 @@ function drawZombie(g: CanvasRenderingContext2D, S: Skin, extra: number, frame: 
   g.fillStyle = S.shirtD; g.fillRect(20, 80, 60, 6)
   g.fillStyle = S.dark
   g.beginPath(); g.moveTo(34, 92); g.lineTo(44, 90); g.lineTo(46, 99); g.lineTo(38, 102); g.closePath(); g.fill()
+  // outfit: stripes, a star pocket or a bow tie, so the crowd is not three clones
+  if (outfit === 0) {
+    g.fillStyle = 'rgba(255,255,255,.22)'
+    for (let y = 68; y < 112; y += 12) g.fillRect(20, y, 60, 4.5)
+  } else if (outfit === 1) {
+    g.fillStyle = 'rgba(255,255,255,.28)'; rr(g, 56, 84, 14, 14, 3); g.fill()
+    g.fillStyle = '#ffe14a'; g.beginPath(); for (let n = 0; n < 10; n++) { const a = -Math.PI / 2 + (n * Math.PI) / 5, r = n % 2 ? 2.4 : 5; g.lineTo(63 + Math.cos(a) * r, 91 + Math.sin(a) * r) } g.closePath(); g.fill()
+  } else {
+    g.fillStyle = '#ffe14a'; g.fillRect(46, 64, 8, 24)
+    g.fillStyle = '#ff4f6e'; g.beginPath(); g.moveTo(50, 70); g.lineTo(38, 63); g.lineTo(38, 77); g.closePath(); g.moveTo(50, 70); g.lineTo(62, 63); g.lineTo(62, 77); g.closePath(); g.fill()
+  }
+  g.fillStyle = 'rgba(0,0,30,.2)'; g.fillRect(60, 60, 20, 60)
+  g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(27, 62, 6, 50)
   g.restore()
   // ears + head
   g.fillStyle = S.skin; g.strokeStyle = S.dark; g.lineWidth = 2
   for (const s of [-1, 1]) { g.beginPath(); g.ellipse(50 + s * 28, 38, 5.5, 7.5, 0, 0, TAU); g.fill(); g.stroke() }
   g.beginPath(); g.ellipse(50, 34, 29, 26, 0, 0, TAU); g.fill(); g.stroke()
+  g.save(); g.beginPath(); g.ellipse(50, 34, 28, 25, 0, 0, TAU); g.clip()
+  g.fillStyle = 'rgba(0,40,20,.16)'; g.beginPath(); g.ellipse(58, 46, 34, 26, 0, 0, TAU); g.fill()
+  g.fillStyle = 'rgba(255,255,230,.26)'; g.beginPath(); g.ellipse(38, 17, 13, 6, -0.4, 0, TAU); g.fill()
+  g.restore()
   // extras on top
   if (extra === 0) { // leaf sprout
     g.strokeStyle = '#3f9a3a'; g.lineWidth = 3
@@ -212,6 +270,17 @@ function drawZombie(g: CanvasRenderingContext2D, S: Skin, extra: number, frame: 
   } else if (extra === 2) { // messy hair
     g.fillStyle = S.hair
     g.beginPath(); g.moveTo(26, 22); g.lineTo(24, 2); g.lineTo(36, 15); g.lineTo(42, -4); g.lineTo(50, 12); g.lineTo(60, -3); g.lineTo(64, 14); g.lineTo(76, 3); g.lineTo(74, 24); g.closePath(); g.fill()
+  } else if (extra === 4) { // top hat
+    g.fillStyle = '#2a2540'; g.strokeStyle = '#14101f'; g.lineWidth = 2
+    rr(g, 34, -16, 32, 30, 3); g.fill(); g.stroke()
+    g.beginPath(); g.ellipse(50, 14, 30, 5.5, 0, 0, TAU); g.fill(); g.stroke()
+    g.fillStyle = '#b46cff'; g.fillRect(34.5, 3, 31, 6)
+    g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(38, -13, 4, 14)
+  } else if (extra === 5) { // big headphones
+    g.strokeStyle = '#3a3a52'; g.lineWidth = 5
+    g.beginPath(); g.arc(50, 32, 31, Math.PI * 1.08, Math.PI * 1.92); g.stroke()
+    g.fillStyle = '#4fb4ff'; g.strokeStyle = '#2a5f9a'; g.lineWidth = 2
+    for (const s of [-1, 1]) { rr(g, 50 + s * 30 - 6, 28, 12, 20, 5); g.fill(); g.stroke() }
   } else { // party hat
     g.fillStyle = '#ff5fa8'
     g.beginPath(); g.moveTo(31, 14); g.lineTo(69, 14); g.lineTo(52, -14); g.closePath(); g.fill()

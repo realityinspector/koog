@@ -25,9 +25,13 @@ interface Zombie {
 interface Boss { scoreIdx: number[]; p: number; idx: number; max: number; melody: number[]; flinch: number; age: number }
 interface Particle { x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; kind: 0 | 1 | 2 | 3; ci: number; size: number; spin: number }
 interface Pop { text: string; x: number; y: number; age: number; max: number; color: string; size: number }
-interface Beam { x: number; x2: number; y0: number; y1: number; w: number; age: number; max: number; fizzle: boolean; grad: CanvasGradient; hue: number }
+interface Dying { z: Zombie; age: number; big: boolean; x: number; y: number }
+/** seconds for a beam to climb its lane and strike, and for a struck zombie to reel before it poofs */
+const TRAVEL = 0.09, REEL = 0.13
+interface Beam { sparked: boolean; hit: boolean; x: number; x2: number; y0: number; y1: number; w: number; age: number; max: number; fizzle: boolean; grad: CanvasGradient; hue: number }
 interface Ring { x: number; y: number; age: number; max: number }
 
+const TAU = Math.PI * 2
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 const rnd = Math.random
 
@@ -90,6 +94,7 @@ export class Game {
   private particles: Particle[] = []
   private pops: Pop[] = []
   private beams: Beam[] = []
+  private dying: Dying[] = []
   private rings: Ring[] = []
   private press = new Map<number, number>()
   private pulse = 0
@@ -191,7 +196,7 @@ export class Game {
     clearScore('zombielanes')
     this.zombies = []; this.boss = null; this.spawned = 0; this.spawnLeft = 0; this.bag = []; this.chordIx = 0
     this.ending = false; this.later = null; this.recent = []; this.pending = []
-    this.particles = []; this.pops = []; this.beams = []; this.rings = []; this.press.clear()
+    this.particles = []; this.pops = []; this.beams = []; this.dying = []; this.rings = []; this.press.clear()
     this.jamUntil = 0; this.pulse = 0; this.shake = 0
     this.setGuideKey('')
   }
@@ -356,7 +361,7 @@ export class Game {
     const lane = this.laneFor(g.note)
     if (lane) this.addBeam(lane, c.y, false, c.x)
     this.zombies.splice(this.zombies.indexOf(z), 1)
-    this.poof(c.x, c.y, false)
+    this.dying.push({ z, age: 0, big: false, x: c.x, y: c.y })
     this.score += pts; this.combo++
     this.pop('+' + pts, c.x, c.top + 6, onBeat ? '#ffe14a' : '#fff7b0', onBeat ? 30 : 26)
     if (onBeat) this.pop('ON BEAT!', c.x, c.top - 22, '#7dffb0', 20, 1.0)
@@ -370,7 +375,7 @@ export class Game {
       if (lane) this.addBeam(lane, c.y, false, c.x)
     }
     this.zombies.splice(this.zombies.indexOf(z), 1)
-    this.poof(c.x, c.y, true)
+    this.dying.push({ z, age: 0, big: true, x: c.x, y: c.y })
     const pts = 300 + 10 * Math.min(this.combo, 10)
     this.score += pts; this.combo++
     this.pop('+' + pts, c.x, c.top + 6, '#ffe14a', 32)
@@ -618,7 +623,17 @@ export class Game {
       if (p.kind === 0) p.vx *= 1 - dt * 0.8
     }
     for (let i = this.pops.length - 1; i >= 0; i--) { this.pops[i].age += dt; if (this.pops[i].age >= this.pops[i].max) this.pops.splice(i, 1) }
-    for (let i = this.beams.length - 1; i >= 0; i--) { this.beams[i].age += dt; if (this.beams[i].age >= this.beams[i].max) this.beams.splice(i, 1) }
+    for (let i = this.beams.length - 1; i >= 0; i--) {
+      const b = this.beams[i]
+      b.age += dt
+      if (!b.sparked && b.age >= TRAVEL) { b.sparked = true; if (b.hit) this.sparks(b.x2, b.y1, b.hue) }
+      if (b.age >= b.max) this.beams.splice(i, 1)
+    }
+    for (let i = this.dying.length - 1; i >= 0; i--) {
+      const d = this.dying[i]
+      d.age += dt
+      if (d.age >= TRAVEL + REEL) { this.poof(d.x, d.y, d.big); this.dying.splice(i, 1) }
+    }
     for (let i = this.rings.length - 1; i >= 0; i--) { this.rings[i].age += dt; if (this.rings[i].age >= this.rings[i].max) this.rings.splice(i, 1) }
     for (const [n, t] of this.press) if (this.clock - t > 0.4) this.press.delete(n)
   }
@@ -642,6 +657,15 @@ export class Game {
       this.addParticle({ x: x + (rnd() - 0.5) * 26, y: y + (rnd() - 0.5) * 26, vx: (rnd() - 0.5) * 30, vy: -20 - rnd() * 30, g: 0, life: 0, max: 0.45, kind: 2, ci: 0, size: big ? 1.6 : 1.1, spin: 0 })
     }
   }
+  /** impact sparks where a beam strikes: a hot flash plus a fan of small stars */
+  private sparks(x: number, y: number, hue: number) {
+    const f = this.rm ? 0.4 : 1
+    this.addParticle({ x, y, vx: 0, vy: 0, g: 0, life: 0, max: 0.22, kind: 2, ci: 0, size: 1.3, spin: 0 })
+    for (let i = 0; i < Math.max(2, Math.round(7 * f)); i++) {
+      const a = (i / 7) * TAU + rnd() * 0.5, sp = 140 + rnd() * 160
+      this.addParticle({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, g: 300, life: 0, max: 0.28 + rnd() * 0.16, kind: 1, ci: ((hue / 40) | 0) + i, size: 0.34 + rnd() * 0.22, spin: 0 })
+    }
+  }
   private pop(text: string, x: number, y: number, color: string, size: number, max = 0.95) {
     if (this.pops.length > 14) this.pops.shift()
     this.pops.push({ text, x: clamp(x, 60, this.w - 60), y: Math.max(66, y), age: 0, max: this.rm ? max * 0.8 : max, color, size })
@@ -657,7 +681,7 @@ export class Game {
     grad.addColorStop(0, `hsla(${hue},${sat}%,${lum}%,0.85)`)
     grad.addColorStop(1, `hsla(${hue},${sat}%,${lum}%,${fizzle || soft ? 0 : 0.5})`)
     const w = Math.max(6, lane.w * (lane.black ? 0.9 : 0.62))
-    this.beams.push({ x: lane.cx, x2: tx ?? lane.cx, y0, y1, w, age: 0, max: fizzle ? 0.42 : 0.3, fizzle: fizzle || soft, grad, hue })
+    this.beams.push({ sparked: false, hit: !(fizzle || soft), x: lane.cx, x2: tx ?? lane.cx, y0, y1, w, age: 0, max: fizzle ? 0.42 : 0.3, fizzle: fizzle || soft, grad, hue })
     if (fizzle && !soft) {
       for (let i = 0; i < 3; i++) this.addParticle({ x: lane.cx + (rnd() - 0.5) * lane.w * 0.5, y: y1, vx: (rnd() - 0.5) * 40, vy: -10 - rnd() * 30, g: -10, life: 0, max: 0.7, kind: 3, ci: 0, size: 0.9, spin: 0 })
     }
@@ -687,19 +711,49 @@ export class Game {
     else { ctx.fillStyle = '#2c2563'; ctx.fillRect(0, 0, w, h) }
     const sp = this.sprites
     if (!sp) return
-    // lane glow under keys you press
-    for (const [n, t] of this.press) {
+    // atmosphere: drifting ground mist and a couple of bats (still when reduced motion is on)
+    const t = this.rm ? 0 : this.clock
+    const hz = this.horizonY
+    ctx.globalAlpha = 0.55
+    const fogS = sp.fog()
+    for (let i = 0; i < 4; i++) {
+      const span = w + 320
+      const x = (((i * 0.31 * w + t * (5 + i * 2.5)) % span) + span) % span - 220
+      ctx.drawImage(fogS, x, hz - 8 + i * 9, 260 + i * 40, 44)
+    }
+    ctx.globalAlpha = 1
+    if (!this.rm) {
+      for (let i = 0; i < 2; i++) {
+        const span = w + 120
+        const x = ((t * (16 + i * 9) + i * w * 0.5) % span) - 60
+        const y = hz * (0.3 + i * 0.22) + Math.sin(t * 1.3 + i * 2) * 8
+        const b = sp.bat(Math.floor(t * 5 + i) % 2)
+        ctx.drawImage(b, x, y, b.width / this.dpr, b.height / this.dpr)
+      }
+    }
+    // lane lighting: the lane of a key you play lights up its whole length, in the note's colour
+    ctx.globalCompositeOperation = 'lighter'
+    for (const [n, tp] of this.press) {
       const l = this.laneMap.get(n)
       if (!l) continue
-      const a = 0.18 * (1 - (this.clock - t) / 0.4)
-      ctx.fillStyle = `hsla(${noteHue(n)},90%,70%,${a.toFixed(3)})`
-      ctx.fillRect(l.x, h - 70, l.w, 70)
+      const u = 1 - (this.clock - tp) / 0.4
+      ctx.globalAlpha = Math.min(0.5, 0.5 * u * u + 0.05)
+      ctx.drawImage(sp.laneGlow(noteHue(n)), l.x, hz, l.w, h - hz)
     }
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'source-over'
     if (this.shake > 0 && !this.rm) ctx.translate(Math.sin(this.clock * 90) * 3 * this.shake * 2.5, Math.cos(this.clock * 77) * 2 * this.shake * 2.5)
 
     // zombies, far ones first
     this.zombies.sort((a, b) => a.p - b.p)
-    for (const z of this.zombies) this.drawZombie(sp, z)
+    if (this.dying.length > 1) this.dying.sort((a, b) => a.z.p - b.z.p)
+    let di = 0
+    const dy = this.dying
+    for (const z of this.zombies) {
+      while (di < dy.length && dy[di].z.p <= z.p) { this.drawZombie(sp, dy[di].z, dy[di].age - TRAVEL); di++ }
+      this.drawZombie(sp, z)
+    }
+    for (; di < dy.length; di++) this.drawZombie(sp, dy[di].z, dy[di].age - TRAVEL)
     if (this.boss) this.drawBoss(sp, this.boss)
 
     // beams (light)
@@ -708,12 +762,19 @@ export class Game {
       const t = b.age / b.max
       const a = b.fizzle ? (1 - t) * 0.8 : (1 - t * t)
       ctx.globalAlpha = Math.max(0, a)
+      // the bolt climbs the lane: its head leaves the key and reaches the target in TRAVEL seconds
+      const reach = Math.min(1, b.age / TRAVEL)
+      const top = b.y0 - (b.y0 - b.y1) * (1 - (1 - reach) * (1 - reach))
       ctx.fillStyle = b.grad
-      ctx.fillRect(b.x - b.w / 2, b.y1, b.w, b.y0 - b.y1)
+      ctx.fillRect(b.x - b.w / 2, top, b.w, b.y0 - top)
       if (!b.fizzle) {
         ctx.fillStyle = 'rgba(255,255,255,.85)'
-        ctx.fillRect(b.x - b.w * 0.14, b.y1, b.w * 0.28, b.y0 - b.y1)
-        if (Math.abs(b.x2 - b.x) > b.w * 0.5) {
+        ctx.fillRect(b.x - b.w * 0.14, top, b.w * 0.28, b.y0 - top)
+        if (reach < 1) {
+          const hs = sp.puff(), hr = b.w * 1.1
+          ctx.drawImage(hs, b.x - hr, top - hr, hr * 2, hr * 2)
+        }
+        if (reach >= 1 && Math.abs(b.x2 - b.x) > b.w * 0.5) {
           ctx.fillStyle = `hsla(${b.hue},100%,75%,.9)`
           ctx.fillRect(Math.min(b.x, b.x2), b.y1 - 2, Math.abs(b.x2 - b.x), 4)
         }
@@ -778,7 +839,8 @@ export class Game {
     }
   }
 
-  private drawZombie(sp: Sprites, z: Zombie) {
+  /** `hit` is seconds since a beam struck this zombie (negative or undefined: not struck). */
+  private drawZombie(sp: Sprites, z: Zombie, hit = -1) {
     const ctx = this.ctx, zk = this.zk
     const lane = this.laneMap.get(z.note)
     if (lane) z.x = lane.cx
@@ -799,11 +861,31 @@ export class Game {
     }
     ctx.translate(0, (1 - rise) * (1 - rise) * hh * 0.85 + bob)
     ctx.rotate(sway)
+    // fog: far zombies are paler, and they firm up as they march closer
+    ctx.globalAlpha = 0.55 + 0.45 * clamp(z.p * 2.2, 0, 1)
+    let flash = 0
+    if (hit >= 0) {
+      // struck: squash flat and get shoved back up the lane, then spring back before the poof
+      const u = clamp(hit / REEL, 0, 1)
+      const sq = this.rm ? 0.1 : Math.sin(Math.min(1, u * 1.6) * Math.PI) * 0.28
+      ctx.translate(0, -(1 - Math.pow(1 - u, 2)) * 16 * s * zk)
+      ctx.scale(1 + sq * 0.8, 1 - sq)
+      if (!this.rm) ctx.rotate(Math.sin(u * Math.PI) * 0.14 * (z.id % 2 ? 1 : -1))
+      flash = Math.max(0, 1 - u * 2.2)
+    }
     const body = sp.zombie(z.skin, z.extra, frame, crown)
     ctx.drawImage(body, -w / 2, -ZFEET * zk * s, w, hh)
     const label = crown ? z.chord!.name : z.label
     const sign = sp.sign(label, z.skin, crown ? 3 : 0)
     ctx.drawImage(sign, -w / 2, -ZFEET * zk * s, w, hh)
+    if (flash > 0.02) {
+      // a soft white-hot flash of the zombie itself (one sprite, brief, a fraction of a second)
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.globalAlpha = flash * 0.4
+      ctx.drawImage(body, -w / 2, -ZFEET * zk * s, w, hh)
+      ctx.globalCompositeOperation = 'source-over'
+    }
+    ctx.globalAlpha = 1
     ctx.restore()
   }
 

@@ -280,4 +280,11 @@ export const entries: Entry[] = [
     title: '🕯️ BachDoom gets real lighting',
     body: 'Graphics round 1! BachDoom\'s halls now have wall torches that throw warm pools of light, stained glass that paints colored patches on the floor, and every level has its own mood: gold sunrise, rose opera house, blue midnight ball, teal crypt. Game artists call this a "light map". We work out the light ONCE when a level loads and save it, so the game doesn\'t have to redo the math 60 times a second.',
   },
+  {
+    id: 39,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🧟⚡ Zombie Lanes: your beam actually HITS now',
+    body: 'Graphics round 2! Before, the beam stopped short and the zombie just vanished. Now the beam climbs the lane, SMACKS the zombie, which gets squashed and shoved back with sparks flying, and THEN it poofs. Game designers call this "hit feedback": your eyes need about a tenth of a second of reaction to believe you hit something. Also new: your lane lights up in your note\'s color, far-away zombies fade into the fog, bats fly by, and the zombies got new outfits, top hats and headphones.',
+  },
 ]
