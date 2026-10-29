@@ -67,6 +67,7 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
       game.update(dt)
       if (mapRef !== game.map) { mapRef = game.map; view.setLevel(game.map, tex) }
       const bob = game.reduced || game.mode !== 'glide' ? 0 : Math.sin(game.bobT) * view.ih * 0.012
+      view.still = game.reduced
       scene.build(game, painter.sprites)
       view.render(game.camX, game.camY, game.camAng, bob, scene.list, scene.n)
       painter.draw(game, view, ctx, W, H, hudH, dt)

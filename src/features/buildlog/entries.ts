@@ -273,4 +273,11 @@ export const entries: Entry[] = [
     title: '🥋👗🎛️🎼 Jiu-Jitsu, Runway Remix, real synth emulators, sheet music, and computer-key piano',
     body: 'Seven AI helpers built at the same time, each in its own folder. NEW GAMES: 🥋 Jiu-Jitsu Flow (copy your partner\'s phrases on the beat to win positions, earn belts, and learn to tap out) and 👗 Runway Remix (style a model through 400 years of music; chords pick the colors, because neighbors on the circle of fifths are like neighbor colors on the color wheel). In SYNTH, tap ▶ Play it on the timeline to PLAY a theremin, an organ, a Moog-style synth, a 303 bass, a DX7-style FM synth and more. They are rebuilt from the physics of sound, not recordings. 🎼 Sheet music can ride along the bottom of the screen any time, and notes turn green when you nail them. No MIDI keyboard? Your computer keys are a piano now (Z S X D C… and Q 2 W 3 E…). And in BachDoom your organ shots now actually fly into the demons and knock them back.',
   },
+  {
+    id: 38,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🕯️ BachDoom gets real lighting',
+    body: 'Graphics round 1! BachDoom\'s halls now have wall torches that throw warm pools of light, stained glass that paints colored patches on the floor, and every level has its own mood: gold sunrise, rose opera house, blue midnight ball, teal crypt. Game artists call this a "light map". We work out the light ONCE when a level loads and save it, so the game doesn\'t have to redo the math 60 times a second.',
+  },
 ]

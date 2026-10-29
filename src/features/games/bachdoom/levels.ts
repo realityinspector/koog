@@ -6,7 +6,7 @@ import { PRELUDE_C, PRELUDE_PHASES, preludeFigure } from '../../../music/scores'
 import { CEIL_KINDS, FLOOR_KINDS, WALL_KINDS } from './types'
 import type { CeilKind, DemonKind, FloorKind, WallKind } from './types'
 
-export type PropKind = 'column' | 'candles' | 'bust' | 'stand'
+export type PropKind = 'column' | 'candles' | 'bust' | 'stand' | 'torch' | 'banner'
 export interface RoomSpec { w: number; d: number; turn: 'L' | 'R' | 'S'; wall: WallKind; far?: WallKind; floor: FloorKind; ceil: CeilKind; props: PropKind[] }
 export interface LevelSpec {
   id: string; name: string; songId: string; take?: number; reps?: number; boss?: boolean
@@ -16,6 +16,10 @@ export interface LevelSpec {
   episode?: 1 | 2
   /** last level of the episode: shown as BOSS on the title screen, but played as a normal (big) demon fight */
   finale?: boolean
+  /** colour of the sconce flames and the light they throw (default warm orange) */
+  torch?: [number, number, number]
+  /** soft colour wash over the whole level's light, added to every lit pixel (0..~40 each) */
+  ambient?: [number, number, number]
 }
 export const EPISODES: { n: 1 | 2; name: string }[] = [{ n: 1, name: 'Episode 1: The Cathedral' }, { n: 2, name: 'Episode 2: Symphony of Shadows' }]
 export const episodeOf = (l: { episode?: 1 | 2 }): 1 | 2 => l.episode ?? 1
@@ -23,38 +27,38 @@ export const episodeOf = (l: { episode?: 1 | 2 }): 1 | 2 => l.episode ?? 1
 const R = (w: number, d: number, turn: RoomSpec['turn'], wall: WallKind, floor: FloorKind, ceil: CeilKind, props: PropKind[], far?: WallKind): RoomSpec => ({ w, d, turn, wall, floor, ceil, props, far })
 
 export const LEVELS: LevelSpec[] = [
-  { id: 'E1M1', name: 'The Practice Room', songId: 'ode', fog: [34, 22, 20], fogDist: 15, demons: ['imp', 'squeak'],
+  { id: 'E1M1', torch: [255,160,70], ambient: [18,8,0], name: 'The Practice Room', songId: 'ode', fog: [34, 22, 20], fogDist: 15, demons: ['imp', 'squeak'],
     blurb: 'Warm up! Ode to Joy.', fact: 'Beethoven wrote Ode to Joy when he was almost totally deaf. He heard every note inside his head.',
     rooms: [R(7, 9, 'S', 'wood', 'planks', 'beams', ['stand', 'column']), R(7, 10, 'L', 'wood', 'planks', 'beams', ['bust', 'column']), R(9, 10, 'R', 'brick', 'flag', 'beams', ['stand', 'bust', 'column'], 'wood')] },
-  { id: 'E1M2', name: 'The Ballroom', songId: 'minuet', fog: [40, 22, 52], fogDist: 17, wallH: 1.3, demons: ['imp', 'grumble', 'squeak'],
+  { id: 'E1M2', torch: [255,190,120], ambient: [20,6,16], name: 'The Ballroom', songId: 'minuet', fog: [40, 22, 52], fogDist: 17, wallH: 1.3, demons: ['imp', 'grumble', 'squeak'],
     blurb: 'Dance steps in G: Minuet.', fact: 'A minuet is a dance in three beats: ONE-two-three, ONE-two-three. Fancy people danced it in powdered wigs.',
     rooms: [R(9, 10, 'S', 'marble', 'checker', 'gold', ['column', 'candles']), R(9, 10, 'L', 'velvet', 'carpet', 'gold', ['bust', 'column']), R(9, 11, 'R', 'marble', 'checker', 'gold', ['candles', 'column'], 'velvet'), R(11, 11, 'L', 'velvet', 'carpet', 'gold', ['bust', 'candles', 'column'], 'marble')] },
-  { id: 'E1M3', name: 'The Organ Loft', songId: 'toccata', reps: 3, fog: [20, 20, 46], fogDist: 16, demons: ['grumble', 'imp'],
+  { id: 'E1M3', torch: [150,110,255], ambient: [4,6,26], name: 'The Organ Loft', songId: 'toccata', reps: 3, fog: [20, 20, 46], fogDist: 16, demons: ['grumble', 'imp'],
     blurb: 'Bach\'s spooky Toccata, three times.', fact: 'A pipe organ makes sound with moving air. Press a key, a pipe opens, and the longer the pipe, the lower the note.',
     rooms: [R(7, 10, 'S', 'pipes', 'flag', 'vault', ['column', 'candles']), R(9, 10, 'R', 'brick', 'flag', 'vault', ['column', 'bust'], 'pipes'), R(9, 11, 'L', 'pipes', 'planks', 'vault', ['candles', 'column'])] },
-  { id: 'E1M4', name: 'Hall of the Mountain King', songId: 'king', fog: [38, 12, 20], fogDist: 16, demons: ['grumble', 'squeak', 'imp'],
+  { id: 'E1M4', torch: [255,70,50], ambient: [26,0,0], name: 'Hall of the Mountain King', songId: 'king', fog: [38, 12, 20], fogDist: 16, demons: ['grumble', 'squeak', 'imp'],
     blurb: 'Sneak in, then speed up!', fact: 'Grieg wrote Mountain King for a play. Start soft and sneaky, speed up, get louder: that is called a crescendo.',
     rooms: [R(9, 10, 'S', 'brick', 'flag', 'vault', ['column', 'candles']), R(9, 10, 'R', 'velvet', 'carpet', 'vault', ['column']), R(9, 11, 'L', 'brick', 'flag', 'vault', ['candles', 'column'], 'velvet'), R(11, 11, 'R', 'velvet', 'carpet', 'vault', ['column', 'candles', 'bust'], 'brick')] },
-  { id: 'E1M5', name: 'The Well-Tempered Cathedral', songId: 'prelude', boss: true, fog: [26, 16, 50], fogDist: 22, wallH: 2.2, demons: [],
+  { id: 'E1M5', torch: [255,180,90], ambient: [8,4,22], name: 'The Well-Tempered Cathedral', songId: 'prelude', boss: true, fog: [26, 16, 50], fogDist: 22, wallH: 2.2, demons: [],
     blurb: 'Boss: the Cacophodemon. Bach\'s Prelude in C.', fact: 'Bach wrote the Well-Tempered Clavier in 1722 to show off a tuning where every key sounds good.',
     rooms: [R(13, 17, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes')] },
   // ---- Episode 2: Symphony of Shadows (unlocks after the Cathedral boss) ----
-  { id: 'E2M1', episode: 2, name: 'Sunrise Overlook', songId: 'morning', fog: [58, 40, 46], fogDist: 18, wallH: 1.4, demons: ['imp', 'squeak'],
+  { id: 'E2M1', torch: [255,200,110], ambient: [34,20,6], episode: 2, name: 'Sunrise Overlook', songId: 'morning', fog: [58, 40, 46], fogDist: 18, wallH: 1.4, demons: ['imp', 'squeak'],
     blurb: 'Grieg\'s Morning Mood. The tune climbs like a sunrise.', fact: 'Grieg wrote Morning Mood for a play, to paint a sunrise. The same tune is played again one step higher, so it feels like the sun rising.',
     rooms: [R(9, 10, 'S', 'wood', 'planks', 'beams', ['column', 'stand']), R(9, 10, 'R', 'marble', 'flag', 'beams', ['bust', 'column']), R(9, 11, 'L', 'wood', 'planks', 'beams', ['stand', 'column'], 'marble')] },
-  { id: 'E2M2', episode: 2, name: 'The Opera House', songId: 'habanera', reps: 3, fog: [48, 14, 28], fogDist: 16, demons: ['grumble', 'imp'],
+  { id: 'E2M2', torch: [255,90,120], ambient: [30,0,10], episode: 2, name: 'The Opera House', songId: 'habanera', reps: 3, fog: [48, 14, 28], fogDist: 16, demons: ['grumble', 'imp'],
     blurb: 'Bizet\'s Habanera: slide down the keys, black ones too!', fact: 'The Habanera slides down one half step at a time. That is called a chromatic scale, and it uses every key, black and white.',
     rooms: [R(9, 10, 'S', 'velvet', 'carpet', 'gold', ['candles', 'column']), R(9, 10, 'L', 'velvet', 'carpet', 'gold', ['bust', 'candles']), R(11, 11, 'R', 'velvet', 'carpet', 'gold', ['candles', 'column', 'bust'], 'marble')] },
-  { id: 'E2M3', episode: 2, name: 'The Sultan\'s Courtyard', songId: 'turkish', reps: 2, fog: [52, 30, 14], fogDist: 17, demons: ['imp', 'grumble', 'squeak'],
+  { id: 'E2M3', torch: [255,170,40], ambient: [34,16,0], episode: 2, name: 'The Sultan\'s Courtyard', songId: 'turkish', reps: 2, fog: [52, 30, 14], fogDist: 17, demons: ['imp', 'grumble', 'squeak'],
     blurb: 'Mozart\'s Turkish March, twice as fast as it sounds.', fact: 'Mozart loved the sound of Turkish military bands, with drums and cymbals. He copied their stomping beat on the piano.',
     rooms: [R(9, 10, 'S', 'brick', 'checker', 'beams', ['column', 'stand']), R(9, 10, 'R', 'marble', 'checker', 'gold', ['column', 'bust']), R(11, 11, 'L', 'brick', 'flag', 'beams', ['candles', 'column'], 'marble')] },
-  { id: 'E2M4', episode: 2, name: 'Midnight Soiree', songId: 'nachtmusik', reps: 2, fog: [18, 18, 44], fogDist: 17, wallH: 1.3, demons: ['squeak', 'imp'],
+  { id: 'E2M4', torch: [120,170,255], ambient: [0,8,30], episode: 2, name: 'Midnight Soiree', songId: 'nachtmusik', reps: 2, fog: [18, 18, 44], fogDist: 17, wallH: 1.3, demons: ['squeak', 'imp'],
     blurb: 'Mozart\'s Little Night Music. Fancy and quick.', fact: 'Eine kleine Nachtmusik means "A Little Night Music" in German. Mozart wrote it in 1787 for a small group of string players.',
     rooms: [R(9, 10, 'S', 'marble', 'checker', 'gold', ['column', 'candles']), R(9, 10, 'L', 'velvet', 'carpet', 'gold', ['bust', 'column']), R(9, 11, 'R', 'marble', 'checker', 'gold', ['candles', 'column'], 'velvet')] },
-  { id: 'E2M5', episode: 2, name: 'The Counterpoint Crypt', songId: 'invention1', reps: 5, fog: [20, 24, 30], fogDist: 15, demons: ['grumble', 'imp', 'squeak'],
+  { id: 'E2M5', torch: [70,240,190], ambient: [0,20,18], episode: 2, name: 'The Counterpoint Crypt', songId: 'invention1', reps: 5, fog: [20, 24, 30], fogDist: 15, demons: ['grumble', 'imp', 'squeak'],
     blurb: 'Bach\'s Invention No. 1: one tiny tune, over and over.', fact: 'Bach wrote his Inventions to teach his students to play two melodies at once. This one starts with just seven notes.',
     rooms: [R(7, 10, 'S', 'brick', 'flag', 'vault', ['column', 'candles']), R(9, 10, 'R', 'pipes', 'flag', 'vault', ['column', 'bust']), R(9, 11, 'L', 'brick', 'flag', 'vault', ['candles', 'column'], 'pipes')] },
-  { id: 'E2M6', episode: 2, finale: true, name: 'The Moonlit Cathedral', songId: 'moonlight', reps: 2, fog: [14, 18, 48], fogDist: 22, wallH: 2.0, demons: ['grumble', 'imp', 'squeak'],
+  { id: 'E2M6', torch: [190,215,255], ambient: [8,14,34], episode: 2, finale: true, name: 'The Moonlit Cathedral', songId: 'moonlight', reps: 2, fog: [14, 18, 48], fogDist: 22, wallH: 2.0, demons: ['grumble', 'imp', 'squeak'],
     blurb: 'Final fight: Beethoven\'s Moonlight Sonata, slow and steady.', fact: 'Beethoven\'s Moonlight Sonata got its name after he died. A poet said it sounded like moonlight on a lake.',
     rooms: [R(11, 12, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes'), R(11, 12, 'R', 'marble', 'checker', 'vault', ['column', 'bust']), R(13, 14, 'L', 'glass', 'checker', 'vault', ['column', 'candles', 'bust'], 'pipes')] },
 ]
@@ -73,7 +77,10 @@ export interface Room {
   stopS: number
 }
 export interface Prop { x: number; y: number; kind: PropKind }
+/** a static point light baked into the level's light map. r,g,b = how much light it adds at its centre (0..255 = 0..1 of the surface colour) */
+export interface Light { x: number; y: number; r: number; g: number; b: number; rad: number; pow: number }
 export interface LevelMap {
+  lights: Light[]
   spec: LevelSpec
   w: number; h: number
   /** 0 = floor, 1.. = wall kind index + 1 */
@@ -95,6 +102,7 @@ export function buildMap(spec: LevelSpec): LevelMap {
   let h: [number, number] = [0, -1]
   const rooms: Room[] = []
   const props: Prop[] = []
+  const lights: Light[] = []
   const pts: number[][] = []
   const CL = 4 // corridor length
   const cw = (c: [number, number]) => [c[0] + 0.5, c[1] + 0.5]
@@ -130,6 +138,24 @@ export function buildMap(spec: LevelSpec): LevelMap {
       for (const sj of [-1, 1]) {
         const k = Math.max(2, rs.d - 3 - Math.floor(rnd() * 3)), j = sj * Math.max(1, hw - 1 - Math.floor(rnd() * 2))
         const p = cw([en[0] + h[0] * k + lt[0] * j, en[1] + h[1] * k + lt[1] * j]); props.push({ x: p[0], y: p[1], kind })
+      }
+    }
+    // wall decor between the columns: sconces (which throw light) alternate with banners; glass halls get coloured window light instead
+    {
+      const tc = spec.torch ?? [255, 150, 60], c0 = cw(en)
+      const wallLight = rs.wall === 'glass'
+      const GLASS: [number, number, number][] = [[255, 70, 80], [80, 120, 255], [90, 230, 130], [255, 210, 90]]
+      for (let n = 0, f = 1; f < rs.d - 0.5; n++, f += 3) for (const sj of [-1, 1]) {
+        const px0 = c0[0] + h[0] * f + lt[0] * sj * (hw + 0.42), py0 = c0[1] + h[1] * f + lt[1] * sj * (hw + 0.42)
+        if (wallLight) continue
+        const torch = n % 2 === 0 || rs.wall === 'pipes'
+        props.push({ x: px0, y: py0, kind: torch ? 'torch' : 'banner' })
+        const ix = px0 - lt[0] * sj * 0.5, iy = py0 - lt[1] * sj * 0.5
+        if (torch) lights.push({ x: ix, y: iy, r: tc[0] * 0.42, g: tc[1] * 0.42, b: tc[2] * 0.42, rad: 3.6, pow: 2 })
+      }
+      if (wallLight) for (let n = 0, f = 1.5; f < rs.d - 0.5; n++, f += 2.5) for (const sj of [-1, 1]) {
+        const g = GLASS[(n * 2 + (sj > 0 ? 1 : 0)) % 4], lat = hw - 0.6
+        lights.push({ x: c0[0] + h[0] * f + lt[0] * sj * lat, y: c0[1] + h[1] * f + lt[1] * sj * lat, r: g[0] * 0.6, g: g[1] * 0.6, b: g[2] * 0.6, rad: 1.9, pow: 1 })
       }
     }
     const e = cw(en)
@@ -179,7 +205,10 @@ export function buildMap(spec: LevelSpec): LevelMap {
   })
   for (const r of rooms) { r.sx -= x0; r.sy -= y0 }
   for (const p of props) { p.x -= x0; p.y -= y0 }
-  return { spec, w, h: hh, cells: out, floorId: fo, ceilId: co, rooms, props, path, cum }
+  // candelabras glow too
+  for (const p of props) if (p.kind === 'candles') lights.push({ x: p.x + x0, y: p.y + y0, r: 120, g: 80, b: 34, rad: 2.6, pow: 2 })
+  for (const l of lights) { l.x -= x0; l.y -= y0 }
+  return { lights, spec, w, h: hh, cells: out, floorId: fo, ceilId: co, rooms, props, path, cum }
 }
 
 /** position and unit direction at path distance s */

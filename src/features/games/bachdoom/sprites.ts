@@ -3,7 +3,7 @@ import type { Sprites } from './types'
 import { buildBoss } from './sp-boss'
 import { buildGrumble, buildImp, buildSqueak } from './sp-demons'
 import { buildBfg, buildNotes, buildOrbs, buildSmoke } from './sp-fx'
-import { buildBust, buildCandles, buildColumn, buildStand } from './sp-props'
+import { buildBanner, buildBust, buildCandles, buildColumn, buildStand, buildTorch } from './sp-props'
 
 export function buildSprites(): Sprites {
   return {
@@ -13,6 +13,6 @@ export function buildSprites(): Sprites {
     orb: buildOrbs(),
     bfg: buildBfg(),
     smoke: buildSmoke(),
-    props: { column: buildColumn(), candles: buildCandles(), bust: buildBust(), stand: buildStand() },
+    props: { column: buildColumn(), candles: buildCandles(), bust: buildBust(), stand: buildStand(), torch: buildTorch(), banner: buildBanner() },
   }
 }

@@ -151,3 +151,41 @@ export function buildStand(): Img {
   fillRect(img, 2, 17, 3, 1, GOLD.m); fillRect(img, 23, 17, 3, 1, GOLD.m)
   return img
 }
+
+/** wall sconce with a flame (2 frames, 16 x 32). The flame is pale so the level's torch colour can tint it. */
+export function buildTorch(): [Img, Img] {
+  const mk = (f: number): Img => {
+    const img = newImg(16, 32)
+    // bracket + cup
+    part(img, GOLD, OL, (L, F) => {
+      fillRect(L, 7, 18, 3, 12, F)
+      fillPoly(L, [[3, 14], [13, 14], [11, 19], [5, 19]], F)
+      fillEllipse(L, 8, 29, 4.5, 2, F)
+    })
+    // flame: outer, middle, hot core; the tip leans a pixel with the frame
+    const lean = f ? 1 : 0
+    const outer = hex('#ffc060'), mid = hex('#ffe9a0'), core = hex('#ffffe8')
+    fillPoly(img, [[8, 14], [4, 12], [4, 8], [6, 4 + f], [7 + lean, 1], [9 + lean, 5], [11, 8], [12, 12]], outer)
+    fillPoly(img, [[8, 14], [6, 12], [6, 9], [8, 5 + f], [9, 9], [10, 12]], mid)
+    fillRect(img, 7, 10, 2, 3, core)
+    return img
+  }
+  return [mk(0), mk(1)]
+}
+
+/** hanging cloth banner with a gold note on it (24 x 56). Mid-grey cloth so the level colour can tint it. */
+export function buildBanner(): Img {
+  const img = newImg(24, 56)
+  const CLOTH = ramp('#c8a0e8')
+  part(img, GOLD, OL, (L, F) => { fillRect(L, 1, 1, 22, 3, F); fillEllipse(L, 2, 2.5, 2, 2, F); fillEllipse(L, 22, 2.5, 2, 2, F) })
+  part(img, CLOTH, OL, (L, F) => { fillPoly(L, [[3, 4], [21, 4], [21, 48], [12, 54], [3, 48]], F) })
+  // gold trim and tassels
+  for (let y = 7; y < 46; y++) { put(img, 5, y, GOLD.m); put(img, 18, y, GOLD.m) }
+  for (const x of [5, 9, 13, 17]) fillRect(img, x, 50 - Math.abs(x - 11) / 2, 2, 2, GOLD.l)
+  // a big eighth note
+  const g = GOLD.l, d = GOLD.d
+  fillEllipse(img, 9, 34, 4, 3, d); fillEllipse(img, 9, 34, 3, 2, g)
+  fillRect(img, 12, 14, 2, 21, g); fillRect(img, 13, 14, 1, 21, GOLD.m)
+  fillPoly(img, [[14, 14], [19, 20], [19, 25], [14, 19]], g)
+  return img
+}

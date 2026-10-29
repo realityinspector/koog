@@ -12,7 +12,10 @@ const BITS: Img[] = [
   dot(0xff5fd0ff), dot(0xffa0f070), dot(0xffff9a5a), dot(0xff9a6aff), // butter, mint, sky, pink  (0xAABBGGRR)
   dot(0xff4ac9ff), dot(0xfff0fcff),
 ]
-const PROP_H = { column: 1, candles: 0.62, bust: 0.62, stand: 0.52 } as const
+const TORCH: [number, number, number] = [255, 150, 60]
+/** banner cloth colour per level (ambient is a wash, not a cloth colour) */
+const BANNER: Record<string, [number, number, number]> = { E1M1: [200, 60, 80], E1M2: [140, 60, 200], E1M3: [70, 70, 200], E1M4: [220, 40, 40], E1M5: [120, 70, 220], E2M1: [240, 150, 60], E2M2: [220, 40, 100], E2M3: [230, 140, 30], E2M4: [60, 110, 230], E2M5: [40, 190, 150], E2M6: [150, 170, 255] }
+const PROP_H = { column: 1, candles: 0.62, bust: 0.62, stand: 0.52, torch: 0.36, banner: 1 } as const
 
 export class SceneList {
   list: Billboard[] = Array.from({ length: 200 }, newBillboard)
@@ -31,13 +34,26 @@ export class SceneList {
     const wh = g.map.spec.wallH ?? 1
     const clock = g.clock
     const demo = g.phase === 'title'
+    const tc = g.map.spec.torch ?? TORCH, ac = g.map.spec.ambient ? BANNER[g.map.spec.id] ?? TORCH : TORCH
 
     for (const p of g.map.props) {
       const dx = p.x - g.camX, dy = p.y - g.camY
       if (dx * dx + dy * dy > 400) continue
       const b = this.next(); if (!b) break
-      b.x = p.x; b.y = p.y; b.img = sp.props[p.kind]
-      b.h = p.kind === 'column' ? wh * 0.98 : PROP_H[p.kind] * Math.min(1.5, wh)
+      b.x = p.x; b.y = p.y
+      if (p.kind === 'torch') {
+        // slow two-frame flame, a different phase per sconce; the pose is fixed for kids who prefer reduced motion
+        b.img = sp.props.torch[g.reduced ? 0 : Math.floor(clock * 2.2 + p.x * 1.7 + p.y * 2.3) & 1]
+        b.z = Math.min(0.62, wh * 0.5); b.h = 0.55; b.glow = true
+        b.tint = 0.4; b.tr = tc[0]; b.tg = tc[1]; b.tb = tc[2]
+      } else if (p.kind === 'banner') {
+        b.img = sp.props.banner
+        b.h = Math.min(1.3, 0.55 * wh + 0.2); b.z = Math.max(0.15, wh - 0.2 - b.h)
+        b.tint = 0.5; b.tr = ac[0]; b.tg = ac[1]; b.tb = ac[2]
+      } else {
+        b.img = sp.props[p.kind]
+        b.h = p.kind === 'column' ? wh * 0.98 : PROP_H[p.kind] * Math.min(1.5, wh)
+      }
     }
     for (const k of g.pickups) {
       if (!k.on) continue

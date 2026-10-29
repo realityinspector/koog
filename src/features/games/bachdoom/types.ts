@@ -36,7 +36,7 @@ export interface Sprites {
   /** gun smoke puff for misfires, 24 x 24, 3 frames growing */
   smoke: [Img, Img, Img]
   /** decor, drawn as billboards. column 32 x 64, candles 24 x 48, bust 32 x 56, stand 28 x 40 */
-  props: { column: Img; candles: Img; bust: Img; stand: Img }
+  props: { column: Img; candles: Img; bust: Img; stand: Img; torch: [Img, Img]; banner: Img }
 }
 
 /** Bach's status-bar face, 32 x 32 each */
