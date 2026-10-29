@@ -100,3 +100,12 @@
 .kg-display .pd .pd-x { width: 34px; height: 34px; }
 /* while the drawer is open, keep the visual-mode chips to its left */
 .kg-display .viz:has(.pd) .viz-bar { right: min(352px, 92%); }
+
+/* Slimmer rail: icon + label side by side, so the display gets the height. */
+:root { --kg-rail-h: clamp(48px, 7.5vh, 62px); }
+.kg-mode { flex-direction: row; gap: 8px; padding: 4px 10px; }
+.kg-mode-ic { font-size: clamp(15px, 2.2vh, 19px); }
+.kg-led { top: 50%; left: 10px; transform: translateY(-50%); }
+/* "Show note names" tucks into the keybed's top-right corner, small. */
+.kg-keybed .kb-top { top: -4px; right: 6px; transform: scale(.85); transform-origin: top right; opacity: .8; }
+.kg-display .viz-hint { background: rgba(10, 8, 30, .6); padding: 4px 10px; border-radius: 10px; color: #e8e6f6; }

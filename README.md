@@ -16,6 +16,8 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 |---|---|
 | **PLAY** | The visualizer fills the display: fireworks, ripples, rising bars or 🔥 fire. In-key notes burst gold and out-of-key notes go "spicy". Smart readouts show the detected key, chord, in-key % and streak. |
 | **🎛️ Patch** (inside PLAY) | A Moog-style patch on the display: VCO → VCF → VCA, with ENV and a cable-patching game. The patch drives the visuals: the waveform sets particle shape, filter cutoff sets brightness, resonance adds halos, and release sets the trails. You can also play your keyboard through the synth. |
+| **🤖 Smart Band** (inside PLAY) | Turn it on and play a melody. It guesses the chord your notes fit, follows your tempo, and plays pad, bass and light drums along with you. It uses a small readable rule set in `src/features/smartband/harmonizer.ts`, not a black box. |
+| **🧩 Patch Quests** (in the Patch drawer) | Guided synth-patching lessons, such as "make it dark", "make it scream" and "slide like a theremin". Each one tells you what to watch in the visuals as the sound changes. |
 | **SONGS** | 🎧 Koog Originals (original pop songs written for this project), 🔥 public-domain Bangers and warm-ups. *Wait* mode pauses for you; *Flow* mode keeps time with a backing beat. Includes a My Songs recorder. |
 | **CHALLENGE** | 15 games, including intervals, echo, black keys only, mirror mode, major or minor, a boss level and a daily challenge. Earns badges, personal bests and confetti. |
 | **BEATS** | 8 original grooves synthesized in the browser, plus a jam score. |
@@ -51,7 +53,7 @@ Koog only ships music that is public domain in the US: published in 1930 or earl
 
 ## Roadmap
 
-- **Eventually: teach modular synthesizer patches too.** Oscillators, filters, envelopes and patch cables, starting from the synth-history module.
+- **Eventually: teach modular synthesizer patches too.** Oscillators, filters, envelopes and patch cables. Patch Quests is the first step; next come real patch-cable routing and LFO modulation.
 - Measure real keyboards (range, velocity curve, latency) and adapt songs to fit.
 - Check every song by ear. Some were transcribed from memory.
 

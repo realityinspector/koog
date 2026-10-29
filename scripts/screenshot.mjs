@@ -25,6 +25,7 @@ const send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.
 await send('Runtime.enable'); await send('Page.enable')
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 1, mobile: false })
 for (const s of steps) {
+  if (s.viewport) { await send('Emulation.setDeviceMetricsOverride', { width: s.viewport[0], height: s.viewport[1], deviceScaleFactor: 1, mobile: false }); await sleep(600) }
   if (s.nav) { await send('Page.navigate', { url: s.nav }); await sleep(s.wait ?? 2500) }
   if (s.js) { const r = await send('Runtime.evaluate', { expression: s.js, awaitPromise: true, returnByValue: true }); const v = r.result?.result?.value ?? r.result?.exceptionDetails?.exception?.description; if (s.log !== false) console.log((s.name || 'js') + ':', typeof v === 'string' ? v.slice(0, 600) : JSON.stringify(v)?.slice(0, 600)); await sleep(s.wait ?? 300) }
   if (s.shot) { const r = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync(`${outDir}/${s.shot}.png`, Buffer.from(r.result.data, 'base64')); console.log('shot', s.shot) }
