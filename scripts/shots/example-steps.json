@@ -1,0 +1,12 @@
+[
+ {"nav":"http://localhost:5173/","wait":1500},
+ {"js":"localStorage.setItem('koog.profiles','[\"tester\"]'); localStorage.setItem('koog.active','tester'); localStorage.setItem('koog.viz.mode','fireworks'); 'set'","log":false},
+ {"nav":"http://localhost:5173/","wait":3000},
+ {"shot":"10-idle"},
+ {"name":"push","js":"(async()=>{const {useAppStore}=await import('/src/store/appStore.ts'); window.__p=(n,on)=>{const N=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; useAppStore.setState(s=>({recentNotes:[{id:-Math.floor(Math.random()*1e9),note:n,velocity:on?110:0,on,name:N[n%12]+'4'},...s.recentNotes].slice(0,12)}))}; for (const n of [60,64,67]) { window.__p(n,true); await new Promise(r=>setTimeout(r,150)) } await new Promise(r=>setTimeout(r,700)); return document.querySelector('.viz-bar')?.getBoundingClientRect().height })()"},
+ {"shot":"11-play"},
+ {"name":"style","js":"(async()=>{ const b=[...document.querySelectorAll('.viz-bar button')].find(b=>b.textContent.includes('🎨')); b?.click(); await new Promise(r=>setTimeout(r,400)); return !!b })()"},
+ {"shot":"12-style-popover"},
+ {"name":"patch","js":"(async()=>{ document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); const b=[...document.querySelectorAll('.viz-bar button')].find(b=>b.textContent.includes('Patch')); b?.click(); await new Promise(r=>setTimeout(r,500)); const q=[...document.querySelectorAll('.pd button')].find(b=>b.textContent.includes('Quests')); q?.click(); await new Promise(r=>setTimeout(r,400)); return !!q })()"},
+ {"shot":"13-quests"}
+]

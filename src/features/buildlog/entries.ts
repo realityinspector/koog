@@ -231,4 +231,11 @@ export const entries: Entry[] = [
     title: '👻🎤✨ Ghosts, karaoke and sparkles (requests #13–15)',
     body: 'Three of your requests in one go, built by two AI helpers working at the same time on different files so they never bumped into each other. Engineers call that "parallel work". Each ghost is drawn ONCE into a hidden picture, then copied onto the screen hundreds of times, which is much faster than drawing it fresh every frame. Karaoke: every note in a song now carries a syllable, and the words light up using the SAME counter the game uses to track your notes. One source of truth means the words can never drift out of sync. Lyrics for the Koog Originals are brand new. Old songs like Jingle Bells use their real words, which are public domain.',
   },
+  {
+    id: 32,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🤖 Smart Band + 🧩 Patch Quests',
+    body: 'Koog has a BAND now. Tap 🤖 BAND, then play a melody. It listens to your notes, guesses which chord fits (it scores every chord in your key by how many of your notes it contains, and only switches on the first beat of a bar so it doesn\'t jump around), and works out your speed by measuring the gaps between your notes. Then it plays bass and chords along with you. That\'s a "smart" algorithm: no magic, just clear rules that are good at guessing. Also new: 🧩 Quests in the Patch drawer teach real synth patching. "Make it dark", "make it scream", "slide like a theremin"… and you can SEE each sound change in the visuals.',
+  },
 ]

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
-import { createEngine, THEMES, type Engine, type Mode, type Theme } from './engine'
+import { createEngine, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
 import { PatchDrawer } from './PatchDrawer'
+import { VizControls, VISUALS } from './VizControls'
 import './visualizer.css'
 
 // Computer-keyboard fallback so it works even before MIDI is allowed.
@@ -16,14 +17,6 @@ function push(ev: Omit<NoteEvent, 'id' | 'name'>) {
   useAppStore.setState((s) => ({ recentNotes: [full, ...s.recentNotes].slice(0, 12) }))
 }
 
-const MODES: { id: Mode; label: string }[] = [
-  { id: 'fireworks', label: 'Fireworks' },
-  { id: 'ripples', label: 'Ripples' },
-  { id: 'rise', label: 'Rising bars' },
-  { id: 'fire', label: '🔥 Fire' },
-  { id: 'ghost', label: '👻 Ghosts' },
-]
-
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -31,7 +24,7 @@ export function Visualizer() {
   const [mode, setMode] = useState<Mode>(() => {
     try {
       const m = localStorage.getItem('koog.viz.mode')
-      if (m && MODES.some((x) => x.id === m)) return m as Mode
+      if (m && VISUALS.some((x) => x.id === m)) return m as Mode
     } catch { /* storage blocked: fine */ }
     return 'fireworks'
   })
@@ -44,6 +37,8 @@ export function Visualizer() {
   const [patchOpen, setPatchOpen] = useState(() => {
     try { return localStorage.getItem('koog.viz.patch') === '1' } catch { return false }
   })
+  const [played, setPlayed] = useState(false)
+  useEffect(() => onNote((n) => { if (n.on) setPlayed(true) }), [])
   const connected = useAppStore((s) => s.midiConnected)
 
   useEffect(() => {
@@ -80,7 +75,6 @@ export function Visualizer() {
   useEffect(() => {
     try { localStorage.setItem('koog.viz.patch', patchOpen ? '1' : '0') } catch { /* ignore */ }
   }, [patchOpen])
-  const nextTheme = () => setTheme((t) => THEMES[(THEMES.findIndex((x) => x.id === t) + 1) % THEMES.length].id)
 
   useEffect(() => {
     const down = new Set<string>()
@@ -118,20 +112,10 @@ export function Visualizer() {
   return (
     <div className="viz" ref={wrap}>
       <canvas ref={canvas} className="viz-canvas" />
-      <div className="viz-bar">
-        {MODES.map((m) => (
-          <button key={m.id} className={(m.id === mode ? 'on' : '') + (m.id === 'fire' ? ' fire' : '') + (m.id === 'ghost' ? ' ghost' : '')} onClick={() => setMode(m.id)}>
-            {m.label}
-          </button>
-        ))}
-        <button className={emoji ? 'on' : ''} onClick={() => setEmoji((e) => !e)}>Emoji 😜</button>
-        <button className={sparkle ? 'on' : ''} onClick={() => setSparkle((x) => !x)} aria-pressed={sparkle} title="Sparkles">✨</button>
-        <button onClick={nextTheme} title="Change background">{THEMES.find((x) => x.id === theme)?.label}</button>
-        <button className={patchOpen ? 'on' : ''} onClick={() => setPatchOpen((o) => !o)} aria-expanded={patchOpen}>🎛️ Patch</button>
-        <button onClick={fullscreen}>Fullscreen</button>
-      </div>
+      <VizControls mode={mode} onMode={setMode} theme={theme} onTheme={setTheme} emoji={emoji} onEmoji={setEmoji}
+        sparkle={sparkle} onSparkle={setSparkle} patchOpen={patchOpen} onPatch={() => setPatchOpen((o) => !o)} onFullscreen={fullscreen} />
       {patchOpen && <PatchDrawer onClose={() => setPatchOpen(false)} />}
-      <div className="viz-hint">
+      <div className={'viz-hint' + (played ? ' gone' : '')} aria-hidden={played}>
         {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: A W S E D F T G Y H U J K (Z / X change octave)'}
       </div>
     </div>

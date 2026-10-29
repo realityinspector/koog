@@ -1,0 +1,18 @@
+/* Smart Band chip: reuses the .sr-cell LCD look from harmony.css */
+.sb { padding: 0; min-width: 0; }
+.sb-row { display: flex; align-items: stretch; }
+.sb-main { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 100px; padding: 7px 8px 8px 12px; border-radius: 10px 0 0 10px; }
+.sb-main:hover { background: rgba(120, 220, 255, .08); }
+.sb-main:focus-visible, .sb-more:focus-visible { outline: 2px solid #4fd8ff; outline-offset: -2px; }
+.sb-more { all: unset; cursor: pointer; display: grid; place-items: center; width: 26px; color: #9fc4e0; font-size: 12px; border-left: 1px solid rgba(120, 220, 255, .18); border-radius: 0 10px 10px 0; }
+.sb-more:hover, .sb-more[aria-expanded="true"] { background: rgba(120, 220, 255, .12); color: #bff5ff; }
+.sb-chord { font-size: 18px; }
+.sb-led.live { animation: sb-pulse 1.4s ease-in-out infinite; }
+.sb-pop { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20; width: 250px; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px;
+  background: rgba(14, 12, 38, .96); border: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 18px 50px rgba(0, 0, 0, .6); color: var(--text); }
+.sb-styles { display: flex; gap: 6px; }
+.sb-styles .kp-btn { padding: 4px 6px; }
+.sb-vol { display: flex; flex-direction: column; gap: 6px; }
+.sb-vol input { width: 100%; accent-color: #4fd8ff; }
+@keyframes sb-pulse { 0%, 100% { box-shadow: 0 0 4px #6cffa8; } 50% { box-shadow: 0 0 10px #6cffa8; } }
+@media (prefers-reduced-motion: reduce) { .sb-led.live { animation: none; } }

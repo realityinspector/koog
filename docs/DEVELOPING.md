@@ -39,3 +39,7 @@ Per-kid data goes through `src/profile/profile.ts`: `pload(name, fallback)` / `p
 - **Stores** that cache saved data at module level: subscribe with `onProfileChange` and reload.
 - **Panels** that read saved data in `useState`: `App.tsx` remounts them with `key={player}`.
 - **Dev-only panels** go inside the `dad &&` block in `App.tsx`.
+
+## Seeing the app without touching anyone's browser
+
+`node scripts/screenshot.mjs scripts/shots/example-steps.json` launches headless Chrome with a throwaway profile, so kids' progress is never touched. It runs the steps (`nav`, `js`, `shot`) and writes PNGs to `scripts/shots/`, then prints page exceptions and console errors. macOS Chrome path.

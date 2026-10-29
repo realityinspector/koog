@@ -10,3 +10,4 @@ backups/
 RESTART.md
 private/
 *.log
+scripts/shots/*.png

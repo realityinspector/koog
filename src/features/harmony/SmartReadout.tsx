@@ -3,6 +3,7 @@ import './harmony.css'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
 import { KeyPopover } from './KeyPopover'
+import { SmartBandChip } from '../smartband/SmartBandChip'
 
 function mult(streak: number) {
   if (streak >= 32) return 'ON FIRE'
@@ -42,6 +43,7 @@ export function SmartReadout() {
         <b className="sr-val sr-streak" key={streak}>{streak}</b>
         <span className="sr-best">BEST {bestStreak}{lastJudgement === 'out' ? ' · spicy!' : ''}</span>
       </div>
+      <SmartBandChip />
     </div>
   )
 }

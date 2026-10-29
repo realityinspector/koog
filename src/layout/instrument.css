@@ -41,10 +41,7 @@
 .kg-display[data-screen] .kg-overlay { opacity: 0; visibility: hidden; }
 .kg-glass { position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; background: linear-gradient(112deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .02) 32%, transparent 32.2%), linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 18%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
 .kg-display .viz-hint { left: 14px; bottom: 10px; }
-.kg-display .viz-bar { top: 12px; right: 12px; max-width: 62%; z-index: 7; }
-.kg-display .viz-bar button { font-size: 12px; padding: 5px 11px; min-height: 0; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16); color: #f4f2ff; backdrop-filter: blur(8px); }
-.kg-display .viz-bar button:not(.on) { background: rgba(14, 10, 38, .5); }
-.kg-display .viz-bar button:not(.on):hover { background: rgba(255, 255, 255, .16); }
+.kg-display .viz-bar { z-index: 7; }
 
 /* screens */
 .kg-screen { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; background: rgba(16, 12, 42, .78); backdrop-filter: blur(16px) saturate(1.2); border-radius: inherit; animation: kg-screen-in .25s ease-out; }
@@ -93,13 +90,13 @@
 }
 @media (prefers-reduced-motion: reduce) { .kg-mode, .kg-screen, .kg-display .viz, .kg-overlay { transition: none; animation: none; } }
 
-/* Visual-mode chips live bottom-right so the smart readouts own the top-left. */
-.kg-display .viz-bar { top: auto; bottom: 10px; right: 12px; left: auto; max-width: calc(100% - 380px); justify-content: flex-end; flex-wrap: wrap; }
+/* Visual controls live bottom-right so the smart readouts own the top-left. */
+.kg-display .viz-bar { top: auto; bottom: 10px; right: 12px; left: auto; max-width: none; justify-content: flex-end; flex-wrap: nowrap; }
 .kg-display .viz-hint { max-width: 340px; }
 /* Patch drawer: full height on the right, clear of the chips at the bottom. */
-.kg-display .pd { top: 10px; bottom: 54px; padding-top: 14px; }
+.kg-display .pd { top: 10px; bottom: 10px; padding-top: 14px; }
 .kg-display .pd .pd-x { display: inline-flex; }
 .kg-display .pd .pd-head { position: static; margin-bottom: 6px; }
 .kg-display .pd .pd-x { width: 34px; height: 34px; }
 /* while the drawer is open, keep the visual-mode chips to its left */
-.kg-display .viz:has(.pd) .viz-bar { right: min(352px, 92%); max-width: calc(100% - 352px - 380px); }
+.kg-display .viz:has(.pd) .viz-bar { right: min(352px, 92%); }

@@ -91,3 +91,5 @@
 .sg .ly-l.cur .sy.sung { color: #6fe3ff; }
 .sg .ly-l.cur .sy.now { color: var(--gold); transform: scale(1.14); text-shadow: 0 0 12px rgba(255, 215, 108, .65); }
 @media (prefers-reduced-motion: reduce) { .sg .sy { transition: none; } .sg .ly-l.cur .sy.now { transform: none; } }
+/* Lyrics sit at the top of the lane (under the title/score row), so the hit zone above the keys stays clear. */
+.sg .ly { bottom: auto; top: 30px; background: rgba(13, 10, 32, .62); }

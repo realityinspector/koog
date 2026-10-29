@@ -3,6 +3,7 @@ import { onNote } from '../../music/notes'
 import { getSynth } from '../synth-history/engine'
 import { PRESETS } from '../synth-history/presets'
 import type { SynthParams, Wave } from '../synth-history/params'
+import { QuestsPanel } from './QuestsPanel'
 import './patchdrawer.css'
 
 type Id = 'VCO' | 'VCF' | 'VCA' | 'OUT' | 'ENV' | 'LFO'
@@ -42,6 +43,7 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
   const [params, setParams] = useState<SynthParams>({ ...synth.params })
   const [hear, setHear] = useState(false)
   const [sel, setSel] = useState<Id | null>(null)
+  const [tab, setTab] = useState<'sound' | 'quests'>('sound')
   const [game, setGame] = useState(false)
   const [from, setFrom] = useState<Id | null>(null)
   const [links, setLinks] = useState<string[]>([])
@@ -90,6 +92,12 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
         <b>🎛️ Patch</b>
         <button className="pd-x" onClick={onClose} aria-label="Close patch drawer">✕</button>
       </div>
+      <div className="pd-tabs" role="group" aria-label="Drawer section">
+        <button className={'pd-tab' + (tab === 'sound' ? ' on' : '')} aria-pressed={tab === 'sound'} onClick={() => setTab('sound')}>🎛️ Sound</button>
+        <button className={'pd-tab' + (tab === 'quests' ? ' on' : '')} aria-pressed={tab === 'quests'} onClick={() => setTab('quests')}>🧩 Quests</button>
+      </div>
+      {tab === 'sound' ? (
+        <>
       <p className="pd-sub">Change the sound and watch the sparks change too.</p>
 
       <svg className="pd-svg" viewBox="0 0 340 150" role="img" aria-label="Synth patch diagram">
@@ -138,6 +146,9 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
+        </>
+      ) : <QuestsPanel params={params} />}
+
       <h4>Knobs</h4>
       <div className="pd-waves" role="group" aria-label="Wave shape">
         {WAVES.map((x) => (
@@ -150,6 +161,10 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
         <input type="range" min={0.1} max={20} step={0.1} value={params.resonance} onPointerUp={blur} onChange={(e) => set({ resonance: Number(e.target.value) })} /></label>
       <label className="pd-knob"><span>Attack <i>bloom in</i><b>{params.attack.toFixed(2)} s</b></span>
         <input type="range" min={0.002} max={2} step={0.002} value={params.attack} onPointerUp={blur} onChange={(e) => set({ attack: Number(e.target.value) })} /></label>
+      <label className="pd-knob"><span>Decay <i>drop-off</i><b>{params.decay.toFixed(2)} s</b></span>
+        <input type="range" min={0.01} max={2} step={0.01} value={params.decay} onPointerUp={blur} onChange={(e) => set({ decay: Number(e.target.value) })} /></label>
+      <label className="pd-knob"><span>Sustain <i>hold level</i><b>{Math.round(params.sustain * 100)}%</b></span>
+        <input type="range" min={0} max={1} step={0.01} value={params.sustain} onPointerUp={blur} onChange={(e) => set({ sustain: Number(e.target.value) })} /></label>
       <label className="pd-knob"><span>Release <i>linger</i><b>{params.release.toFixed(2)} s</b></span>
         <input type="range" min={0.01} max={3} step={0.01} value={params.release} onPointerUp={blur} onChange={(e) => set({ release: Number(e.target.value) })} /></label>
       <label className="pd-knob"><span>Detune <i>ghost copy</i><b>{Math.round(params.detune)} ¢</b></span>
