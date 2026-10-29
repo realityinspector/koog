@@ -101,9 +101,28 @@ function ghostSprite(variant: number, frame: number) {
   return c
 }
 
+let puffSpr: HTMLCanvasElement | null = null
+function puffSprite() {
+  if (puffSpr) return puffSpr
+  const c = document.createElement('canvas')
+  c.width = c.height = 48
+  const g = c.getContext('2d')!
+  const gr = g.createRadialGradient(24, 24, 2, 24, 24, 24)
+  gr.addColorStop(0, 'rgba(245,240,255,0.95)')
+  gr.addColorStop(0.55, 'rgba(210,198,250,0.5)')
+  gr.addColorStop(1, 'rgba(190,175,240,0)')
+  g.fillStyle = gr
+  g.fillRect(0, 0, 48, 48)
+  puffSpr = c
+  return c
+}
+interface Puff { x: number; y: number; age: number; size: number }
+
 interface Ghost {
   x: number; y: number; bx: number; vy: number; ph: number; sway: number; size: number; variant: number
   age: number; max: number; note: number; hoverY: number
+  /** frames left before a spooked ghost goes poof */
+  spook?: number
   orbit?: { cx: number; rad: number; ang: number; spin: number }
   conga?: { dir: number; base: number }
   delay: number; hov?: boolean
@@ -114,6 +133,10 @@ export interface Ghosts {
   noteOn(note: number, x: number, v: number, kind: GhostKind): void
   noteOff(note: number): void
   releaseAll(): void
+  /** a fizzled forearm slam: the ghosts on screen jump, shake, and go poof one after another */
+  spook(): void
+  /** BOOM: a swirling ring of ghosts and two conga lines */
+  cheer(cx: number): void
   clear(): void
   drawBackdrop(ctx: CanvasRenderingContext2D, now: number): void
   draw(ctx: CanvasRenderingContext2D, now: number, quality: number): void
@@ -122,6 +145,7 @@ export interface Ghosts {
 export function createGhosts(reduced: boolean): Ghosts {
   const calm = reduced ? 0.5 : 1
   const list: Ghost[] = []
+  const puffs: Puff[] = []
   const holding = new Map<number, Ghost>()
   let W = 0, H = 0
   let lastChord = 0
@@ -210,8 +234,37 @@ export function createGhosts(reduced: boolean): Ghosts {
       for (const g of holding.values()) g.note = -1
       holding.clear()
     },
+    spook() {
+      let k = 0
+      for (let i = list.length - 1; i >= 0 && k < 10; i--) {
+        const g = list[i]
+        if (g.spook !== undefined || g.orbit || g.conga) continue
+        g.spook = 12 + k * 3
+        k++
+      }
+    },
+    cheer(cx) {
+      const room = cap(curQ) + 14
+      const n = 10
+      for (let i = 0; i < n && list.length < room; i++) {
+        const o = make(i % 5 === 0 ? V_KING : Math.floor(Math.random() * PASTELS.length) * 2, cx, H * 0.45, 28 + (i % 3) * 4, -0.3, 260)
+        o.orbit = { cx, rad: 84 + (i % 2) * 38, ang: (i / n) * 6.283, spin: (reduced ? 0.014 : 0.03) * (i % 2 ? 1 : -1) }
+        o.y = H * 0.45
+        list.push(o)
+      }
+      for (const dir of [1, -1]) {
+        const base = H * (0.28 + (dir > 0 ? 0 : 0.22))
+        for (let i = 0; i < 5 && list.length < room; i++) {
+          const o = make(Math.floor(Math.random() * PASTELS.length) * 2 + 1, dir > 0 ? -30 : W + 30, base, 30, 0, 600)
+          o.conga = { dir, base }
+          o.delay = i * 12
+          list.push(o)
+        }
+      }
+    },
     clear() {
       list.length = 0
+      puffs.length = 0
       holding.clear()
     },
     drawBackdrop(ctx, now) {
@@ -261,6 +314,11 @@ export function createGhosts(reduced: boolean): Ghosts {
       for (let i = list.length - 1; i >= 0; i--) {
         const g = list[i]
         if (g.delay > 0) { g.delay--; continue }
+        if (g.spook !== undefined && --g.spook <= 0) {
+          if (puffs.length < 24) puffs.push({ x: g.x, y: g.y, age: 0, size: g.size * 1.5 })
+          if (holding.get(g.note) === g) holding.delete(g.note)
+          list[i] = list[list.length - 1]; list.pop(); continue
+        }
         let a = 1
         if (g.orbit) {
           g.age++
@@ -303,13 +361,32 @@ export function createGhosts(reduced: boolean): Ghosts {
         g.x = g.bx + Math.sin(t * 1.5 * calm + g.ph) * g.sway
         drawOne(ctx, g, g.x, g.y, a, t, quality)
       }
+      // poofs: soft lavender clouds where spooked ghosts vanished
+      if (puffs.length) {
+        const sp = puffSprite()
+        for (let i = puffs.length - 1; i >= 0; i--) {
+          const p = puffs[i]
+          const u = ++p.age / 34
+          if (u >= 1) { puffs[i] = puffs[puffs.length - 1]; puffs.pop(); continue }
+          const r = p.size * (0.55 + u * 0.8)
+          ctx.globalAlpha = 0.7 * (1 - u)
+          ctx.drawImage(sp, p.x - r, p.y - r, r * 2, r * 2)
+        }
+      }
       ctx.globalAlpha = 1
     },
   }
 
   function drawOne(ctx: CanvasRenderingContext2D, g: Ghost, x: number, y: number, a: number, t: number, quality: number) {
     const fr = reduced || quality < 0.5 ? 0 : [0, 1, 2, 1][Math.floor(t * 4 * calm + g.ph) & 3]
-    const wd = g.size, ht = g.size * (GH / GW)
+    let wd = g.size, ht = g.size * (GH / GW)
+    if (g.spook !== undefined) {
+      // spooked: jump, shake, puff up a bit
+      x += Math.sin(g.spook * 2.1) * 4
+      y -= 4
+      wd *= 1.12
+      ht *= 1.12
+    }
     ctx.globalAlpha = Math.max(0, Math.min(1, a)) * 0.95
     ctx.drawImage(ghostSprite(g.variant, fr), x - wd / 2, y - ht / 2, wd, ht)
   }

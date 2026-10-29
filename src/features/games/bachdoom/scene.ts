@@ -1,0 +1,103 @@
+// Turns the game's state into the list of billboards the raycaster draws (demons, boss, orbs, props, notes).
+// The list is preallocated and refilled each frame.
+import { newBillboard } from './render'
+import type { Billboard } from './render'
+import type { Game } from './game'
+import type { DemonKind, Sprites } from './types'
+
+const HEIGHT: Record<DemonKind, number> = { imp: 1.22, grumble: 1.12, squeak: 0.8 }
+const PROP_H = { column: 1, candles: 0.62, bust: 0.62, stand: 0.52 } as const
+
+export class SceneList {
+  list: Billboard[] = Array.from({ length: 200 }, newBillboard)
+  n = 0
+  private tmp = { x: 0, y: 0 }
+
+  private next(): Billboard | null {
+    if (this.n >= this.list.length) return null
+    const b = this.list[this.n++]
+    b.flip = false; b.tint = 0; b.glow = false; b.z = 0
+    return b
+  }
+
+  build(g: Game, sp: Sprites) {
+    this.n = 0
+    const wh = g.map.spec.wallH ?? 1
+    const clock = g.clock
+    const demo = g.phase === 'title'
+
+    for (const p of g.map.props) {
+      const dx = p.x - g.camX, dy = p.y - g.camY
+      if (dx * dx + dy * dy > 400) continue
+      const b = this.next(); if (!b) break
+      b.x = p.x; b.y = p.y; b.img = sp.props[p.kind]
+      b.h = p.kind === 'column' ? wh * 0.98 : PROP_H[p.kind] * Math.min(1.5, wh)
+    }
+    for (const k of g.pickups) {
+      if (!k.on) continue
+      const b = this.next(); if (!b) break
+      b.x = k.x; b.y = k.y; b.z = 0.38 + (g.reduced ? 0 : Math.sin(clock * 3 + k.ph) * 0.05); b.h = 0.2
+      b.img = sp.note[Math.floor(clock * 2 + k.ph) & 1]; b.glow = true
+    }
+    for (const d of g.demons) {
+      if (d.state === 2) continue
+      if (d.room !== g.roomIdx && d.state !== 1) continue
+      g.demonPos(d, this.tmp)
+      const set = sp.demons[d.kind]
+      const b = this.next(); if (!b) break
+      b.x = this.tmp.x; b.y = this.tmp.y
+      let h = HEIGHT[d.kind] * Math.min(1.25, wh)
+      const fly = d.kind === 'squeak'
+      b.z = fly ? 0.22 + Math.sin(d.t * 3) * 0.06 : Math.abs(Math.sin(d.t * 5)) * 0.025
+      const walking = !demo && g.diff !== 'story' && d.dist > 2.55
+      if (d.state === 1) {
+        const k = Math.max(0, d.dieT / 0.85)
+        b.img = set.hurt; b.tint = 0.85 * (1 - k); b.tr = 255; b.tg = 220; b.tb = 110
+        h *= 0.35 + 0.65 * k; b.z += (1 - k) * 0.5; b.glow = true
+      } else if (d.lungeT > 0 || (!demo && d.dist <= 2.55 && g.diff !== 'story')) b.img = set.attack
+      else if (d.hurtT > 0) b.img = set.hurt
+      else b.img = set.walk[Math.floor(d.t * (walking ? 4 : 2)) & 1]
+      b.h = h
+      if (d.hurtT > 0 && d.state === 0) { b.tint = 0.35; b.tr = 255; b.tg = 255; b.tb = 255 }
+    }
+    if (g.boss && g.room) {
+      const bs = g.boss
+      g.bossPos(this.tmp)
+      const b = this.next()
+      if (b) {
+        b.x = this.tmp.x; b.y = this.tmp.y
+        b.h = 2.5 * Math.min(1, wh / 2.2 + 0.2)
+        b.z = 0.04 + (g.reduced ? 0 : Math.sin(clock * 1.7) * 0.07)
+        if (bs.dieT >= 0) {
+          const k = Math.max(0, 1 - bs.dieT / 2.6)
+          b.img = sp.boss.hurt; b.tint = 0.85 * (1 - k); b.tr = 255; b.tg = 220; b.tb = 110; b.h *= 0.2 + 0.8 * k; b.glow = true
+        } else if (bs.attackT > 0) b.img = sp.boss.attack
+        else if (bs.hurtT > 0) { b.img = sp.boss.hurt; b.tint = 0.3 }
+        else b.img = sp.boss.idle[Math.floor(clock * 2) & 1]
+      }
+      for (const o of g.orbs) {
+        if (!o.on) continue
+        g.orbPos(o, this.tmp)
+        const ob = this.next(); if (!ob) break
+        ob.x = this.tmp.x; ob.y = this.tmp.y; ob.z = o.z + Math.sin(o.t * 4) * 0.04; ob.h = 0.55; ob.glow = true
+        ob.img = sp.orb[Math.floor(o.t * 8) & 1]
+      }
+    }
+    for (const p of g.parts) {
+      if (!p.on) continue
+      const b = this.next(); if (!b) break
+      b.x = p.x; b.y = p.y; b.z = p.z; b.h = 0.17 * Math.min(1, p.life / 0.4); b.glow = true
+      b.img = sp.note[(p.frame + Math.floor(clock * 6)) & 1]
+    }
+    if (g.bfgT >= 0 && g.bfgT < 0.6 && g.room) {
+      const t = g.bfgT / 0.6, r = g.room
+      const b = this.next()
+      if (b) {
+        const dist = 0.9 + t * 4.2
+        b.x = r.sx + r.hx * dist; b.y = r.sy + r.hy * dist
+        b.z = 0.2 + t * 0.15; b.h = 0.35 + t * 0.9; b.glow = true
+        b.img = sp.bfg[Math.floor(clock * 10) & 1]
+      }
+    }
+  }
+}

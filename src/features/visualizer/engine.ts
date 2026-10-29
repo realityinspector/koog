@@ -8,6 +8,7 @@ import { createGhosts } from './ghosts'
 import { createSparkles } from './sparkle'
 import { drawNebula } from './galaxy'
 import type { Scene } from './scenes'
+import { useJudge, type JudgeEvent, type NoteGrade } from '../../music/judge'
 import { createConfetti } from './confetti'
 import { createMail } from './mail'
 import { createZombies } from './zombies'
@@ -35,8 +36,13 @@ const THEME_DEF: Record<Theme, [number, number, number, number, number, number]>
 }
 
 export interface Engine {
-  noteOn(note: number, velocity: number): void
+  /** g = the judge's grade for this note. It decides the look (kind, score, rhythm, fizzle/boom). Without it the engine grades the note itself. */
+  noteOn(note: number, velocity: number, g?: NoteGrade): void
   noteOff(note: number): void
+  /** the judge's musical moments: cluster (fizzle/boom), resolve, cadence, motif, charged */
+  react(ev: JudgeEvent): void
+  /** true while a full-screen game owns the display: stop drawing and give back the CPU */
+  setPaused(paused: boolean): void
   setMode(mode: Mode): void
   setEmoji(on: boolean): void
   setTheme(theme: Theme): void
@@ -51,13 +57,19 @@ const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // Hue walks the circle of fifths, so notes that sound good together get related colours.
 const hueFor = (note: number) => (((note % 12) * 7) % 12) * 30
 
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean; nb?: boolean }
+// nt/st = which note spawned it and when (ms). A forearm slam is only known after its first notes already
+// fired, so the 'cluster' event uses these tags to turn those early sparks gray (retro-fizzle).
+// b = brightness multiplier (how well the note was played). fz = already fizzled.
+interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean; nb?: boolean; b?: number; nt?: number; st?: number; fz?: boolean }
 type Kind = 'tonic' | 'in' | 'spicy'
-interface Rocket { x: number; y: number; vy: number; ty: number; hue: number }
-interface Bloom { x: number; y: number; r: number; life: number; max: number; hue: number; n: number }
-interface Ring { x: number; y: number; r: number; vr: number; life: number; max: number; hue: number; width: number; sat?: number; wob?: number }
-interface Bar { note: number; x: number; top: number; bottom: number; hue: number; held: boolean; width: number; alpha: number; kind?: Kind }
-interface Label { text: string; x: number; y: number; life: number; hue: number }
+// rockets: normal (streak), form (rhythm in formation: straight and tall), boom (finale barrage), dud (fizzle: sputters, never bursts)
+interface Rocket { x: number; y: number; vy: number; ty: number; hue: number; vx?: number; drag?: number; wob?: number; ph?: number; age?: number; sc?: number; form?: boolean; boom?: boolean; dud?: boolean; stage?: number; dudAt?: number; cough?: number; nt?: number; st?: number }
+interface Ring { x: number; y: number; r: number; vr: number; life: number; max: number; hue: number; width: number; sat?: number; wob?: number; a?: number; nt?: number; st?: number }
+interface Bar { note: number; x: number; top: number; bottom: number; hue: number; held: boolean; width: number; alpha: number; kind?: Kind; fz?: number; nt?: number; st?: number }
+interface Label { text: string; x: number; y: number; life: number; hue: number; sz?: number; max?: number; sat?: number; lit?: number; stroke?: boolean; nt?: number }
+interface Smoke { x: number; y: number; vx: number; vy: number; r: number; vr: number; life: number; max: number; a: number }
+interface Block { x: number; y: number; vx: number; vy: number; rot: number; vr: number; s: number; life: number; max: number; tone: number }
+interface Glow { x: number; y: number; life: number; max: number; r: number; hue: number; a: number }
 interface Streak { x1: number; y1: number; x2: number; y2: number; life: number; max: number; hue: number }
 interface Held { x: number; y: number; hue: number; velocity: number; kind?: Kind }
 
@@ -70,6 +82,7 @@ const EMOJI_TONIC = ['🌟', '👑', '🏆', '💎']
 const EMOJI_SPICY = ['🌶️', '🌶️', '🌶️', '🥵', '😜']
 const EMOJI_FIRE = ['🔥', '🚀', '⚡️', '😎']
 const EMOJI_CHORD = ['🌈', '🎹', '🪐']
+const EMOJI_BOOM = ['⭐', '🌟', '✨', '💥', '🎆', '🎇', '🎉', '🪩', '💫']
 interface Emoji { ch: string; x: number; y: number; vx: number; vy: number; rot: number; vr: number; size: number; life: number; max: number }
 const pick = (a: string[]) => a[Math.floor(Math.random() * a.length)]
 
@@ -173,7 +186,7 @@ function flameSpr(pal: number, stage: number) {
   }
   return c
 }
-interface Flame { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; pal: number; ph: number; lift: number; spark?: boolean }
+interface Flame { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; pal: number; ph: number; lift: number; spark?: boolean; nt?: number; st?: number }
 const MAX_FLAMES = 850
 
 // Drawing emoji text every frame is slow too, so rasterize each one once.
@@ -194,6 +207,44 @@ function sprite(ch: string) {
   return c
 }
 
+// Fizzle sprites, also stamped once: a soft gray smoke puff and a small dud rocket.
+let smokeSpr: HTMLCanvasElement | null = null
+function smokeSprite() {
+  if (smokeSpr) return smokeSpr
+  const c = document.createElement('canvas')
+  c.width = c.height = 48
+  const g = c.getContext('2d')!
+  const gr = g.createRadialGradient(24, 24, 2, 24, 24, 24)
+  gr.addColorStop(0, 'rgba(208,211,222,0.95)')
+  gr.addColorStop(0.55, 'rgba(165,170,184,0.45)')
+  gr.addColorStop(1, 'rgba(145,150,165,0)')
+  g.fillStyle = gr
+  g.fillRect(0, 0, 48, 48)
+  smokeSpr = c
+  return c
+}
+let dudSpr: HTMLCanvasElement | null = null
+function dudSprite() {
+  if (dudSpr) return dudSpr
+  const c = document.createElement('canvas')
+  c.width = 24
+  c.height = 44
+  const g = c.getContext('2d')!
+  g.fillStyle = '#8a8f9c' // fins
+  g.beginPath(); g.moveTo(5, 28); g.lineTo(1, 40); g.lineTo(8, 34); g.closePath(); g.fill()
+  g.beginPath(); g.moveTo(19, 28); g.lineTo(23, 40); g.lineTo(16, 34); g.closePath(); g.fill()
+  g.fillStyle = '#c4c8d2' // body
+  g.beginPath(); g.roundRect(6, 12, 12, 26, 3); g.fill()
+  g.fillStyle = '#a05a55' // nose, a sad faded red
+  g.beginPath(); g.moveTo(6, 13); g.quadraticCurveTo(12, -4, 18, 13); g.closePath(); g.fill()
+  g.fillStyle = '#6f7a8c' // window
+  g.beginPath(); g.arc(12, 24, 3, 0, Math.PI * 2); g.fill()
+  g.fillStyle = 'rgba(255,255,255,0.35)'
+  g.fillRect(8, 15, 2, 20)
+  dudSpr = c
+  return c
+}
+
 export function createEngine(canvas: HTMLCanvasElement): Engine {
   const ctx = canvas.getContext('2d')!
   let w = 0
@@ -203,6 +254,9 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   let hi = 84
   let lastNoteAt = 0
   let raf = 0
+  let paused = false // a full-screen game owns the display
+  let dead = false
+  let warned = false
 
   const particles: Particle[] = []
   const rings: Ring[] = []
@@ -211,8 +265,20 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   const held = new Map<number, Held>()
   const motes: Particle[] = []
   const rockets: Rocket[] = []
-  const blooms: Bloom[] = []
   const emojis: Emoji[] = []
+  // judge-driven effects
+  const smokes: Smoke[] = []
+  const blocks: Block[] = []
+  const glows: Glow[] = []
+  const fountains: { x: number; life: number; max: number }[] = []
+  const timers: { at: number; fn: () => void }[] = []
+  const noteY = new Map<number, number>() // where each note's burst happened (for resolve and motif)
+  let lastPfft = 0
+  let lastFizzSfx = 0
+  let crackleN = 0
+  let crackleJag: number[] = []
+  let crackleIcons: { x: number; at: number }[] = [{ x: 0.2, at: 0 }, { x: 0.55, at: 9 }, { x: 0.85, at: 17 }]
+  let tagNote = -1, tagT = 0 // fire mode: flames spawned right now belong to this note
   const laneGrad = new Map<string, CanvasGradient>()
   let emojiOn = false
   let sparkleOn = true
@@ -268,18 +334,18 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     lfoTgt = p.lfoTarget ?? 'none'; lfoHz = p.lfoRate ?? 5; lfoDep = p.lfoDepth ?? 0
     glideAmt = p.glide > 0.02 ? Math.min(1, p.glide / 0.3) : 0
   }
-  const pushP = (p: Particle) => {
-    if (particles.length >= MAX_PARTICLES * quality) return
+  const pushP = (p: Particle, prio = false) => {
+    if (particles.length >= MAX_PARTICLES * (prio ? 1.3 : 1) * quality) return
     if (linger !== 1) p.max = Math.round(p.max * linger)
     if (atkFrames > 1 && !p.nb) p.max += atkFrames
     particles.push(p)
   }
-  function burst(x: number, y: number, hue: number, n: number, speed: number, extra: Partial<Particle> = {}) {
+  function burst(x: number, y: number, hue: number, n: number, speed: number, extra: Partial<Particle> = {}, prio = false) {
     n = Math.round(n * calm * quality)
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2
       const s = (0.6 + Math.random()) * speed
-      pushP({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: 50 + Math.random() * 50, size: 1.5 + Math.random() * 2.5, hue: hue + (Math.random() - 0.5) * 30, ...extra })
+      pushP({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: 50 + Math.random() * 50, size: 1.5 + Math.random() * 2.5, hue: hue + (Math.random() - 0.5) * 30, ...extra }, prio)
     }
   }
 
@@ -295,7 +361,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   const rnd = Math.random
   function addFlame(x: number, y: number, vx: number, vy: number, max: number, size: number, pal: number, lift = 0.02, spark = false) {
     if (flames.length >= MAX_FLAMES * quality) return
-    flames.push({ x, y, vx, vy, life: 0, max, size, pal, ph: rnd() * 6.28, lift, spark })
+    flames.push({ x, y, vx, vy, life: 0, max, size, pal, ph: rnd() * 6.28, lift, spark, nt: tagNote, st: tagT })
   }
   const palFor = (kind?: Kind) => (kind === 'spicy' ? 1 + (rnd() < 0.5 ? 1 : 0) : kind === 'tonic' && rnd() < 0.55 ? 3 : 0)
   function spark(x: number, y: number, pal: number, long = false) {
@@ -390,6 +456,43 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     ctx.globalAlpha = 1
   }
 
+  // While the BOOM meter is full: a thin, steady electric crackle along the bottom edge. Small area, no blinking.
+  function drawCrackle() {
+    if (useJudge.getState().charge < 1) return
+    const n = Math.max(8, Math.floor(w / 26))
+    crackleN++
+    if (crackleJag.length !== n + 1 || (!reduced && crackleN % 8 === 0)) {
+      crackleJag = []
+      for (let i = 0; i <= n; i++) crackleJag.push(rnd())
+    }
+    const t = performance.now() / 1000
+    ctx.lineJoin = 'round'
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.beginPath()
+      for (let i = 0; i <= n; i++) {
+        const x = (i / n) * w
+        const amp = 0.5 + 0.5 * Math.sin(i * 0.5 - t * (reduced ? 0.6 : 2.4))
+        const y = h - 3 - crackleJag[i] * (3 + amp * 12)
+        if (i) ctx.lineTo(x, y)
+        else ctx.moveTo(x, y)
+      }
+      ctx.strokeStyle = pass ? 'hsla(52,100%,90%,0.7)' : 'hsla(46,100%,58%,0.26)'
+      ctx.lineWidth = pass ? 1.2 : 4.5
+      ctx.stroke()
+    }
+    if (!reduced) {
+      // a few small bolts that fade in and out smoothly, and the odd spark
+      for (const ic of crackleIcons) {
+        const u = ((crackleN + ic.at * 4) % 70) / 70
+        if (u < 0.02) ic.x = 0.05 + rnd() * 0.9
+        ctx.globalAlpha = Math.sin(u * Math.PI) * 0.8
+        ctx.drawImage(sprite('⚡'), ic.x * w - 9, h - 30, 18, 18)
+      }
+      ctx.globalAlpha = 1
+      if (rnd() < 0.12 * quality) pushP({ x: rnd() * w, y: h - 6, vx: (rnd() - 0.5) * 1.2, vy: -(1.5 + rnd() * 2), life: 0, max: 24, size: 1.6, hue: 50, nb: true, b: 0.8 })
+    }
+  }
+
   let dpr = 1
   const resize = () => {
     dpr = Math.min(1.5, window.devicePixelRatio || 1)
@@ -421,36 +524,328 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     return pad + ((note - lo) / Math.max(1, hi - lo)) * (w - pad * 2)
   }
 
-  function noteOn(note: number, velocity: number) {
+  // ================= judge-driven effects =================
+  const clamp01 = (x: number) => Math.max(0, Math.min(1, x))
+  const later = (ms: number, fn: () => void) => { if (timers.length < 48) timers.push({ at: performance.now() + ms, fn }) }
+  const avgX = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length)
+
+  /** a soft gray puff (stamped from one cached sprite, drawn source-over) */
+  function puffAt(x: number, y: number, n = 1, size = 1, a = 0.38) {
+    for (let i = 0; i < n; i++) {
+      if (smokes.length >= 90 * quality) return
+      smokes.push({ x: x + (rnd() - 0.5) * 14 * size, y: y + (rnd() - 0.5) * 8, vx: (rnd() - 0.5) * 0.9, vy: -(0.3 + rnd() * 0.8), r: (9 + rnd() * 7) * size, vr: 0.3 + rnd() * 0.3, life: 0, max: 45 + rnd() * 30, a })
+    }
+  }
+
+  /** turn a particle gray and dull, and let it drop and fade */
+  function fizzP(p: Particle) {
+    p.fz = true
+    p.sat = 10
+    p.tw = undefined
+    p.trail = false
+    p.wob = undefined
+    p.b = 0.4
+    // half of them just vanish, so a pile of dull additive sparks doesn't add up to a bright blob
+    p.max = rnd() < 0.5 ? p.life + 1 : Math.min(p.max, p.life + 22 + ((rnd() * 18) | 0))
+    p.vx *= 0.35
+    p.vy = Math.max(0, p.vy) * 0.5
+  }
+
+  /** a fizzled note: a rocket that sputters, wobbles, coughs gray smoke, droops and falls. Never bursts. */
+  function dudRocket(x: number, note: number, now: number) {
+    let n = 0
+    for (const r of rockets) if (r.dud) n++
+    if (n >= Math.max(3, Math.round(8 * quality))) return
+    rockets.push({ x, y: h - 6, vy: -(5.5 + rnd() * 2.5), ty: 0, hue: 0, dud: true, stage: 0, ph: rnd() * 6.28, age: 0, dudAt: 15 + ((rnd() * 16) | 0), vx: 0, nt: note, st: now })
+    if (now - lastPfft > 1500) {
+      lastPfft = now
+      labels.push({ text: 'pfft', x, y: h * 0.62, life: 0, hue: 220, sat: 10, lit: 82, sz: 19, max: 85 })
+    }
+  }
+  function makeDud(r: Rocket) {
+    r.dud = true
+    r.form = false
+    r.boom = false
+    r.wob = undefined
+    r.stage = 0
+    r.ph = r.ph ?? rnd() * 6.28
+    r.dudAt = (r.age ?? 0) + 5 + ((rnd() * 10) | 0)
+    r.vx = 0
+    r.vy = Math.max(r.vy, -6)
+  }
+  /** stamp a sprite centred at x,y, rotated by ang, wd x ht CSS px */
+  function stampRot(img: HTMLCanvasElement, x: number, y: number, ang: number, wd: number, ht: number, a: number) {
+    const c = Math.cos(ang) * dpr, sn = Math.sin(ang) * dpr
+    ctx.globalAlpha = a
+    ctx.setTransform(c, sn, -sn, c, x * dpr, y * dpr)
+    ctx.drawImage(img, -wd / 2, -ht / 2, wd, ht)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  }
+  /** one frame of a dud rocket. Returns false when it is done. Call with source-over. */
+  function stepDud(r: Rocket): boolean {
+    const a = r.age ?? 0
+    const ph = r.ph ?? 0
+    const calmK = reduced ? 0.4 : 1
+    let ang = 0
+    let shake = 0
+    if (r.stage === 0) {
+      // sputtering up: the path wobbles more and more, sparks come and go
+      r.vy *= 0.96
+      r.x += Math.sin(a * 0.55 + ph) * (0.7 + a * 0.04) * calmK
+      r.y += r.vy
+      ang = Math.cos(a * 0.55 + ph) * 0.45 * calmK
+      if (a % 2 === 0) puffAt(r.x, r.y + 9, 1, 0.55, 0.3)
+      if (rnd() < 0.5) pushP({ x: r.x, y: r.y + 8, vx: (rnd() - 0.5) * 1.2, vy: 1 + rnd(), life: 0, max: 10, size: 1.6, hue: 28, nb: true, b: 0.7 })
+      if (a >= (r.dudAt ?? 24) || r.vy > -1.1) { r.stage = 1; r.cough = 0; puffAt(r.x, r.y, 3, 0.9, 0.4) }
+    } else if (r.stage === 1) {
+      // cough
+      r.cough = (r.cough ?? 0) + 1
+      shake = Math.sin(r.cough * 1.7) * 2 * calmK
+      ang = Math.sin(r.cough * 1.7) * 0.25 * calmK + r.cough * 0.03
+      r.vy *= 0.9
+      r.y += r.vy
+      if (r.cough % 4 === 1) puffAt(r.x, r.y + 8, 1, 0.8, 0.42)
+      if (r.cough > 14) { r.stage = 2; r.vx = (rnd() - 0.5) * 1.6 }
+    } else {
+      // droop and fall
+      r.vy += 0.17
+      r.vx = (r.vx ?? 0) * 0.99
+      r.x += r.vx
+      r.y += r.vy
+      ang = Math.atan2(r.vy, r.vx ?? 0) + Math.PI / 2
+      if (a % 5 === 0) puffAt(r.x, r.y - 6, 1, 0.5, 0.22)
+      if (r.y > h - 14 || a > 170) { puffAt(r.x, Math.min(r.y, h - 14), 3, 1, 0.4); return false }
+    }
+    stampRot(dudSprite(), r.x + shake, r.y, ang, 15, 28, 1)
+    ctx.globalAlpha = 1
+    return true
+  }
+
+  /** a bar falls apart into gray blocks */
+  function crumble(b: Bar) {
+    const hgt = Math.max(10, b.bottom - b.top)
+    const n = 8 + ((rnd() * 4) | 0)
+    for (let i = 0; i < n && blocks.length < 140 * quality; i++) {
+      blocks.push({ x: b.x + (rnd() - 0.5) * b.width, y: b.top + rnd() * hgt, vx: (rnd() - 0.5) * 3.2, vy: -2 - rnd() * 2.5, rot: rnd() * 6.28, vr: (rnd() - 0.5) * 0.4, s: 6 + rnd() * Math.max(5, b.width * 0.3), life: 0, max: 60 + rnd() * 25, tone: (rnd() * 3) | 0 })
+    }
+    puffAt(b.x, b.top + hgt / 2, 1, 0.7, 0.3)
+  }
+
+  /** the slam is known only now: undo what its first notes already spawned (tagged by note + time) */
+  function retroFizzle(notes: number[]) {
+    const now = performance.now()
+    const cutoff = now - 260
+    const set = new Set(notes)
+    for (const n of notes) held.delete(n)
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i]
+      if (p.nt !== undefined && !p.fz && (p.st ?? 0) > cutoff && set.has(p.nt)) fizzP(p)
+    }
+    for (const r of rockets) if (!r.dud && r.nt !== undefined && (r.st ?? 0) > cutoff && set.has(r.nt)) makeDud(r)
+    for (const r of rings) {
+      if (r.nt === undefined || (r.st ?? 0) <= cutoff || !set.has(r.nt)) continue
+      r.sat = 14
+      r.hue = 30
+      if (mode === 'ripples') r.vr = -Math.abs(r.vr) - 0.8 // a muddy ring that collapses
+      else r.life = Math.max(r.life, r.max - 12)
+    }
+    for (const b of bars) {
+      if (b.nt !== undefined && b.fz === undefined && (b.st ?? 0) > cutoff && set.has(b.nt)) { b.kind = 'spicy'; b.fz = 3 + ((rnd() * 6) | 0); b.held = false }
+    }
+    for (const f of flames) if (f.nt !== undefined && f.nt >= 0 && (f.st ?? 0) > cutoff && set.has(f.nt)) f.life = Math.max(f.life, f.max * 0.8)
+    for (let i = labels.length - 1; i >= 0; i--) { const nt = labels[i].nt; if (nt !== undefined && set.has(nt)) labels.splice(i, 1) }
+    if (mode === 'ghost') ghosts.spook()
+    else if (mode === 'fire') for (const n of notes.slice(0, 3)) puffAt(xFor(n), h - 50, 2, 2, 0.55)
+  }
+
+  /** BOOM was charged and the kid slammed the keys: the best thing in the app */
+  function boomFinale(notes: number[], xs: number[], cx: number) {
+    const q = quality * calm
+    const cy = h * 0.48
+    const x0 = Math.min(...xs), x1 = Math.max(...xs)
+    const span = Math.max(w * 0.36, x1 - x0 + 140)
+    // 1. the hit: a gold shockwave, five rainbow rings, and ONE local glow (never the whole canvas)
+    // (reduced motion: one slow, gentle ring and no emoji or barrage)
+    rings.push({ x: cx, y: cy, r: 8, vr: reduced ? 4.6 : 11, life: 0, max: reduced ? 36 : 46, hue: 46, width: 13, a: 0.8 })
+    if (!reduced) for (let k = 0; k < 3; k++) rings.push({ x: cx, y: cy, r: 4 - k * 16, vr: 9, life: 0, max: 48, hue: 300 - k * 100, width: 5 - k, a: 0.6 })
+    glows.push({ x: cx, y: cy, life: 0, max: 20, r: 150, hue: 46, a: reduced ? 0.22 : 0.32 })
+    // 2. core: gold sphere, rainbow sphere, glitter that hangs and twinkles
+    burst(cx, cy, 46, 150, 8.5, { tw: rnd() * 6.28, trail: true, size: 3.4 }, true)
+    const nr = Math.round(140 * q)
+    for (let i = 0; i < nr; i++) {
+      const a = (i / nr) * 6.2832 + rnd() * 0.05
+      const sp = 3.5 + rnd() * 3.5
+      pushP({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 80 + rnd() * 40, size: 2.6 + rnd() * 1.8, hue: (i / nr) * 360, tw: rnd() * 6.28 }, true)
+    }
+    if (!reduced) spawnEmoji(cx, cy, EMOJI_BOOM, 16, 1.3)
+    const ng = Math.round(90 * q)
+    for (let i = 0; i < ng; i++) {
+      const a = rnd() * 6.2832
+      const sp = 1 + rnd() * 6
+      pushP({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.6, life: 0, max: 120 + rnd() * 60, size: 1.1 + rnd() * 1.3, hue: 44 + rnd() * 14, tw: rnd() * 6.28 }, true)
+    }
+    labels.push({ text: 'BOOM!', x: cx, y: cy - 6, life: 0, hue: 46, lit: 64, sz: 60, max: 95, stroke: true })
+    if (reduced) return
+    // 3. barrage: a rocket from every slammed lane, one after another
+    // at most 3 rockets, 380 ms apart: keeps the BOOM under 3 bursts a second (photosensitivity rule)
+    const lanes = [notes[0], notes[Math.floor(notes.length / 2)], notes[notes.length - 1]].filter((n, i, a) => n != null && a.indexOf(n) === i)
+    lanes.forEach((n, i) => later(140 + i * 380, () => {
+      const x = xFor(n), ty = h * (0.26 + rnd() * 0.2)
+      rockets.push({ x, y: h, vy: -((h - ty) / 24.5), ty, hue: hueFor(n), boom: true, drag: 0.99, age: 0, sc: 1 })
+    }))
+    // 4. a golden crown ring, then secondary bursts, never closer than 0.35 s apart
+    later(260, () => {
+      const m = Math.round(44 * q)
+      for (let i = 0; i < m; i++) {
+        const a = (i / m) * 6.2832
+        pushP({ x: cx, y: cy, vx: Math.cos(a) * 7, vy: Math.sin(a) * 7, life: 0, max: 80, size: 3, hue: 46, tw: i, trail: true }, true)
+      }
+    })
+    ;[0.5, 0.85, 1.2, 1.55].forEach((sec, i) => later(sec * 1000, () => {
+      const x = Math.max(40, Math.min(w - 40, cx + (i % 2 ? 1 : -1) * span * (0.3 + 0.25 * (i >> 1)) + (rnd() - 0.5) * 50))
+      const y = h * (0.2 + rnd() * 0.22)
+      const hu = 30 + i * 85
+      burst(x, y, hu, 70, 5.6, { tw: rnd() * 6, trail: true, size: 3 }, true)
+      burst(x, y, hu + 50, 34, 3.2, { tw: 2 }, true)
+      rings.push({ x, y, r: 4, vr: 6, life: 0, max: 46, hue: hu, width: 5 })
+    }))
+    // 5. golden willow rain
+    later(1000, () => {
+      const m = Math.round(80 * q)
+      for (let i = 0; i < m; i++) pushP({ x: cx - span / 2 + rnd() * span, y: h * (0.12 + rnd() * 0.06), vx: (rnd() - 0.5) * 1.2, vy: -0.4 + rnd() * 0.6, life: 0, max: 130 + rnd() * 50, size: 1.8 + rnd() * 1.6, hue: 40 + rnd() * 16, tw: rnd() * 6.28, trail: true }, true)
+    })
+  }
+
+  /** the shape of a flower: eight petals of gold */
+  function releaseBloom(note: number) {
+    const x = xFor(note)
+    const y = noteY.get(note) ?? h * 0.5
+    const q = quality * calm
+    // two layers of petals (8 big gold ones, 8 smaller pink-gold ones between them), filled in
+    const n = Math.max(30, Math.round(110 * q))
+    for (let i = 0; i < n; i++) {
+      const inner = i % 3 === 0
+      const a = rnd() * 6.2832
+      const lobe = Math.pow(Math.abs(Math.cos(4 * (inner ? a + 0.3927 : a))), 0.8)
+      const sp = (inner ? 3.0 : 5.4) * (0.1 + 0.9 * lobe) * (0.45 + 0.55 * rnd())
+      pushP({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 60 + rnd() * 16, size: 2.2 + rnd() * 1.4, hue: inner ? 335 + rnd() * 25 : 40 + rnd() * 18, tw: i * 0.3 })
+    }
+    burst(x, y, 50, 8, 1.0, { size: 3.4, max: 50 })
+    rings.push({ x, y, r: 4, vr: 3, life: 0, max: 46, hue: 46, width: 4 })
+    labels.push({ text: 'release ✨', x, y: y - 34, life: 0, hue: 46, lit: 80, sz: 17, max: 85, stroke: true })
+  }
+
+  function cadenceFx(note: number) {
+    const x = xFor(note)
+    fountains.push({ x, life: 0, max: reduced ? 36 : 62 })
+    rings.push({ x, y: h - 24, r: 6, vr: 6, life: 0, max: 62, hue: 46, width: 6 })
+    rings.push({ x, y: h - 24, r: -8, vr: 6, life: 0, max: 70, hue: 290, width: 3 })
+    labels.push({ text: '🏁 cadence', x, y: h * 0.5, life: 0, hue: 46, lit: 82, sz: 20, max: 100, stroke: true })
+  }
+
+  /** faint copies of the pattern's bursts, up above, one after another */
+  function motifEcho(notes: number[]) {
+    const ys: number[] = []
+    const xs: number[] = []
+    notes.forEach((n, i) => {
+      const x = xFor(n)
+      const y = Math.max(h * 0.3, (noteY.get(n) ?? h * 0.5) - h * 0.2)
+      xs.push(x)
+      ys.push(y)
+      later(i * 140, () => {
+        burst(x, y, hueFor(n), 24, 2.3, { b: 0.38 })
+        rings.push({ x, y, r: 3, vr: 2.3, life: 0, max: 40, hue: hueFor(n), width: 2, a: 0.4 })
+      })
+    })
+    labels.push({ text: '🔁 motif', x: avgX(xs), y: Math.max(h * 0.28, Math.min(...ys) - 26), life: 0, hue: 190, lit: 84, sz: 17, max: 100, stroke: true })
+  }
+
+  function rainbowWave(cx: number, cy: number, n: number) {
+    for (let k = 0; k < n; k++) rings.push({ x: cx, y: cy, r: 6 - k * 18, vr: 8.5 + k * 0.2, life: 0, max: 75, hue: k * (360 / n), width: 7 - k * 0.4, a: 0.6 })
+    rings.push({ x: cx, y: cy, r: 8, vr: 11, life: 0, max: 60, hue: 46, width: 8, a: 0.8 })
+  }
+
+  /** modest versions of the moments for ripples / rise / fire / ghost */
+  function genericMark(x: number, y: number, text: string, hue: number) {
+    rings.push({ x, y, r: 4, vr: 3.4, life: 0, max: 52, hue, width: 4 })
+    rings.push({ x, y, r: -10, vr: 3.4, life: 0, max: 60, hue: hue + 30, width: 2 })
+    labels.push({ text, x, y: y - 30, life: 0, hue, lit: 82, sz: 16, max: 85, stroke: true })
+  }
+
+  function boomFx(notes: number[]) {
+    const xs = notes.map(xFor)
+    const cx = avgX(xs)
+    const now = performance.now()
+    if (mode === 'fireworks') boomFinale(notes, xs, cx)
+    else {
+      labels.push({ text: 'BOOM!', x: cx, y: h * 0.4, life: 0, hue: 46, lit: 64, sz: 50, max: 90, stroke: true })
+      if (mode === 'ripples') { rainbowWave(cx, h * 0.5, 7); burst(cx, h * 0.5, 46, 60, 6, { tw: 1 }, true) }
+      else if (mode === 'rise') { rainbowWave(cx, h, 7); burst(cx, h - 40, 46, 70, 7, { tw: 1 }, true) }
+      else if (mode === 'fire') {
+        ignite = 1
+        lastIgnite = now
+        for (let k = 0; k < 3; k++) fireball(cx + (k - 1) * w * 0.18, h - 90 - k * 12, () => (rnd() < 0.3 ? 3 : 0))
+        if (flashes.length < 6) flashes.push({ x: cx, life: 0 })
+      } else if (mode === 'ghost') {
+        ghosts.cheer(cx)
+        rings.push({ x: cx, y: h * 0.45, r: 8, vr: 9, life: 0, max: 60, hue: 46, width: 6 })
+      }
+    }
+  }
+
+  function noteOn(note: number, velocity: number, g?: NoteGrade) {
+    if (paused) return
     const v = Math.max(1, Math.min(127, velocity)) / 127
     const hue = hueFor(note)
     const x = xFor(note)
     lastNoteAt = performance.now()
-    if (theme === 'rainbow') tint += (((hue - (THEME_DEF.rainbow[0] + drift + tint)) % 360 + 540) % 360 - 180) * 0.04
 
-    const kind = kindOf(note)
+    // the judge's grade is the truth (so the visuals agree with the games); without one, grade it here
+    const kind: Kind = g?.kind ?? kindOf(note)
+    if (g?.cluster) return clusterNote(note, x, v, hue, kind, g)
+    // (slam notes never shift the background colour: a forearm must not swing the whole screen)
+    if (theme === 'rainbow') tint += (((hue - (THEME_DEF.rainbow[0] + drift + tint)) %360 + 540) % 360 - 180) * 0.04
     if (kind === 'spicy') streak = Math.floor(streak / 3)
     else streak++
     const boost = 1 + Math.min(1.2, streak * 0.04)
     const spicyHue = 270 + (Math.random() - 0.5) * 30
+    // how well it was played, 0..1. Scales burst size and brightness so weak notes are visibly weaker.
+    const qs = g ? clamp01((g.score - 0.3) / 0.7) : 0.85
+    const sz = 0.55 + 0.6 * qs
+    const bright = 0.55 + 0.45 * qs
+    const rh = g?.rhythm ?? null
+    const tag = { nt: note, st: lastNoteAt }
 
     if (mode === 'fireworks') {
       const y = h - 40 - v * h * 0.55
       held.set(note, { x, y, hue, velocity: v, kind })
+      noteY.set(note, y)
       if (kind === 'spicy') {
-        burst(x, y, spicyHue, 10 + v * 16, 1 + v * 2, { sat: 12, wob: 1, size: 2 + Math.random() * 3 })
+        burst(x, y, spicyHue, (10 + v * 16) * (0.7 + 0.3 * sz), 1 + v * 2, { sat: 12, wob: 1, size: 2 + Math.random() * 3, b: bright, ...tag })
       } else {
         const sc = kind === 'tonic' ? 1.3 : 1
-        burst(x, y, hue, (14 + v * 46) * boost * sc, (1.5 + v * 4.5) * sc, { tw: Math.random() * 6.28, trail: streak > 5 })
+        burst(x, y, hue, (14 + v * 46) * boost * sc * sz, (1.5 + v * 4.5) * sc * (0.8 + 0.2 * sz), { tw: Math.random() * 6.28, trail: streak > 5 && qs > 0.5, b: bright, ...tag })
         if (kind === 'tonic') {
-          for (let i = 0; i < Math.round(36 * calm); i++) {
-            const a = (i / 36) * Math.PI * 2
-            pushP({ x, y, vx: Math.cos(a) * 5.5, vy: Math.sin(a) * 5.5, life: 0, max: 80, size: 2.6, hue: 45, tw: i, trail: true })
+          const nt = Math.round(36 * calm)
+          for (let i = 0; i < nt; i++) {
+            const a = (i / nt) * Math.PI * 2
+            pushP({ x, y, vx: Math.cos(a) * 5.5, vy: Math.sin(a) * 5.5, life: 0, max: 80, size: 2.6, hue: 45, tw: i, trail: true, b: bright, ...tag })
           }
-          rings.push({ x, y, r: 4, vr: 4, life: 0, max: 70, hue: 45, width: 5 })
+          rings.push({ x, y, r: 4, vr: 4, life: 0, max: 70, hue: 45, width: 5, a: bright, ...tag })
         }
-        if (!reduced && streak >= 8 && rockets.length < 3 && Math.random() < Math.min(0.7, 0.15 + streak * 0.03)) {
-          rockets.push({ x: w * (0.15 + Math.random() * 0.7), y: h, vy: -(7 + Math.random() * 3), ty: h * (0.15 + Math.random() * 0.3), hue: Math.random() * 360 })
+        if (!reduced) {
+          // rhythm: on the beat = a straight, tall rocket "in formation" (they all burst on one row). Off the beat = a wobbly short one.
+          if (rh !== null && rh >= 0.8 && qs > 0.45 && rockets.length < 9) {
+            const ty = h * (0.27 + (1 - qs) * 0.08)
+            rockets.push({ x, y: h, vy: -((h - ty) / 24.5), ty, hue, form: true, drag: 0.99, age: 0, sc: 0.6 + 0.5 * qs, ...tag })
+          } else if (rh !== null && rh < 0.35 && rockets.length < 9 && Math.random() < 0.7) {
+            rockets.push({ x, y: h, vy: -(5 + Math.random() * 2), ty: h * (0.5 + Math.random() * 0.2), hue, wob: 1.8 + (0.35 - rh) * 3, ph: Math.random() * 6.28, age: 0, sc: 0.4, ...tag })
+          }
+          let ns = 0
+          for (const r of rockets) if (!r.form && !r.dud && !r.boom) ns++
+          if (streak >= 8 && ns < 3 && Math.random() < Math.min(0.7, 0.15 + streak * 0.03)) {
+            rockets.push({ x: w * (0.15 + Math.random() * 0.7), y: h, vy: -(7 + Math.random() * 3), ty: h * (0.15 + Math.random() * 0.3), hue: Math.random() * 360, wob: rh === null ? 0.5 : (1 - rh) * 2, ph: Math.random() * 6.28, age: 0, ...tag })
+          }
         }
       }
     } else if (mode === 'ripples') {
@@ -459,16 +854,19 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       const sp = kind === 'spicy'
       const nr = kind === 'tonic' ? 5 : sp ? 2 : 3 + (streak > 6 ? 1 : 0)
       for (let k = 0; k < nr; k++) {
-        rings.push({ x, y, r: 4 + k * -14, vr: (1.2 + v * 2.5) * (sp ? 0.7 : 1), life: 0, max: (110 + v * 60) * (sp ? 0.7 : 1), hue: sp ? spicyHue : kind === 'tonic' ? 45 : hue, width: 1.5 + v * 4 - k, sat: sp ? 12 : undefined, wob: sp && !reduced ? 1 : undefined })
+        rings.push({ x, y, r: 4 + k * -14, vr: (1.2 + v * 2.5) * (sp ? 0.7 : 1), life: 0, max: (110 + v * 60) * (sp ? 0.7 : 1), hue: sp ? spicyHue : kind === 'tonic' ? 45 : hue, width: 1.5 + v * 4 - k, sat: sp ? 12 : undefined, wob: sp && !reduced ? 1 : undefined, ...tag })
       }
     } else if (mode === 'fire') {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       const ton = kind === 'tonic'
       const hsc = fireScale()
       const n = Math.round((8 + v * 14) * (ton ? 1.6 : 1) * calm * quality)
+      tagNote = note
+      tagT = lastNoteAt
       for (let i = 0; i < n; i++) {
         addFlame(x + (rnd() - 0.5) * 22, h - 6, (rnd() - 0.5) * 1.6, -(4 + v * 6) * hsc * (ton ? 1.5 : 1) * (0.6 + rnd() * 0.6), 30 + rnd() * 20, (12 + v * 14) * Math.min(1.3, hsc), palFor(kind))
       }
+      tagNote = -1
       if (ton && flashes.length < 6) flashes.push({ x, life: 0 })
       const t = performance.now()
       if (kind !== 'spicy' && streak >= 12 && streak % 12 === 0 && t - lastIgnite > 3000) { ignite = 1; lastIgnite = t }
@@ -483,19 +881,96 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     } else if (scenes[mode]) {
       const sc = scenes[mode]!
       held.set(note, { x, y: h - 60, hue, velocity: v, kind })
-      sc.noteOn(note, x, v, kind, hue, NAMES[note % 12])
+      sc.noteOn(note, x, v, kind, hue, NAMES[note % 12], g)
       const t = performance.now()
       const hv = [...held.values()]
       if (hv.length >= 3 && t - lastSceneChord > 600 && hv.every((q) => q.kind !== 'spicy')) { lastSceneChord = t; sc.chord?.(hv.map((q) => q.x)) }
     } else {
       held.set(note, { x, y: h, hue, velocity: v, kind })
-      bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5 })
+      bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5, ...tag })
     }
-    if (mode !== 'mail' && mode !== 'zombie') labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue })
+    if (mode !== 'mail' && mode !== 'zombie') labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue, nt: note })
     if (labels.length > 24) labels.shift()
     if (sparkleOn && mode !== 'ghost' && !scenes[mode]?.ownBackdrop) sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
     emojiFor(note, v, kind)
     patchFx(note, kind, hue, v)
+  }
+
+  /** a note that is part of a forearm slam. Fizzle = a sad dud, boom = the finale comes with the 'cluster' event. */
+  function clusterNote(note: number, x: number, v: number, hue: number, kind: Kind, g: NoteGrade) {
+    const now = performance.now()
+    const fizz = g.cluster === 'fizzle'
+    if (fizz) streak = Math.floor(streak / 2)
+    const bw = Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7)
+    if (mode === 'fireworks') {
+      if (fizz) dudRocket(x, note, now)
+      else burst(x, h - 50, 46, 8, 2.2, { tw: 1, size: 2 }, true) // a gold pop in the lane
+    } else if (mode === 'ripples') {
+      if (fizz && rings.length < 70 * quality && now - lastFizzSfx > 40) {
+        lastFizzSfx = now
+        rings.push({ x, y: h * 0.5 + (rnd() - 0.5) * h * 0.3, r: 70 + rnd() * 30, vr: -(1.8 + rnd()), life: 0, max: 46, hue: 28, width: 5, sat: 18, nt: note, st: now })
+      }
+    } else if (mode === 'rise') {
+      if (fizz) {
+        if (bars.length < 60) bars.push({ note, x, top: h - 8, bottom: h, hue: 40, kind: 'spicy', held: false, width: bw, alpha: 0.75, fz: 16 + ((rnd() * 8) | 0) })
+      } else {
+        held.set(note, { x, y: h, hue, velocity: v, kind })
+        bars.push({ note, x, top: h, bottom: h, hue: (note * 31) % 360, held: true, width: bw, alpha: 1 })
+      }
+    } else if (mode === 'fire') {
+      if (fizz && smokes.length < 50 * quality) puffAt(x, h - 40, 2, 2, 0.55) // a smoke puff instead of a flame
+    } else if (mode === 'ghost') {
+      if (fizz && now - lastFizzSfx > 120) { lastFizzSfx = now; ghosts.spook() }
+    } else if (scenes[mode]) {
+      scenes[mode]!.noteOn(note, x, v, g.kind, hue, NAMES[note % 12], g)
+    }
+  }
+
+  function react(ev: JudgeEvent) {
+    if (paused || dead || ev.type === 'note' || ev.type === 'off') return
+    try {
+      const sc = scenes[mode]
+      switch (ev.type) {
+        case 'cluster': {
+          const notes = ev.notes
+          if (ev.boom) { for (const n of notes) held.delete(n); boomFx(notes) } else retroFizzle(notes)
+          sc?.react?.({ type: ev.boom ? 'boom' : 'fizzle', notes, xs: notes.map(xFor) })
+          break
+        }
+        case 'resolve': {
+          const x = xFor(ev.to)
+          if (mode === 'fireworks') releaseBloom(ev.to)
+          else if (!sc) genericMark(x, mode === 'ripples' ? h * 0.5 : h * 0.55, 'release ✨', 46)
+          sc?.react?.({ type: 'resolve', note: ev.to, x })
+          break
+        }
+        case 'cadence': {
+          const x = xFor(ev.note)
+          if (mode === 'fireworks') cadenceFx(ev.note)
+          else if (!sc) {
+            genericMark(x, h * 0.55, '🏁 cadence', 46)
+            if (mode === 'fire') ignite = Math.max(ignite, 0.6)
+          }
+          sc?.react?.({ type: 'cadence', note: ev.note, x, length: ev.length })
+          break
+        }
+        case 'motif': {
+          if (mode === 'fireworks') motifEcho(ev.notes)
+          else if (!sc) genericMark(avgX(ev.notes.map(xFor)), h * 0.4, '🔁 motif', 190)
+          sc?.react?.({ type: 'motif', xs: ev.notes.map(xFor) })
+          break
+        }
+        case 'charged': {
+          labels.push({ text: '⚡ BOOM ready!', x: w / 2, y: h - 80, life: 0, hue: 50, lit: 80, sz: 22, max: 110, stroke: true })
+          const n = Math.round(26 * calm * quality)
+          for (let i = 0; i < n; i++) pushP({ x: rnd() * w, y: h - 8, vx: (rnd() - 0.5) * 1.4, vy: -(2 + rnd() * 3), life: 0, max: 40 + rnd() * 25, size: 1.5 + rnd() * 1.5, hue: 48 + rnd() * 10, tw: rnd() * 6 })
+          sc?.react?.({ type: 'charged' })
+          break
+        }
+      }
+    } catch (e) {
+      if (!warned) { warned = true; console.error('[viz] react failed', e) }
+    }
   }
 
   // Resonance halo + glide streak, on top of whatever the mode drew.
@@ -548,7 +1023,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     for (const b of bars) if (b.note === note && b.held) b.held = false
   }
 
-  function frame() {
+  // One frame. frame() below wraps it so a bug in a new effect can never freeze the visualizer.
+  function paint() {
     const now = performance.now()
     frameEma = frameEma * 0.9 + Math.min(100, now - lastFrame) * 0.1
     lastFrame = now
@@ -582,6 +1058,26 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       }
     }
     ctx.globalCompositeOperation = 'lighter'
+
+    // delayed stages (BOOM barrage, motif echo) and fountains
+    if (timers.length) {
+      const tn = performance.now()
+      for (let i = timers.length - 1; i >= 0; i--) {
+        if (timers[i].at > tn) continue
+        const fn = timers[i].fn
+        timers[i] = timers[timers.length - 1]
+        timers.pop()
+        try { fn() } catch (e) { if (!warned) { warned = true; console.error('[viz] timer failed', e) } }
+      }
+    }
+    for (let i = fountains.length - 1; i >= 0; i--) {
+      const f = fountains[i]
+      if (++f.life > f.max) { fountains[i] = fountains[fountains.length - 1]; fountains.pop(); continue }
+      const n = Math.round(5 * quality * calm)
+      for (let k = 0; k < n; k++) {
+        pushP({ x: f.x + (rnd() - 0.5) * 10, y: h - 12, vx: (rnd() - 0.5) * 2.2, vy: -(8 + rnd() * 5), life: 0, max: 60 + rnd() * 30, size: 1.8 + rnd() * 2, hue: rnd() < 0.6 ? 42 + rnd() * 14 : rnd() * 360, tw: rnd() * 6.28 })
+      }
+    }
 
     // ambient motes when idle
     const idle = performance.now() - lastNoteAt > 3000
@@ -626,20 +1122,44 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       }
     }
 
-    // rockets
+    // rockets: streak rockets, rhythm "formation" rockets, the BOOM barrage, and fizzled duds
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i]
-      r.y += r.vy
-      r.vy *= 0.985
-      pushP({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: 25, size: 2, hue: r.hue, tw: 1, nb: true })
+      r.age = (r.age ?? 0) + 1
+      if (r.dud) {
+        ctx.globalCompositeOperation = 'source-over'
+        const alive = stepDud(r)
+        ctx.globalCompositeOperation = 'lighter'
+        if (!alive) { rockets[i] = rockets[rockets.length - 1]; rockets.pop() }
+        continue
+      }
+      const steps = Math.max(1, Math.min(5, Math.ceil(-r.vy / 6)))
+      for (let k = 0; k < steps; k++) {
+        r.y += r.vy / steps
+        if (r.wob) r.x += (Math.sin(r.age * 0.33 + (r.ph ?? 0)) * r.wob) / steps
+        pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: steps > 1 ? 16 : 25, size: 2, hue: r.hue, tw: 1, nb: true })
+      }
+      r.vy *= r.drag ?? 0.985
       ctx.fillStyle = `hsl(${r.hue},100%,85%)`
       ctx.beginPath()
       ctx.arc(r.x, r.y, 3, 0, Math.PI * 2)
       ctx.fill()
       if (r.y <= r.ty || r.vy > -1.5) {
-        burst(r.x, r.y, r.hue, 70, 5, { tw: Math.random() * 6, trail: true })
-        burst(r.x, r.y, r.hue + 60, 30, 3, { tw: 2 })
-        rockets.splice(i, 1)
+        const sc = r.sc ?? 1
+        if (r.boom) {
+          burst(r.x, r.y, r.hue, 62, 5.2, { tw: Math.random() * 6, trail: true }, true)
+          burst(r.x, r.y, 46, 28, 3.4, { tw: 2 }, true)
+          rings.push({ x: r.x, y: r.y, r: 4, vr: 5, life: 0, max: 40, hue: 46, width: 4 })
+        } else if (r.form) {
+          burst(r.x, r.y, r.hue, 54 * sc, 4.6, { tw: Math.random() * 6, trail: true })
+          burst(r.x, r.y, r.hue + 50, 20 * sc, 2.8, { tw: 2 })
+          rings.push({ x: r.x, y: r.y, r: 4, vr: 3.4, life: 0, max: 42, hue: r.hue, width: 3, a: 0.5 + 0.5 * sc })
+        } else {
+          burst(r.x, r.y, r.hue, 70 * sc, 5 * (0.7 + 0.3 * sc), { tw: Math.random() * 6, trail: sc >= 0.8 })
+          burst(r.x, r.y, r.hue + 60, 30 * sc, 3, { tw: 2 })
+        }
+        rockets[i] = rockets[rockets.length - 1]
+        rockets.pop()
       }
     }
 
@@ -739,6 +1259,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       p.vy = p.vy * 0.985 + 0.035
       p.x += p.vx
       p.y += p.vy
+      if (p.fz) p.vy += 0.07
       const t = 1 - p.life / p.max
       if (t <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue }
       if (p.wob) p.x += Math.sin(p.life * 0.5 + i) * 0.6
@@ -747,7 +1268,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       const dull = p.sat !== undefined
       const grow = atkFrames > 1 && !p.nb && p.life < atkFrames ? p.life / atkFrames : 1
       const r = (lfoTgt === 'amp' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1) * 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
-      const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow * (lfoTgt === 'filter' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1))
+      const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow * (lfoTgt === 'filter' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1)) * (p.b ?? 1)
       const shim = lfoTgt === 'pitch' && lfoOn ? Math.sin(lfoPh + p.y * 0.02) * 4 * lfoDep : 0
       ctx.globalAlpha = al
       const spr = pdot(shape, level, p.hue, dull)
@@ -772,6 +1293,56 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       ctx.globalAlpha = 1
     }
 
+    // local glows (BOOM): small and soft, never the whole canvas
+    for (let i = glows.length - 1; i >= 0; i--) {
+      const gl = glows[i]
+      const u = ++gl.life / gl.max
+      if (u >= 1) { glows[i] = glows[glows.length - 1]; glows.pop(); continue }
+      const r = gl.r * (0.55 + 0.45 * u)
+      ctx.globalAlpha = gl.a * (1 - u) * (1 - u)
+      ctx.drawImage(dot(gl.hue, false), gl.x - r, gl.y - r, r * 2, r * 2)
+    }
+    ctx.globalAlpha = 1
+    if (smokes.length || blocks.length) {
+      ctx.globalCompositeOperation = 'source-over'
+      if (smokes.length) {
+        const spr = smokeSprite()
+        for (let i = smokes.length - 1; i >= 0; i--) {
+          const m = smokes[i]
+          m.life++
+          const u = m.life / m.max
+          if (u >= 1) { smokes[i] = smokes[smokes.length - 1]; smokes.pop(); continue }
+          m.x += m.vx
+          m.y += m.vy
+          m.vy *= 0.985
+          m.r += m.vr
+          ctx.globalAlpha = m.a * Math.min(1, u * 8) * (1 - u)
+          ctx.drawImage(spr, m.x - m.r, m.y - m.r, m.r * 2, m.r * 2)
+        }
+      }
+      // crumbled bar chunks: small gray squares that tumble and fall
+      const TONES = ['#8b909d', '#a2a7b3', '#737886']
+      for (let i = blocks.length - 1; i >= 0; i--) {
+        const b = blocks[i]
+        b.life++
+        const u = b.life / b.max
+        if (u >= 1 || b.y > h + 20) { blocks[i] = blocks[blocks.length - 1]; blocks.pop(); continue }
+        b.vy += 0.34
+        b.x += b.vx
+        b.y += b.vy
+        b.rot += b.vr
+        const c = Math.cos(b.rot) * dpr, sn = Math.sin(b.rot) * dpr
+        ctx.globalAlpha = Math.min(1, (1 - u) * 1.6)
+        ctx.setTransform(c, sn, -sn, c, b.x * dpr, b.y * dpr)
+        ctx.fillStyle = TONES[b.tone]
+        ctx.fillRect(-b.s / 2, -b.s / 2, b.s, b.s)
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'lighter'
+    }
+    drawCrackle()
+
     ctx.lineCap = 'round'
     for (let i = streaks.length - 1; i >= 0; i--) {
       const s = streaks[i]
@@ -794,7 +1365,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       const t = 1 - r.life / r.max
       if (t <= 0) { rings.splice(i, 1); continue }
       if (r.r <= 0) continue
-      ctx.strokeStyle = `hsla(${r.hue},${r.sat ?? 90}%,${r.sat ? 45 : 65}%,${t * (r.sat ? 0.6 : 0.9)})`
+      ctx.strokeStyle = `hsla(${r.hue},${r.sat ?? 90}%,${r.sat ? 45 : 65}%,${t * (r.sat ? 0.6 : 0.9) * (r.a ?? 1)})`
       ctx.lineWidth = Math.max(0.5, r.width * t)
       ctx.beginPath()
       if (r.wob) {
@@ -811,7 +1382,11 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     for (let i = bars.length - 1; i >= 0; i--) {
       const b = bars[i]
       const speed = 2.2
-      if (b.held) b.top -= speed
+      if (b.fz !== undefined) {
+        // fizzled: a short wobbly stub, then it falls apart into blocks
+        b.top -= 4
+        if (--b.fz <= 0) { crumble(b); bars[i] = bars[bars.length - 1]; bars.pop(); continue }
+      } else if (b.held) b.top -= speed
       else { b.top -= speed; b.bottom -= speed }
       if (b.bottom < -10) { bars.splice(i, 1); continue }
       const g = ctx.createLinearGradient(0, b.top, 0, b.bottom)
@@ -829,12 +1404,30 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     ctx.globalCompositeOperation = 'source-over'
     ctx.font = '600 14px system-ui, sans-serif'
     ctx.textAlign = 'center'
+    ctx.lineJoin = 'round'
     for (let i = labels.length - 1; i >= 0; i--) {
       const l = labels[i]
       l.life++
-      l.y -= 0.5
-      const t = 1 - l.life / 70
+      l.y -= l.sz ? 0.35 : 0.5
+      const t = 1 - l.life / (l.max ?? 70)
       if (t <= 0) { labels.splice(i, 1); continue }
+      if (l.sz) {
+        // big labels pop in with a little overshoot
+        const pop = Math.min(1, l.life / 10)
+        const k = pop < 1 ? 1 + 0.3 * Math.sin(pop * Math.PI) : 1
+        const a = Math.min(1, t * 3)
+        const lx = Math.max(70, Math.min(w - 70, l.x))
+        ctx.font = `800 ${Math.round(l.sz * k * Math.min(1, 0.4 + pop * 0.6))}px system-ui, sans-serif`
+        if (l.stroke) {
+          ctx.lineWidth = Math.max(3, l.sz * 0.12)
+          ctx.strokeStyle = `hsla(262,60%,14%,${a * 0.85})`
+          ctx.strokeText(l.text, lx, l.y)
+        }
+        ctx.fillStyle = `hsla(${l.hue},${l.sat ?? 95}%,${l.lit ?? 80}%,${a})`
+        ctx.fillText(l.text, lx, l.y)
+        ctx.font = '600 14px system-ui, sans-serif'
+        continue
+      }
       ctx.fillStyle = `hsla(${l.hue},90%,80%,${t})`
       ctx.fillText(l.text, l.x, l.y)
     }
@@ -859,17 +1452,50 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.globalAlpha = 1
     ctx.textBaseline = 'alphabetic'
-
-    raf = requestAnimationFrame(frame)
+  }
+  function frame() {
+    raf = 0
+    if (paused || dead) return
+    try {
+      paint()
+    } catch (e) {
+      if (!warned) { warned = true; console.error('[viz] frame failed', e) }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
+    }
+    if (!paused && !dead) raf = requestAnimationFrame(frame)
   }
   raf = requestAnimationFrame(frame)
 
   return {
     noteOn,
     noteOff,
+    react,
+    setPaused(p) {
+      if (p === paused || dead) return
+      paused = p
+      if (p) {
+        cancelAnimationFrame(raf)
+        raf = 0
+        timers.length = 0
+        fountains.length = 0
+      } else {
+        lastFrame = performance.now()
+        frameEma = 16
+        if (!raf) raf = requestAnimationFrame(frame)
+      }
+    },
     setMode(m) {
       mode = m
       held.clear()
+      timers.length = 0
+      fountains.length = 0
+      smokes.length = 0
+      blocks.length = 0
+      glows.length = 0
+      rockets.length = 0
+      noteY.clear()
       ghosts.clear()
       for (const sc of sceneList) sc.clear()
       for (const b of bars) b.held = false
@@ -887,6 +1513,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       if (!on) emojis.length = 0
     },
     destroy() {
+      dead = true
       cancelAnimationFrame(raf)
       ro.disconnect()
     },

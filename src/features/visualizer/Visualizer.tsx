@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
+import { onJudge } from '../../music/judge'
+import { useScreen } from '../../layout/screenStore'
 import { playLocal } from '../../music/localNotes'
 import { createEngine, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
@@ -47,9 +49,19 @@ export function Visualizer() {
     const synth = getSynth()
     eng.setPatch(synth.params)
     const offParams = synth.onParams?.((p) => eng.setPatch(p))
-    const unsub = onNote((n) => (n.on ? eng.noteOn(n.note, n.velocity) : eng.noteOff(n.note)))
+    // The judge grades every note first (kind, score, rhythm, slams), so the visuals agree with the games.
+    const unsub = onJudge((ev) => {
+      if (ev.type === 'note') eng.noteOn(ev.g.note, ev.g.velocity, ev.g)
+      else if (ev.type === 'off') eng.noteOff(ev.note)
+      else eng.react(ev)
+    })
+    // A full-screen game owns the display: stop drawing so it gets the CPU.
+    const syncPause = () => eng.setPaused(useScreen.getState().game !== null)
+    syncPause()
+    const unScreen = useScreen.subscribe(syncPause)
     return () => {
       unsub()
+      unScreen()
       offParams?.()
       eng.destroy()
     }

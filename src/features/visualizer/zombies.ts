@@ -1,7 +1,8 @@
 // Zombies mode: goofy cartoon zombies rise out of a moonlit graveyard at every note. All zombies are
 // sprites built once per (skin, shirt, frame) and stamped with drawImage. The graveyard backdrop is
 // rendered once into an offscreen canvas; only the low green fog moves. No flashes, no blood.
-import type { Scene, SceneFactory, SceneKind } from './scenes'
+import type { Scene, SceneFactory, SceneKind, SceneReact } from './scenes'
+import type { NoteGrade } from '../../music/judge'
 
 const TAU = 6.283185
 const BW = 96, BH = 80 // body sprite
@@ -410,6 +411,11 @@ interface Z {
   dir: number; spd: number; range: number
   ev: number; evT: number; nextEv: number // spicy mishaps: 1 head pop, 2 arm drop
   dStart: number; dUntil: number
+  // judge moments: point-and-laugh at a fizzle, pancake on BOOM, bow on a cadence, zap on a release
+  lgStart: number; lgUntil: number; lgX: number; lgTxt: TextS | null
+  flatStart: number; flatUntil: number
+  bowStart: number; bowUntil: number
+  zapT: number
   text: TextS
   tx: number; ty: number; bOn: boolean
 }
@@ -426,7 +432,9 @@ export const createZombies: SceneFactory = (reduced) => {
   let lastT = 0, lastNow = 0
   let bg: HTMLCanvasElement | null = null
   let fog: HTMLCanvasElement | null = null
-  let bubble = { x: 0, t0: -1e9 }
+  let bubble = { x: 0, t0: -1e9, txt: '🧟 DANCE!' }
+  let boomT = -1e9
+  const LAUGHS = ['HA HA!', 'hehehe', 'pfft! 😂', 'oopsie!']
   const FOGS: [number, number, number, number][] = [[0.8, 14, 0, 1], [0.9, 20, 0.4, 1.2], [0.72, 10, 0.75, 0.8]]
 
   const zcap = (q: number) => Math.round(30 * calm * Math.max(0.4, q))
@@ -542,8 +550,32 @@ export const createZombies: SceneFactory = (reduced) => {
         }
       }
     }
+    // judge moments (only while the zombie is standing up)
+    const ease01 = (t: number) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t) }
+    const laughing = z.state === 1 && now >= z.lgStart && now < z.lgUntil
+    let mirror = 1
+    if (laughing) {
+      // point and laugh at the slam: a jiggle, one arm stuck out toward it
+      frame = 4
+      lift = Math.max(lift, Math.abs(Math.sin(now * 0.022 + z.ph)) * 6 * k * mv)
+      tilt += Math.sin(now * 0.018 + z.ph) * 0.08 * mv
+      mirror = z.lgX > z.x ? -1 : 1
+    }
+    if (z.state === 1 && now >= z.bowStart && now < z.bowUntil) {
+      const u = (now - z.bowStart) / (z.bowUntil - z.bowStart)
+      tilt += ease01(u / 0.35) * (1 - ease01((u - 0.65) / 0.35)) * 0.6 * (z.dir || 1) * mv
+    }
+    let sx = 1, sy = 1, flat = false
+    if (now >= z.flatStart && now < z.flatUntil) {
+      // pancake: squash flat, stay, then boing back up
+      const t = now - z.flatStart
+      if (t < 130) { const p = t / 130; sy = 1 - 0.8 * p * p; sx = 1 + 0.55 * p; flat = true }
+      else if (t < 950) { sy = 0.2 + Math.sin(t * 0.03) * 0.012; sx = 1.55; flat = true }
+      else { const p = Math.min(1, (t - 950) / 400), u = p - 1; sy = 0.2 + 0.8 * (1 + 2.70158 * u * u * u + 1.70158 * u * u); sx = 1.55 - 0.55 * p }
+    }
     if (z.kind === 'spicy' && z.state === 1) tilt += Math.sin(now * 0.007 * calm + z.ph) * 0.14 * mv
     bodyTop -= lift
+    if (laughing) armPos = { x: -30 * k, y: bodyTop + 30 * k, r: Math.PI + 0.25 + Math.sin(now * 0.03 + z.ph) * 0.1 }
 
     // dirt mound under the zombie
     ctx.globalAlpha = 0.35 + 0.55 * (1 - vis)
@@ -552,6 +584,7 @@ export const createZombies: SceneFactory = (reduced) => {
     ctx.save()
     ctx.translate(z.x + dxd, z.gy)
     if (tilt) ctx.rotate(tilt)
+    if (mirror !== 1 || sx !== 1 || sy !== 1) ctx.scale(mirror * sx, sy)
     // hands poke out first
     if (vis < 0.55) {
       const hp = Math.min(1, vis / 0.3)
@@ -599,6 +632,40 @@ export const createZombies: SceneFactory = (reduced) => {
       }
     }
     ctx.restore()
+    if (flat && q >= 0.4) {
+      // seeing stars
+      const star = starSprite()
+      for (let i = 0; i < 3; i++) {
+        const a = now * 0.006 + i * 2.09
+        const sz = 15 * k * 1.3
+        ctx.globalAlpha = 0.9
+        ctx.drawImage(star, z.x + Math.cos(a) * 34 * k - sz / 2, z.gy - 22 * k + Math.sin(a) * 7 * k - sz / 2, sz, sz)
+      }
+      ctx.globalAlpha = 1
+    }
+    if (z.zapT > 0 && now - z.zapT < 650) {
+      // zapped: one lightning bolt from the sky and a golden glow (a single thin bolt, fading over 0.4 s)
+      const u = (now - z.zapT) / 650
+      const hy = z.gy - 78 * k
+      if (u < 0.6) {
+        ctx.globalAlpha = 1 - u / 0.6
+        ctx.lineJoin = 'round'
+        ctx.beginPath()
+        ctx.moveTo(z.x, -8)
+        for (let j = 1; j < 7; j++) ctx.lineTo(z.x + Math.sin(j * 7.3 + z.ph * 3) * 16, -8 + ((hy + 8) * j) / 7)
+        ctx.lineTo(z.x, hy)
+        ctx.strokeStyle = 'rgba(255,226,80,0.55)'
+        ctx.lineWidth = 7
+        ctx.stroke()
+        ctx.strokeStyle = 'rgba(255,255,235,0.95)'
+        ctx.lineWidth = 2.2
+        ctx.stroke()
+      }
+      const gs = starSprite(), gz = 90 * k * (0.6 + 0.4 * u)
+      ctx.globalAlpha = (1 - u) * 0.85
+      ctx.drawImage(gs, z.x - gz / 2, hy - gz / 2, gz, gz)
+      ctx.globalAlpha = 1
+    }
     if (boing) {
       const t = textSprite('BOING!', 1)
       ctx.globalAlpha = 0.95
@@ -613,7 +680,8 @@ export const createZombies: SceneFactory = (reduced) => {
       W = w; H = h
       bg = null
     },
-    noteOn(note, x, v, kind, hue, name) {
+    noteOn(note, x, v, kind, hue, name, g?: NoteGrade) {
+      if (g?.cluster === 'fizzle') { puff(Math.max(24, Math.min(W - 24, x)), H * 0.88, 2); return } // no zombie for a fizzle: the crowd laughs instead
       const old = holding.get(note)
       if (old) sink(old, 250)
       const cap = zcap(curQ)
@@ -633,9 +701,11 @@ export const createZombies: SceneFactory = (reduced) => {
         ph: Math.random() * TAU, born: lastNow, state: 0, vis: 0, wave: 0,
         dir: Math.random() < 0.5 ? -1 : 1, spd: (10 + Math.random() * 10) * s0() * mv, range: 60 + Math.random() * 50,
         ev: 0, evT: 0, nextEv: lastNow + 1500 + Math.random() * 1500, dStart: 0, dUntil: 0,
+        lgStart: 0, lgUntil: 0, lgX: 0, lgTxt: null, flatStart: 0, flatUntil: 0, bowStart: 0, bowUntil: 0, zapT: 0,
         text: textSprite(opts[Math.floor(Math.random() * opts.length)]), tx: x, ty: gy, bOn: false,
       }
       z.bx = z.x
+      if (g?.cluster === 'boom' && lastNow - boomT < 600) { z.flatStart = boomT; z.flatUntil = boomT + 1350 } // the rest of the slam also gets flattened
       holding.set(note, z)
       list.push(z)
       puff(z.x, z.gy, 10)
@@ -646,6 +716,56 @@ export const createZombies: SceneFactory = (reduced) => {
       holding.delete(note)
       sink(z, z.vis > 0.6 ? 450 : 0)
     },
+    react(ev: SceneReact) {
+      const now = lastNow
+      if (ev.type === 'fizzle') {
+        // undo the zombies the slam's first notes raised, then everybody points and laughs (gently: it's a funny sound, not a shaming one)
+        const set = new Set(ev.notes)
+        for (const z of list) if (z.state < 2 && set.has(z.note) && now - z.born < 320) sink(z, 0)
+        const tx = ev.xs.reduce((a, b) => a + b, 0) / Math.max(1, ev.xs.length)
+        let k = 0
+        for (const z of list) {
+          if (z.state === 2) continue
+          z.lgStart = now + (k % 6) * 80 + Math.random() * 100
+          z.lgUntil = z.lgStart + 1900
+          z.lgX = tx
+          z.lgTxt = k % 2 === 0 && k < 6 ? textSprite(LAUGHS[Math.floor(Math.random() * LAUGHS.length)], 1) : null
+          z.ev = 0
+          z.nextEv = z.lgUntil + 600
+          k++
+        }
+      } else if (ev.type === 'boom') {
+        // every zombie is flattened like a pancake, then pops back up
+        boomT = now
+        for (const z of list) {
+          if (z.state === 2) continue
+          z.flatStart = now + Math.random() * 60
+          z.flatUntil = z.flatStart + 1350
+          z.ev = 0
+          z.nextEv = z.flatUntil + 600
+          puff(z.x, z.gy, 3)
+        }
+        bubble = { x: ev.xs.reduce((a, b) => a + b, 0) / Math.max(1, ev.xs.length), t0: now, txt: '💥 SPLAT!' }
+      } else if (ev.type === 'resolve') {
+        // one zombie is zapped and starts to dance
+        let z = holding.get(ev.note) ?? null
+        if (!z) for (const q of list) if (q.state < 2 && (!z || Math.abs(q.x - ev.x) < Math.abs(z.x - ev.x))) z = q
+        if (!z) return
+        z.zapT = now
+        z.dStart = now + 700
+        z.dUntil = z.dStart + 2300
+        z.ev = 0
+        puff(z.x, z.gy, 5)
+      } else if (ev.type === 'cadence') {
+        // the whole graveyard bows, a wave starting at the home note's lane
+        for (const z of list) {
+          if (z.state === 2) continue
+          z.bowStart = now + (Math.abs(z.x - ev.x) / Math.max(1, W)) * 500
+          z.bowUntil = z.bowStart + 1500
+        }
+        bubble = { x: ev.x, t0: now, txt: '👏 Bravo!' }
+      }
+    },
     chord(xs) {
       const t = lastNow
       for (const z of list) {
@@ -655,7 +775,7 @@ export const createZombies: SceneFactory = (reduced) => {
         z.ev = 0
         z.nextEv = t + 2400
       }
-      if (xs.length) bubble = { x: xs.reduce((a, b) => a + b, 0) / xs.length, t0: t }
+      if (xs.length) bubble = { x: xs.reduce((a, b) => a + b, 0) / xs.length, t0: t, txt: '🧟 DANCE!' }
     },
     clear() {
       list.length = 0
@@ -724,7 +844,7 @@ export const createZombies: SceneFactory = (reduced) => {
       // speech bubbles
       if (quality >= 0.5) {
         for (const z of list) {
-          if (!z.bOn || z.state === 2 && z.vis < 0.8) continue
+          if (!z.bOn || z.state === 2 && z.vis < 0.8 || (now >= z.flatStart && now < z.flatUntil)) continue
           const age = now - z.born
           const a = Math.min(1, (2700 - age) / 500)
           if (a <= 0) continue
@@ -733,9 +853,16 @@ export const createZombies: SceneFactory = (reduced) => {
           const bx = Math.max(4, Math.min(W - w - 4, z.tx - w / 2))
           ctx.drawImage(z.text.c, bx, z.ty - h - 2, w, h)
         }
+        for (const z of list) {
+          if (!z.lgTxt || !z.bOn || now < z.lgStart || now >= z.lgUntil) continue
+          const a = Math.min(1, (z.lgUntil - now) / 300, (now - z.lgStart) / 150 + 0.2)
+          const w = z.lgTxt.w * 0.72, h = z.lgTxt.h * 0.72
+          ctx.globalAlpha = a * 0.95
+          ctx.drawImage(z.lgTxt.c, Math.max(4, Math.min(W - w - 4, z.tx - w / 2)), z.ty - h - 6 - Math.abs(Math.sin(now * 0.02 + z.ph)) * 4, w, h)
+        }
         const ba = Math.min(1, (1700 - (now - bubble.t0)) / 400)
         if (ba > 0 && bubble.t0 > -1e8) {
-          const t = textSprite('🧟 DANCE!', 1)
+          const t = textSprite(bubble.txt, 1)
           const w = t.w * 0.6, h = t.h * 0.6
           ctx.globalAlpha = ba
           ctx.drawImage(t.c, Math.max(4, Math.min(W - w - 4, bubble.x - w / 2)), H * 0.32 - Math.sin((now - bubble.t0) * 0.004) * 4 * mv, w, h)

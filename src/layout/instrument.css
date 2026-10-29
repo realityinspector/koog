@@ -109,3 +109,6 @@
 /* "Show note names" tucks into the keybed's top-right corner, small. */
 .kg-keybed .kb-top { top: -4px; right: 6px; transform: scale(.85); transform-origin: top right; opacity: .8; }
 .kg-display .viz-hint { background: rgba(10, 8, 30, .6); padding: 4px 10px; border-radius: 10px; color: #e8e6f6; }
+/* 7+ modes on narrower screens: tighter labels, LED stays clear of the icon */
+@media (max-width: 1200px) { .kg-mode { padding-left: 22px; padding-right: 6px; gap: 6px; } .kg-mode-lb { letter-spacing: .08em; } }
+@media (max-width: 900px) { .kg-led { display: none; } .kg-mode { padding-left: 6px; } }

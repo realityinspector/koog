@@ -5,6 +5,7 @@ import { BeatsPanel } from './features/beats/BeatsPanel'
 import { BuildLog } from './features/buildlog/BuildLog'
 import { ChallengesPanel } from './features/challenges/ChallengesPanel'
 import { SmartReadout } from './features/harmony/SmartReadout'
+import { CoachTips } from './features/harmony/CoachTips'
 import { PreflightPanel } from './features/preflight/PreflightPanel'
 import { RequestBar } from './features/requests/RequestBar'
 import { SongsPanel } from './features/songs/SongsPanel'
@@ -17,6 +18,8 @@ import { ProfileBar, ProfileManager, WhoIsPlaying } from './profile/ProfileBar'
 import { useChallengeStore } from './features/challenges/store'
 import { useProfile } from './profile/profile'
 import { Tour } from './features/tour/Tour'
+import { GamesPanel } from './features/games/GamesPanel'
+import './music/judge'
 
 export function App() {
   const mode = useProfile((s) => s.mode)
@@ -28,6 +31,7 @@ export function App() {
     { id: 'songs', icon: '🎵', label: 'SONGS', title: 'Songs', node: <SongsPanel key={'so-' + player} /> },
     // key = player: switching kids remounts these so they load that kid's saved progress
     { id: 'challenges', icon: '🏆', label: 'CHALLENGE', title: 'Challenges', badge: badgeCount > 0 ? badgeCount : undefined, node: <ChallengesPanel key={'ch-' + player} /> },
+    { id: 'games', icon: '🎮', label: 'GAMES', title: 'Games', node: <GamesPanel key={'gm-' + player} /> },
     { id: 'beats', icon: '🥁', label: 'BEATS', title: 'Beats', node: <BeatsPanel /> },
     { id: 'synth', icon: '🎛️', label: 'SYNTH', title: 'Synth History', node: <SynthHistoryPanel /> },
     { id: 'log', icon: '🔧', label: 'LOG', title: 'Behind the scenes', node: <BuildLog /> },
@@ -40,7 +44,7 @@ export function App() {
   }
   return (
     <>
-      <Instrument strip={<ProfileBar />} idea={<RequestBar />} display={<Visualizer />} overlay={<SmartReadout />} keybed={<PianoStrip />} modes={modes} />
+      <Instrument strip={<ProfileBar />} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /></>} keybed={<PianoStrip />} modes={modes} />
       <WhoIsPlaying />
       <Tour />
     </>

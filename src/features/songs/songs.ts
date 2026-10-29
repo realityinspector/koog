@@ -1,5 +1,6 @@
 // Public-domain melodies as data. Pure module, no state.
 import type { Key } from '../../music/theory'
+import { PRELUDE_C, preludeFigure } from '../../music/scores'
 
 // lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
 // note (joined when shown). Trailing "/" = a new lyric line starts after this syllable. Rests never carry a lyric.
@@ -67,7 +68,9 @@ const BASE: Song[] = [
   { id: 'brahms', title: "Brahms' Lullaby", origin: 'Johannes Brahms', year: '1868', key: maj(0), bpm: 80, tier: 'medium',
     notes: seq('E4:.5 E4:.5 G4:2 E4:.5 E4:.5 G4:2 E4:.5 G4:.5 C5:1 B4:1.5 A4:.5 A4:1 G4:3 D4:.5 E4:.5 F4:1 D4:.5 E4:.5 F4:2 D4:.5 F4:.5 B4:1 A4:1 G4:1 B4:3 C5:3') },
   { id: 'minuet', title: 'Minuet in G', origin: 'Christian Petzold (long credited to Bach)', year: 'c. 1725', key: maj(7), bpm: 108, tier: 'medium',
-    notes: seq('D5:1 G4:.5 A4 B4 C5 D5:1 G4:1 G4:1 E5:1 C5:.5 D5 E5 F#5 G5:1 G4:1 G4:1 C5:1 D5:.5 C5 B4 A4 B4:1 C5:.5 B4 A4 G4 F#4:1 G4:.5 A4 B4 G4 B4:3') },
+    notes: seq('D5:1 G4:.5 A4 B4 C5 D5:1 G4:1 G4:1 E5:1 C5:.5 D5 E5 F#5 G5:1 G4:1 G4:1 C5:1 D5:.5 C5 B4 A4 B4:1 C5:.5 B4 A4 G4 F#4:1 G4:.5 A4 B4 G4 A4:3 D5:1 G4:.5 A4 B4 C5 D5:1 G4:1 G4:1 E5:1 C5:.5 D5 E5 F#5 G5:1 G4:1 G4:1 C5:1 D5:.5 C5 B4 A4 B4:1 C5:.5 B4 A4 G4 A4:1 B4:.5 A4 G4 F#4 G4:3') },
+  { id: 'prelude', title: 'Prelude in C (Well-Tempered Clavier)', origin: 'J.S. Bach', year: '1722', key: maj(0), bpm: 72, tier: 'flex', hook: 'the BachDoom final boss. One chord per bar, broken the same way every time.',
+    notes: [...PRELUDE_C.flatMap((b) => preludeFigure(b).map((note) => ({ note, beats: 0.25 }))), { note: 60, beats: 4 }] },
   { id: 'greensleeves', title: 'Greensleeves', origin: 'English folk song', year: '16th c.', key: min(9), bpm: 96, tier: 'flex',
     notes: seq('A4:1 C5:2 D5:1 E5:1.5 F5:.5 E5:1 D5:2 B4:1 G4:1.5 A4:.5 B4:1 C5:2 A4:1 A4:1.5 G#4:.5 A4:1 B4:2 G#4:1 E4:2 A4:1 C5:2 D5:1 E5:1.5 F5:.5 E5:1 D5:2 B4:1 G4:1.5 A4:.5 B4:1 C5:1.5 B4:.5 A4:1 G#4:1.5 F#4:.5 G#4:1 A4:3') },
   { id: 'elise', title: 'Für Elise (opening)', origin: 'Beethoven', year: '1810', key: min(9), bpm: 120, tier: 'bang', hook: 'the one everyone half-knows',

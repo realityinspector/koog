@@ -1,7 +1,8 @@
 // Mail mode: every note mails something. An envelope flutters up from the key, pops open, and a big
 // LETTER card (the note's name) flies out. Postcards, parcels, stamps and paper planes mix in.
 // All art is built once per variant into offscreen canvases and stamped with drawImage.
-import type { Scene, SceneFactory, SceneKind } from './scenes'
+import type { Scene, SceneFactory, SceneKind, SceneReact } from './scenes'
+import type { NoteGrade } from '../../music/judge'
 
 const TAU = 6.283
 const GOLD = 12 // hue bucket index meaning "gold"
@@ -290,8 +291,115 @@ function planeSprite(b: number) {
   })
 }
 
+// Fizzle: crumpled gray junk mail (a paper ball, an ad flyer) spills out. All gray, a bit funny, never scary.
+function junkSprite(v: number) {
+  return cached(`j${v}`, () => {
+    if (v === 0) {
+      const [c, g] = mk(48, 48)
+      g.shadowColor = 'rgba(0,0,0,0.25)'
+      g.shadowBlur = 4
+      const gr = g.createRadialGradient(20, 18, 2, 24, 24, 22)
+      gr.addColorStop(0, '#eceef2')
+      gr.addColorStop(1, '#a3a8b4')
+      g.fillStyle = gr
+      g.beginPath()
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * TAU, r = i % 2 ? 15 : 20 + (i % 3)
+        g.lineTo(24 + Math.cos(a) * r, 24 + Math.sin(a) * r)
+      }
+      g.closePath()
+      g.fill()
+      g.shadowColor = 'transparent'
+      g.strokeStyle = 'rgba(70,76,92,0.45)'
+      g.lineWidth = 1.2
+      g.beginPath()
+      g.moveTo(10, 20); g.lineTo(22, 26); g.lineTo(16, 36)
+      g.moveTo(30, 12); g.lineTo(28, 24); g.lineTo(38, 28)
+      g.moveTo(20, 10); g.lineTo(26, 16)
+      g.stroke()
+      return c
+    }
+    const [c, g] = mk(56, 66)
+    g.shadowColor = 'rgba(0,0,0,0.25)'
+    g.shadowBlur = 4
+    g.fillStyle = '#d9dce3'
+    g.beginPath()
+    g.moveTo(6, 6); g.lineTo(46, 4); g.lineTo(50, 60); g.lineTo(26, 56); g.lineTo(6, 60)
+    g.closePath()
+    g.fill()
+    g.shadowColor = 'transparent'
+    g.fillStyle = '#9fa5b3'
+    g.beginPath(); g.moveTo(34, 57); g.lineTo(50, 60); g.lineTo(47, 44); g.closePath(); g.fill() // bent corner
+    g.fillStyle = '#6f7686'
+    g.font = `800 15px ${FONT}`
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillText(v === 1 ? 'SALE!' : 'JUNK', 28, 20)
+    g.font = `700 8px ${FONT}`
+    g.fillText(v === 1 ? '50% OFF' : 'MAIL', 28, 33)
+    g.fillStyle = 'rgba(80,86,102,0.35)'
+    for (let y = 40; y <= 52; y += 5) g.fillRect(10, y, 28, 2)
+    return c
+  })
+}
+
+// BOOM: an overstuffed mailbag that rises, shakes, and bursts.
+function bagSprite() {
+  return cached('bag', () => {
+    const [c, g] = mk(96, 104)
+    g.shadowColor = 'rgba(0,0,0,0.3)'
+    g.shadowBlur = 6
+    g.shadowOffsetY = 3
+    const gr = g.createLinearGradient(0, 20, 0, 100)
+    gr.addColorStop(0, '#c99a5e')
+    gr.addColorStop(1, '#8e6334')
+    g.fillStyle = gr
+    g.beginPath()
+    g.moveTo(34, 24)
+    g.bezierCurveTo(10, 36, 4, 70, 18, 90)
+    g.quadraticCurveTo(48, 102, 78, 90)
+    g.bezierCurveTo(92, 70, 86, 36, 62, 24)
+    g.closePath()
+    g.fill()
+    g.shadowColor = 'transparent'
+    // neck puff + rope
+    g.fillStyle = '#b6864c'
+    g.beginPath(); g.moveTo(34, 24); g.quadraticCurveTo(20, 10, 30, 2); g.quadraticCurveTo(48, 12, 66, 2); g.quadraticCurveTo(76, 10, 62, 24); g.closePath(); g.fill()
+    g.strokeStyle = '#5b3b1c'
+    g.lineWidth = 4
+    g.lineCap = 'round'
+    g.beginPath(); g.moveTo(33, 24); g.quadraticCurveTo(48, 30, 63, 24); g.stroke()
+    g.lineWidth = 2.5
+    g.beginPath(); g.moveTo(48, 28); g.quadraticCurveTo(40, 40, 36, 38); g.moveTo(48, 28); g.quadraticCurveTo(58, 42, 62, 38); g.stroke()
+    // stitches + patch
+    g.strokeStyle = 'rgba(70,44,20,0.55)'
+    g.lineWidth = 1.5
+    g.setLineDash([4, 3])
+    g.beginPath(); g.moveTo(22, 80); g.quadraticCurveTo(48, 92, 74, 80); g.stroke()
+    g.setLineDash([])
+    g.fillStyle = '#fffdf5'
+    rr(g, 26, 48, 44, 24, 4)
+    g.fill()
+    g.strokeStyle = '#d33c4c'
+    g.lineWidth = 2
+    g.stroke()
+    g.fillStyle = '#d33c4c'
+    g.font = `800 17px ${FONT}`
+    g.textAlign = 'center'
+    g.textBaseline = 'middle'
+    g.fillText('MAIL', 48, 61)
+    // a letter peeking out
+    g.fillStyle = '#fff'
+    g.save(); g.translate(40, 8); g.rotate(-0.25); g.fillRect(-9, -7, 18, 12); g.strokeStyle = '#e8334a'; g.lineWidth = 1; g.strokeRect(-9, -7, 18, 12); g.restore()
+    return c
+  })
+}
+
 interface Item {
-  ty: 0 | 1 | 2 | 3 // 0 envelope rising, 1 letter, 2 ballistic, 3 flutter
+  ty: 0 | 1 | 2 | 3 | 4 // 0 envelope rising, 1 letter, 2 ballistic, 3 flutter, 4 the BOOM mailbag
+  /** performance.now() at spawn: lets a late 'fizzle' event undo what a slam's first notes already sent */
+  born: number
+  junk: boolean
   spr: HTMLCanvasElement
   w: number
   x: number; y: number; bx: number; y0: number
@@ -326,7 +434,7 @@ export const createMail: SceneFactory = (reduced): Scene => {
 
   function blank(spr: HTMLCanvasElement, w: number): Item {
     return {
-      ty: 2, spr, w, x: 0, y: 0, bx: 0, y0: 0, vx: 0, vy: 0, g: 0, rot: 0, vr: 0, ph: Math.random() * TAU, sway: 0,
+      ty: 2, born: performance.now(), junk: false, spr, w, x: 0, y: 0, bx: 0, y0: 0, vx: 0, vy: 0, g: 0, rot: 0, vr: 0, ph: Math.random() * TAU, sway: 0,
       age: 0, max: 200, delay: 0, note: -1, held: false, hoverY: 0, dur: 40, wob: 0, rel: 0, aim: false, spicy: false,
       env: null, card: null, gold: false, bucket: 0,
     }
@@ -397,10 +505,76 @@ export const createMail: SceneFactory = (reduced): Scene => {
     o.rot = 0
   }
 
+  /** a fizzle: junk mail pops out of the lane, tumbles, and falls (capped, so mashing can't flood the screen) */
+  function junkSpill(x: number, n: number) {
+    let junk = 0
+    for (const o of list) if (o.junk) junk++
+    for (let i = 0; i < n && junk < 36 * calm && list.length < cap(curQ) + 30; i++, junk++) {
+      const j = blank(junkSprite(Math.floor(Math.random() * 3)), rnd(30, 46))
+      j.junk = true
+      j.x = x + rnd(-18, 18); j.y = H - 10
+      j.vx = rnd(-2.4, 2.4) * sp; j.vy = -rnd(4.5, 8.5) * sp; j.g = 0.2 * sp * sp
+      j.rot = rnd(0, TAU); j.vr = rnd(-0.2, 0.2) * rotK
+      j.max = Math.round(150 / sp)
+      list.push(j)
+    }
+  }
+  /** BOOM: the bag bursts into letters, cards, parcels, stamps and planes */
+  function bagBurst(x: number, y: number) {
+    const total = Math.round(46 * calm)
+    const room = Math.max(0, cap(curQ) + 80 - list.length)
+    for (let i = 0; i < Math.min(total, room); i++) {
+      const r = Math.random()
+      let o: Item
+      const b = rb()
+      if (r < 0.3) o = blank(envSprite(0, b), rnd(46, 62))
+      else if (r < 0.5) o = blank(cardSprite('ABCDEFG'[(Math.random() * 7) | 0], b, r < 0.38 ? 1 : 0), rnd(48, 64))
+      else if (r < 0.65) o = blank(postcardSprite(b), rnd(50, 64))
+      else if (r < 0.77) o = blank(parcelSprite(b), rnd(36, 48))
+      else if (r < 0.85) o = blank(planeSprite(b), rnd(44, 56))
+      else o = blank(stampSprite(r < 0.93 ? GOLD : b), rnd(18, 28))
+      const a = rnd(-Math.PI * 0.97, -Math.PI * 0.03)
+      const v = rnd(4.5, 11) * sp
+      o.x = x + rnd(-10, 10); o.y = y + rnd(-10, 10)
+      o.vx = Math.cos(a) * v; o.vy = Math.sin(a) * v
+      o.g = 0.17 * sp * sp
+      o.rot = rnd(0, TAU); o.vr = rnd(-0.16, 0.16) * rotK
+      o.max = Math.round(rnd(110, 170) / sp)
+      list.push(o)
+    }
+    spawnBurst(x, y, Math.round(14 * calm), true)
+  }
+
   return {
     ownBackdrop: false,
     resize(w, h) { W = w; H = h },
-    noteOn(note, x, v, kind: SceneKind, hue, name) {
+    react(ev: SceneReact) {
+      if (ev.type === 'fizzle') {
+        // undo the envelopes the slam's first notes already sent, and spill junk instead
+        const now = performance.now()
+        for (let i = list.length - 1; i >= 0; i--) {
+          const o = list[i]
+          if (o.ty <= 1 && o.note >= 0 && ev.notes.includes(o.note) && now - o.born < 260) {
+            if (holding.get(o.note) === o) holding.delete(o.note)
+            list[i] = list[list.length - 1]
+            list.pop()
+          }
+        }
+        for (const x of ev.xs.slice(0, 3)) junkSpill(x, 2)
+      } else if (ev.type === 'boom') {
+        const cx = ev.xs.reduce((a, b) => a + b, 0) / Math.max(1, ev.xs.length)
+        const bag = blank(bagSprite(), 118)
+        bag.ty = 4
+        bag.bx = cx; bag.x = cx
+        bag.y0 = H + 70; bag.y = bag.y0
+        bag.hoverY = H * 0.55
+        bag.max = 100000
+        list.push(bag)
+      }
+    },
+    noteOn(note, x, v, kind: SceneKind, hue, name, g?: NoteGrade) {
+      if (g?.cluster === 'fizzle') { junkSpill(x, 2); return }
+      if (g?.cluster === 'boom') { if (roomMisc(0.9)) spawnBurst(x, H - 30, Math.round(5 * calm), true); return }
       if (!room()) return
       const b = bucketOf(hue)
       const k = kind === 'tonic' ? 1 : kind === 'spicy' ? 2 : 0
@@ -524,6 +698,16 @@ export const createMail: SceneFactory = (reduced): Scene => {
             }
             if (o.rel >= 80) dead = true
           }
+        } else if (o.ty === 4) {
+          // the BOOM bag: rises (22 frames), shakes harder and swells (22 frames), bursts
+          o.age++
+          const p1 = Math.min(1, o.age / 22)
+          y = o.y0 + (o.hoverY - o.y0) * easeOut(p1)
+          x = o.bx
+          const sh = o.age > 22 ? (o.age - 22) / 22 : 0
+          rot = Math.sin(o.age * 1.15) * 0.18 * sh * rotK
+          w = o.w * (1 + 0.3 * sh * sh)
+          if (o.age >= 44) { bagBurst(x, y); dead = true }
         } else if (o.ty === 2) {
           o.age++
           o.vy += o.g

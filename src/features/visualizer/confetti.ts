@@ -1,7 +1,8 @@
 // Confetti mode: every note fires a confetti cannon from its key. Pieces are pooled, drawn as
 // colour-batched filled paths (no gradients / shadows per piece), and land into a cached, slowly
 // fading "floor" canvas so the pile never fills the screen.
-import type { Scene, SceneFactory, SceneKind } from './scenes'
+import type { Scene, SceneFactory, SceneKind, SceneReact } from './scenes'
+import type { NoteGrade } from '../../music/judge'
 
 const MAXP = 700
 const HUES = 24
@@ -43,7 +44,7 @@ interface Piece {
   sway: number; swf: number; swp: number; lo: number
   wv: number; len: number; c: number
 }
-interface Puff { x: number; y: number; vx: number; vy: number; r: number; age: number; max: number }
+interface Puff { x: number; y: number; vx: number; vy: number; r: number; age: number; max: number; a?: number }
 interface Held { x: number; kind: SceneKind; hue: number; v: number; acc: number; t: number }
 
 let smokeSprite: HTMLCanvasElement | null = null
@@ -125,8 +126,8 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
   }
 
   /** one piece launched from (x,y) at angle a (0 = straight up), reaching ~frac*H high */
-  function launch(x: number, y: number, a: number, frac: number, kind: SceneKind, hue: number) {
-    if (n >= cap()) return
+  function launch(x: number, y: number, a: number, frac: number, kind: SceneKind, hue: number, force = false) {
+    if (n >= (force ? MAXP : cap())) return
     const shape = pickShape(kind)
     const p = pool[n++]
     const d = 3.2 + Math.random() * 2.3
@@ -158,13 +159,59 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
     p.c = 1
   }
 
-  function burst(x: number, y: number, count: number, a0: number, spread: number, frac: number, kind: SceneKind, hue: number) {
-    for (let i = 0; i < count; i++) launch(x, y, a0 + (Math.random() - 0.5) * 2 * spread, frac, kind, hue)
+  function burst(x: number, y: number, count: number, a0: number, spread: number, frac: number, kind: SceneKind, hue: number, force = false) {
+    for (let i = 0; i < count; i++) launch(x, y, a0 + (Math.random() - 0.5) * 2 * spread, frac, kind, hue, force)
   }
 
-  function addPuff(x: number, y: number) {
-    if (puffs.length >= 16) return
-    puffs.push({ x: x + (Math.random() - 0.5) * 20, y: y - 4, vx: (Math.random() - 0.5) * 24, vy: -(24 + Math.random() * 30) * calm, r: 14 + Math.random() * 12, age: 0, max: 1.3 + Math.random() * 0.5 })
+  // ---- judge moments ----
+  const queue: { at: number; fn: () => void }[] = []
+  const later = (ms: number, fn: () => void) => { if (queue.length < 24) queue.push({ at: last + ms, fn }) }
+  /** the cannon jams: a sad gray puff and a few limp gray scraps that flop out and fall */
+  function jam(x: number) {
+    addPuff(x, H, 1.7, 1.7)
+    addPuff(x, H - 10, 1.3, 1.7)
+    const k = Math.round(5 * calm * qf())
+    for (let i = 0; i < k && n < cap(); i++) {
+      const p = pool[n++]
+      p.x = x + (Math.random() - 0.5) * 16
+      p.y = H - 2
+      p.vx = (Math.random() - 0.5) * 50
+      p.vy = -(70 + Math.random() * 60) // barely clears the barrel
+      p.drag = 3 + Math.random() * 2
+      fill(p, 'spicy', 0, R_RECT)
+      p.col = Math.random() < 0.5 ? GRAY : DGRAY
+      p.size *= 0.9
+    }
+  }
+  /** BOOM: mega cannons from both corners and the centre, a second volley, then a rain of streamers */
+  function mega() {
+    const q = calm * qf()
+    const c = (frac: number) => Math.round(frac * q)
+    burst(0, H + 2, c(95), 0.62, 0.3, 0.95, 'tonic', 40, true)
+    burst(W, H + 2, c(95), -0.62, 0.3, 0.95, 'tonic', 200, true)
+    later(160, () => burst(W / 2, H + 2, c(130), 0, 0.55, 0.98, 'tonic', 120, true))
+    if (reduced) return
+    later(520, () => {
+      burst(0, H + 2, c(45), 0.5, 0.35, 0.8, 'in', Math.random() * 360, true)
+      burst(W, H + 2, c(45), -0.5, 0.35, 0.8, 'in', Math.random() * 360, true)
+      burst(W / 2, H + 2, c(55), 0, 0.6, 0.85, 'in', Math.random() * 360, true)
+    })
+    later(900, () => {
+      for (let i = 0; i < c(60) && n < MAXP; i++) {
+        const p = pool[n++]
+        p.x = Math.random() * W
+        p.y = -10 - Math.random() * 60
+        p.vx = (Math.random() - 0.5) * 40
+        p.vy = 40 + Math.random() * 70
+        p.drag = 2.5 + Math.random() * 2
+        fill(p, 'tonic', Math.random() * 360, Math.random() < 0.6 ? R_RIBBON : R_STAR)
+      }
+    })
+  }
+
+  function addPuff(x: number, y: number, big = 1, a = 1) {
+    if (puffs.length >= 28) return
+    puffs.push({ x: x + (Math.random() - 0.5) * 20, y: y - 4, vx: (Math.random() - 0.5) * 24, vy: -(24 + Math.random() * 30) * calm, r: (14 + Math.random() * 12) * big, age: 0, max: 1.3 + Math.random() * 0.5, a })
   }
 
   function rain(count: number, W0: number) {
@@ -188,6 +235,15 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
   }
 
   function step(dt: number) {
+    if (queue.length) {
+      for (let i = queue.length - 1; i >= 0; i--) {
+        if (queue[i].at > last) continue
+        const fn = queue[i].fn
+        queue[i] = queue[queue.length - 1]
+        queue.pop()
+        fn()
+      }
+    }
     // held-key trickle
     if (held.size) {
       const tNow = last / 1000
@@ -251,7 +307,9 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
       W = w; H = h
       buildFloor()
     },
-    noteOn(note, x, v, kind, hue) {
+    noteOn(note, x, v, kind, hue, _name, g?: NoteGrade) {
+      if (g?.cluster === 'fizzle') { jam(x); return }
+      if (g?.cluster === 'boom') return
       const q = qf()
       let count: number, frac: number, spread: number
       if (kind === 'tonic') { count = 64 + v * 50; frac = 0.45 + 0.4 * v; spread = 0.5 }
@@ -264,6 +322,20 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
     noteOff(note) {
       held.delete(note)
     },
+    react(ev: SceneReact) {
+      if (ev.type === 'fizzle') {
+        // the slam's first notes already fired real cannons: pull back everything younger than ~170 ms
+        for (let i = n - 1; i >= 0; i--) {
+          if (pool[i].age >= 0.17) continue
+          const t = pool[n - 1]
+          pool[n - 1] = pool[i]
+          pool[i] = t
+          n--
+        }
+        for (const nt of ev.notes) held.delete(nt)
+        for (const x of ev.xs.slice(0, 3)) jam(x)
+      } else if (ev.type === 'boom') mega()
+    },
     chord(xs) {
       rain(Math.round(26 * calm * qf()), W)
       void xs
@@ -273,6 +345,7 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
     },
     clear() {
       n = 0
+      queue.length = 0
       puffs.length = 0
       held.clear()
       if (fg) fg.clearRect(0, 0, W, H)
@@ -297,7 +370,7 @@ export const createConfetti: SceneFactory = (reduced): Scene => {
         for (let i = 0; i < puffs.length; i++) {
           const s = puffs[i]
           const t = s.age / s.max
-          ctx.globalAlpha = 0.32 * Math.min(1, t * 6) * (1 - t)
+          ctx.globalAlpha = 0.32 * (s.a ?? 1) * Math.min(1, t * 6) * (1 - t)
           ctx.drawImage(sp, s.x - s.r, s.y - s.r, s.r * 2, s.r * 2)
         }
       }

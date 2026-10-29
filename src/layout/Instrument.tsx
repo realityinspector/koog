@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Celebration } from '../features/celebrate/Celebration'
+import { useScreen } from './screenStore'
 import './instrument.css'
 
 export type ModeDef = { id: string; icon: string; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
@@ -23,6 +24,8 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes }: {
     setSaved(id)
     try { localStorage.setItem(KEY, id) } catch { /* ignore */ }
   }
+
+  useEffect(() => { useScreen.setState({ screen: mode }) }, [mode])
 
   // Canvases hidden with display:none need a nudge to re-measure when shown again.
   useEffect(() => {

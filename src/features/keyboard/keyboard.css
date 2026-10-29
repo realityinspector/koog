@@ -25,3 +25,12 @@
 .kg-keybed .kb-key.held.white, .kg-keybed .kb-key.held.black { background: hsl(var(--h) 90% 62%); }
 .kg-keybed .kb-key.spicy { background: #ffb06c; }
 .kg-keybed .kb-key.held.spicy { background: hsl(var(--h) 90% 62%); }
+
+/* guide: a game or song lights the key to play next (gentle pulse, never a flash) */
+.kb-key.white.guide { background: linear-gradient(180deg, #fff 0%, var(--gd, #b8f0ff) 100%); box-shadow: inset 0 -10px 18px var(--gd2, rgba(60,190,255,.55)), 0 0 14px var(--gd2, rgba(60,190,255,.7)); }
+.kb-key.black.guide { background: linear-gradient(180deg, var(--gd2, #3cbfff) 0%, #1a1530 100%); box-shadow: 0 0 14px var(--gd2, rgba(60,190,255,.8)); }
+.kb-key.guide::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--gd2, rgba(60,190,255,.9)); animation: kb-guide 1.1s ease-in-out infinite; pointer-events: none; }
+.kb-key.guide-danger { --gd: #ffc4c4; --gd2: rgba(255,80,80,.75); }
+.kb-key.guide-gold { --gd: #ffe9a8; --gd2: rgba(255,200,40,.8); }
+@keyframes kb-guide { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .kb-key.guide::after { animation: none; opacity: .8 } }

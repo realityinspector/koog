@@ -259,4 +259,11 @@ export const entries: Entry[] = [
     title: '💌🎉🧟 Mail, Confetti and Zombies (requests #17 and #18)',
     body: 'Three new settings in VISUAL, built by three AI helpers at the same time. 💌 Mail: every note mails an envelope that pops open with that note\'s LETTER, so you learn the note names while you play (out-of-key notes come back "Return to sender"). 🎉 Confetti: every note is a confetti cannon, and the confetti piles up on the floor. 🧟 Zombies: goofy zombies climb out of a graveyard, groan the note name ("C… brains…"), lose their heads on spicy notes, and all dance when you play a chord. The engineering trick: before building them, we wrote a "plug-in" contract, a short list of things every scene must be able to do (start a note, stop a note, draw). Each helper built against that contract, so the three scenes snapped in without anyone touching the same file. Big apps like games and browsers use plug-ins the same way.',
   },
+  {
+    id: 36,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🎓 The Judge, ⚡ BOOM, and 🎮 GAMES (Zombie Lanes + BachDoom)',
+    body: 'Koog now has a JUDGE: one small set of rules that grades every note for KEY, BEAT and STYLE (see MUSIC POWER at the top). It also spots musical moments: an out-of-key note that steps back home ("tension → release"), a repeated pattern ("motif"), and a phrase that ends on the home note ("cadence"). Every visual and every game listens to the same judge, so "playing well" means the same thing everywhere. Forearm slams now FIZZLE… unless you charge ⚡ BOOM by playing in key. Then the slam is the biggest finale in the app. (Slamming is a real technique: Henry Cowell did it in 1917!) New 🎮 GAMES: Zombie Lanes (blast zombies by playing the note on their sign; the lanes line up with your real keys) and BachDoom, a retro first-person game where the music IS your ammo. The final boss is Bach\'s Prelude in C from 1722. Three AI helpers built the visuals and the two games at the same time, all plugged into the one judge. Engineers call that a "single source of truth".',
+  },
 ]

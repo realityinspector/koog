@@ -4,6 +4,7 @@ import { useHarmonyStore, judge } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { playLocal } from '../../music/localNotes'
 import { buildLayout, noteHue, snapRange, type KeyShape } from './layout'
+import { useGuide, type GuideTone } from '../../music/guide'
 import './keyboard.css'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -27,22 +28,25 @@ interface KeyProps {
   flash: boolean
   status: 'tonic' | 'in' | 'out'
   showName: boolean
+  /** lit by a game or song: "play this next" */
+  guide?: GuideTone | null
   down: (n: number, e: React.PointerEvent) => void
   up: (n: number) => void
 }
 
-const Key = memo(function Key({ k, held, flash, status, showName, down, up }: KeyProps) {
+const Key = memo(function Key({ k, held, flash, status, showName, guide, down, up }: KeyProps) {
   const style = {
     left: k.left + '%',
     width: k.width + '%',
     ...(held ? { '--h': noteHue(k.note) } : {}),
   } as React.CSSProperties
-  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '')
+  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '') + (guide ? ' guide guide-' + guide : '')
   const label = k.black ? null : k.label && (showName || k.label.length > 1) ? k.label : null
   return (
     <div
       className={cls}
       style={style}
+      data-note={k.note}
       onPointerDown={(e) => down(k.note, e)}
       onPointerUp={() => up(k.note)}
       onPointerLeave={() => up(k.note)}
@@ -73,6 +77,9 @@ export function PianoStrip() {
   }, [chord])
 
   const layout = useMemo(() => buildLayout(range[0], range[1]), [range])
+  const guideTargets = useGuide((g) => g.targets)
+  const guideTone = useGuide((g) => g.tone)
+  const guideSet = useMemo(() => new Set(guideTargets), [guideTargets])
   const status = useMemo(() => layout.map((k) => judge(k.note)), [layout, key])
 
   useEffect(() => {
@@ -128,7 +135,7 @@ export function PianoStrip() {
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (
-          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} down={down} up={up} />
+          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} guide={guideSet.has(k.note) ? guideTone : null} down={down} up={up} />
         ))}
       </div>
     </section>
