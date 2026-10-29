@@ -266,4 +266,11 @@ export const entries: Entry[] = [
     title: '🎓 The Judge, ⚡ BOOM, and 🎮 GAMES (Zombie Lanes + BachDoom)',
     body: 'Koog now has a JUDGE: one small set of rules that grades every note for KEY, BEAT and STYLE (see MUSIC POWER at the top). It also spots musical moments: an out-of-key note that steps back home ("tension → release"), a repeated pattern ("motif"), and a phrase that ends on the home note ("cadence"). Every visual and every game listens to the same judge, so "playing well" means the same thing everywhere. Forearm slams now FIZZLE… unless you charge ⚡ BOOM by playing in key. Then the slam is the biggest finale in the app. (Slamming is a real technique: Henry Cowell did it in 1917!) New 🎮 GAMES: Zombie Lanes (blast zombies by playing the note on their sign; the lanes line up with your real keys) and BachDoom, a retro first-person game where the music IS your ammo. The final boss is Bach\'s Prelude in C from 1722. Three AI helpers built the visuals and the two games at the same time, all plugged into the one judge. Engineers call that a "single source of truth".',
   },
+  {
+    id: 37,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🥋👗🎛️🎼 Jiu-Jitsu, Runway Remix, real synth emulators, sheet music, and computer-key piano',
+    body: 'Seven AI helpers built at the same time, each in its own folder. NEW GAMES: 🥋 Jiu-Jitsu Flow (copy your partner\'s phrases on the beat to win positions, earn belts, and learn to tap out) and 👗 Runway Remix (style a model through 400 years of music; chords pick the colors, because neighbors on the circle of fifths are like neighbor colors on the color wheel). In SYNTH, tap ▶ Play it on the timeline to PLAY a theremin, an organ, a Moog-style synth, a 303 bass, a DX7-style FM synth and more. They are rebuilt from the physics of sound, not recordings. 🎼 Sheet music can ride along the bottom of the screen any time, and notes turn green when you nail them. No MIDI keyboard? Your computer keys are a piano now (Z S X D C… and Q 2 W 3 E…). And in BachDoom your organ shots now actually fly into the demons and knock them back.',
+  },
 ]

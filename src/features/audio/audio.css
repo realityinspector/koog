@@ -1,0 +1,28 @@
+.kg-audio { display: flex; align-items: center; gap: 8px; flex: none; }
+.kg-audio-vol { position: relative; display: flex; align-items: center; gap: 6px; }
+.kg-audio-btn, .kg-audio-sw, .kg-audio-mute { font: inherit; color: #f4f2ff; cursor: pointer; border: 1px solid rgba(255, 255, 255, .16);
+  background: linear-gradient(180deg, #2c2748, #1b1832); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 2px 5px rgba(0, 0, 0, .4); }
+.kg-audio-btn { min-width: 36px; height: 36px; border-radius: 999px; font-size: 16px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.kg-audio-btn.off { opacity: .75; }
+.kg-audio-btn:hover, .kg-audio-sw:hover, .kg-audio-mute:hover { border-color: var(--gold); }
+.kg-audio-btn:focus-visible, .kg-audio-sw:focus-visible, .kg-audio-mute:focus-visible, .kg-vol:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kg-vol { -webkit-appearance: none; appearance: none; width: 84px; height: 6px; margin: 0; border-radius: 999px; cursor: pointer; border: 0; padding: 0;
+  background: linear-gradient(90deg, var(--gold) var(--p, 70%), rgba(255, 255, 255, .16) var(--p, 70%)); }
+.kg-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); box-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.kg-vol::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); }
+.kg-audio-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; display: flex; flex-direction: column; gap: 10px; align-items: stretch; padding: 12px; width: 150px;
+  border-radius: 14px; background: rgba(16, 13, 40, .97); border: 1px solid var(--border); box-shadow: 0 16px 40px rgba(0, 0, 0, .6); }
+.kg-audio-pop .kg-vol { width: 100%; }
+.kg-audio-mute { padding: 6px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.kg-audio-sw { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+.kg-audio-track { position: relative; width: 30px; height: 17px; border-radius: 999px; background: rgba(255, 255, 255, .18); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .5); transition: background .15s; flex: none; }
+.kg-audio-knob { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); transition: transform .15s; }
+.kg-audio-sw.on { border-color: var(--gold); }
+.kg-audio-sw.on .kg-audio-track { background: var(--gold); }
+.kg-audio-sw.on .kg-audio-knob { transform: translateX(13px); }
+@media (max-width: 1099px) { .kg-audio-label { font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { .kg-audio-track, .kg-audio-knob { transition: none; } }
+/* SYNTHESIZER ON/OFF label: all caps, fixed width so the strip doesn't jump when it flips */
+.kg-audio-label { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.kg-audio-label b { display: inline-block; min-width: 3ch; color: #9fa0b8; }
+.kg-audio-sw.on .kg-audio-label b { color: #6cffa8; }

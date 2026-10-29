@@ -1,6 +1,7 @@
 // Level data: the five maps (generated from a tiny room recipe), the rail path the camera glides along,
 // and the piece each level plays (split into one phrase per demon). Pure functions, no state.
-import { SONGS } from '../../songs/songs'
+import { SONGS, type SongNote } from '../../songs/songs'
+import type { Key } from '../../../music/theory'
 import { PRELUDE_C, PRELUDE_PHASES, preludeFigure } from '../../../music/scores'
 import { CEIL_KINDS, FLOOR_KINDS, WALL_KINDS } from './types'
 import type { CeilKind, DemonKind, FloorKind, WallKind } from './types'
@@ -11,7 +12,13 @@ export interface LevelSpec {
   id: string; name: string; songId: string; take?: number; reps?: number; boss?: boolean
   rooms: RoomSpec[]; fog: [number, number, number]; fogDist: number; wallH?: number; demons: DemonKind[]
   blurb: string; fact: string
+  /** which episode's tab the level lives under (1 or 2); defaults to 1 */
+  episode?: 1 | 2
+  /** last level of the episode: shown as BOSS on the title screen, but played as a normal (big) demon fight */
+  finale?: boolean
 }
+export const EPISODES: { n: 1 | 2; name: string }[] = [{ n: 1, name: 'Episode 1: The Cathedral' }, { n: 2, name: 'Episode 2: Symphony of Shadows' }]
+export const episodeOf = (l: { episode?: 1 | 2 }): 1 | 2 => l.episode ?? 1
 
 const R = (w: number, d: number, turn: RoomSpec['turn'], wall: WallKind, floor: FloorKind, ceil: CeilKind, props: PropKind[], far?: WallKind): RoomSpec => ({ w, d, turn, wall, floor, ceil, props, far })
 
@@ -31,6 +38,25 @@ export const LEVELS: LevelSpec[] = [
   { id: 'E1M5', name: 'The Well-Tempered Cathedral', songId: 'prelude', boss: true, fog: [26, 16, 50], fogDist: 22, wallH: 2.2, demons: [],
     blurb: 'Boss: the Cacophodemon. Bach\'s Prelude in C.', fact: 'Bach wrote the Well-Tempered Clavier in 1722 to show off a tuning where every key sounds good.',
     rooms: [R(13, 17, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes')] },
+  // ---- Episode 2: Symphony of Shadows (unlocks after the Cathedral boss) ----
+  { id: 'E2M1', episode: 2, name: 'Sunrise Overlook', songId: 'morning', fog: [58, 40, 46], fogDist: 18, wallH: 1.4, demons: ['imp', 'squeak'],
+    blurb: 'Grieg\'s Morning Mood. The tune climbs like a sunrise.', fact: 'Grieg wrote Morning Mood for a play, to paint a sunrise. The same tune is played again one step higher, so it feels like the sun rising.',
+    rooms: [R(9, 10, 'S', 'wood', 'planks', 'beams', ['column', 'stand']), R(9, 10, 'R', 'marble', 'flag', 'beams', ['bust', 'column']), R(9, 11, 'L', 'wood', 'planks', 'beams', ['stand', 'column'], 'marble')] },
+  { id: 'E2M2', episode: 2, name: 'The Opera House', songId: 'habanera', reps: 3, fog: [48, 14, 28], fogDist: 16, demons: ['grumble', 'imp'],
+    blurb: 'Bizet\'s Habanera: slide down the keys, black ones too!', fact: 'The Habanera slides down one half step at a time. That is called a chromatic scale, and it uses every key, black and white.',
+    rooms: [R(9, 10, 'S', 'velvet', 'carpet', 'gold', ['candles', 'column']), R(9, 10, 'L', 'velvet', 'carpet', 'gold', ['bust', 'candles']), R(11, 11, 'R', 'velvet', 'carpet', 'gold', ['candles', 'column', 'bust'], 'marble')] },
+  { id: 'E2M3', episode: 2, name: 'The Sultan\'s Courtyard', songId: 'turkish', reps: 2, fog: [52, 30, 14], fogDist: 17, demons: ['imp', 'grumble', 'squeak'],
+    blurb: 'Mozart\'s Turkish March, twice as fast as it sounds.', fact: 'Mozart loved the sound of Turkish military bands, with drums and cymbals. He copied their stomping beat on the piano.',
+    rooms: [R(9, 10, 'S', 'brick', 'checker', 'beams', ['column', 'stand']), R(9, 10, 'R', 'marble', 'checker', 'gold', ['column', 'bust']), R(11, 11, 'L', 'brick', 'flag', 'beams', ['candles', 'column'], 'marble')] },
+  { id: 'E2M4', episode: 2, name: 'Midnight Soiree', songId: 'nachtmusik', reps: 2, fog: [18, 18, 44], fogDist: 17, wallH: 1.3, demons: ['squeak', 'imp'],
+    blurb: 'Mozart\'s Little Night Music. Fancy and quick.', fact: 'Eine kleine Nachtmusik means "A Little Night Music" in German. Mozart wrote it in 1787 for a small group of string players.',
+    rooms: [R(9, 10, 'S', 'marble', 'checker', 'gold', ['column', 'candles']), R(9, 10, 'L', 'velvet', 'carpet', 'gold', ['bust', 'column']), R(9, 11, 'R', 'marble', 'checker', 'gold', ['candles', 'column'], 'velvet')] },
+  { id: 'E2M5', episode: 2, name: 'The Counterpoint Crypt', songId: 'invention1', reps: 5, fog: [20, 24, 30], fogDist: 15, demons: ['grumble', 'imp', 'squeak'],
+    blurb: 'Bach\'s Invention No. 1: one tiny tune, over and over.', fact: 'Bach wrote his Inventions to teach his students to play two melodies at once. This one starts with just seven notes.',
+    rooms: [R(7, 10, 'S', 'brick', 'flag', 'vault', ['column', 'candles']), R(9, 10, 'R', 'pipes', 'flag', 'vault', ['column', 'bust']), R(9, 11, 'L', 'brick', 'flag', 'vault', ['candles', 'column'], 'pipes')] },
+  { id: 'E2M6', episode: 2, finale: true, name: 'The Moonlit Cathedral', songId: 'moonlight', reps: 2, fog: [14, 18, 48], fogDist: 22, wallH: 2.0, demons: ['grumble', 'imp', 'squeak'],
+    blurb: 'Final fight: Beethoven\'s Moonlight Sonata, slow and steady.', fact: 'Beethoven\'s Moonlight Sonata got its name after he died. A poet said it sounded like moonlight on a lake.',
+    rooms: [R(11, 12, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes'), R(11, 12, 'R', 'marble', 'checker', 'vault', ['column', 'bust']), R(13, 14, 'L', 'glass', 'checker', 'vault', ['column', 'candles', 'bust'], 'pipes')] },
 ]
 
 export const FACTS_EXTRA = ["A cadence is how music says 'the end of a sentence'.", 'Arpeggio means "harp-style": the notes of a chord played one after another, like Bach\'s Prelude in C.']
@@ -178,25 +204,29 @@ export interface Piece {
   chunks: Chunk[]
   /** boss only */
   bars: number
+  /** the piece as sheet-music notes (rests included), the score index of each entry of `notes`, key and bar length */
+  score: SongNote[]; scoreIdx: number[]; key: Key; beatsPerBar: number
 }
 
 export function buildPiece(spec: LevelSpec): Piece {
   if (spec.boss) {
     const notes = PRELUDE_C.flatMap(preludeFigure)
     const sixteenth = (60000 / 72) * 0.25
-    return { title: 'Prelude in C', origin: 'J.S. Bach, 1722', bpm: 72, notes, gap: notes.map((_, i) => (i ? sixteenth : 0)), chunks: PRELUDE_PHASES.map(([a, b]) => ({ s: a * 16, e: b * 16 })), bars: PRELUDE_C.length }
+    return { title: 'Prelude in C', origin: 'J.S. Bach, 1722', bpm: 72, notes, gap: notes.map((_, i) => (i ? sixteenth : 0)), chunks: PRELUDE_PHASES.map(([a, b]) => ({ s: a * 16, e: b * 16 })), bars: PRELUDE_C.length,
+      score: notes.map((note) => ({ note, beats: 0.25 })), scoreIdx: notes.map((_, i) => i), key: { tonic: 0, scale: 'major' }, beatsPerBar: 4 }
   }
   const song = SONGS.find((s) => s.id === spec.songId)!
   const base = song.notes.slice(0, spec.take ?? song.notes.length)
-  const notes: number[] = [], gap: number[] = [], breaks: number[] = []
+  const notes: number[] = [], gap: number[] = [], breaks: number[] = [], score: SongNote[] = [], scoreIdx: number[] = []
   const msPerBeat = 60000 / song.bpm
   let carry = 0 // beats since the previous sounding note started
   let prevBeats = 0
   for (let rep = 0; rep < (spec.reps ?? 1); rep++) {
-    if (rep > 0) { carry += 2; if (notes.length) breaks.push(notes.length) }
+    if (rep > 0) { carry += 2; score.push({ note: null, beats: 2 }); if (notes.length) breaks.push(notes.length) }
     for (const n of base) {
-      if (n.note == null) { carry += n.beats; if (notes.length) breaks.push(notes.length); continue }
+      if (n.note == null) { carry += n.beats; score.push({ note: null, beats: n.beats }); if (notes.length) breaks.push(notes.length); continue }
       gap.push(notes.length === 0 ? 0 : (prevBeats + carry) * msPerBeat)
+      scoreIdx.push(score.length); score.push({ note: n.note, beats: n.beats })
       notes.push(n.note)
       prevBeats = n.beats; carry = 0
     }
@@ -210,7 +240,7 @@ export function buildPiece(spec: LevelSpec): Piece {
     const parts = Math.max(1, Math.ceil(len / 7))
     for (let p = 0; p < parts; p++) chunks.push({ s: a + Math.floor((len * p) / parts), e: a + Math.floor((len * (p + 1)) / parts) })
   }
-  return { title: song.title, origin: song.origin, bpm: song.bpm, notes, gap, chunks, bars: 0 }
+  return { title: song.title, origin: song.origin, bpm: song.bpm, notes, gap, chunks, bars: 0, score, scoreIdx, key: song.key, beatsPerBar: 4 }
 }
 
 /** how many demons per room: spread evenly, extras to the later rooms */

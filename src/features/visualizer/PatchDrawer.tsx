@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { onNote } from '../../music/notes'
-import { isLocalNote } from '../../music/localNotes'
+import { unlockAudio } from '../../music/localNotes'
+import { useAudioSettings, setComputerSound } from '../../music/audioSettings'
 import { getSynth } from '../synth-history/engine'
 import { PRESETS } from '../synth-history/presets'
 import type { LfoShape, LfoTarget, SynthParams, Wave } from '../synth-history/params'
@@ -48,7 +48,7 @@ const posToCut = (p: number) => Math.round(40 * Math.pow(300, p / 100))
 export function PatchDrawer({ onClose }: { onClose: () => void }) {
   const synth = getSynth()
   const [params, setParams] = useState<SynthParams>({ ...synth.params })
-  const [hear, setHear] = useState(false)
+  const hear = useAudioSettings((s) => s.computerSound)
   const [sel, setSel] = useState<Id | null>(null)
   const [tab, setTab] = useState<'sound' | 'quests'>('sound')
   const [game, setGame] = useState(false)
@@ -59,19 +59,11 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
 
   useEffect(() => synth.onParams?.((p) => setParams({ ...p })), [synth])
 
-  // keyboard -> synth, only while the toggle is ON
-  useEffect(() => {
-    if (!hear) return
-    // on-screen/computer-key notes already sound by themselves (see music/localNotes.ts)
-    const off = onNote((e) => { if (isLocalNote(e)) return; if (e.on) synth.noteOn(e.note, e.velocity); else synth.noteOff(e.note) })
-    return () => { off(); synth.panic() }
-  }, [hear, synth])
-  useEffect(() => () => synth.panic(), [synth])
-
+  // 'Hear' is the shared 💻 Computer sound setting (routing lives in music/localNotes.ts)
   const toggleHear = async () => {
-    if (hear) { synth.panic(); setHear(false); return }
-    await synth.unlock()
-    setHear(true)
+    if (hear) { setComputerSound(false); return }
+    await unlockAudio()
+    setComputerSound(true)
   }
 
   const set = (p: Partial<SynthParams>) => synth.setParams(p)
@@ -228,7 +220,7 @@ export function PatchDrawer({ onClose }: { onClose: () => void }) {
       <button className={'pd-hear' + (hear ? ' on' : '')} aria-pressed={hear} onClick={() => void toggleHear()}>
         🔊 Hear it through the synth: {hear ? 'ON' : 'OFF'}
       </button>
-      <p className="pd-fine">{hear ? 'Your keyboard now plays through the synth.' : 'Off by default, since your keyboard may have its own speakers. The sparks change either way!'}</p>
+      <p className="pd-fine">{hear ? 'Your keyboard now plays through the computer.' : 'Off by default, since your keyboard may have its own speakers. The sparks change either way!'}</p>
     </aside>
   )
 }

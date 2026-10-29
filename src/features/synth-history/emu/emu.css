@@ -1,0 +1,124 @@
+.emu{--pl:#2a2733;--ink:#f1ece0;--kn:#d8d2c2;--ac:#ff9a3c;--cheek:#5a3a22;--cheek2:#3e2614;--hd:#1b1822;
+ color:var(--ink);display:flex;flex-direction:column;gap:8px;min-height:100%;padding:8px 22px;border-radius:12px;position:relative;
+ background:linear-gradient(90deg,var(--cheek2),var(--cheek) 14px,transparent 14px,transparent calc(100% - 14px),var(--cheek) calc(100% - 14px),var(--cheek2)),var(--pl)}
+.emu button{font:inherit}
+.emu-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-right:0}
+.emu-back{min-height:44px;padding:6px 14px;font-size:14px;font-weight:700}
+.emu-title{display:flex;align-items:baseline;gap:8px;flex:1;min-width:180px}
+.emu-title h3{margin:0;font-size:17px;letter-spacing:.04em;color:var(--ac)}
+.emu-title span{font-size:13px;opacity:.8}
+.emu-presets{display:flex;gap:6px;flex-wrap:wrap}
+.emu-presets button,.emu-btn{min-height:40px;padding:4px 12px;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;color:var(--ink);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28)}
+.emu-presets button.on,.emu-btn.on{background:var(--ac);color:#111;border-color:transparent}
+.emu-btn.big{min-height:44px;font-size:15px}
+.emu-main{display:flex;gap:12px;flex:1;min-height:0;align-items:flex-start}
+.emu-plate{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px;background:var(--hd);border:2px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 10px;box-shadow:inset 0 0 20px rgba(0,0,0,.4)}
+.emu-side{flex:0 0 238px;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.4}
+.emu-why,.emu-learn{background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px}
+.emu h4{margin:0 0 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ac)}
+.emu p{margin:0 0 4px}
+.emu-dim{opacity:.8}
+.emu-warn{color:var(--gold)}
+.emu-legal{margin:0;font-size:11px;opacity:.65;text-align:center}
+.emu-groups{display:flex;flex-wrap:wrap;gap:8px 14px}
+.emu-group-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.emu-group{border-left:2px solid color-mix(in srgb,var(--ac) 55%,transparent);padding-left:8px}
+.emu-group:first-child{border-left:0;padding-left:0}
+.emu-ctl{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:58px}
+.emu-ctl b{font-size:12px;font-weight:700;text-align:center;line-height:1.1}
+.emu-ctl small{font-size:12px;opacity:.75;font-variant-numeric:tabular-nums}
+.emu-knob{width:50px;height:50px;border-radius:50%;cursor:ns-resize;position:relative;touch-action:none;
+ background:radial-gradient(circle at 35% 30%,#fff3,transparent 45%),var(--kn);box-shadow:0 3px 6px #000a,inset 0 -3px 5px #0005;transform:rotate(var(--ang))}
+.emu-knob:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.emu-knob i{position:absolute;left:50%;top:4px;width:4px;height:16px;margin-left:-2px;border-radius:2px;background:#111}
+.emu-pick{align-items:flex-start;min-width:0}
+.emu-pick div{display:flex;gap:3px;flex-wrap:wrap}
+.emu-pick button{min-height:38px;min-width:44px;padding:2px 9px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;color:var(--ink);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25)}
+.emu-pick button.on{background:var(--ac);color:#111;border-color:transparent}
+.emu-vrange{writing-mode:vertical-lr;direction:rtl;width:28px;height:84px;accent-color:var(--ac);cursor:pointer}
+.emu-bar b{font-size:11px}
+.bar-0,.bar-1{--ac:#a5622a}.bar-2,.bar-3,.bar-6,.bar-7{--ac:#eee}.bar-4,.bar-5,.bar-8{--ac:#222}
+.bar-4 .emu-vrange,.bar-5 .emu-vrange,.bar-8 .emu-vrange{accent-color:#777}
+.emu-field{position:relative;height:96px;border-radius:8px;cursor:crosshair;touch-action:none;overflow:hidden;
+ background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 8.33%),linear-gradient(0deg,rgba(0,0,0,.4),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25)}
+.emu-field em{position:absolute;left:10px;top:6px;font-size:13px;font-style:normal;opacity:.9}
+.emu-fmark{position:absolute;bottom:2px;font-size:11px;opacity:.6;padding-left:2px;border-left:1px solid #fff5}
+.emu-fdot{position:absolute;width:22px;height:22px;margin:0 0 -11px -11px;border-radius:50%;background:var(--ac);box-shadow:0 0 14px var(--ac)}
+.emu-seq{display:flex;flex-direction:column;gap:6px}
+.emu-seq-top{display:flex;gap:6px;flex-wrap:wrap}
+.emu-grid{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.emu-col{display:flex;flex-direction:column;gap:2px;padding:2px;border-radius:4px}
+.emu-col.beat{background:rgba(255,255,255,.07)}
+.emu-col.now{background:color-mix(in srgb,var(--ac) 45%,transparent)}
+.emu-cell{height:16px;padding:0;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);cursor:pointer}
+.emu-cell.on{background:var(--ac);border-color:transparent}
+.emu-flag{height:22px;padding:0;font-size:11px;font-weight:800;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:var(--ink);cursor:pointer}
+.emu-flag.on.acc{background:#e33;border-color:transparent}.emu-flag.on.sl{background:#2ac;border-color:transparent}
+.emu-tape{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.emu-reel{flex:1;height:12px;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden}
+.emu-reel i{display:block;height:100%;background:var(--ac)}
+.emu-learn-row{display:flex;gap:6px;align-items:center}
+.emu-learn select{flex:1;min-width:0;min-height:42px;font-size:13px;border-radius:6px;background:#0008;color:var(--ink);border:1px solid #fff5}
+.emu-hwy{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.emu-hwy span{padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.14);font-weight:700;font-size:13px}
+.emu-hwy span.now{background:var(--ac);color:#111;font-size:20px;padding:3px 12px}
+.emu-hwy small{margin-left:auto;opacity:.8}
+/* skins */
+.skin-theremin{--pl:#d9d0b8;--ink:#2b2418;--hd:#efe8d4;--ac:#8a5a14;--cheek:#b08840;--cheek2:#7a5a20;--kn:#7a5a20}
+.skin-theremin .emu-knob i{background:#f5e9c8}
+.skin-ondes{--pl:#2a1a10;--hd:#3b2616;--ac:#e5c36a;--cheek:#7a4a24;--cheek2:#4a2a12;--kn:#e5c36a}
+.skin-hammond{--pl:#3b2414;--hd:#efe4c8;--ink:#2a1a0a;--ac:#8a2a10;--cheek:#6a3a1a;--cheek2:#432410;--kn:#2a1a0a}
+.skin-hammond .emu-knob i{background:#efe4c8}.skin-hammond .emu-pick button,.skin-hammond .emu-field{color:#2a1a0a}
+.skin-hammond .emu-pick button.on{color:#fff}
+.skin-mellotron{--pl:#4a3a2a;--hd:#d8c9a4;--ink:#2a2010;--ac:#a03a1a;--cheek:#5a4028;--cheek2:#3a2a18;--kn:#3a2a18}
+.skin-mellotron .emu-knob i{background:#d8c9a4}
+.skin-moog{--pl:#201a14;--hd:#17120e;--ac:#ffb04a;--cheek:#7a4a22;--cheek2:#3e2210;--kn:#e8dcc0}
+.skin-arp{--pl:#111;--hd:#0a0a0a;--ac:#ff7a1a;--cheek:#222;--cheek2:#000;--kn:#2a2a2a}
+.skin-arp .emu-knob{outline:3px solid #ff7a1a}.skin-arp .emu-knob i{background:#ff7a1a}
+.skin-prophet{--pl:#1d1b1a;--hd:#2c2a29;--ac:#ff5a4a;--cheek:#8a5a30;--cheek2:#4a2c14;--kn:#c9c4bc}
+.skin-303{--pl:#8d9095;--hd:#b9bcc0;--ink:#16181c;--ac:#d94a1a;--cheek:#555;--cheek2:#333;--kn:#2a2c30}
+.skin-303 .emu-knob i{background:#fff}.skin-303 .emu-pick button,.skin-303 .emu-btn,.skin-303 .emu-presets button{color:#16181c;border-color:#0006;background:#ffffff55}
+.skin-303 .emu-cell,.skin-303 .emu-flag{background:#0003;color:#16181c}.skin-303 .emu-presets button.on,.skin-303 .emu-btn.on{color:#fff}
+.skin-juno{--pl:#d8d8dc;--hd:#ececf0;--ink:#1c1c24;--ac:#e0452b;--cheek:#3a3a44;--cheek2:#1c1c24;--kn:#33343c}
+.skin-juno .emu-knob i{background:#fff}.skin-juno .emu-pick button,.skin-juno .emu-btn,.skin-juno .emu-presets button{color:#1c1c24;border-color:#0005;background:#0001}
+.skin-juno .emu-cell,.skin-juno .emu-flag{background:#0002}.skin-juno .emu-presets button.on{color:#fff}.skin-juno .emu-pick button.on{color:#fff}
+.skin-dx{--pl:#16181d;--hd:#0f1115;--ac:#3fe0c5;--cheek:#26292f;--cheek2:#0b0c0f;--kn:#4a4f58}
+.skin-dx .emu-knob i{background:#3fe0c5}
+.skin-theremin .emu-why,.skin-theremin .emu-learn,.skin-hammond .emu-why,.skin-hammond .emu-learn,.skin-mellotron .emu-why,.skin-mellotron .emu-learn,.skin-303 .emu-why,.skin-303 .emu-learn,.skin-juno .emu-why,.skin-juno .emu-learn{color:#f4f0e6}
+.skin-theremin .emu-top,.skin-hammond .emu-top,.skin-juno .emu-top,.skin-303 .emu-top,.skin-mellotron .emu-top{color:#f4f0e6}
+.skin-theremin .emu-title h3{color:#f6d98a}.skin-hammond .emu-title h3,.skin-mellotron .emu-title h3{color:#f6d98a}.skin-juno .emu-title h3,.skin-303 .emu-title h3{color:#ffb090}
+.skin-theremin .emu-legal,.skin-hammond .emu-legal,.skin-juno .emu-legal,.skin-303 .emu-legal{color:#f4f0e6}
+.skin-theremin .emu-pick button,.skin-mellotron .emu-pick button{color:var(--ink)}
+.skin-theremin .emu-pick button.on,.skin-mellotron .emu-pick button.on{color:#fff}
+@media (max-width:900px){.emu-main{flex-direction:column}.emu-side{flex-basis:auto;width:100%}}
+@media (prefers-reduced-motion:reduce){.emu *{transition:none!important;animation:none!important}}
+
+.emu{gap:6px;padding:6px 20px 4px}
+.emu-top{gap:8px}
+.emu-back{min-height:40px}
+.emu-presets button{min-height:36px}
+.emu-tabs{display:flex;gap:6px;align-items:center;justify-content:space-between;flex-wrap:wrap}.emu-tabs .emu-legal{flex:1;text-align:left;min-width:200px;font-size:11px;line-height:1.2}
+.emu-tabs button{min-height:34px;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;cursor:pointer;color:#f4f0e6;background:#000a;border:1px solid #fff6}
+.emu-tabs button.on{background:var(--ac);color:#111}
+.emu-pop{position:absolute;right:22px;top:96px;width:min(380px,calc(100% - 44px));z-index:5;box-shadow:0 8px 24px #000a;background:#0d0b14!important;color:#f4f0e6;border:1px solid var(--ac)}
+.emu-pop[hidden]{display:none}
+.emu-plate{padding:6px 8px;gap:6px;}
+.emu-knob{width:40px;height:40px}.emu-knob i{top:3px;height:12px}
+.emu-ctl{min-width:56px}.emu-ctl b{font-size:11px}.emu-ctl small{font-size:11px}
+.emu h4{margin-bottom:2px;font-size:11px}
+.emu-vrange{height:52px}
+.emu-pick button{min-height:34px}
+.emu-field{height:62px}
+.emu-cell{height:11px}.emu-flag{height:17px}
+.emu-seq{gap:4px}.emu-seq-top .emu-btn{min-height:34px}
+.emu-hwy{margin:0;padding:4px 8px;background:#000a;border-radius:8px;position:relative;z-index:3}
+.emu-legal{font-size:10px}
+
+.emu-group{display:flex;gap:4px;align-items:stretch}
+.emu-group h4{writing-mode:vertical-rl;transform:rotate(180deg);margin:0;font-size:10px;letter-spacing:.1em;white-space:nowrap;text-align:center;opacity:.9}
+.emu-groups{gap:6px 10px}
+.emu-group-row{gap:6px}
+.emu-pick{gap:0}
+.emu-pick{flex-direction:row;align-items:center;gap:4px}.emu-pick b{max-width:52px}
+.skin-theremin{--pl:#3a2c18}.skin-juno{--pl:#2a2a33}.skin-303{--pl:#44474d}.skin-mellotron{--pl:#2e2216}
+.skin-theremin .emu-back,.skin-juno .emu-back,.skin-303 .emu-back{color:#f4f0e6}

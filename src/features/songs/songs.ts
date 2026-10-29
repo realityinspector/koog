@@ -1,14 +1,17 @@
 // Public-domain melodies as data. Pure module, no state.
 import type { Key } from '../../music/theory'
 import { PRELUDE_C, preludeFigure } from '../../music/scores'
+import { CLASSICAL } from '../../music/classical'
 
 // lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
 // note (joined when shown). Trailing "/" = a new lyric line starts after this syllable. Rests never carry a lyric.
 export interface SongNote { note: number | null; beats: number; lyric?: string } // null = rest
-export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex'
+export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex' | 'classical'
 export interface Song {
   id: string; title: string; origin: string; year: string
   key: Key; bpm: number; tier: Tier; notes: SongNote[]; hook?: string; mine?: boolean
+  /** classical library only: false = melody written from memory, not yet verified by ear */
+  checked?: boolean
 }
 
 const PCS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
@@ -28,7 +31,7 @@ function seq(s: string, def = 1): SongNote[] {
 const maj = (tonic: number): Key => ({ tonic, scale: 'major' })
 const min = (tonic: number): Key => ({ tonic, scale: 'minor' })
 
-export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex' }
+export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex', classical: '🎻 Classical' }
 
 const BASE: Song[] = [
   { id: 'pop-static', title: 'Static in My Headphones', origin: 'Koog Original', year: '2026', key: min(4), bpm: 124, tier: 'pop', hook: 'Sad but loud. Smash the build, then scream the hook.',
@@ -138,7 +141,7 @@ const LYRICS: Record<string, string> = {
   'pop-hyper': `Su- gar bounc- ing off walls/ So- da fizz in my shoes/ Can- dy fly- ing past stars/ can't sit still at all/ Fast- er fast- er fast- er fast- er/ don't you blink or you'll miss all the fun/`,
 }
 
-export const SONGS: Song[] = BASE.map((s) => {
+export const SONGS: Song[] = [...BASE, ...CLASSICAL].map((s) => {
   const txt = LYRICS[s.id]
   if (!txt) return s
   const syl = txt.trim().split(/\s+/)

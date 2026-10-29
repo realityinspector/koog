@@ -46,3 +46,6 @@
 .sh-score{color:var(--gold);font-weight:700;font-size:15px}
 .sh-reset{min-height:36px;padding:4px 14px;font-size:14px;font-weight:700;background:var(--surface-3);color:var(--text);border:1px solid var(--border);border-radius:999px;cursor:pointer;margin-left:6px}
 @media (prefers-reduced-motion:reduce){.sh-card{transition:none}}
+.sh-play-tag{margin-top:auto;font-size:12px;font-weight:800;color:#1a1233;background:var(--era);border-radius:999px;padding:3px 10px;align-self:flex-start}
+.sh-play{min-height:48px;font-size:17px;font-weight:800;border:0;border-radius:999px;cursor:pointer;color:#fff;background:var(--grad-main);padding:8px 20px}
+.sh-play:hover{filter:brightness(1.15)}

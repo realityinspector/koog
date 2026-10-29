@@ -3,17 +3,11 @@ import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
 import { onJudge } from '../../music/judge'
 import { useScreen } from '../../layout/screenStore'
-import { playLocal } from '../../music/localNotes'
 import { createEngine, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
 import { PatchDrawer } from './PatchDrawer'
 import { VizControls, VISUALS } from './VizControls'
 import './visualizer.css'
-
-// Computer-keyboard fallback so it works even before MIDI is allowed.
-const KEYS = ['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', ';', "'"]
-// Computer-keyboard notes share the local-note path with the on-screen keys (shared ids + sound).
-const push = (ev: { note: number; velocity: number; on: boolean }) => playLocal(ev.note, ev.velocity, ev.on)
 
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
@@ -26,7 +20,6 @@ export function Visualizer() {
     } catch { /* storage blocked: fine */ }
     return 'fireworks'
   })
-  const [octave, setOctave] = useState(0)
   const [emoji, setEmoji] = useState(false)
   const [sparkle, setSparkle] = useState(() => {
     try { return localStorage.getItem('koog.viz.sparkle') !== '0' } catch { return true }
@@ -84,34 +77,6 @@ export function Visualizer() {
     try { localStorage.setItem('koog.viz.patch', patchOpen ? '1' : '0') } catch { /* ignore */ }
   }, [patchOpen])
 
-  useEffect(() => {
-    const down = new Set<string>()
-    const typing = (e: KeyboardEvent) => (e.target as HTMLElement)?.closest?.('input, textarea, select')
-    const onDown = (e: KeyboardEvent) => {
-      if (typing(e) || e.repeat || e.metaKey || e.ctrlKey) return
-      const k = e.key.toLowerCase()
-      if (k === 'z') return setOctave((o) => Math.max(-2, o - 1))
-      if (k === 'x') return setOctave((o) => Math.min(2, o + 1))
-      const i = KEYS.indexOf(k)
-      if (i < 0 || down.has(k)) return
-      down.add(k)
-      push({ note: 60 + octave * 12 + i, velocity: 70 + Math.round(Math.random() * 40), on: true })
-    }
-    const onUp = (e: KeyboardEvent) => {
-      const k = e.key.toLowerCase()
-      const i = KEYS.indexOf(k)
-      if (i < 0 || !down.has(k)) return
-      down.delete(k)
-      push({ note: 60 + octave * 12 + i, velocity: 0, on: false })
-    }
-    window.addEventListener('keydown', onDown)
-    window.addEventListener('keyup', onUp)
-    return () => {
-      window.removeEventListener('keydown', onDown)
-      window.removeEventListener('keyup', onUp)
-    }
-  }, [octave])
-
   const fullscreen = () => {
     if (document.fullscreenElement) void document.exitFullscreen()
     else void wrap.current?.requestFullscreen()
@@ -124,7 +89,7 @@ export function Visualizer() {
         sparkle={sparkle} onSparkle={setSparkle} patchOpen={patchOpen} onPatch={() => setPatchOpen((o) => !o)} onFullscreen={fullscreen} />
       {patchOpen && <PatchDrawer onClose={() => setPatchOpen(false)} />}
       <div className={'viz-hint' + (played ? ' gone' : '')} aria-hidden={played}>
-        {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: A W S E D F T G Y H U J K (Z / X change octave)'}
+        {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: Z S X D C V and Q 2 W 3 E R keys (← → change octave)'}
       </div>
     </div>
   )

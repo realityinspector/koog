@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useHarmonyStore } from '../../music/harmonyStore'
+import { outputScale } from '../../music/audioSettings'
 import { onNote } from '../../music/notes'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { celebrate } from '../celebrate/celebrate'
@@ -27,6 +28,8 @@ const save = psave
 let ac: AudioContext | null = null
 function beep(note: number, gain = 0.08) {
   if (!ac) return
+  gain *= outputScale()
+  if (gain <= 0.0002) return
   try {
     const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime
     o.type = 'sine'; o.frequency.value = 440 * Math.pow(2, (note - 69) / 12)

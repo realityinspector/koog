@@ -1,6 +1,7 @@
 // Zombie Lanes: levels, lessons, chords, save format. Pure data and helpers, no module-level state.
 import { PC_NAMES, pc } from '../../../music/theory'
-import { SONGS } from '../../songs/songs'
+import { SONGS, type SongNote } from '../../songs/songs'
+import type { Key } from '../../../music/theory'
 import { pload, psave } from '../../../profile/profile'
 
 export type Mode = 'easy' | 'normal'
@@ -63,6 +64,21 @@ export function odeMelody(): number[] {
   return m.length ? m : [64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62]
 }
 
+/** Pieces the Zombie King can play. 'ode' stays the default; the rest are classical pieces from the song book. */
+export const BOSS_PIECE_IDS = ['ode', 'morning', 'moonlight', 'habanera', 'invention1', 'minuet', 'nachtmusik', 'king', 'turkish', 'elise', 'canon', 'toccata', 'beethoven5']
+export interface BossPiece { id: string; title: string; origin: string; melody: number[]; notes: SongNote[]; scoreIdx: number[]; key: Key; bpm: number }
+export function bossPieces(): { id: string; title: string }[] {
+  return BOSS_PIECE_IDS.map((id) => SONGS.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x).map((x) => ({ id: x.id, title: x.title.replace(/ \(.*\)$/, '') }))
+}
+/** the boss's melody (sounding notes, max 32) plus the score-note index of each one, for the sheet-music overlay */
+export function bossPiece(id: string): BossPiece {
+  const s = SONGS.find((x) => x.id === id && BOSS_PIECE_IDS.includes(id)) ?? SONGS.find((x) => x.id === 'ode')!
+  const melody: number[] = [], scoreIdx: number[] = []
+  s.notes.forEach((n, i) => { if (n.note != null && melody.length < 32) { melody.push(n.note); scoreIdx.push(i) } })
+  const last = scoreIdx.length ? scoreIdx[scoreIdx.length - 1] + 1 : s.notes.length
+  return { id: s.id, title: s.title, origin: s.origin, melody, notes: s.notes.slice(0, last), scoreIdx, key: s.key, bpm: s.bpm }
+}
+
 const SHARP = PC_NAMES
 const FLAT = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B']
 /** "C", "F♯" (sharp) or "G♭" (flat). `flat` only matters for black keys. */
@@ -78,6 +94,8 @@ export interface Save {
   /** highest wave unlocked per mode */
   wave: Record<Mode, number>
   mode: Mode
+  /** which piece the Zombie King plays (a BOSS_PIECE_IDS id) */
+  boss: string
 }
 const num = (v: unknown, d: number, lo: number, hi: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d)
 export function loadSave(): Save {
@@ -86,6 +104,7 @@ export function loadSave(): Save {
     best: { easy: num(r.best?.easy, 0, 0, 1e9), normal: num(r.best?.normal, 0, 0, 1e9) },
     wave: { easy: Math.round(num(r.wave?.easy, 1, 1, 5)), normal: Math.round(num(r.wave?.normal, 1, 1, 5)) },
     mode: r.mode === 'normal' ? 'normal' : 'easy',
+    boss: typeof r.boss === 'string' && BOSS_PIECE_IDS.includes(r.boss) ? r.boss : 'ode',
   }
 }
 export function writeSave(s: Save) { psave('zombielanes', s) }
@@ -107,5 +126,6 @@ export interface Snapshot {
   cleared: number
   save: Save
   bonusBrain: boolean
+  bossSong: string
 }
 export const MAX_LIVES = 3

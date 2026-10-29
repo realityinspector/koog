@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Celebration } from '../features/celebrate/Celebration'
 import { useScreen } from './screenStore'
+import { useScore, useSheet } from '../music/scoreStore'
 import './instrument.css'
 
 export type ModeDef = { id: string; icon: string; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
@@ -11,8 +12,10 @@ function loadMode(): string {
 }
 
 /** The Koog instrument: strip, display (hero), control rail of modes, keybed. Modes with a node open as screens over the display. */
-export function Instrument({ strip, idea, display, overlay, keybed, modes }: {
+export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet }: {
   strip: ReactNode; idea: ReactNode; display: ReactNode; overlay: ReactNode; keybed: ReactNode; modes: ModeDef[]
+  /** sheet-music strip along the bottom of the display, above every screen and game */
+  sheet?: ReactNode
 }) {
   const [saved, setSaved] = useState(loadMode)
   // Saved mode may be gone (e.g. DEV after leaving Dad mode): fall back to PLAY.
@@ -45,6 +48,9 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes }: {
   })
 
   const screens = modes.filter((m) => m.node != null)
+  const hasScore = useScore((s) => s.score != null)
+  // same rule as SheetOverlay: reserve room only when the sheet has something to show
+  const sheetOn = useSheet((s) => s.on) && (hasScore || mode === 'play')
   return (
     <div className="kg-app">
       <div className="kg-chassis">
@@ -61,7 +67,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes }: {
           </header>
 
           <div className="kg-bezel">
-            <div className="kg-display" data-screen={mode !== 'play' ? '1' : undefined}>
+            <div className="kg-display" data-screen={mode !== 'play' ? '1' : undefined} data-sheet={sheetOn ? '1' : undefined}>
               {display}
               <div className="kg-overlay">{overlay}</div>
               {screens.map((m) => (
@@ -73,6 +79,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes }: {
                   <div className="kg-screen-body">{m.node}</div>
                 </div>
               ))}
+              {sheet}
               <div className="kg-glass" aria-hidden />
             </div>
           </div>

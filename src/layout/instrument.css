@@ -112,3 +112,14 @@
 /* 7+ modes on narrower screens: tighter labels, LED stays clear of the icon */
 @media (max-width: 1200px) { .kg-mode { padding-left: 22px; padding-right: 6px; gap: 6px; } .kg-mode-lb { letter-spacing: .08em; } }
 @media (max-width: 900px) { .kg-led { display: none; } .kg-mode { padding-left: 6px; } }
+/* always-visible strip switches (sound, sheet music) */
+.kg-strip-mid { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.kg-strip-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+/* sheet music on: screens and games end above the sheet strip; the visualizer's controls move up */
+.kg-display { --sheet-h: 0px; }
+.kg-display[data-sheet] { --sheet-h: clamp(96px, 17vh, 140px); }
+.kg-display[data-sheet] .kg-screen { bottom: var(--sheet-h); }
+.kg-display[data-sheet] .viz .viz-bar { bottom: calc(var(--sheet-h) + 10px); }
+/* a running game brings its own Back/Menu buttons: drop the screen header so the game gets the height */
+.kg-screen:has(.gm-stage) .kg-screen-head { display: none; }
+.kg-display[data-sheet] { --sheet-h: clamp(92px, 15vh, 128px); }

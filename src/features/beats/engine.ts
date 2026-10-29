@@ -1,5 +1,6 @@
 // Beat engine: Web Audio lookahead scheduler. No React in here.
 // Long-lived state lives in import.meta.hot.data so HMR can stop sound cleanly.
+import { useAudioSettings, outputScale } from '../../music/audioSettings'
 import { inKey, SCALES, PC_NAMES, type Key, type ScaleType } from '../../music/theory'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
@@ -213,7 +214,7 @@ export function start() {
   comp.attack.value = 0.003; comp.release.value = 0.15
   const master = ctx.createGain()
   master.gain.value = 0
-  master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN), ctx.currentTime, 0.02)
+  master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), ctx.currentTime, 0.02)
   master.connect(comp).connect(ctx.destination)
   const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
   const d = buf.getChannelData(0)
@@ -264,7 +265,7 @@ export function setGroove(id: string) {
 export function setBpmAdj(n: number) { S.bpmAdj = Math.max(-20, Math.min(20, n)); emit() }
 export function setGain(v: number) {
   S.gain = Math.max(0, Math.min(MAX_GAIN, v))
-  if (S.ctx && S.master) S.master.gain.setTargetAtTime(S.gain, S.ctx.currentTime, 0.03)
+  if (S.ctx && S.master) S.master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), S.ctx.currentTime, 0.03)
   emit()
 }
 export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on; emit() }
@@ -358,6 +359,9 @@ const onHide = () => stop()
 window.addEventListener('pagehide', onHide)
 if (hot) {
   hot.data.beatsOffHide = () => window.removeEventListener('pagehide', onHide)
-  hot.dispose(() => { stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
+  const offSettings = useAudioSettings.subscribe(() => {
+    if (S.ctx && S.master) S.master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), S.ctx.currentTime, 0.03)
+  })
+  hot.dispose(() => { offSettings(); stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
   hot.accept()
 }

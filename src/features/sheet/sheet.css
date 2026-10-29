@@ -1,0 +1,29 @@
+.sh-toggle { flex: none; min-height: 36px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 14px; color: #f4f2ff; cursor: pointer;
+  background: linear-gradient(180deg, #2c2748, #1b1832); border: 1px solid rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 2px 5px rgba(0, 0, 0, .4); }
+.sh-toggle:hover { border-color: var(--gold); }
+.sh-toggle.on { box-shadow: inset 0 3px 6px rgba(0, 0, 0, .6); border-color: var(--gold); background: linear-gradient(180deg, #3a3160, #231f40); }
+@media (max-width: 1100px) { .sh-toggle-t { display: none; } .sh-toggle { padding: 4px 10px; } }
+
+.sh-overlay { position: absolute; left: 0; right: 0; bottom: 0; height: var(--sheet-h); z-index: 25; pointer-events: none; overflow: hidden;
+  --ink: #2a2236; --sh-hit: #12994a; --sh-miss: #d6342f; --sh-paper: #f7efdc;
+  background: linear-gradient(180deg, #fbf5e6, #f1e6c9); border-top: 2px solid rgba(60, 40, 20, .35); box-shadow: 0 -6px 18px rgba(0, 0, 0, .35); color: var(--ink); }
+.sh-svg { display: block; width: 100%; height: 100%; color: var(--ink); }
+.sh-g { color: var(--ink); }
+.sh-g.hit { color: var(--sh-hit); }
+.sh-g.miss { color: var(--sh-miss); }
+.sh-bar { position: absolute; top: 4px; right: 8px; display: flex; gap: 6px; align-items: center; pointer-events: none; max-width: 70%; }
+.sh-pill { pointer-events: none; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; background: rgba(42, 34, 54, .88); color: #fff6dc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sh-btn { pointer-events: auto; cursor: pointer; width: 24px; height: 24px; flex: none; border-radius: 50%; border: 1px solid rgba(42, 34, 54, .5); background: rgba(255, 250, 235, .95); color: var(--ink); font-weight: 900; font-size: 12px; line-height: 1; padding: 0; }
+.sh-btn.on { background: #2a2236; color: #fff6dc; }
+.sh-btn:hover { border-color: #b8860b; }
+.sh-empty { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 13px; font-weight: 800; color: rgba(42, 34, 54, .55); pointer-events: none; text-align: center; }
+
+/* Music-stand look: dark glass with light ink so it belongs to the instrument, inset from the display edges. */
+.sh-overlay { left: 8px; right: 8px; bottom: 8px; height: calc(var(--sheet-h) - 12px); border-radius: 14px;
+  --ink: #ece8ff; --sh-hit: #6cffa8; --sh-miss: #ff8a8a; --sh-paper: #171233;
+  background: linear-gradient(180deg, rgba(26, 20, 58, .94), rgba(16, 12, 38, .96)); border: 1px solid rgba(255, 255, 255, .16); border-top-color: rgba(255, 215, 108, .45);
+  box-shadow: 0 -4px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .08); backdrop-filter: blur(10px); }
+.sh-pill { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .16); color: #f4f2ff; }
+.sh-btn { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .25); color: #f4f2ff; }
+.sh-btn.on { background: #ffd76c; color: #1b1534; }
+.sh-empty { color: rgba(236, 232, 255, .55); }

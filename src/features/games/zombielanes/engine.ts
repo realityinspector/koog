@@ -5,11 +5,12 @@
 import { onJudge, type JudgeEvent, type NoteGrade } from '../../../music/judge'
 import { setGuide, clearGuide } from '../../../music/guide'
 import { pc } from '../../../music/theory'
+import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
 import { buildLayout, noteHue } from '../../keyboard/layout'
 import { Sprites, SKINS, EXTRAS, ZH, ZFEET, KH, KFEET, SIGN_Y, KSIGN_Y, CONFETTI_FRAMES } from './sprites'
 import { renderBackground, renderVignette, type Lane } from './background'
 import {
-  LEVELS, CHORDS, CHORD_WINDOW, MAX_LIVES, odeMelody, noteLabel, isBlackKey, loadSave, writeSave,
+  LEVELS, CHORDS, CHORD_WINDOW, MAX_LIVES, bossPiece, noteLabel, isBlackKey, loadSave, writeSave,
   type Mode, type Phase, type Snapshot, type LevelDef, type Chord, type Save,
 } from './data'
 
@@ -21,7 +22,7 @@ interface Zombie {
   id: number; kind: 'note' | 'chord'; note: number; label: string; chord: Chord | null
   p: number; skin: number; extra: number; age: number; walk: number; x: number
 }
-interface Boss { p: number; idx: number; max: number; melody: number[]; flinch: number; age: number }
+interface Boss { scoreIdx: number[]; p: number; idx: number; max: number; melody: number[]; flinch: number; age: number }
 interface Particle { x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; kind: 0 | 1 | 2 | 3; ci: number; size: number; spin: number }
 interface Pop { text: string; x: number; y: number; age: number; max: number; color: string; size: number }
 interface Beam { x: number; x2: number; y0: number; y1: number; w: number; age: number; max: number; fizzle: boolean; grad: CanvasGradient; hue: number }
@@ -136,11 +137,13 @@ export class Game {
     window.clearInterval(this.poll)
     this.mq?.removeEventListener('change', this.onMq)
     this.offJudge()
+    clearScore('zombielanes')
     clearGuide()
     if (import.meta.env.DEV && (window as unknown as { __zl?: Game }).__zl === this) delete (window as unknown as { __zl?: Game }).__zl
   }
 
   // ---------------- public controls ----------------
+  setBossSong(id: string) { this.save.boss = bossPiece(id).id; writeSave(this.save); this.emit() }
   setMode(m: Mode) { this.mode = m; this.save.mode = m; writeSave(this.save); this.emit() }
 
   start(mode: Mode, wave: number) {
@@ -173,8 +176,10 @@ export class Game {
     this.spawnLeft = lv.count
     this.spawnTimer = 0.7
     if (lv.boss) {
-      const melody = odeMelody()
-      this.boss = { p: 0, idx: 0, max: melody.length, melody, flinch: 0, age: 0 }
+      const bp = bossPiece(this.save.boss)
+      const melody = bp.melody
+      this.boss = { scoreIdx: bp.scoreIdx, p: 0, idx: 0, max: melody.length, melody, flinch: 0, age: 0 }
+      setScore({ owner: 'zombielanes', title: bp.title, notes: bp.notes, key: bp.key, bpm: bp.bpm, beatsPerBar: 4 }, bp.scoreIdx[0] ?? 0)
       this.spawnLeft = 0
     }
     this.emit()
@@ -183,6 +188,7 @@ export class Game {
   private get lv(): LevelDef { return LEVELS[this.wave - 1] }
 
   private resetField() {
+    clearScore('zombielanes')
     this.zombies = []; this.boss = null; this.spawned = 0; this.spawnLeft = 0; this.bag = []; this.chordIx = 0
     this.ending = false; this.later = null; this.recent = []; this.pending = []
     this.particles = []; this.pops = []; this.beams = []; this.rings = []; this.press.clear()
@@ -195,7 +201,7 @@ export class Game {
     return {
       phase: this.phase, mode: this.mode, wave: this.wave, score: this.score, lives: this.lives, combo: this.combo, left,
       jam: this.clock < this.jamUntil, bossHp: this.boss ? this.boss.max - this.boss.idx : 0, bossMax: this.boss ? this.boss.max : 0,
-      stars: this.stars, won: this.won, newBest: this.newBest, cleared: this.cleared, save: this.save, bonusBrain: this.bonusBrain,
+      stars: this.stars, won: this.won, newBest: this.newBest, cleared: this.cleared, save: this.save, bonusBrain: this.bonusBrain, bossSong: this.save.boss,
     }
   }
   private emit() { if (!this.dead) this.onSnap(this.snap()) }
@@ -296,7 +302,7 @@ export class Game {
     if (this.boss) {
       const b = this.boss
       if (this.matches(b.melody[b.idx], g.note)) this.hitBoss(g)
-      else this.miss(g.note)
+      else { setScorePos(b.scoreIdx[b.idx] ?? 0, 'miss'); this.miss(g.note) }
       return
     }
     // 1. a chord zombie completed within 400 ms
@@ -380,6 +386,7 @@ export class Game {
     const lane = this.laneFor(g.note)
     if (lane) this.addBeam(lane, c.y, false, c.x)
     b.idx++; b.flinch = 1
+    setScorePos(b.scoreIdx[b.idx] ?? b.scoreIdx[b.idx - 1] + 1, 'hit')
     this.score += pts; this.combo++
     this.poof(c.x + (rnd() - 0.5) * 40, c.y + (rnd() - 0.5) * 30, false)
     this.pop('+' + pts, c.x, c.top + 24, onBeat ? '#ffe14a' : '#fff7b0', onBeat ? 30 : 26)
@@ -389,6 +396,7 @@ export class Game {
   }
 
   private defeatBoss() {
+    clearScore('zombielanes')
     const c = this.bossCenter()
     this.boss = null
     this.ending = true
@@ -466,6 +474,7 @@ export class Game {
   }
 
   private gameOver(won: boolean) {
+    clearScore('zombielanes')
     this.won = won
     this.stars = this.score <= 0 ? 0 : won ? 3 : this.cleared >= 2 ? 2 : 1
     this.recordBest()

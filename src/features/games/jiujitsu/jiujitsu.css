@@ -1,0 +1,67 @@
+/* Jiu-Jitsu Flow UI. The canvas draws the mat; this styles the HUD and cards. Sizes use container units so it fits any stage height. */
+.bj-root { position: relative; width: 100%; height: 100%; overflow: hidden; container-type: size; color: #f4f2ff; font-family: inherit; user-select: none; background: #2b2a4a; }
+.bj-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.bj-hud { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 12px; box-sizing: border-box; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, rgba(22, 14, 56, .8), rgba(22, 14, 56, 0)); }
+.bj-hud > * { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bj-hud button { pointer-events: auto; }
+.bj-beltname { font-size: 17px; font-weight: 800; white-space: nowrap; }
+.bj-belt { display: inline-flex; align-items: center; justify-content: flex-end; width: 74px; height: 14px; border-radius: 3px; border: 2px solid rgba(0, 0, 0, .45); box-sizing: border-box; flex: none; }
+.bj-belt.big { width: 150px; height: 26px; }
+.bj-tab { display: flex; align-items: center; justify-content: center; gap: 3px; width: 34%; height: 100%; margin-right: 8%; border-radius: 2px; }
+.bj-tab i { width: 3px; height: 70%; background: #fff; border-radius: 1px; }
+.bj-belt.big .bj-tab i { width: 5px; }
+
+.bj-score { display: flex; align-items: stretch; gap: 0; border-radius: 10px; overflow: hidden; background: #0e0e18; border: 2px solid #3c3c58; box-shadow: 0 3px 10px rgba(0, 0, 0, .4); }
+.bj-score > div { display: flex; flex-direction: column; align-items: center; padding: 1px 14px; min-width: 66px; }
+.bj-score small { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #b8b6d4; }
+.bj-score b { font-size: 28px; line-height: 1; font-weight: 900; color: #7dffb0; font-variant-numeric: tabular-nums; }
+.bj-score > div:last-child b { color: #9ec5ff; }
+.bj-score i { align-self: center; font-style: normal; font-size: 11px; font-weight: 800; color: #ffd23f; padding: 0 4px; letter-spacing: .08em; }
+
+.bj-boom { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; color: #ffe9a0; white-space: nowrap; }
+.bj-boom-bar { width: 84px; height: 14px; border-radius: 999px; background: rgba(10, 6, 30, .75); border: 1px solid rgba(255, 220, 120, .55); overflow: hidden; }
+.bj-boom-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ffb347, #ffe14a); border-radius: 999px; transition: width .2s ease; }
+.bj-boom.full { color: #fff; }
+.bj-quit { font: inherit; font-size: 15px; font-weight: 800; padding: 3px 11px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .35); background: rgba(10, 6, 30, .6); color: #fff; cursor: pointer; }
+.bj-quit:hover { background: rgba(60, 40, 120, .8); }
+
+.bj-bottom { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 10px 6px; box-sizing: border-box; pointer-events: none;
+  background: linear-gradient(0deg, rgba(14, 10, 40, .85), rgba(14, 10, 40, 0)); }
+.bj-bottom button { pointer-events: auto; }
+.bj-ladder { display: flex; gap: 4px; flex-wrap: nowrap; }
+.bj-ladder span { font-size: clamp(11px, 3.4cqh, 14px); font-weight: 700; padding: 1px 8px; border-radius: 999px; background: rgba(10, 6, 30, .65); color: #aaa8c8; border: 1px solid rgba(255, 255, 255, .15); white-space: nowrap; }
+.bj-ladder span.done { color: #7dffb0; border-color: rgba(125, 255, 176, .4); }
+.bj-ladder span.cur { background: #ffd23f; color: #2a1c00; border-color: #fff3a8; }
+.bj-banner { font-size: clamp(18px, 6.2cqh, 28px); font-weight: 900; text-align: center; line-height: 1.15; color: #fff; text-shadow: 0 2px 0 rgba(20, 10, 60, .9); max-width: 96%; }
+.bj-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 0; }
+.bj-tip { font-size: clamp(14px, 4.2cqh, 18px); font-weight: 700; color: #e6e1ff; background: rgba(10, 6, 30, .6); border-radius: 999px; padding: 2px 12px; }
+.bj-dots { display: inline-flex; gap: 6px; }
+.bj-dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255, 255, 255, .2); border: 2px solid rgba(255, 255, 255, .6); box-sizing: border-box; }
+.bj-dots i.on { background: #7dffb0; border-color: #fff; }
+.bj-chain { font-size: 20px; font-weight: 900; color: #9dffcb; }
+.bj-chain small { font-size: 14px; color: #cfc9ea; margin-left: 8px; }
+
+.bj-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 8px; box-sizing: border-box; }
+.bj-card { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 2.2cqh, 12px); text-align: center; max-width: min(660px, 94%); max-height: 98%; box-sizing: border-box; overflow: hidden;
+  padding: clamp(10px, 3.2cqh, 18px) clamp(14px, 3cqw, 28px); border-radius: 20px; background: rgba(24, 16, 58, .94); border: 2px solid rgba(190, 170, 255, .45); box-shadow: 0 10px 34px rgba(0, 0, 0, .45); }
+.bj-title { margin: 0; font-size: clamp(24px, 8.5cqh, 40px); line-height: 1.05; font-weight: 900; color: #ffd23f; text-shadow: 0 3px 0 rgba(40, 20, 0, .7); }
+.bj-sub, .bj-lesson { margin: 0; font-size: clamp(15px, 4.6cqh, 20px); line-height: 1.3; color: #e9e5ff; }
+.bj-lesson { font-weight: 700; font-size: clamp(16px, 5cqh, 22px); }
+.bj-big { font-size: clamp(22px, 7cqh, 32px); font-weight: 900; color: #7dffb0; }
+.bj-best { font-weight: 800; color: #ffe9a0; font-size: 17px; }
+.bj-stripe { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 18px; font-weight: 800; color: #fff3a8; }
+.bj-beltrow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; font-size: 17px; }
+.bj-pick { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 16px; font-weight: 700; color: #cfc9ea; }
+.bj-song { color: #fff; max-width: 260px; }
+.bj-chip { font: inherit; font-size: 15px; font-weight: 800; padding: 3px 12px; border-radius: 999px; border: 2px solid rgba(255, 255, 255, .3); background: rgba(10, 6, 30, .6); color: #fff; cursor: pointer; }
+.bj-chip[aria-pressed='true'] { background: #ffd23f; color: #2a1c00; border-color: #fff3a8; }
+.bj-bow { font-size: 32px; }
+.bj-btn { font: inherit; font-size: clamp(16px, 5cqh, 22px); font-weight: 900; padding: 8px 20px; border-radius: 999px; border: 2px solid rgba(255, 255, 255, .4); background: rgba(60, 50, 130, .9); color: #fff; cursor: pointer; }
+.bj-btn:hover { background: rgba(90, 76, 180, .95); }
+.bj-btn.go { background: #29a35a; border-color: #b6ffd0; }
+.bj-btn.go:hover { background: #33c06c; }
+.bj-btn.ghost { background: transparent; }
+.bj-btn.small { font-size: 15px; padding: 3px 14px; }
+@media (prefers-reduced-motion: reduce) { .bj-boom-bar i { transition: none; } }

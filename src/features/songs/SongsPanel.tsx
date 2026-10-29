@@ -8,6 +8,8 @@ import { loadMine, saveMine } from './recording'
 import { pload, psave } from '../../profile/profile'
 import { celebrate } from '../celebrate/celebrate'
 import { startBacking, stopBacking } from '../beats/engine'
+import { syncSongScore } from '../sheet/songSync'
+import { clearScore } from '../../music/scoreStore'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -320,10 +322,11 @@ export function SongsPanel() {
         if (game.cursor > game.endBeat) li = game.notes.length
       }
       if (li !== lastLy) { lastLy = li; setLyIdx(li) }
+      syncSongScore(song, game.phase === 'playing' || game.phase === 'listening', game.notes, game.idx, game.cursor, game.phase === 'playing' && o.mode === 'wait', false)
       draw(ctx, game, lay, W, dpr, song, o)
     }
     raf = requestAnimationFrame(frame)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); clearScore('songs') }
   }, [song, finish])
 
   const bestFor = (id: string) => {
@@ -332,11 +335,12 @@ export function SongsPanel() {
     return m ? m : 0
   }
   const curBest = song ? bests[song.id + ':' + mode] : undefined
-  const [tab, setTab] = useState<'pop' | 'bang' | 'warm'>('pop')
-  const rows: { id: 'pop' | 'bang' | 'warm'; label: string; tabLabel: string; tiers: Tier[] }[] = [
+  const [tab, setTab] = useState<'pop' | 'bang' | 'warm' | 'classical'>('pop')
+  const rows: { id: 'pop' | 'bang' | 'warm' | 'classical'; label: string; tabLabel: string; tiers: Tier[] }[] = [
     { id: 'pop', label: TIER_LABEL.pop, tabLabel: '🎧 Originals', tiers: ['pop'] },
     { id: 'bang', label: '🔥 ' + TIER_LABEL.bang, tabLabel: '🔥 Bangers', tiers: ['bang'] },
     { id: 'warm', label: 'Warm-ups', tabLabel: 'Warm-ups', tiers: ['easy', 'medium', 'flex'] },
+    { id: 'classical', label: TIER_LABEL.classical, tabLabel: '🎻 Classical', tiers: ['classical'] },
   ]
   const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
   const listFor = (r: { tiers: Tier[] }) => SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))

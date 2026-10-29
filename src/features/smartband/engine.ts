@@ -1,6 +1,7 @@
 // Smart Band engine: its own tiny Web Audio synth + lookahead scheduler. No React in here.
 // Safety: hard master cap, limiter, short ramps, max 6 voices, every voice has a scheduled stop.
 // Long-lived state lives in import.meta.hot.data so HMR can silence it cleanly.
+import { useAudioSettings, outputScale } from '../../music/audioSettings'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import {
@@ -60,7 +61,7 @@ export const getVersion = () => S.version
 export const getState = () => S
 
 const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12)
-const masterLevel = () => Math.min(MASTER_CAP, Math.max(0, S.volume) * MASTER_CAP)
+const masterLevel = () => Math.min(MASTER_CAP, Math.max(0, S.volume) * MASTER_CAP) * outputScale()
 
 // ---- voice budget: a note only plays if there's room (stuck-note guard: every voice also has a hard stop) ----
 function reserve(t: number, end: number, n = 1): boolean {
@@ -266,7 +267,10 @@ const onHide = () => panic()
 window.addEventListener('pagehide', onHide)
 if (hot) {
   hot.data.smartbandOffHide = () => window.removeEventListener('pagehide', onHide)
-  hot.dispose(() => { panic(); window.removeEventListener('pagehide', onHide) })
+  const offSettings = useAudioSettings.subscribe(() => {
+    if (S.ctx && S.master) S.master.gain.setTargetAtTime(masterLevel(), S.ctx.currentTime, 0.03)
+  })
+  hot.dispose(() => { offSettings(); panic(); window.removeEventListener('pagehide', onHide) })
 }
 
 if (import.meta.hot) { import.meta.hot.accept() }

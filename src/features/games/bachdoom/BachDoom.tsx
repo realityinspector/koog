@@ -4,7 +4,7 @@ import { onJudge } from '../../../music/judge'
 import { clearGuide } from '../../../music/guide'
 import { DIFFS, Game } from './game'
 import type { Diff } from './game'
-import { LEVELS } from './levels'
+import { EPISODES, LEVELS, episodeOf } from './levels'
 import { View } from './render'
 import { Painter } from './hud'
 import { SceneList } from './scene'
@@ -20,6 +20,7 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
   const gameRef = useRef<Game | null>(null)
   const [, redraw] = useReducer((n: number) => n + 1, 0)
   const [sel, setSel] = useState<number | null>(null)
+  const [epSel, setEpSel] = useState<1 | 2 | null>(null)
   const [diffSel, setDiffSel] = useState<Diff | null>(null)
   const [err, setErr] = useState('')
 
@@ -100,6 +101,7 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
   const save = game?.save
   const unlocked = save?.unlocked ?? 1
   const level = sel ?? Math.min(LEVELS.length - 1, unlocked - 1)
+  const ep = epSel ?? episodeOf(LEVELS[level])
   const diff = diffSel ?? game?.diff ?? 'normal'
   // a click should never leave a focused button behind: the computer keyboard plays notes, and Space/Enter would press it
   const act = (fn: () => void) => (e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.blur(); fn() }
@@ -120,14 +122,26 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
               </button>
             ))}
           </div>
+          <div className="bd-diffs bd-eps" role="group" aria-label="Episode">
+            {EPISODES.map((e) => {
+              const first = LEVELS.findIndex((l) => episodeOf(l) === e.n)
+              const locked = first < 0 || first >= unlocked
+              return (
+                <button key={e.n} disabled={locked} className={'bd-btn bd-diff' + (ep === e.n ? ' on' : '')}
+                  onClick={act(() => { setEpSel(e.n); setSel(LEVELS.reduce((best, l, i) => (episodeOf(l) === e.n && i < unlocked ? i : best), first)) })}>
+                  <b>{locked ? '🔒 ' : ''}{e.name}</b>{locked && e.n === 2 && <small>Beat Episode 1 to unlock</small>}
+                </button>
+              )
+            })}
+          </div>
           <div className="bd-levels">
-            {LEVELS.map((l, i) => {
+            {LEVELS.map((l, i) => (episodeOf(l) === ep ? [l, i] as const : null)).filter((x): x is readonly [typeof LEVELS[number], number] => !!x).map(([l, i]) => {
               const best = save?.best[l.id]
               const locked = i >= unlocked
               return (
-                <button key={l.id} disabled={locked} className={'bd-btn bd-lvl' + (level === i ? ' on' : '') + (l.boss ? ' boss' : '')} onClick={act(() => setSel(i))} title={l.name}>
+                <button key={l.id} disabled={locked} className={'bd-btn bd-lvl' + (level === i ? ' on' : '') + ((l.boss || l.finale) ? ' boss' : '')} onClick={act(() => setSel(i))} title={l.name}>
                   <b>{locked ? '🔒' : ''} {l.id}</b>
-                  <small>{l.boss ? 'BOSS' : l.name}</small>
+                  <small>{l.boss || l.finale ? 'BOSS' : l.name}</small>
                   <span className="bd-stars">{[0, 1, 2].map((k) => <i key={k} className={best && best.stars > k ? 'on' : ''}>★</i>)}</span>
                 </button>
               )

@@ -32,6 +32,7 @@
 .sg .card-s:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(255, 255, 255, .22); }
 .sg .card-s.t-pop { background: linear-gradient(135deg, rgba(255, 93, 162, .55), rgba(124, 92, 255, .6)), #1c143a; border-color: rgba(255, 93, 162, .7); }
 .sg .card-s.t-bang { background: linear-gradient(135deg, rgba(255, 106, 20, .6), rgba(255, 150, 40, .35)), #2a1408; border-color: rgba(255, 170, 60, .7); }
+.sg .card-s.t-classical { background: linear-gradient(135deg, rgba(212, 175, 90, .45), rgba(120, 70, 40, .35)), #2a1c10; border-color: rgba(230, 195, 110, .7); }
 .sg .card-s.t-easy, .sg .card-s.t-medium, .sg .card-s.t-flex { background: linear-gradient(135deg, rgba(79, 216, 255, .28), rgba(124, 92, 255, .22)), #10223a; border-color: rgba(79, 216, 255, .5); }
 /* taller screens: show every tier row, tabs are not needed */
 @media (min-height: 780px) {

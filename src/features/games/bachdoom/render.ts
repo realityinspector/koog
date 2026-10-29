@@ -16,8 +16,10 @@ export interface Billboard {
   tint: number; tr: number; tg: number; tb: number
   /** glowing things ignore fog darkening */
   glow: boolean
+  /** horizontal squash/stretch (1 = normal) */
+  ws: number
 }
-export const newBillboard = (): Billboard => ({ x: 0, y: 0, z: 0, h: 1, img: null as unknown as Img, flip: false, tint: 0, tr: 255, tg: 255, tb: 255, glow: false })
+export const newBillboard = (): Billboard => ({ x: 0, y: 0, z: 0, h: 1, img: null as unknown as Img, flip: false, tint: 0, tr: 255, tg: 255, tb: 255, glow: false, ws: 1 })
 
 const PLANE = 0.86 // half-width of the camera plane: ~85 degree field of view
 const VSCALE = 0.78 // vertical focal length relative to the horizontal one (a squat, wide view fits the stage)
@@ -182,7 +184,7 @@ export class View {
       const tx = inv * (dirY * dx - dirX * dy)
       const img = b.img
       const sh = (b.h * f) / ty
-      const sw = (sh * img.w) / img.h
+      const sw = (sh * img.w * b.ws) / img.h
       const scx = (w / 2) * (1 + tx / ty)
       const bottom = horizon + ((CAMH - b.z) * f) / ty
       const top = bottom - sh

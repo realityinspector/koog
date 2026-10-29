@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { EVENTS, QUIZ } from './timelineData'
+import { getEmu } from './emu'
 
 const era = (y: number) => (y < 1960 ? 'era-early' : y < 1970 ? 'era-60' : y < 1980 ? 'era-70' : 'era-80')
 
-export function Timeline() {
+export function Timeline({ onPlay }: { onPlay: (id: string, preset: number) => void }) {
   const [open, setOpen] = useState<number | null>(null)
   const [quiz, setQuiz] = useState(false)
   const [answers, setAnswers] = useState<Record<number, 'a' | 'b'>>({})
@@ -67,6 +68,7 @@ export function Timeline() {
               <span className="sh-year">{e.year}</span>
               <span className="sh-emoji">{e.emoji}</span>
               <h3>{e.title}</h3>
+              {e.emu && getEmu(e.emu) && <span className="sh-play-tag">▶ Play it</span>}
             </button>
           ))}
         </div>
@@ -75,6 +77,7 @@ export function Timeline() {
             <button className="sh-x" onClick={() => setOpen(null)} aria-label="Close card">✕</button>
             <div className="sh-side-h"><span>{ev.emoji}</span><div><small>{ev.year}</small><h3>{ev.title}</h3></div></div>
             <p className="sh-body">{ev.body}</p>
+            {ev.emu && getEmu(ev.emu) && <button className="sh-play" onClick={() => onPlay(ev.emu!, ev.emuPreset ?? 0)}>▶ Play it</button>}
             <p className="sh-try">👉 {ev.hook}</p>
           </aside>
         )}

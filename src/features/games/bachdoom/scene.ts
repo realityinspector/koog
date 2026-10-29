@@ -3,9 +3,15 @@
 import { newBillboard } from './render'
 import type { Billboard } from './render'
 import type { Game } from './game'
-import type { DemonKind, Sprites } from './types'
+import type { DemonKind, Img, Sprites } from './types'
 
 const HEIGHT: Record<DemonKind, number> = { imp: 1.22, grumble: 1.12, squeak: 0.8 }
+/** tiny solid squares: 4 confetti colours (frames 2-5), gold and white sparks (6, 7) */
+const dot = (abgr: number, n = 4): Img => ({ w: n, h: n, px: new Uint32Array(n * n).fill(abgr) })
+const BITS: Img[] = [
+  dot(0xff5fd0ff), dot(0xffa0f070), dot(0xffff9a5a), dot(0xff9a6aff), // butter, mint, sky, pink  (0xAABBGGRR)
+  dot(0xff4ac9ff), dot(0xfff0fcff),
+]
 const PROP_H = { column: 1, candles: 0.62, bust: 0.62, stand: 0.52 } as const
 
 export class SceneList {
@@ -16,7 +22,7 @@ export class SceneList {
   private next(): Billboard | null {
     if (this.n >= this.list.length) return null
     const b = this.list[this.n++]
-    b.flip = false; b.tint = 0; b.glow = false; b.z = 0
+    b.flip = false; b.tint = 0; b.glow = false; b.z = 0; b.ws = 1
     return b
   }
 
@@ -57,6 +63,8 @@ export class SceneList {
       } else if (d.lungeT > 0 || (!demo && d.dist <= 2.55 && g.diff !== 'story')) b.img = set.attack
       else if (d.hurtT > 0) b.img = set.hurt
       else b.img = set.walk[Math.floor(d.t * (walking ? 4 : 2)) & 1]
+      // squash on every hit (not a flash): shorter and wider, then springs back
+      if (d.sq > 0 && !g.reduced) { const k = Math.sin((1 - d.sq / 0.12) * Math.PI); h *= 1 - 0.17 * k; b.ws = 1 + 0.2 * k }
       b.h = h
       if (d.hurtT > 0 && d.state === 0) { b.tint = 0.35; b.tr = 255; b.tg = 255; b.tb = 255 }
     }
@@ -68,6 +76,7 @@ export class SceneList {
         b.x = this.tmp.x; b.y = this.tmp.y
         b.h = 2.5 * Math.min(1, wh / 2.2 + 0.2)
         b.z = 0.04 + (g.reduced ? 0 : Math.sin(clock * 1.7) * 0.07)
+        if (bs.sq > 0 && !g.reduced) { const k = Math.sin((1 - bs.sq / 0.12) * Math.PI); b.h *= 1 - 0.1 * k; b.ws = 1 + 0.12 * k }
         if (bs.dieT >= 0) {
           const k = Math.max(0, 1 - bs.dieT / 2.6)
           b.img = sp.boss.hurt; b.tint = 0.85 * (1 - k); b.tr = 255; b.tg = 220; b.tb = 110; b.h *= 0.2 + 0.8 * k; b.glow = true
@@ -79,15 +88,16 @@ export class SceneList {
         if (!o.on) continue
         g.orbPos(o, this.tmp)
         const ob = this.next(); if (!ob) break
-        ob.x = this.tmp.x; ob.y = this.tmp.y; ob.z = o.z + Math.sin(o.t * 4) * 0.04; ob.h = 0.55; ob.glow = true
+        ob.x = this.tmp.x; ob.y = this.tmp.y; ob.z = o.z + Math.sin(o.t * 4) * 0.04; ob.h = 0.55 * (o.hitT > 0 && !g.reduced ? 1 + 0.5 * (o.hitT / 0.2) : 1); ob.glow = true
         ob.img = sp.orb[Math.floor(o.t * 8) & 1]
       }
     }
     for (const p of g.parts) {
       if (!p.on) continue
       const b = this.next(); if (!b) break
-      b.x = p.x; b.y = p.y; b.z = p.z; b.h = 0.17 * Math.min(1, p.life / 0.4); b.glow = true
-      b.img = sp.note[(p.frame + Math.floor(clock * 6)) & 1]
+      b.x = p.x; b.y = p.y; b.z = p.z; b.glow = true
+      if (p.frame >= 2) { b.h = (p.frame >= 6 ? 0.13 : 0.12) * Math.min(1, p.life / 0.2); b.img = BITS[p.frame - 2] }
+      else { b.h = 0.17 * Math.min(1, p.life / 0.4); b.img = sp.note[(p.frame + Math.floor(clock * 6)) & 1] }
     }
     if (g.bfgT >= 0 && g.bfgT < 0.6 && g.room) {
       const t = g.bfgT / 0.6, r = g.room

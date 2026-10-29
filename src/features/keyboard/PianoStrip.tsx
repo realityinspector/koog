@@ -3,6 +3,7 @@ import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { useHarmonyStore, judge } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { playLocal } from '../../music/localNotes'
+import { typingCaps, useTyping } from '../../music/typing'
 import { buildLayout, noteHue, snapRange, type KeyShape } from './layout'
 import { useGuide, type GuideTone } from '../../music/guide'
 import './keyboard.css'
@@ -22,19 +23,25 @@ function loadNames(): boolean {
   try { return localStorage.getItem('koog.kb.names') === '1' } catch { return false }
 }
 
+function loadTyping(): boolean {
+  try { return localStorage.getItem('koog.kb.typing') === '1' } catch { return false }
+}
+
 interface KeyProps {
   k: KeyShape
   held: boolean
   flash: boolean
   status: 'tonic' | 'in' | 'out'
   showName: boolean
+  /** typing letters for this key, or null */
+  caps?: string | null
   /** lit by a game or song: "play this next" */
   guide?: GuideTone | null
   down: (n: number, e: React.PointerEvent) => void
   up: (n: number) => void
 }
 
-const Key = memo(function Key({ k, held, flash, status, showName, guide, down, up }: KeyProps) {
+const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, down, up }: KeyProps) {
   const style = {
     left: k.left + '%',
     width: k.width + '%',
@@ -54,6 +61,7 @@ const Key = memo(function Key({ k, held, flash, status, showName, guide, down, u
     >
       {status === 'tonic' ? <span className="kb-home">🏠</span> : status === 'in' ? <span className="kb-dot" /> : null}
       {label && <span className="kb-label">{label}</span>}
+      {caps && <span className="kb-cap">{caps}</span>}
     </div>
   )
 })
@@ -61,6 +69,8 @@ const Key = memo(function Key({ k, held, flash, status, showName, guide, down, u
 export function PianoStrip() {
   const [range, setRange] = useState<[number, number]>(loadRange)
   const [names, setNames] = useState(loadNames)
+  const [typing, setTyping] = useState(loadTyping)
+  const shift = useTyping((s) => s.shift)
   const [held, setHeld] = useState<ReadonlySet<number>>(new Set())
   const [flash, setFlash] = useState<ReadonlySet<number>>(new Set())
   const key = useHarmonyStore((s) => s.key)
@@ -125,17 +135,29 @@ export function PianoStrip() {
     })
   }
 
+  const toggleTyping = () => {
+    setTyping((v) => {
+      try { localStorage.setItem('koog.kb.typing', v ? '0' : '1') } catch { /* ignore */ }
+      return !v
+    })
+  }
+
   return (
     <section className="kb">
       <div className="kb-top">
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
-        <label className="kb-toggle">
-          <input type="checkbox" checked={names} onChange={toggleNames} /> Show note names
-        </label>
+        <div className="kb-toggles">
+          <label className="kb-toggle">
+            <input type="checkbox" checked={typing} onChange={toggleTyping} /> ⌨️ Show computer keys
+          </label>
+          <label className="kb-toggle">
+            <input type="checkbox" checked={names} onChange={toggleNames} /> Show note names
+          </label>
+        </div>
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (
-          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} guide={guideSet.has(k.note) ? guideTone : null} down={down} up={up} />
+          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} down={down} up={up} />
         ))}
       </div>
     </section>

@@ -1,4 +1,5 @@
 // Moog-style subtractive synth engine. SAFETY: master hard cap 0.15, limiter, Q clamp, stuck-note guard.
+import { useAudioSettings, outputScale } from '../../music/audioSettings'
 import { DEFAULT_PARAMS, type LfoShape, type LfoTarget, type SynthEngine, type SynthParams, type Wave } from './params'
 
 export const MASTER_CAP = 0.15
@@ -46,9 +47,12 @@ function sanitize(p: SynthParams): SynthParams {
 S.params = sanitize(S.params)
 S.subs ??= new Set()
 
+/** dev/test getter: current master gain value (0 until audio starts) */
+export const masterGainValue = () => S.master?.gain.value ?? null
+
 const applyLevel = () => {
   if (!S.ctx || !S.master) return
-  S.master.gain.setTargetAtTime(MASTER_CAP * S.params.level, S.ctx.currentTime, 0.02)
+  S.master.gain.setTargetAtTime(MASTER_CAP * S.params.level * outputScale(), S.ctx.currentTime, 0.02)
 }
 
 /** One shared LFO feeding three depth-scaled gains. Gains are 0 unless their target is patched. */
@@ -231,6 +235,7 @@ const synth: SynthEngine = {
 export function getSynth(): SynthEngine { return synth }
 
 if (import.meta.hot) {
-  import.meta.hot.dispose(() => synth.panic())
+  const offSettings = useAudioSettings.subscribe(() => applyLevel())
+  import.meta.hot.dispose(() => { offSettings(); synth.panic() })
 }
 if (import.meta.hot) { import.meta.hot.accept() }

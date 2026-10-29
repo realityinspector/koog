@@ -11,7 +11,7 @@ const prof = mkdtempSync(path.join(process.env.TMPDIR || tmpdir(), 'koog-shot-')
 const port = 9300 + Math.floor(Math.random() * 500)
 const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
   '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, '--no-first-run', '--no-default-browser-check',
-  '--window-size=1280,800', '--autoplay-policy=no-user-gesture-required', 'about:blank'], { stdio: 'ignore' })
+  '--window-size=1280,800', '--autoplay-policy=no-user-gesture-required', '--mute-audio', 'about:blank'], { stdio: 'ignore' })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 let ws
 for (let i = 0; i < 50; i++) {

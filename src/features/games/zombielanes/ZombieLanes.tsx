@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useJudge } from '../../../music/judge'
 import { Game } from './engine'
-import { LEVELS, MAX_LIVES, loadSave, type Mode, type Snapshot } from './data'
+import { LEVELS, MAX_LIVES, bossPieces, loadSave, type Mode, type Snapshot } from './data'
 import './zombielanes.css'
+
+const bossTitle = (id: string) => bossPieces().find((p) => p.id === id)?.title ?? 'a tune'
 
 function initialSnap(): Snapshot {
   const save = loadSave()
-  return { phase: 'menu', mode: save.mode, wave: 1, score: 0, lives: MAX_LIVES, combo: 0, left: 0, jam: false, bossHp: 0, bossMax: 0, stars: 0, won: false, newBest: false, cleared: 0, save, bonusBrain: false }
+  return { phase: 'menu', mode: save.mode, wave: 1, score: 0, lives: MAX_LIVES, combo: 0, left: 0, jam: false, bossHp: 0, bossMax: 0, stars: 0, won: false, newBest: false, cleared: 0, save, bonusBrain: false, bossSong: save.boss }
 }
 
 /** Zombie Lanes: zombies march down lanes lined up with the real keys. Play the note on the sign to blast one. */
@@ -52,6 +54,12 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
                 ))}
               </div>
             )}
+            <label className="zl-boss-pick">
+              👑 Zombie King plays
+              <select value={snap.bossSong} onChange={(e) => g()?.setBossSong(e.target.value)} aria-label="Zombie King's piece">
+                {bossPieces().map((p) => <option key={p.id} value={p.id}>{p.id === 'ode' ? 'Ode to Joy (default)' : p.title}</option>)}
+              </select>
+            </label>
             {snap.save.best[snap.mode] > 0 && <div className="zl-best">🏆 Best score: {snap.save.best[snap.mode].toLocaleString()}</div>}
             <div className="zl-row">
               <button className="zl-btn go" onClick={() => g()?.start(snap.mode, wave)}>▶ Start</button>
@@ -65,9 +73,9 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
           <div className="zl-card">
             <h2 className="zl-wnum">Wave {snap.wave}!</h2>
             <p className="zl-wname">{LEVELS[snap.wave - 1].title}</p>
-            <p className="zl-lesson">{LEVELS[snap.wave - 1].lesson}</p>
+            <p className="zl-lesson">{LEVELS[snap.wave - 1].boss && snap.bossSong !== 'ode' ? `Boss time! The King plays ${bossTitle(snap.bossSong)}. Play it one note at a time. Each right note hits the King.` : LEVELS[snap.wave - 1].lesson}</p>
             {snap.wave <= 3 && <MiniKeys octaves={snap.wave === 2 ? 2 : 1} names={snap.wave === 3 ? 'accidentals' : 'letters'} />}
-            {LEVELS[snap.wave - 1].tip && <p className="zl-tip">{LEVELS[snap.wave - 1].tip}</p>}
+            {LEVELS[snap.wave - 1].tip && !(LEVELS[snap.wave - 1].boss && snap.bossSong !== 'ode') && <p className="zl-tip">{LEVELS[snap.wave - 1].tip}</p>}
             {snap.bonusBrain && <p className="zl-tip">🧠 A brain grew back!</p>}
             <div className="zl-row">
               <button className="zl-btn go" onClick={() => g()?.beginWave()}>Go! ▶</button>

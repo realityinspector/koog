@@ -7,7 +7,7 @@ import { useJudge } from '../../../music/judge'
 import { drawText, textWidth } from './font'
 import { LEVELS } from './levels'
 import { DIFFS } from './game'
-import type { FaceName, Game, Phase } from './game'
+import type { Bolt, Demon, FaceName, Game, Phase } from './game'
 import type { View } from './render'
 import type { Face, Gun, Img, Sprites } from './types'
 
@@ -37,6 +37,9 @@ export class Painter {
   private screenT = 0
   private pt = { x: 0, y: 0, d: 0 }
   private nextBuf: number[] = []
+  // aiming: smoothed -1..1 toward the target's screen x, the muzzle's screen position, the reticle's lock-on pulse
+  private aim = 0; private mzx = 0; private mzy = 0; private retTgt: unknown = null; private retT = 1
+  private glowDur = 0.14; private dtv = 0.016
   /** device px per internal view px, set each frame */
   private kx = 1; private ky = 1
 
@@ -60,11 +63,19 @@ export class Painter {
     const ps = this.ps(H)
     if (g.phase !== this.lastPhase) { this.lastPhase = g.phase; this.screenT = 0 }
     this.screenT += dt
+    this.dtv = dt
 
     if (g.phase === 'title') { this.title(ctx, g, W, H, hudH, ps); return }
 
+    // a 1-2 px nudge on PERFECT / killing blows only (never under reduced motion); the status bar stays put
+    ctx.save()
+    if (g.kickT > 0 && !g.reduced) {
+      const m = Math.max(1, Math.round(ps * 0.5)) * Math.min(1, g.kickT / 0.1), sg = g.st.hits & 1 ? 1 : -1
+      ctx.translate(Math.round(m * sg), Math.round(m * 0.6))
+    }
     this.overlays(ctx, g, view, W, viewH, ps)
     this.gunLayer(ctx, g, W, viewH, ps)
+    ctx.restore()
     this.vignette(ctx, g, W, viewH, dt)
     this.statusBar(ctx, g, W, H, hudH, ps)
     this.topLayer(ctx, g, view, W, viewH, ps)
@@ -97,7 +108,15 @@ export class Painter {
       let x = Math.round(this.pt.x - tw / 2); const y = Math.round(this.pt.y)
       ctx.fillStyle = 'rgba(10,4,12,.78)'
       ctx.fillRect(x - gap - 1, y - gap - 1, tw + gap * 2 + 2, pw + gap * 2 + 2)
-      for (let i = 0; i < n; i++, x += pw + gap) { ctx.fillStyle = i < d.hp ? (d === tgt ? GOLD : '#c9a24a') : '#4a3350'; ctx.fillRect(x, y, pw, pw) }
+      for (let i = 0; i < n; i++, x += pw + gap) { ctx.fillStyle = i < d.vhp ? (d === tgt ? GOLD : '#c9a24a') : '#4a3350'; ctx.fillRect(x, y, pw, pw) }
+      if (d.pipT > 0) {
+        // the pips you just shot off pop up and fade
+        const k = 1 - d.pipT / 0.4
+        ctx.globalAlpha = Math.max(0, 1 - k)
+        ctx.fillStyle = '#fff3d0'
+        for (let i = d.vhp; i < d.vhp + d.pipN && i < n; i++) ctx.fillRect(Math.round(this.pt.x - tw / 2 + i * (pw + gap)), Math.round(y - k * ps * 9 - ps), pw, pw)
+        ctx.globalAlpha = 1
+      }
       if (d === tgt) {
         // a gold arrow that bobs over the demon you are playing against
         const bob = g.reduced ? 0 : Math.round(Math.sin(g.clock * 6) * ps)
@@ -108,22 +127,7 @@ export class Painter {
         for (let r = 0; r < 4; r++) ctx.fillRect(cx - (3 - r) * ps, cy + r * ps, (3 - r) * 2 * ps + ps, ps)
       }
     }
-    // tracer: a few gold notes fly from the organ to what you hit
-    if (g.shot.t < 1) {
-      if (this.toScreen(view, g.shot.wx, g.shot.wy, g.shot.wz)) {
-        const sx = W / 2, sy = viewH * 0.72, tx = this.pt.x, ty = this.pt.y
-        const s = g.shot.t
-        for (let i = 0; i < 3; i++) {
-          const u = Math.min(1, s * 1.1 + i * 0.09 - 0.09)
-          if (u <= 0) continue
-          const nx = sx + (tx - sx) * u, ny = sy + (ty - sy) * u - Math.sin(u * Math.PI) * viewH * 0.06
-          const sz = Math.round(ps * (7 - i * 1.5))
-          ctx.globalAlpha = 1 - u * 0.4
-          ctx.drawImage(this.note[(i + (g.st.hits & 1)) & 1], Math.round(nx - sz / 2), Math.round(ny - sz / 2), sz, sz)
-        }
-        ctx.globalAlpha = 1
-      }
-    }
+    this.aimLayer(ctx, g, view, W, viewH, ps)
     // BFG impact glow: local, soft, and gentle (never a full-screen flash)
     if (g.bfgT >= 0.6 && g.room) {
       const k = (g.bfgT - 0.6) / 0.8
@@ -151,17 +155,120 @@ export class Painter {
     }
   }
 
+  private aimX = -1
+  private aimT(W: number) { return this.aimX < 0 ? 0 : Math.max(-1, Math.min(1, (this.aimX - W / 2) / (W / 2))) }
+
+  /** the reticle on the current target, the bolts flying to it (or fizzling short of it), and the impact ring */
+  private aimLayer(ctx: CanvasRenderingContext2D, g: Game, view: View, W: number, viewH: number, ps: number) {
+    const fight = g.phase === 'play' && g.mode === 'fight' && g.endT < 0
+    const tgt = g.target
+    this.aimX = -1
+    if (fight && (tgt || g.boss) && this.targetPt(g, view, tgt, 0)) {
+      this.aimX = this.pt.x
+      if (this.retTgt !== (tgt ?? g.boss)) { this.retTgt = tgt ?? g.boss; this.retT = 0 }
+      else this.retT = Math.min(1, this.retT + this.dtv / 0.18)
+      const cx = Math.round(this.pt.x), cy = Math.round(this.pt.y)
+      const pulse = g.shot.t < 0.5 ? 1 + (0.5 - g.shot.t) * 0.5 : 1
+      const r = Math.round(ps * (g.boss ? 11 : 7) * (1 + (1 - this.retT) * 1.2) * pulse), tk = ps * 3, th = Math.max(1, Math.round(ps * 0.8))
+      for (let pass = 0; pass < 2; pass++) {
+        ctx.strokeStyle = pass ? '#ffe9a0' : '#2a1406'; ctx.fillStyle = ctx.strokeStyle
+        ctx.lineWidth = th + (pass ? 0 : 2); ctx.globalAlpha = 0.5 + 0.5 * this.retT
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(cx - r - tk, cy); ctx.lineTo(cx - r * 0.55, cy); ctx.moveTo(cx + r * 0.55, cy); ctx.lineTo(cx + r + tk, cy)
+        ctx.moveTo(cx, cy - r - tk); ctx.lineTo(cx, cy - r * 0.55); ctx.moveTo(cx, cy + r * 0.55); ctx.lineTo(cx, cy + r + tk)
+        ctx.stroke()
+        ctx.fillRect(cx - th, cy - th, th * 2, th * 2)
+      }
+      ctx.globalAlpha = 1
+    } else this.retTgt = null
+    // bolts
+    const trail = g.reduced ? 2 : 5
+    for (const b of g.bolts) {
+      if (!b.on) continue
+      if (!this.targetPt(g, view, b.tk === 3 ? (g.boss ? null : b.d) : b.d, b.tk === 2 ? b.oi + 1 : b.tk === 1 ? -1 : 0)) continue
+      const mx = this.mzx || W / 2, my = this.mzy || viewH * 0.66, tx = this.pt.x, ty = this.pt.y
+      if (b.tk === 3) { this.dud(ctx, g, b, mx, my, tx, ty, viewH, ps); continue }
+      const u = Math.min(1, b.t / b.dur)
+      // a straight, fast blast: gold streak with a white core, glowing head
+      ctx.lineCap = 'round'
+      for (let j = trail - 1; j >= 0; j--) {
+        const u0 = Math.max(0, u - (j + 1) * 0.09), u1 = Math.max(0, u - j * 0.09)
+        if (u1 <= 0) continue
+        ctx.globalAlpha = 0.95 - j * (g.reduced ? 0.3 : 0.16)
+        ctx.strokeStyle = '#ff9d2e'; ctx.lineWidth = Math.max(3, ps * (5.2 - j * 0.8))
+        ctx.beginPath(); ctx.moveTo(mx + (tx - mx) * u0, my + (ty - my) * u0); ctx.lineTo(mx + (tx - mx) * u1, my + (ty - my) * u1); ctx.stroke()
+        if (j < 3) {
+          ctx.strokeStyle = '#fffbe0'; ctx.lineWidth = Math.max(1.5, ps * (2.4 - j * 0.55))
+          ctx.stroke()
+        }
+      }
+      const hx = mx + (tx - mx) * u, hy = my + (ty - my) * u
+      ctx.globalAlpha = 0.28; ctx.fillStyle = '#ffd76c'; ctx.beginPath(); ctx.arc(hx, hy, ps * 8, 0, Math.PI * 2); ctx.fill()
+      ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.arc(hx, hy, ps * 5, 0, Math.PI * 2); ctx.fill()
+      ctx.globalAlpha = 1
+      const sz = Math.round(ps * 10)
+      ctx.drawImage(this.note[(g.st.hits + (b.tk === 2 ? 1 : 0)) & 1], Math.round(hx - sz / 2), Math.round(hy - sz / 2), sz, sz)
+    }
+    ctx.globalAlpha = 1
+    // impact: a thin ring that opens where the bolt landed (local, brief, outline only)
+    if (g.shot.t < 0.7 && this.toScreen(view, g.shot.wx, g.shot.wy, g.shot.wz)) {
+      const k = g.shot.t / 0.7
+      ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#fff3d0'; ctx.lineWidth = Math.max(1, Math.round(ps * (1.6 - k)))
+      ctx.beginPath(); ctx.arc(this.pt.x, this.pt.y, ps * (2 + k * 9), 0, Math.PI * 2); ctx.stroke()
+      ctx.globalAlpha = 1
+    }
+  }
+
+  /** screen position of the body centre of a demon / the boss (oi = -1) / an orb (oi > 0 means orb oi-1); false if off screen */
+  private targetPt(g: Game, view: View, d: Demon | null, oi: number): boolean {
+    const p = this.wp
+    if (oi > 0) { const o = g.orbs[oi - 1]; g.orbPos(o, p); return this.toScreen(view, p.x, p.y, o.z + 0.1) }
+    if (d && oi === 0) { g.demonPos(d, p); return this.toScreen(view, p.x, p.y, g.bodyZ(d)) }
+    if (g.boss) { g.bossPos(p); return this.toScreen(view, p.x, p.y, 1.25) }
+    return false
+  }
+  private wp = { x: 0, y: 0 }
+
+  /** a wrong note: a grey puff that wobbles, sags and fizzles out about half way, never touching the target */
+  private dud(ctx: CanvasRenderingContext2D, g: Game, b: Bolt, mx: number, my: number, tx: number, ty: number, viewH: number, ps: number) {
+    const u = Math.min(1, b.t / b.dur), e = 1 - (1 - u) * (1 - u)
+    const reach = 0.5 * e
+    const wob = g.reduced ? 0 : Math.sin(b.t * 38) * ps * 2.4 * u
+    const x = mx + (tx - mx) * reach + wob, y = my + (ty - my) * reach + u * u * viewH * 0.07
+    for (let j = 3; j >= 0; j--) {
+      const uj = Math.max(0, u - j * 0.1), ej = 1 - (1 - uj) * (1 - uj)
+      const xj = mx + (tx - mx) * 0.5 * ej + (g.reduced ? 0 : Math.sin((b.t - j * 0.026) * 38) * ps * 2.4 * uj), yj = my + (ty - my) * 0.5 * ej + uj * uj * viewH * 0.07
+      ctx.globalAlpha = (1 - u * 0.85) * (0.7 - j * 0.15)
+      ctx.fillStyle = j & 1 ? '#8a8794' : '#b5b2bf'
+      const r = Math.round(ps * (3.2 + j * 0.6 + u * 2.4))
+      ctx.fillRect(Math.round(xj - r / 2), Math.round(yj - r / 2), r, r)
+    }
+    const s = this.smoke[Math.min(2, Math.floor(u * 3))], sz = Math.round(ps * (10 + u * 10))
+    ctx.globalAlpha = Math.max(0, 1 - u * u)
+    ctx.drawImage(s, Math.round(x - sz / 2), Math.round(y - sz / 2), sz, sz)
+    ctx.globalAlpha = 1
+  }
+
   private gunLayer(ctx: CanvasRenderingContext2D, g: Game, W: number, viewH: number, ps: number) {
     // the little glow frames show at most 3 times a second, however fast you play; in between the gun just kicks
-    if (g.recoilT > 0.1 && g.clock - this.lastGlow >= 0.34) { this.lastGlow = g.clock; this.glowUntil = g.clock + 0.14 }
+    if ((g.recoilT > 0.1 || g.killT > 0.25) && g.clock - this.lastGlow >= 0.34) { this.lastGlow = g.clock; this.glowDur = g.killT > 0.25 ? 0.3 : 0.14; this.glowUntil = g.clock + this.glowDur }
     const glow = g.clock < this.glowUntil
-    const src = g.jamT > 0 ? this.gun.jam : glow ? (this.glowUntil - g.clock > 0.06 ? this.gun.f0 : this.gun.f1) : this.gun.idle
+    const src = g.jamT > 0 ? this.gun.jam : glow ? (this.glowUntil - g.clock > this.glowDur * 0.45 ? this.gun.f0 : this.gun.f1) : this.gun.idle
     const sc = Math.max(2, (viewH * 0.44) / src.height)
     const w = Math.round(src.width * sc), h = Math.round(src.height * sc)
     const bob = g.reduced ? 0 : Math.sin(g.bobT * 1.0) * ps * (g.mode === 'glide' ? 1.5 : 0.3)
-    const kick = !glow && g.recoilT > 0 && !g.reduced ? Math.round((g.recoilT / 0.16) * ps * 2) : 0
+    const kick = g.reduced ? 0 : Math.round(((g.killT > 0 ? Math.min(1, g.killT / 0.2) * 2 : 0) + (!glow && g.recoilT > 0 ? g.recoilT / 0.16 * 2 : 0)) * ps)
     const x = Math.round(W / 2 - w / 2 + bob * 1.5), y = Math.round(viewH - h * 0.9 + Math.abs(bob) + kick)
+    // the organ turns toward whatever it is aimed at (a little: 0.1 rad at the screen edge, less under reduced motion)
+    this.aim += (this.aimT(W) - this.aim) * Math.min(1, this.dtv * 12)
+    const ang = this.aim * (g.reduced ? 0.03 : 0.1), px = W / 2 + bob * 1.5, py = y + h * 0.95
+    ctx.save(); ctx.translate(px, py); ctx.rotate(ang); ctx.translate(-px, -py)
     ctx.drawImage(src, x, y, w, h)
+    ctx.restore()
+    // muzzle = the top-centre of the pipes after the turn (bolts start here next frame)
+    const L = py - (y + h * 0.1)
+    this.mzx = px + Math.sin(ang) * L; this.mzy = py - Math.cos(ang) * L
     if (g.smokeT > 0 || g.jamT > 0) {
       const k = g.jamT > 0 ? Math.min(1, (1.5 - g.jamT) / 0.5) : 1 - g.smokeT / 0.5
       const s = this.smoke[Math.min(2, Math.floor(k * 3))]

@@ -9,12 +9,13 @@ const RELEASE = 0.12
 interface Voice { osc: OscillatorNode[]; env: GainNode; note: number; t: number; timer: number; released: boolean }
 interface Shared { ctx?: AudioContext; master?: GainNode; voices: Map<number, Voice>; sustain: boolean; sustained: Set<number>; level: number; muted: boolean }
 
+import { useAudioSettings, outputScale } from '../music/audioSettings'
 const hot = import.meta.hot
 const S: Shared = hot ? (hot.data.synth ??= { voices: new Map(), sustain: false, sustained: new Set(), level: DEFAULT_GAIN, muted: false }) : { voices: new Map(), sustain: false, sustained: new Set(), level: DEFAULT_GAIN, muted: false }
 
 const applyGain = () => {
   if (!S.ctx || !S.master) return
-  const g = S.muted ? 0 : Math.min(MAX_GAIN, Math.max(0, S.level))
+  const g = S.muted ? 0 : Math.min(MAX_GAIN, Math.max(0, S.level)) * outputScale()
   S.master.gain.cancelScheduledValues(S.ctx.currentTime)
   S.master.gain.setTargetAtTime(g, S.ctx.currentTime, 0.02)
 }
@@ -114,6 +115,7 @@ export function panic() {
 export const voiceCount = () => S.voices.size
 
 if (import.meta.hot) {
-  import.meta.hot.dispose(() => panic())
+  const offSettings = useAudioSettings.subscribe(() => applyGain())
+  import.meta.hot.dispose(() => { offSettings(); panic() })
   import.meta.hot.accept()
 }
