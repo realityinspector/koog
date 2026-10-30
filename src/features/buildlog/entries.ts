@@ -308,4 +308,11 @@ export const entries: Entry[] = [
     title: '🎆 Fireworks: real shell types + a city skyline',
     body: 'Graphics round 5! Real fireworks come in shapes, and now ours do too: peony (a round ball), chrysanthemum (with trails), ring, golden willow (droops like a tree), and crossette (every spark splits into four!). Sparks glitter as they fall, rockets leave sparkly tails, a little smoke hangs in the air, and there\'s a city skyline at the bottom so the show feels BIG. Out-of-key slams still go "pfft" and BOOM is still the grand finale.',
   },
+  {
+    id: 43,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🎧🎹 DUO mode: one DJs, one plays piano, together',
+    body: 'Plug in a DJ controller AND the piano at the same time! Koog now listens to every MIDI device and gives each one a job (🎛️ Devices at the top). Tap 🎧 DUO and the DJ decks slide in at the bottom. The DJ is the band: whatever track is playing sets the KEY and the BEAT, so the piano player gets graded in the DJ\'s key, and the screen pulses on the DJ\'s beat. It works both ways: when the piano player nails 8 in-key notes, the DJ gets a filter sweep, a cadence throws an echo, and a BOOM launches a riser into the drop. The DJ\'s pads light up piano keys that fit the song. Try the 🎯 8-bar Duo Challenge. Also new: 🎹 Sound lets you swap the piano for an organ, a Moog, an electric piano, strings and more.',
+  },
 ]

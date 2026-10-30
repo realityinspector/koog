@@ -1,0 +1,76 @@
+/* DUO: the DJ deck strip docked at the bottom of the display (inside PLAY). Own file, own class names (dj-*). */
+.dj-root { position: absolute; inset: 0; pointer-events: none; }
+.dj-chip { pointer-events: auto; position: absolute; top: 12px; right: 12px; z-index: 8; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 14px; border-radius: 999px; cursor: pointer;
+  color: #e9e6ff; font-size: 13px; letter-spacing: .12em; background: rgba(18, 14, 44, .72); border: 1px solid rgba(255, 255, 255, .2); backdrop-filter: blur(8px); }
+.dj-chip:hover { background: rgba(40, 32, 90, .85); }
+.dj-chip.on { border-color: #7fe3ff; box-shadow: 0 0 12px rgba(127, 227, 255, .35); }
+.dj-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #6cffa8; box-shadow: 0 0 8px #6cffa8; }
+
+.dj-bar { pointer-events: auto; position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h, 0px) + 10px); z-index: 8; box-sizing: border-box; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 16px; color: #dcd8f7; font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, rgba(26, 20, 62, .86), rgba(12, 9, 30, .9)); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .12); }
+.dj-wake { position: absolute; left: 50%; top: -34px; transform: translateX(-50%); padding: 6px 16px; border-radius: 999px; border: 0; cursor: pointer; font-weight: 800; color: #1b1030; background: #ffd86c; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+
+.dj-deck { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dj-B { flex-direction: row-reverse; }
+.dj-col { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
+.dj-row { display: flex; gap: 4px; align-items: center; }
+.dj-B .dj-row { flex-direction: row-reverse; }
+.dj-btn, .dj-pad { flex: none; min-width: 30px; height: 28px; padding: 0 7px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 800; letter-spacing: .06em; color: #dcd8f7; touch-action: none;
+  background: linear-gradient(180deg, #3a3460, #26213f); border: 1px solid rgba(255, 255, 255, .14); border-bottom-color: rgba(0, 0, 0, .5); box-shadow: 0 2px 0 #120f24; }
+.dj-btn:active, .dj-pad:active { transform: translateY(2px); box-shadow: none; }
+.dj-btn.lit { background: linear-gradient(180deg, #2c8f62, #1f6a49); color: #fff; box-shadow: 0 0 10px rgba(108, 255, 168, .5); }
+.dj-mode { min-width: 40px; color: #ffd86c; }
+.dj-pad { min-width: 28px; padding: 0 3px; font-size: 13px; }
+.dj-pad.lit { background: linear-gradient(180deg, #e0719f, #a63d72); color: #fff; box-shadow: 0 0 10px rgba(255, 110, 180, .55); }
+.dj-A .dj-pad.lit { background: linear-gradient(180deg, #4fb7ff, #2a74c8); box-shadow: 0 0 10px rgba(110, 190, 255, .55); }
+.dj-btn:focus-visible, .dj-pad:focus-visible, .dj-chip:focus-visible, .dj-go:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
+
+.dj-sls { gap: 6px; }
+.dj-sl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; font-size: 8px; font-weight: 800; letter-spacing: .12em; color: #a8a2d0; }
+.dj-sl input, .dj-xf input { width: 100%; height: 14px; margin: 0; accent-color: #7fe3ff; cursor: pointer; touch-action: none; }
+.dj-B .dj-sl input { accent-color: #ff8fc4; }
+
+.dj-jog { position: relative; flex: none; width: 56px; height: 56px; border-radius: 50%; touch-action: none; cursor: grab; user-select: none;
+  background: radial-gradient(circle at 50% 50%, #1a1636 0 38%, #2d2756 40% 62%, #14102c 64% 100%); border: 2px solid rgba(255, 255, 255, .2); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 2px 6px rgba(0, 0, 0, .5); }
+.dj-jog.on { border-color: #7fe3ff; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 0 10px rgba(127, 227, 255, .45); }
+.dj-B .dj-jog.on { border-color: #ff8fc4; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), 0 0 10px rgba(255, 143, 196, .45); }
+.dj-jog-spin { position: absolute; inset: 0; border-radius: 50%; }
+.dj-jog-spin i { position: absolute; left: 50%; top: 3px; width: 4px; height: 12px; margin-left: -2px; border-radius: 2px; background: #ffd86c; box-shadow: 0 0 6px #ffd86c; }
+.dj-jog-lb { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; font-weight: 900; color: rgba(255, 255, 255, .5); pointer-events: none; }
+
+.dj-mid { display: flex; flex-direction: column; gap: 4px; align-items: stretch; width: 168px; padding: 0 4px; }
+.dj-key { font-size: 10px; letter-spacing: .08em; color: #a8a2d0; text-align: center; white-space: nowrap; }
+.dj-key b { color: #7fe3ff; font-size: 12px; letter-spacing: .04em; }
+.dj-xf { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 900; color: #a8a2d0; }
+.dj-xf input { accent-color: #ffd86c; height: 18px; }
+.dj-info { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 800; }
+.dj-dots { display: inline-flex; gap: 4px; }
+.dj-dots i { width: 8px; height: 8px; border-radius: 50%; background: #2b2650; box-shadow: inset 0 1px 2px #000; }
+.dj-dots i.on { background: #ffd86c; box-shadow: 0 0 8px #ffd86c; }
+.dj-bpm { color: #c9c4ee; letter-spacing: .06em; font-size: 10px; }
+.dj-go { white-space: nowrap; height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); color: #fff; font-size: 10px; font-weight: 800; cursor: pointer; }
+.dj-go:disabled { opacity: .4; cursor: default; }
+.dj-status { min-height: 13px; font-size: 10px; text-align: center; color: #ffd86c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* make room: the visualizer's own controls ride above the strip (the bar is ~86px tall; sheet strip stacks under it) */
+.kg-display.kg-display[data-duo-open] { --duo-h: 108px; }
+.kg-display.kg-display[data-duo-open] .viz .viz-bar { bottom: calc(var(--sheet-h, 0px) + var(--duo-h) + 10px); }
+.kg-display.kg-display[data-duo-open] .viz .viz-hint { bottom: calc(var(--sheet-h, 0px) + var(--duo-h) + 10px); }
+
+/* the beat pulse: a soft glow on the display EDGE only (set by pulse.ts); never a full-screen flash */
+.kg-display[data-duo-on]::after { content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 calc(var(--dj-beat, 0) * 46px) calc(var(--dj-beat, 0) * 4px) rgba(120, 205, 255, calc(var(--dj-beat, 0) * .4)); }
+
+@media (max-width: 1100px) {
+  .dj-jog { width: 48px; height: 48px; }
+  .dj-btn { min-width: 26px; padding: 0 5px; font-size: 10px; letter-spacing: .02em; }
+  .dj-mode { min-width: 36px; }
+  .dj-pad { min-width: 25px; font-size: 12px; }
+  .dj-mid { width: 150px; }
+  .dj-bar { gap: 4px; padding: 6px 8px; }
+}
+@media (max-width: 960px) { .dj-sl span { display: none; } .dj-bpm { display: none; } }
+@media (max-height: 560px) { .kg-display.kg-display[data-duo-open] { --duo-h: 100px; } }
+@media (prefers-reduced-motion: reduce) { .kg-display[data-duo-on]::after { display: none; } .dj-btn:active, .dj-pad:active { transform: none; } }

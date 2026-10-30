@@ -28,6 +28,7 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | **🔊 SYNTHESIZER ON/OFF, volume, mute** (top strip) | The volume and mute apply to every sound in the app. SYNTHESIZER ON also plays your MIDI keyboard through the computer, using the Koog synth or whichever emulator is open. |
 | **⌨️ Musical typing** | No MIDI keyboard? Use the computer keys in the standard two-row layout: `Z S X D C…` for the lower octave and `Q 2 W 3 E…` for the upper octave. ← → shift octaves. "Show computer keys" labels the on-screen keys. |
 | **🎼 Sheet music** (top strip) | A play-along grand staff along the bottom of the display. It follows whatever piece the songs, games or emulators are playing: hits turn green, misses turn red. In free play it writes down what you play. |
+| **🎧 DUO (DJ + piano)** | Plug in a DJ controller (made for the Numark Mixtrack Go) and a piano at the same time. 🎛️ Devices gives each one a role. The DJ's decks set the key and the beat for the piano player, and good piano playing fires DJ effects back. 🎹 Sound swaps the piano's instrument (organ, Moog-style, FM electric piano, tape strings and more). |
 | **Kid / Dad mode** | Each kid signs in with a short code word. Dad mode (press and hold) adds a DEV screen with MIDI, pre-flight and test tools. |
 
 ## Quick start
