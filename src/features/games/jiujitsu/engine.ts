@@ -11,7 +11,7 @@ import {
   type Phase, type Phrase, type Save, type Snapshot,
 } from './data'
 import { RUNG_POSE, VIA, POSES, FLY, ARMBAR_POSE, lerpPair, type Pair } from './poses'
-import { makeView, renderBackground, drawFig, drawShadow, toScreen, KID_LOOK, PARTNER_LOOK, type View } from './draw'
+import { makeView, renderBackground, drawFig, drawShadow, toScreen, KID_LOOK, PARTNER_LOOKS, type View } from './draw'
 import type { SongNote } from '../../songs/songs'
 
 interface Pop { text: string; x: number; y: number; age: number; max: number; color: string; size: number }
@@ -59,6 +59,7 @@ export class Game {
   private rhy: number[] = []
   private tapN = 0
   private tapAt = -9
+  private partnerIx = 0
   private lesson = LESSONS[0]
   private promoTo = 0
   private stripeEarned = false
@@ -212,6 +213,7 @@ export class Game {
 
   private newRound() {
     this.reset()
+    this.partnerIx = Math.floor(rnd() * 4)
     this.points = 0; this.partner = 0; this.rung = 0
     this.newBest = false
     this.cur = RUNG_POSE[0]; this.anim = null
@@ -528,7 +530,7 @@ export class Game {
   private pop(text: string, who: 'k' | 'p', color: string, sec: number) {
     const x = who === 'k' ? -0.6 : 0.6
     while (this.pops.length > 2) this.pops.shift()
-    this.pops.push({ text, x: x + (rnd() - 0.5) * 0.4, y: 1.45 + (rnd() - 0.5) * 0.1, age: 0, max: Math.max(0.5, sec + 0.4), color, size: text.length > 8 ? 1 : 1.25 })
+    this.pops.push({ text, x: x + (rnd() - 0.5) * 0.4, y: 1.45 - this.pops.length * 0.2 + (rnd() - 0.5) * 0.06, age: 0, max: Math.max(0.5, sec + 0.4), color, size: text.length > 8 ? 1 : 1.25 })
   }
 
   private burst(x: number, y: number, n: number) {
@@ -600,9 +602,11 @@ export class Game {
       p = { ...p, hd: p.hd - nod, t: p.t - nod * 0.5 }
     }
     if (this.tapN > 0 && this.phase === 'sub') {
+      // partner slaps the mat with the near hand: arm out along the floor, lifting and slapping down three times
       const u = this.clock - this.tapAt
-      const sw = u < 0.35 ? Math.sin((u / 0.35) * Math.PI) * 38 : 0
-      p = { ...p, a: [p.a[0] + 30 - sw * 0.5, p.a[1] - 40 + sw, p.a[2], p.a[3]] }
+      const lift = u < 0.4 ? Math.max(0, Math.sin((u / 0.4) * Math.PI)) : 0
+      const sw = this.rm ? 0 : lift
+      p = { ...p, a: [-24 + sw * 38, -14 + sw * 70, p.a[2], p.a[3]] }
     }
     // shake
     let ox = 0
@@ -612,8 +616,9 @@ export class Game {
     drawShadow(g, v, k, p)
     const belt = BELTS[this.trainBelt]?.color ?? '#fff'
     const happy = this.wobble > 0 ? 0.2 : 1
-    drawFig(g, v, p, PARTNER_LOOK, happy)
-    drawFig(g, v, k, KID_LOOK(belt), happy)
+    const tapping = this.phase === 'sub' && this.tapN > 0
+    drawFig(g, v, p, PARTNER_LOOKS[this.partnerIx % PARTNER_LOOKS.length], happy, t, tapping ? 2 : this.phase === 'move' ? 1 : 0)
+    drawFig(g, v, k, KID_LOOK(belt), happy, t + 0.7, 0)
     g.restore()
     // pops
     g.textAlign = 'center'; g.textBaseline = 'middle'

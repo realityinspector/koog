@@ -13,10 +13,13 @@
 .bj-tab i { width: 3px; height: 70%; background: #fff; border-radius: 1px; }
 .bj-belt.big .bj-tab i { width: 5px; }
 
-.bj-score { display: flex; align-items: stretch; gap: 0; border-radius: 10px; overflow: hidden; background: #0e0e18; border: 2px solid #3c3c58; box-shadow: 0 3px 10px rgba(0, 0, 0, .4); }
+.bj-score { display: flex; align-items: stretch; gap: 0; border-radius: 12px; overflow: hidden; background: linear-gradient(180deg, #1a1a2c, #0b0b14); border: 2px solid #4a4a70; box-shadow: 0 3px 10px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .12); }
 .bj-score > div { display: flex; flex-direction: column; align-items: center; padding: 1px 14px; min-width: 66px; }
 .bj-score small { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #b8b6d4; }
-.bj-score b { font-size: 28px; line-height: 1; font-weight: 900; color: #7dffb0; font-variant-numeric: tabular-nums; }
+.bj-score b { font-size: 28px; line-height: 1; font-weight: 900; color: #7dffb0; font-variant-numeric: tabular-nums; text-shadow: 0 0 10px rgba(125, 255, 176, .45), 0 2px 0 rgba(0, 0, 0, .5); }
+.bj-score > div:last-child b { text-shadow: 0 0 10px rgba(158, 197, 255, .45), 0 2px 0 rgba(0, 0, 0, .5); }
+.bj-score > div:first-child { background: linear-gradient(180deg, rgba(125, 255, 176, .1), transparent); }
+.bj-score > div:last-child { background: linear-gradient(180deg, rgba(158, 197, 255, .1), transparent); }
 .bj-score > div:last-child b { color: #9ec5ff; }
 .bj-score i { align-self: center; font-style: normal; font-size: 11px; font-weight: 800; color: #ffd23f; padding: 0 4px; letter-spacing: .08em; }
 
@@ -65,3 +68,16 @@
 .bj-btn.ghost { background: transparent; }
 .bj-btn.small { font-size: 15px; padding: 3px 14px; }
 @media (prefers-reduced-motion: reduce) { .bj-boom-bar i { transition: none; } }
+
+/* Short stages: the position ladder collapses to dots plus the current label, and the bottom stack tightens so the mat stays clear. */
+@container (max-height: 520px) {
+  .bj-bottom { gap: 2px; padding: 3px 10px 4px; }
+  .bj-ladder { gap: 5px; align-items: center; }
+  .bj-ladder span { font-size: 0; width: 10px; height: 10px; padding: 0; border-radius: 50%; border-width: 2px; background: rgba(10, 6, 30, .6); }
+  .bj-ladder span.done { background: #3fcf84; border-color: #b6ffd0; }
+  .bj-ladder span.cur { font-size: 13px; width: auto; height: auto; padding: 1px 10px; border-radius: 999px; background: #ffd23f; }
+  .bj-banner { font-size: clamp(17px, 5.4cqh, 24px); line-height: 1.1; }
+  .bj-tip { font-size: 14px; padding: 1px 10px; }
+  .bj-row .bj-btn.small { font-size: 14px; padding: 1px 12px; }
+  .bj-score b { font-size: 24px; }
+}

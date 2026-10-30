@@ -287,4 +287,11 @@ export const entries: Entry[] = [
     title: '🧟⚡ Zombie Lanes: your beam actually HITS now',
     body: 'Graphics round 2! Before, the beam stopped short and the zombie just vanished. Now the beam climbs the lane, SMACKS the zombie, which gets squashed and shoved back with sparks flying, and THEN it poofs. Game designers call this "hit feedback": your eyes need about a tenth of a second of reaction to believe you hit something. Also new: your lane lights up in your note\'s color, far-away zombies fade into the fog, bats fly by, and the zombies got new outfits, top hats and headphones.',
   },
+  {
+    id: 40,
+    time: 'Evening',
+    stage: 'ship',
+    title: '🥋 Jiu-Jitsu Flow gets real fighters',
+    body: 'Graphics round 3! The grapplers went from stick figures to cartoon athletes: shaded arms and legs, baggy gi sleeves, a belt with a knot and swinging tails, faces that blink and strain, and four different training partners. The dojo got sunlight streaming through the windows and classmates watching from the wall. The tap-out now shows the partner\'s hand slapping the mat. Artists call the light-and-dark stripes on the arms "shading": it\'s how a flat drawing starts to look round.',
+  },
 ]

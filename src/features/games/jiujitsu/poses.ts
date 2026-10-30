@@ -111,13 +111,15 @@ const CLIMB: Pair = {
   k: F(0.34, 0.5, 78, 0, [-45, -10, -30, 15], [-60, -130, -10, -90], 1, false),
   p: F(0.16, 0, 0, 8, [60, 105, 50, 105], [184, 188, 178, 184], -1),
 }
+// Armbar: the partner lies on his back with one arm held straight up; the kid lies back across his chest, legs folded over his face.
 const ARMBAR: Pair = {
-  k: F(0.1, 0.22, 175, 5, [35, 80, 20, 70], [85, 115, 100, 130], 1, false),
-  p: F(0.4, 0, 0, 8, [100, 85, 40, 90], [186, 188, 180, 186], -1),
+  k: F(0.5, 0, 172, 10, [55, 100, 40, 85], [78, 20, 88, 30], 1),
+  p: F(0.2, 0, 0, -6, [95, 92, 70, 82], [186, 190, 178, 184], -1),
 }
+// Flying armbar, mid-air: the kid dives in head first with legs swinging up and over the partner's extended arm.
 const LEAP: Pair = {
-  k: F(0.1, 0.9, 135, 5, [40, 70, 30, 60], [-20, -80, 10, -60], 1, false),
-  p: F(0.5, 0, 70, 6, [60, 100, 50, 95], [-70, -110, -95, -75], -1),
+  k: F(-0.4, 0.95, 18, 6, [12, 4, 22, 10], [60, 10, 78, 28], 1, false),
+  p: F(0.5, 0, 80, 4, [172, 168, 150, 160], [-80, -100, -105, -88], -1),
 }
 
 /** The pose at the end of each rung, and the in-between pose a move passes through. */
