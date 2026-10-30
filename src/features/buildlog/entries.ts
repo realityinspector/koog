@@ -294,4 +294,11 @@ export const entries: Entry[] = [
     title: '🥋 Jiu-Jitsu Flow gets real fighters',
     body: 'Graphics round 3! The grapplers went from stick figures to cartoon athletes: shaded arms and legs, baggy gi sleeves, a belt with a knot and swinging tails, faces that blink and strain, and four different training partners. The dojo got sunlight streaming through the windows and classmates watching from the wall. The tap-out now shows the partner\'s hand slapping the mat. Artists call the light-and-dark stripes on the arms "shading": it\'s how a flat drawing starts to look round.',
   },
+  {
+    id: 41,
+    time: 'Morning',
+    stage: 'ship',
+    title: '👗✨ Runway Remix: shiny runway + real backdrops',
+    body: 'Graphics round 4! The runway is glossy now, with spotlight pools and a reflection of your model in the floor. Every era got its own stage: gilded arches and candle chandeliers for Baroque, columns for Classical, velvet curtains for Romantic, globe lamps for Belle Époque, a sunburst marquee for the Jazz Age, and a neon skyline for Koog Future. Funny bug we caught: the new floor was SO white that the model\'s white stockings disappeared and her shoes looked like they were floating! Fix: tint the floor a little lavender. Designers call that "contrast".',
+  },
 ]

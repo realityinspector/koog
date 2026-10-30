@@ -381,8 +381,8 @@ export class Game {
     if (this.phase === 'runway' && this.run) {
       const p = clamp(this.run.p, 0, 1)
       const e = p * p * (3 - 2 * p) * 0.5 + p * 0.5
-      const footY = lerp(h * 0.5, h * 0.9, e)
-      const sPx = lerp(h * 0.36, h * 0.62, e)
+      const footY = lerp(h * 0.56, h * 0.9, e)
+      const sPx = lerp(h * 0.32, h * 0.62, e)
       return { x: w * 0.5, y: footY, s: sPx / FIG_H }
     }
     if (this.phase === 'results') return { x: w * 0.17, y: h * 0.92, s: (h * 0.62) / FIG_H }
@@ -529,6 +529,15 @@ export class Game {
     if (f) {
       const { x, y, s } = this.pos()
       const pose = this.poseNow()
+      if (this.phase === 'runway' || this.phase === 'style') {
+        // glossy floor reflection: the same cached sprites, flipped, faded by a floor-coloured gradient
+        const rh = FIG_H * s
+        g.save(); g.beginPath(); g.rect(0, y + 1, w, rh * 0.5); g.clip()
+        g.globalAlpha = this.phase === 'runway' ? 0.3 : 0.16; g.translate(0, y * 2); g.scale(1, -1)
+        drawFigure(g, f, x, y, s, pose)
+        g.restore()
+        if (this.phase === 'runway') { const fg = g.createLinearGradient(0, y, 0, y + rh * 0.45); fg.addColorStop(0, 'rgba(212,200,236,0)'); fg.addColorStop(1, 'rgba(212,200,236,1)'); g.save(); g.fillStyle = fg; g.beginPath(); const { yf, yn, hf, hn } = this.runwayGeo(); const t0 = clamp((y - yf) / (yn - yf), 0, 1), hw0 = lerp(hf, hn, t0); g.moveTo(w / 2 - hw0, y); g.lineTo(w / 2 + hw0, y); const hw1 = lerp(hf, hn, clamp((y + rh * 0.45 - yf) / (yn - yf), 0, 1)); g.lineTo(w / 2 + hw1, y + rh * 0.45); g.lineTo(w / 2 - hw1, y + rh * 0.45); g.closePath(); g.clip(); g.fillRect(0, y, w, rh * 0.45); g.restore() }
+      }
       drawFigure(g, f, x, y, s, pose)
       if (this.hat.fly && this.hat.t0 >= 0) {
         const L = f.hat ?? this.goofy
@@ -592,6 +601,16 @@ export class Game {
       const rg2 = g.createLinearGradient(0, yf, 0, yn); rg2.addColorStop(0, '#d9d2f0'); rg2.addColorStop(1, '#fff7ff')
       g.fillStyle = rg2; g.beginPath(); g.moveTo(w / 2 - hf, yf); g.lineTo(w / 2 + hf, yf); g.lineTo(w / 2 + hn, yn); g.lineTo(w / 2 - hn, yn); g.closePath(); g.fill()
       g.strokeStyle = 'rgba(80,50,120,.4)'; g.lineWidth = 2; g.stroke()
+      // glossy floor: perspective seams, era-tinted sheen, spotlight pools, bright front lip
+      g.save(); g.clip()
+      g.strokeStyle = 'rgba(90,60,140,.16)'; g.lineWidth = 1
+      for (let i = 1; i < 6; i++) { const f = i / 6; g.beginPath(); g.moveTo(w / 2 + (f * 2 - 1) * hf, yf); g.lineTo(w / 2 + (f * 2 - 1) * hn, yn); g.stroke() }
+      for (let i = 1; i < 12; i++) { const t = (i / 12) ** 1.7, y = lerp(yf, yn, t), hw = lerp(hf, hn, t); g.beginPath(); g.moveTo(w / 2 - hw, y); g.lineTo(w / 2 + hw, y); g.stroke() }
+      const tint = g.createLinearGradient(0, yf, 0, yn); tint.addColorStop(0, era.glow + '40'); tint.addColorStop(0.5, era.glow + '10'); tint.addColorStop(1, era.glow + '30'); g.fillStyle = tint; g.fillRect(0, yf, w, yn - yf); g.fillStyle = 'rgba(140,110,200,.3)'; g.fillRect(0, yf, w, yn - yf)
+      for (const [t, a] of [[0.12, 0.2], [0.45, 0.26], [0.85, 0.26]] as const) { const y = lerp(yf, yn, t), hw = lerp(hf, hn, t); const q = g.createRadialGradient(w / 2, y, 0, w / 2, y, hw * 1.05); q.addColorStop(0, `rgba(255,255,255,${a})`); q.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = q; g.save(); g.translate(w / 2, y); g.scale(1, 0.32); g.translate(-w / 2, -y); g.fillRect(w / 2 - hw * 1.1, y - hw * 1.1, hw * 2.2, hw * 2.2); g.restore() }
+      const sheen = g.createLinearGradient(w / 2 - hn * 0.5, 0, w / 2 + hn * 0.5, 0); sheen.addColorStop(0, 'rgba(255,255,255,0)'); sheen.addColorStop(0.5, 'rgba(255,255,255,.08)'); sheen.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sheen; g.fillRect(w / 2 - hn * 0.5, yf, hn, yn - yf)
+      g.restore()
+      g.fillStyle = 'rgba(8,4,24,.5)'; g.fillRect(0, yn - 3, w, 3)
       // edge lights
       for (let i = 0; i <= 10; i++) { const t = i / 10, y = lerp(yf, yn, t), hw = lerp(hf, hn, t); for (const s of [-1, 1]) { g.fillStyle = era.glow; g.globalAlpha = 0.9; g.beginPath(); g.arc(w / 2 + s * hw, y, 1.5 + t * 3, 0, TAU); g.fill() } }
       g.globalAlpha = 1
@@ -605,14 +624,60 @@ export class Game {
   }
   private runwayGeo() { const w = this.w, h = this.h; return { yf: h * 0.38, yn: h * 0.98, hf: w * 0.07, hn: w * 0.3 } }
   private decor(g: CanvasRenderingContext2D, era: Era, w: number, h: number) {
-    g.save(); g.globalAlpha = 0.28; g.strokeStyle = era.glow; g.fillStyle = era.glow; g.lineWidth = 2
+    const gl = era.glow, wallB = h * 0.38
+    const glow = (x: number, y: number, r: number, a = 0.5) => { const q = g.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, gl + Math.round(a * 255).toString(16).padStart(2, '0')); q.addColorStop(1, gl + '00'); g.fillStyle = q; g.fillRect(x - r, y - r, r * 2, r * 2) }
+    g.save(); g.strokeStyle = gl; g.fillStyle = gl; g.lineWidth = 2
+    const arch = (cx: number, top: number, aw: number, ah: number) => { g.beginPath(); g.moveTo(cx - aw, top + ah); g.lineTo(cx - aw, top + aw); g.arc(cx, top + aw, aw, Math.PI, 0); g.lineTo(cx + aw, top + ah); g.closePath() }
     switch (era.id) {
-      case 'baroque': for (const x of [0.12, 0.88]) { g.strokeRect(w * x - 34, h * 0.1, 68, h * 0.28); g.strokeRect(w * x - 26, h * 0.1 + 8, 52, h * 0.28 - 16) } break
-      case 'classical': for (const x of [0.1, 0.9]) { g.fillRect(w * x - 10, h * 0.08, 20, h * 0.34); g.fillRect(w * x - 16, h * 0.08, 32, 8); g.fillRect(w * x - 16, h * 0.4, 32, 8) } break
-      case 'romantic': for (let i = 0; i < 7; i++) { g.beginPath(); g.arc(w * (0.08 + i * 0.14), h * 0.1 + (i % 2) * 14, 10, 0, TAU); g.fill() } break
-      case 'belle': for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? era.glow : '#ffffff'; g.fillRect(i * (w / 16), 0, w / 16, h * 0.08) } break
-      case 'jazz': for (let r = 30; r < h * 0.5; r += 22) { g.beginPath(); g.arc(w / 2, h * 0.38, r, Math.PI, TAU); g.stroke() } break
-      default: for (let i = 1; i < 12; i++) { g.beginPath(); g.moveTo(w * i / 12, h * 0.38); g.lineTo(w * (0.5 + (i / 12 - 0.5) * 2.6), h); g.stroke() }
+      case 'baroque': {
+        for (const x of [0.13, 0.3, 0.7, 0.87]) { const cx = w * x, aw = w * 0.04
+          g.globalAlpha = 0.16; g.fillStyle = '#ffe9b0'; arch(cx, h * 0.1, aw, wallB - h * 0.1 - 6); g.fill()
+          g.globalAlpha = 0.5; g.fillStyle = gl; arch(cx, h * 0.1, aw, wallB - h * 0.1 - 6); g.stroke(); arch(cx, h * 0.1 + 7, aw - 7, wallB - h * 0.1 - 14); g.stroke()
+          g.fillRect(cx - aw - 5, h * 0.1 + aw - 3, 10, wallB - h * 0.1 - aw) }
+        for (const x of [0.5]) { const cx = w * x, ty = h * 0.04; g.globalAlpha = 0.6; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, ty + 10); g.stroke()
+          for (let t = 0; t < 3; t++) { const ww = (t + 1) * w * 0.035, yy = ty + 10 + t * h * 0.03; g.beginPath(); g.moveTo(cx - ww, yy); g.quadraticCurveTo(cx, yy + h * 0.035, cx + ww, yy); g.stroke()
+            for (let k = 0; k <= t + 2; k++) { const px = cx - ww + (k / (t + 2)) * ww * 2; g.globalAlpha = 0.95; g.beginPath(); g.arc(px, yy - 3, 2, 0, TAU); g.fill(); g.globalAlpha = 0.6 } }
+          glow(cx, ty + h * 0.05, w * 0.12, 0.35) }
+        break }
+      case 'classical': {
+        for (const x of [0.1, 0.27, 0.73, 0.9]) { const cx = w * x, cw = w * 0.022, top = h * 0.09, bot = wallB - 4
+          g.globalAlpha = 0.28; g.fillRect(cx - cw, top + 10, cw * 2, bot - top - 16); g.globalAlpha = 0.5; g.fillRect(cx - cw - 6, top, cw * 2 + 12, 10); g.fillRect(cx - cw - 6, bot - 8, cw * 2 + 12, 8)
+          g.globalAlpha = 0.25; g.strokeStyle = '#0a1030'; g.lineWidth = 1; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(cx + k * cw * 0.35, top + 10); g.lineTo(cx + k * cw * 0.35, bot - 8); g.stroke() } g.strokeStyle = gl }
+        g.globalAlpha = 0.4; g.beginPath(); g.moveTo(w * 0.05, h * 0.09); g.lineTo(w * 0.5, h * 0.03); g.lineTo(w * 0.95, h * 0.09); g.lineWidth = 3; g.stroke()
+        for (let i = 0; i < 9; i++) { g.globalAlpha = 0.5; g.beginPath(); g.ellipse(w * (0.34 + i * 0.04), h * 0.07 + Math.abs(i - 4) * 1.5, 5, 2.4, 0.4, 0, TAU); g.fill() }
+        break }
+      case 'romantic': {
+        g.globalAlpha = 0.5; g.fillStyle = '#6b1530'
+        for (let i = 0; i < 8; i++) { const x0 = i * (w / 8); g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 + w / 8, 0); g.quadraticCurveTo(x0 + w / 16, h * 0.13, x0, h * 0.04); g.fill() }
+        g.globalAlpha = 0.45; g.strokeStyle = gl; g.lineWidth = 2
+        for (let i = 0; i < 8; i++) { const x0 = i * (w / 8); g.beginPath(); g.moveTo(x0 + w / 8, 0); g.quadraticCurveTo(x0 + w / 16, h * 0.13, x0, h * 0.04); g.stroke() }
+        for (const x of [0.2, 0.5, 0.8]) { const cx = w * x; g.globalAlpha = 0.55; g.lineWidth = 1; g.beginPath(); g.moveTo(cx, h * 0.1); g.lineTo(cx, h * 0.17); g.stroke(); g.globalAlpha = 0.85; g.beginPath(); g.ellipse(cx, h * 0.2, 7, 11, 0, 0, TAU); g.fill(); glow(cx, h * 0.2, w * 0.07, 0.5) }
+        for (const x of [0.08, 0.92]) { g.globalAlpha = 0.2; g.fillStyle = '#ffd0dc'; arch(w * x, h * 0.16, w * 0.035, wallB - h * 0.16 - 6); g.fill() }
+        break }
+      case 'belle': {
+        for (let i = 0; i < 16; i++) { g.globalAlpha = i % 2 ? 0.28 : 0.1; g.fillStyle = i % 2 ? gl : '#ffffff'; g.fillRect(i * (w / 16), 0, w / 16, wallB) }
+        g.fillStyle = gl
+        for (const x of [0.15, 0.33, 0.67, 0.85]) { const cx = w * x; g.globalAlpha = 0.6; g.fillRect(cx - 2, h * 0.14, 4, wallB - h * 0.14); g.globalAlpha = 0.95; g.beginPath(); g.arc(cx, h * 0.13, 11, 0, TAU); g.fill(); glow(cx, h * 0.13, w * 0.08, 0.55) }
+        g.globalAlpha = 0.5; g.lineWidth = 3; g.beginPath(); g.moveTo(0, h * 0.06); g.lineTo(w, h * 0.06); g.stroke()
+        for (let i = 0; i < 24; i++) { g.globalAlpha = 0.9; g.beginPath(); g.arc((i + 0.5) * (w / 24), h * 0.06, 2.4, 0, TAU); g.fill() }
+        break }
+      case 'jazz': {
+        g.lineWidth = 2
+        for (let r = 24, i = 0; r < h * 0.46; r += 20, i++) { g.globalAlpha = 0.5 - i * 0.015; g.beginPath(); g.arc(w / 2, wallB, r, Math.PI, TAU); g.stroke() }
+        for (let i = 0; i < 15; i++) { const a = Math.PI + (i / 14) * Math.PI; g.globalAlpha = 0.2; g.beginPath(); g.moveTo(w / 2, wallB); g.lineTo(w / 2 + Math.cos(a) * h * 0.46, wallB + Math.sin(a) * h * 0.46); g.stroke() }
+        for (const x of [0.1, 0.9]) for (let k = 0; k < 5; k++) { g.globalAlpha = 0.45 + k * 0.1; g.fillRect(w * x - 12 + k * 0, h * 0.08 + k * h * 0.055, 24 - k * 3, 7); }
+        for (let i = 0; i < 28; i++) { const t = i / 27; g.globalAlpha = 0.9; g.beginPath(); g.arc(w * (0.2 + t * 0.6), h * 0.045 + Math.sin(t * Math.PI) * 10, 2.6, 0, TAU); g.fill() }
+        glow(w / 2, wallB * 0.7, w * 0.2, 0.3)
+        break }
+      default: {
+        g.globalAlpha = 0.5; const sg = g.createLinearGradient(0, h * 0.1, 0, wallB); sg.addColorStop(0, '#ff7ad9'); sg.addColorStop(1, '#ffd24a'); g.fillStyle = sg
+        g.beginPath(); g.arc(w / 2, wallB - 4, h * 0.2, Math.PI, TAU); g.fill()
+        g.globalAlpha = 0.5; g.fillStyle = '#0b0630'; for (let k = 0; k < 5; k++) g.fillRect(w / 2 - h * 0.2, wallB - 4 - k * h * 0.035 - 3, h * 0.4, 2 + k)
+        g.fillStyle = gl; for (let i = 0; i < 40; i++) { g.globalAlpha = 0.25 + ((i * 37) % 10) / 20; g.fillRect((i * 97) % w, ((i * 53) % Math.round(h * 0.3)) + 4, 2, 2) }
+        g.globalAlpha = 0.45; g.fillStyle = '#12084a'; g.strokeStyle = gl
+        for (const [x, tw, th] of [[0.06, 0.05, 0.22], [0.13, 0.04, 0.16], [0.2, 0.06, 0.26], [0.8, 0.06, 0.24], [0.88, 0.04, 0.17], [0.94, 0.05, 0.21]]) { g.fillRect(w * x, wallB - h * th, w * tw, h * th); g.globalAlpha = 0.8; g.strokeRect(w * x, wallB - h * th, w * tw, h * th); g.globalAlpha = 0.45 }
+        g.globalAlpha = 0.35; for (let i = 1; i < 12; i++) { g.beginPath(); g.moveTo(w * i / 12, wallB); g.lineTo(w * (0.5 + (i / 12 - 0.5) * 2.6), h); g.stroke() }
+      }
     }
     g.restore()
   }

@@ -62,3 +62,8 @@
 .fr-toast.oops { border-color: #ff9a6a; } .fr-toast.boom { border-color: #ff6fbd; background: rgba(120,20,90,.92); } .fr-toast.good { border-color: #7dffb0; }
 @keyframes fr-pop { from { transform: translateX(-50%) scale(.8); opacity: 0 } to { transform: translateX(-50%) scale(1); opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .fr-toast, .fr-hint .pulse { animation: none } }
+.fr-toast.run { left: 22%; top: 30%; }
+.fr-judge { background: linear-gradient(160deg, rgba(48,24,100,.96), rgba(18,8,46,.96)); border: 1px solid rgba(255,216,120,.45); box-shadow: 0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18); }
+.fr-portrait { box-shadow: 0 0 0 2px #ffd76c, 0 0 12px color-mix(in srgb, var(--jc) 70%, transparent); }
+.fr-final { border: 1px solid rgba(255,216,120,.35); background: linear-gradient(90deg, rgba(48,24,100,.9), rgba(20,8,50,.9)); }
+.fr-wardrobe .fr-row { border-color: rgba(255,255,255,.12); }

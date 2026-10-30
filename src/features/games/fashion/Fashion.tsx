@@ -47,7 +47,7 @@ export function Fashion({ onExit }: { onExit: () => void }) {
       {s.phase === 'runway' && <RunHud s={s} onQuit={() => g()?.toStyle()} />}
       {s.phase === 'results' && <Results s={s} onSave={() => g()?.saveLook()} onAgain={() => g()?.retryRunway()} onRestyle={() => g()?.toStyle()} onEras={() => g()?.toEras()} />}
       {s.phase === 'lookbook' && <Lookbook s={s} onBack={() => g()?.toEras()} onDelete={(id) => g()?.deleteLook(id)} onTry={(id) => g()?.tryOn(id)} />}
-      {s.toast && <div key={s.toast.id} className={'fr-toast ' + s.toast.kind} role="status">{s.toast.text}</div>}
+      {s.toast && <div key={s.toast.id} className={'fr-toast ' + s.toast.kind + (s.phase === 'runway' ? ' run' : '')} role="status">{s.toast.text}</div>}
     </div>
   )
 }
