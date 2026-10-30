@@ -301,4 +301,11 @@ export const entries: Entry[] = [
     title: '👗✨ Runway Remix: shiny runway + real backdrops',
     body: 'Graphics round 4! The runway is glossy now, with spotlight pools and a reflection of your model in the floor. Every era got its own stage: gilded arches and candle chandeliers for Baroque, columns for Classical, velvet curtains for Romantic, globe lamps for Belle Époque, a sunburst marquee for the Jazz Age, and a neon skyline for Koog Future. Funny bug we caught: the new floor was SO white that the model\'s white stockings disappeared and her shoes looked like they were floating! Fix: tint the floor a little lavender. Designers call that "contrast".',
   },
+  {
+    id: 42,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🎆 Fireworks: real shell types + a city skyline',
+    body: 'Graphics round 5! Real fireworks come in shapes, and now ours do too: peony (a round ball), chrysanthemum (with trails), ring, golden willow (droops like a tree), and crossette (every spark splits into four!). Sparks glitter as they fall, rockets leave sparkly tails, a little smoke hangs in the air, and there\'s a city skyline at the bottom so the show feels BIG. Out-of-key slams still go "pfft" and BOOM is still the grand finale.',
+  },
 ]

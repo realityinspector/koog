@@ -60,7 +60,7 @@ const hueFor = (note: number) => (((note % 12) * 7) % 12) * 30
 // nt/st = which note spawned it and when (ms). A forearm slam is only known after its first notes already
 // fired, so the 'cluster' event uses these tags to turn those early sparks gray (retro-fizzle).
 // b = brightness multiplier (how well the note was played). fz = already fizzled.
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean; nb?: boolean; b?: number; nt?: number; st?: number; fz?: boolean }
+interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; size: number; hue: number; sat?: number; tw?: number; wob?: number; trail?: boolean; nb?: boolean; b?: number; nt?: number; st?: number; fz?: boolean; g?: number; gl?: boolean; sp?: number }
 type Kind = 'tonic' | 'in' | 'spicy'
 // rockets: normal (streak), form (rhythm in formation: straight and tall), boom (finale barrage), dud (fizzle: sputters, never bursts)
 interface Rocket { x: number; y: number; vy: number; ty: number; hue: number; vx?: number; drag?: number; wob?: number; ph?: number; age?: number; sc?: number; form?: boolean; boom?: boolean; dud?: boolean; stage?: number; dudAt?: number; cough?: number; nt?: number; st?: number }
@@ -349,6 +349,68 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
   }
 
+  /** a lingering, faint coloured-gray haze where a shell went off (fireworks only, drawn with the smokes) */
+  function haze(x: number, y: number, big = 1) {
+    if (reduced || smokes.length >= 40 * quality) return
+    smokes.push({ x, y, vx: (rnd() - 0.5) * 0.15, vy: -0.05, r: 40 * big, vr: 0.16, life: 0, max: 230 + rnd() * 60, a: 0.1 })
+  }
+  /** firework shell types: peony, chrysanthemum (trails), ring, willow (long golden droop), crossette (splits in four).
+   *  Every type ends in glitter that twinkles as it falls. Reduced motion: plain peony only. */
+  function shell(x: number, y: number, hue: number, n: number, speed: number, extra: Partial<Particle> = {}, fancy = true, prio = false) {
+    const r = rnd()
+    const type = reduced ? 0 : r < 0.3 ? 0 : r < 0.5 ? 1 : r < 0.68 ? 2 : r < 0.84 ? 3 : fancy ? 4 : 0
+    if (type === 0) burst(x, y, hue, n, speed, { gl: true, ...extra }, prio)
+    else if (type === 1) burst(x, y, hue, n * 0.9, speed, { trail: true, gl: true, ...extra }, prio)
+    else if (type === 2) {
+      const m = Math.round(Math.max(14, n * 0.7) * quality)
+      const tilt = (rnd() - 0.5) * 1.2, sq = 0.45 + rnd() * 0.4
+      for (let i = 0; i < m; i++) {
+        const a = (i / m) * 6.2832
+        const cx = Math.cos(a) * speed * 1.2, cy = Math.sin(a) * speed * 1.2 * sq
+        pushP({ x, y, vx: cx * Math.cos(tilt) - cy * Math.sin(tilt), vy: cx * Math.sin(tilt) + cy * Math.cos(tilt), life: 0, max: 60 + rnd() * 14, size: 2.4, hue: hue + (i / m) * 40, gl: true, ...extra }, prio)
+      }
+      burst(x, y, hue + 150, n * 0.25, speed * 0.4, { size: 1.8, ...extra }, prio)
+    } else if (type === 3) {
+      burst(x, y, 42, n * 0.9, speed * 0.8, { trail: true, g: 0.02, gl: true, ...extra, size: 2.2 }, prio)
+      burst(x, y, hue, n * 0.2, speed * 0.5, { ...extra }, prio)
+    } else {
+      const m = Math.max(5, Math.round(7 * quality))
+      for (let i = 0; i < m; i++) {
+        const a = (i / m) * 6.2832 + rnd() * 0.3, s = speed * (0.7 + rnd() * 0.3)
+        pushP({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: 80, size: 3, hue, trail: true, sp: 20 + Math.round(rnd() * 6), ...extra }, prio)
+      }
+    }
+    haze(x, y, 0.6 + n / 90)
+    if (!reduced) rings.push({ x, y, r: 3, vr: 2.2, life: 0, max: 22, hue, width: 2, a: 0.35 })
+  }
+  // a faint city skyline for scale, painted once per resize
+  let skyline: HTMLCanvasElement | null = null
+  function buildSkyline() {
+    const c = document.createElement('canvas')
+    c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h * 0.16))
+    const g = c.getContext('2d')!
+    const H = c.height
+    let seed = 7
+    const sr = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+    for (let layer = 0; layer < 2; layer++) {
+      g.fillStyle = layer ? 'rgba(12,8,36,0.9)' : 'rgba(30,20,70,0.55)'
+      const maxH = H * (layer ? 0.62 : 0.9)
+      for (let x = layer ? 10 : -4; x < w; ) {
+        const bw = 16 + sr() * 30, bh = maxH * (0.35 + sr() * 0.65)
+        g.fillRect(x, H - bh, bw, bh)
+        if (sr() < 0.25) g.fillRect(x + bw * 0.4, H - bh - 8 - sr() * 8, 2, 10) // antenna
+        if (layer && sr() < 0.3) { g.beginPath(); g.moveTo(x, H - bh); g.lineTo(x + bw / 2, H - bh - 7); g.lineTo(x + bw, H - bh); g.fill() }
+        if (layer) {
+          g.fillStyle = 'rgba(255,214,120,0.7)'
+          for (let wy = H - bh + 5; wy < H - 4; wy += 7) for (let wx = x + 4; wx < x + bw - 4; wx += 6) if (sr() < 0.22) g.fillRect(wx, wy, 2, 3)
+          g.fillStyle = 'rgba(12,8,36,0.9)'
+        }
+        x += bw + sr() * 4
+      }
+    }
+    skyline = c
+  }
+
   // ---- Fire mode state ----
   const flames: Flame[] = []
   const flashes: { x: number; life: number }[] = []
@@ -502,6 +564,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     canvas.width = Math.round(w * dpr)
     canvas.height = Math.round(h * dpr)
     fireFloor = null
+    skyline = null
     ghosts.resize(w, h)
     sparkles.resize(w, h)
     for (const sc of sceneList) sc.resize(w, h)
@@ -824,7 +887,8 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
         burst(x, y, spicyHue, (10 + v * 16) * (0.7 + 0.3 * sz), 1 + v * 2, { sat: 12, wob: 1, size: 2 + Math.random() * 3, b: bright, ...tag })
       } else {
         const sc = kind === 'tonic' ? 1.3 : 1
-        burst(x, y, hue, (14 + v * 46) * boost * sc * sz, (1.5 + v * 4.5) * sc * (0.8 + 0.2 * sz), { tw: Math.random() * 6.28, trail: streak > 5 && qs > 0.5, b: bright, ...tag })
+        if (qs > 0.45 && v > 0.35) shell(x, y, hue, (14 + v * 46) * boost * sc * sz, (1.5 + v * 4.5) * sc * (0.8 + 0.2 * sz), { tw: Math.random() * 6.28, b: bright, ...tag }, false)
+        else burst(x, y, hue, (14 + v * 46) * boost * sc * sz, (1.5 + v * 4.5) * sc * (0.8 + 0.2 * sz), { tw: Math.random() * 6.28, trail: streak > 5 && qs > 0.5, b: bright, ...tag })
         if (kind === 'tonic') {
           const nt = Math.round(36 * calm)
           for (let i = 0; i < nt; i++) {
@@ -1057,6 +1121,10 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
         ctx.fillRect(0, 0, w, h)
       }
     }
+    if (mode === 'fireworks') {
+      if (!skyline) buildSkyline()
+      ctx.drawImage(skyline!, 0, h - skyline!.height, w, skyline!.height)
+    }
     ctx.globalCompositeOperation = 'lighter'
 
     // delayed stages (BOOM barrage, motif echo) and fountains
@@ -1138,6 +1206,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
         r.y += r.vy / steps
         if (r.wob) r.x += (Math.sin(r.age * 0.33 + (r.ph ?? 0)) * r.wob) / steps
         pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: steps > 1 ? 16 : 25, size: 2, hue: r.hue, tw: 1, nb: true })
+        if (!reduced && quality > 0.5 && Math.random() < 0.55) pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 1.4, vy: 0.2 + Math.random() * 0.8, life: 0, max: 28 + Math.random() * 18, size: 1, hue: 44 + Math.random() * 10, tw: Math.random() * 6.28, nb: true, gl: true })
       }
       r.vy *= r.drag ?? 0.985
       ctx.fillStyle = `hsl(${r.hue},100%,85%)`
@@ -1147,15 +1216,15 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       if (r.y <= r.ty || r.vy > -1.5) {
         const sc = r.sc ?? 1
         if (r.boom) {
-          burst(r.x, r.y, r.hue, 62, 5.2, { tw: Math.random() * 6, trail: true }, true)
+          shell(r.x, r.y, r.hue, 62, 5.2, { tw: Math.random() * 6 }, true, true)
           burst(r.x, r.y, 46, 28, 3.4, { tw: 2 }, true)
           rings.push({ x: r.x, y: r.y, r: 4, vr: 5, life: 0, max: 40, hue: 46, width: 4 })
         } else if (r.form) {
-          burst(r.x, r.y, r.hue, 54 * sc, 4.6, { tw: Math.random() * 6, trail: true })
+          shell(r.x, r.y, r.hue, 54 * sc, 4.6, { tw: Math.random() * 6 })
           burst(r.x, r.y, r.hue + 50, 20 * sc, 2.8, { tw: 2 })
           rings.push({ x: r.x, y: r.y, r: 4, vr: 3.4, life: 0, max: 42, hue: r.hue, width: 3, a: 0.5 + 0.5 * sc })
         } else {
-          burst(r.x, r.y, r.hue, 70 * sc, 5 * (0.7 + 0.3 * sc), { tw: Math.random() * 6, trail: sc >= 0.8 })
+          shell(r.x, r.y, r.hue, 70 * sc, 5 * (0.7 + 0.3 * sc), { tw: Math.random() * 6 })
           burst(r.x, r.y, r.hue + 60, 30 * sc, 3, { tw: 2 })
         }
         rockets[i] = rockets[rockets.length - 1]
@@ -1260,6 +1329,15 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       p.x += p.vx
       p.y += p.vy
       if (p.fz) p.vy += 0.07
+      if (p.g) p.vy += p.g
+      if (p.sp && p.life === p.sp) {
+        // crossette: the spark splits into four small ones in an X
+        for (let k = 0; k < 4; k++) {
+          const a = Math.PI / 4 + k * (Math.PI / 2), s = 2.2
+          pushP({ x: p.x, y: p.y, vx: Math.cos(a) * s + p.vx * 0.3, vy: Math.sin(a) * s + p.vy * 0.3, life: 0, max: 46, size: p.size * 0.8, hue: p.hue + 20, tw: p.tw, gl: true, trail: true }, true)
+        }
+        particles[i] = particles[particles.length - 1]; particles.pop(); continue
+      }
       const t = 1 - p.life / p.max
       if (t <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue }
       if (p.wob) p.x += Math.sin(p.life * 0.5 + i) * 0.6
@@ -1270,7 +1348,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       const r = (lfoTgt === 'amp' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1) * 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
       const al = Math.min(1, (dull ? t * 0.8 : t * tw) * alphaMul * grow * (lfoTgt === 'filter' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1)) * (p.b ?? 1)
       const shim = lfoTgt === 'pitch' && lfoOn ? Math.sin(lfoPh + p.y * 0.02) * 4 * lfoDep : 0
-      ctx.globalAlpha = al
+      ctx.globalAlpha = p.gl && t < 0.5 ? al * (((p.life * 5 + (p.tw ?? 0) * 17) | 0) % 5 < 2 ? 1 : 0.3) : al
       const spr = pdot(shape, level, p.hue, dull)
       ctx.drawImage(spr, p.x - r + shim, p.y - r, r * 2, r * 2)
       if (ghost > 0 && quality > 0.6 && !p.nb) {
