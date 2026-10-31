@@ -86,14 +86,25 @@ function releaseMidi() {
 }
 
 st.off?.()
+// Sticky user activation (any click/key on the page so far) lets MIDI notes start audio too.
+const hasActivation = () => (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive === true
+// MIDI plays through the computer when SYNTHESIZER is ON, or whenever an instrument was picked on purpose
+// (an emulator panel is open, or a 🎹 Sound was chosen): picking one means "I want to hear THIS".
+const midiThrough = () => useAudioSettings.getState().computerSound || getActiveInstrument() != null
 const offNote = onNote((e) => {
-  if (isLocalNote(e) || !useAudioSettings.getState().computerSound) return
-  if (e.on) { st.midiHeld.add(e.note); route('M' + e.note, e.note, e.velocity, true, false) }
+  if (isLocalNote(e)) return
+  if (!e.on && st.midiHeld.has(e.note)) { st.midiHeld.delete(e.note); route('M' + e.note, e.note, 0, false, false); return }
+  if (!midiThrough()) return
+  if (e.on) { st.midiHeld.add(e.note); route('M' + e.note, e.note, e.velocity, true, hasActivation()) }
   else { st.midiHeld.delete(e.note); route('M' + e.note, e.note, 0, false, false) }
 })
 const offInst = onInstrumentChange(releaseStale)
-const offSet = useAudioSettings.subscribe((s, prev) => { if (prev.computerSound && !s.computerSound) releaseMidi() })
-st.off = () => { offNote(); offInst(); offSet() }
+const offSet = useAudioSettings.subscribe((s, prev) => { if (prev.computerSound && !s.computerSound && !getActiveInstrument()) releaseMidi() })
+// Any click or key wakes the current instrument's audio, so the first MIDI note after it already sounds.
+const wake = () => { void currentTarget().unlock().catch(() => {}) }
+window.addEventListener('pointerdown', wake, true)
+window.addEventListener('keydown', wake, true)
+st.off = () => { offNote(); offInst(); offSet(); window.removeEventListener('pointerdown', wake, true); window.removeEventListener('keydown', wake, true) }
 
 if (import.meta.hot) {
   import.meta.hot.data.localNotes = st
