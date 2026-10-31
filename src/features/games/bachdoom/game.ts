@@ -138,7 +138,9 @@ export class Game {
     this.clearAll()
     this.introT = 3.4
     const pc0 = this.piece
-    setScore({ owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar }, pc0.scoreIdx[0] ?? 0)
+    setScore({ owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar,
+      // the Prelude's real chords (every bar is one chord), so Easy/Full show Bach's harmony instead of a guess
+      harmony: pc0.score.length && pc0.score.every((n) => n.beats === 0.25) ? PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) : undefined }, pc0.scoreIdx[0] ?? 0)
     this.emit()
   }
   retry() { this.start(this.levelIdx, this.diff) }

@@ -322,4 +322,11 @@ export const entries: Entry[] = [
     title: '🎚️ Teach Koog your DJ board + 🤝 band challenges',
     body: 'Every DJ controller speaks MIDI a little differently, so now Koog can LEARN yours: tap 🤝 in the DUO strip → Teach Koog. Press each button and wiggle each knob when it asks, and it remembers. It even blinks each button light to check that it works. 🔍 Knob check shows every control moving live, so you can spot a broken one fast. 🎤 Soundcheck is a two-kid warm-up: the DJ tests the gear while the piano player plays a scale and a chord, and when the checklist is full, the band goes LIVE. Plus three co-op challenges: Crossfade on the Cadence, Drop It, and Call and Response. You only earn stars together.',
   },
+  {
+    id: 45,
+    time: 'Evening',
+    stage: 'ship',
+    title: '🎼 Sheet music levels: Single, Easy chords, Full',
+    body: 'The sheet music now matches how much you want to play. 🎵 Single shows just the melody. 🎶 Easy chords adds chord names on top and one simple left-hand note per chord. 🎼 Full writes a real left-hand part: "Alberti bass" (a rolling pattern Mozart loved) in 4/4, "oom-pah-pah" for waltzes in 3/4. Koog writes these arrangements itself using music theory: it picks chords that fit the melody and always ends with the classic V→I cadence. In SONGS, your left hand earns bonus points for chord notes.',
+  },
 ]

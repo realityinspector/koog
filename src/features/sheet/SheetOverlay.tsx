@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { setSheetOn, useScore, useSheet } from '../../music/scoreStore'
 import { useScreen } from '../../layout/screenStore'
 import { layoutSheet, VH } from './layout'
+import { arrange } from '../../music/arrange'
+import { SHEET_LEVELS, setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
 import type { Layout, Shape } from './layout'
 import { useFree } from './freeplay'
 import './sheet.css'
@@ -71,7 +73,7 @@ function Sheet({ lay, pos, results, free, title }: { lay: Layout; pos: number; r
     const root = scroll.current; if (!root) return
     root.querySelectorAll<SVGGElement>('g[data-i]').forEach((g) => {
       const r = results[Number(g.dataset.i)]
-      g.setAttribute('class', 'sh-g' + (r ? ' ' + r : ''))
+      g.setAttribute('class', 'sh-g' + (g.dataset.lh ? ' lh' : '') + (r ? ' ' + r : ''))
     })
   }, [results, lay])
   useEffect(() => {
@@ -84,7 +86,8 @@ function Sheet({ lay, pos, results, free, title }: { lay: Layout; pos: number; r
   const body = useMemo(() => (
     <>
       {lay.bars.map((x, i) => <line key={'b' + i} x1={x} y1={2.5} x2={x} y2={12.5} stroke="currentColor" strokeWidth={0.12} />)}
-      {lay.groups.map((g) => <g key={g.i} data-i={g.i} className="sh-g">{g.shapes.map(draw)}</g>)}
+      {lay.groups.map((g) => <g key={g.i} data-i={g.i} data-lh={g.lh ? '1' : undefined} className={'sh-g' + (g.lh ? ' lh' : '')}>{g.shapes.map(draw)}</g>)}
+      {lay.marks.length > 0 && <g className="sh-chords">{lay.marks.map(draw)}</g>}
       {lay.names.map((n, i) => draw(n, i))}
     </>
   ), [lay])
@@ -126,19 +129,30 @@ export function SheetOverlay() {
   const [names, setNames] = useState(loadNames)
   const toggleNames = () => setNames((v) => { try { localStorage.setItem(NAMES_KEY, v ? '0' : '1') } catch { /* ignore */ } return !v })
 
+  const level = useSheetLevel((s) => s.level)
+  // The arrangement follows the sheet level: single = the tune, easy = + chord names and a root note, full = + a left-hand pattern.
+  const arr = useMemo(() => (score && level !== 'single'
+    ? arrange({ notes: score.notes, key: score.key, beatsPerBar: score.beatsPerBar, pickup: score.pickup, title: score.title, style: score.style, harmony: score.harmony }, level)
+    : null), [score, level])
   const lay = useMemo(() => {
-    if (score) return layoutSheet(score.notes.map((n) => ({ note: n.note, beats: n.beats })), score.key, score.beatsPerBar)
+    if (score && arr) return layoutSheet(arr.rh.map((n) => ({ note: n.note, midis: n.midis, beats: n.beats })), arr.key, arr.bpb, { lh: arr.lh, marks: arr.marks, pickup: arr.pickup })
+    if (score) return layoutSheet(score.notes.map((n) => ({ note: n.note, beats: n.beats })), score.key, score.beatsPerBar, undefined, score.pickup)
     return layoutSheet(groups.map((g) => ({ note: g.midis[0] ?? null, midis: g.midis, beats: g.beats })), undefined, 4)
-  }, [score, groups])
+  }, [score, groups, arr])
   // Only take space when there's something to read: a published piece, or free play on the PLAY screen.
   if (!on || (!score && screen !== 'play')) return null
   const free = !score
   return (
-    <div className="sh-overlay" data-names={names ? '1' : undefined} role="group" aria-label="Sheet music">
+    <div className="sh-overlay" data-names={names ? '1' : undefined} data-level={arr ? level : 'single'} role="group" aria-label="Sheet music">
       <Sheet lay={names ? lay : { ...lay, names: [] }} pos={pos} results={results} free={free} title={score?.title ?? 'free play'} />
       {free && groups.length === 0 && <div className="sh-empty">Play something and we will write it down.</div>}
       <div className="sh-bar">
-        <span className="sh-pill">{free ? 'free play: we are writing down what you play' : score.title}</span>
+        <span className="sh-pill">{free ? 'free play: we are writing down what you play' : arr?.title ?? score.title}</span>
+        <span className="sh-seg" role="group" aria-label="Sheet level">
+          {SHEET_LEVELS.map((l) => (
+            <button key={l.id} className={'sh-lv' + (level === l.id ? ' on' : '')} aria-pressed={level === l.id} title={l.label + ': ' + l.hint} aria-label={l.label} onClick={() => setSheetLevel(l.id)}>{l.icon}</button>
+          ))}
+        </span>
         <button className={'sh-btn' + (names ? ' on' : '')} aria-pressed={names} title="Show note names under the notes" onClick={toggleNames}>Aa</button>
         <button className="sh-btn" aria-label="Turn sheet music off" title="Hide the sheet music" onClick={() => { setSheetOn(false)}}>✕</button>
       </div>

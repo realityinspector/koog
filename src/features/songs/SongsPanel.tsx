@@ -10,12 +10,15 @@ import { celebrate } from '../celebrate/celebrate'
 import { startBacking, stopBacking } from '../beats/engine'
 import { syncSongScore } from '../sheet/songSync'
 import { clearScore } from '../../music/scoreStore'
+import { arrange } from '../../music/arrange'
+import { SHEET_LEVELS, setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
+import { lhAdvance, lhHitIdxs, lhPress, makeLh, type LhState } from './lhJudge'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
 type Phase = 'ready' | 'playing' | 'listening' | 'done'
 interface N { midi: number; start: number; beats: number; st: 0 | 1 | 2; hitAt: number }
-interface Result { score: number; acc: number; stars: number; hits: number; total: number; best: boolean }
+interface Result { score: number; acc: number; stars: number; hits: number; total: number; best: boolean; lh?: { hits: number; total: number } }
 
 const PPB = 60 // pixels per beat
 const LEAD = 2 // lead-in beats in flow mode
@@ -104,6 +107,7 @@ function layout(song: Song, W: number, CH: number, KH: number) {
 export function SongsPanel() {
   const [songId, setSongId] = useState<string | null>(null)
   const [mode, setMode] = useState<Mode>('wait')
+  const level = useSheetLevel((s) => s.level)
   const [speed, setSpeed] = useState(0.8)
   const [names, setNames] = useState(true)
   const [lyOn, setLyOn] = useState(loadLy)
@@ -123,6 +127,11 @@ export function SongsPanel() {
   const g = useRef<Game | null>(null)
   const opt = useRef({ mode, speed, names })
   opt.current = { mode, speed, names }
+  const arr = useMemo(() => (song && level !== 'single'
+    ? arrange({ notes: song.notes, key: song.key, beatsPerBar: song.beatsPerBar, pickup: song.pickup, title: song.title, style: song.style, harmony: song.harmony }, level) : null), [song, level])
+  const lhRef = useRef<LhState>(makeLh(null))
+  const arrRef = useRef(arr)
+  arrRef.current = arr
   const audio = useRef<AudioContext | null>(null)
   const [beatPref, setBeatPref] = useState(loadBeat)
   const beatOn = song ? (beatPref[song.tier] ?? song.tier === 'pop') : false
@@ -180,7 +189,9 @@ export function SongsPanel() {
     const isBest = !prev || game.score > prev.score
     if (isBest) { b[k] = { score: game.score, acc }; saveBest(b); setBests(b) }
     if (isBest && prev) celebrate({ kind: 'best', title: 'New personal best: ' + song.title, emoji: '⭐' })
-    setResult({ score: game.score, acc, stars, hits: game.hits, total, best: isBest && !!prev })
+    lhAdvance(lhRef.current, 0, true)
+    const lh = lhRef.current.total ? { hits: lhRef.current.hits, total: lhRef.current.total } : undefined
+    setResult({ score: game.score, acc, stars, hits: game.hits, total, best: isBest && !!prev, lh })
     setPhase('done')
   }, [song])
 
@@ -191,6 +202,7 @@ export function SongsPanel() {
     game.startMs = performance.now()
     if (opt.current.mode === 'flow') game.cursor = -LEAD
     g.current = game
+    lhRef.current = makeLh(arrRef.current)
     stopAudio(); setResult(null); setPhase('playing'); setUi({ score: 0, combo: 0, hits: 0, msg: '' })
     if (opt.current.mode === 'flow' && beatOnRef.current) {
       // beat 0 of the song = startMs + LEAD beats at the effective tempo (same clock as the falling notes)
@@ -248,6 +260,9 @@ export function SongsPanel() {
           game.combo = game.wrong === 0 ? game.combo + 1 : 0
           game.hits++; n.st = 1; n.hitAt = performance.now(); game.idx++; game.wrong = 0
           setUi({ score: game.score, combo: game.combo, hits: game.hits, msg: game.combo >= 5 ? 'On a roll.' : '' })
+        } else if (lhPress(lhRef.current, e.note, n.start)) {
+          game.score += 40
+          setUi((u) => ({ ...u, score: game.score, msg: 'Left hand: nice chord note.' }))
         } else {
           game.wrong++; game.combo = 0
           const sameClass = pcOf(e.note) === pcOf(n.midi)
@@ -266,6 +281,9 @@ export function SongsPanel() {
           best.st = 1; best.hitAt = performance.now(); game.hits++; game.combo++
           game.score += (perfect ? 100 : 70) + Math.min(game.combo, 10) * 2
           setUi({ score: game.score, combo: game.combo, hits: game.hits, msg: perfect ? 'Right on the beat.' : '' })
+        } else if (lhPress(lhRef.current, e.note, game.cursor)) {
+          game.score += 40
+          setUi((u) => ({ ...u, score: game.score, msg: 'Left hand: nice chord note.' }))
         } else {
           setUi((u) => ({ ...u, msg: 'Extra note, keep the groove.' }))
         }
@@ -322,7 +340,8 @@ export function SongsPanel() {
         if (game.cursor > game.endBeat) li = game.notes.length
       }
       if (li !== lastLy) { lastLy = li; setLyIdx(li) }
-      syncSongScore(song, game.phase === 'playing' || game.phase === 'listening', game.notes, game.idx, game.cursor, game.phase === 'playing' && o.mode === 'wait', false)
+      if (game.phase === 'playing') lhAdvance(lhRef.current, o.mode === 'wait' ? (game.notes[game.idx]?.start ?? 1e9) : game.cursor)
+      syncSongScore(song, game.phase === 'playing' || game.phase === 'listening', game.notes, game.idx, game.cursor, game.phase === 'playing' && o.mode === 'wait', false, lhHitIdxs(lhRef.current))
       draw(ctx, game, lay, W, dpr, song, o)
     }
     raf = requestAnimationFrame(frame)
@@ -356,6 +375,11 @@ export function SongsPanel() {
             <span className="seg">
               <button className={mode === 'wait' ? 'on' : ''} onClick={() => setMode('wait')}>Wait</button>
               <button className={mode === 'flow' ? 'on' : ''} onClick={() => setMode('flow')}>Flow</button>
+            </span>
+            <span className="seg" role="group" aria-label="Sheet level">
+              {SHEET_LEVELS.map((l) => (
+                <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{l.icon} {l.label}</button>
+              ))}
             </span>
             {mode === 'flow' && (
               <label>Speed
@@ -401,6 +425,7 @@ export function SongsPanel() {
               <div className="card">
                 <div className="stars">{'★'.repeat(result.stars)}{'☆'.repeat(3 - result.stars)}</div>
                 <div className="big">{result.stars === 3 ? 'Absolutely cooked that.' : result.stars === 2 ? 'Smooth. Run it back?' : 'Song complete. Round two hits different.'}</div>
+                {result.lh && <div>Left hand <b>{result.lh.hits}/{result.lh.total}</b> chord notes</div>}
                 <div>Score <b>{result.score}</b> · Accuracy <b>{Math.round(result.acc * 100)}%</b> · <span className="gold">{result.best ? 'New personal best!' : curBest ? `Best ${curBest.score}` : 'First score on the board.'}</span></div>
                 <div className="bar c">
                   <button className="btn" onClick={start}>Again</button>

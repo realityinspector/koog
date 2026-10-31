@@ -4,6 +4,7 @@
 import { create } from 'zustand'
 import type { Key } from './theory'
 import type { SongNote } from '../features/songs/songs'
+import type { ArrStyle, HarmonyBar } from './arrange'
 
 export interface Score {
   /** who published it ('songs', 'bachdoom', ...). clearScore only clears your own. */
@@ -14,6 +15,12 @@ export interface Score {
   bpm?: number
   /** beats per bar for bar lines (default 4) */
   beatsPerBar?: number
+  /** upbeat beats before the first full bar */
+  pickup?: number
+  /** left-hand pattern the arranger should prefer (Full level) */
+  style?: ArrStyle
+  /** real chords for the piece, if known (used instead of generated ones) */
+  harmony?: HarmonyBar[]
 }
 export type NoteResult = 'hit' | 'miss'
 export interface ScoreState {

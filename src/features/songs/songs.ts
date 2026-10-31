@@ -2,6 +2,7 @@
 import type { Key } from '../../music/theory'
 import { PRELUDE_C, preludeFigure } from '../../music/scores'
 import { CLASSICAL } from '../../music/classical'
+import type { ArrStyle, HarmonyBar } from '../../music/arrange'
 
 // lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
 // note (joined when shown). Trailing "/" = a new lyric line starts after this syllable. Rests never carry a lyric.
@@ -12,6 +13,14 @@ export interface Song {
   key: Key; bpm: number; tier: Tier; notes: SongNote[]; hook?: string; mine?: boolean
   /** classical library only: false = melody written from memory, not yet verified by ear */
   checked?: boolean
+  /** meter for bar lines and the arranger (default 4) */
+  beatsPerBar?: number
+  /** upbeat length in beats, before the first full bar */
+  pickup?: number
+  /** left-hand pattern the arranger should use in Full */
+  style?: ArrStyle
+  /** real chords, when we have them (the arranger uses these instead of guessing) */
+  harmony?: HarmonyBar[]
 }
 
 const PCS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
@@ -141,7 +150,19 @@ const LYRICS: Record<string, string> = {
   'pop-hyper': `Su- gar bounc- ing off walls/ So- da fizz in my shoes/ Can- dy fly- ing past stars/ can't sit still at all/ Fast- er fast- er fast- er fast- er/ don't you blink or you'll miss all the fun/`,
 }
 
-export const SONGS: Song[] = [...BASE, ...CLASSICAL].map((s) => {
+// Meter and left-hand style for the arranger / sheet bar lines. Anything not listed is 4/4 and picks its own pattern.
+const WALTZ = { beatsPerBar: 3 }
+const META: Record<string, Partial<Song>> = {
+  minuet: WALTZ, bday: { ...WALTZ, pickup: 1 }, brahms: { ...WALTZ, pickup: 1 }, greensleeves: { ...WALTZ, pickup: 1 },
+  gymnopedie: WALTZ, bluedanube: WALTZ,
+  grace: { style: 'block' },
+  saints: { style: 'oompah' }, susanna: { style: 'oompah' }, oldmac: { style: 'oompah' }, jingle: { style: 'oompah' },
+  cucaracha: { style: 'oompah' }, yankee: { style: 'oompah' }, deckhalls: { style: 'oompah' }, wewish: { style: 'oompah' },
+  prelude: { harmony: PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) },
+}
+
+export const SONGS: Song[] = [...BASE, ...CLASSICAL].map((x) => {
+  const s = META[x.id] ? { ...x, ...META[x.id] } : x
   const txt = LYRICS[s.id]
   if (!txt) return s
   const syl = txt.trim().split(/\s+/)

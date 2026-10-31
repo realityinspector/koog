@@ -27,3 +27,12 @@
 .sh-btn { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .25); color: #f4f2ff; }
 .sh-btn.on { background: #ffd76c; color: #1b1534; }
 .sh-empty { color: rgba(236, 232, 255, .55); }
+
+/* Sheet level: left hand reads a little lighter when it is only a helper (Easy); full strength in Full. Chord names in gold. */
+.sh-overlay[data-level='easy'] .sh-g.lh { opacity: .72; }
+.sh-chords { color: #ffd76c; }
+.sh-seg { pointer-events: auto; display: inline-flex; border-radius: 999px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); }
+.sh-lv { cursor: pointer; height: 24px; min-width: 28px; padding: 0 5px; border: 0; background: transparent; color: #f4f2ff; font-size: 13px; line-height: 1; }
+.sh-lv + .sh-lv { border-left: 1px solid rgba(255, 255, 255, .18); }
+.sh-lv.on { background: #ffd76c; }
+.sh-lv:hover:not(.on) { background: rgba(255, 255, 255, .18); }

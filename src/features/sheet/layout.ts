@@ -7,12 +7,19 @@ export type Shape =
   | { k: 'l'; x1: number; y1: number; x2: number; y2: number; w: number }
   | { k: 'p'; d: string; w: number; fill?: boolean }
   | { k: 't'; x: number; y: number; s: string; size: number }
-export interface Group { i: number; x: number; shapes: Shape[]; rest: boolean }
+export interface Group { i: number; x: number; shapes: Shape[]; rest: boolean; lh?: boolean }
 export interface LayoutInput { note: number | null; midis?: number[]; beats: number }
+/** left-hand event for the two-voice layout (empty midis = rest) */
+export interface LhInput { start: number; beats: number; midis: number[] }
+export interface TwoVoice { lh: LhInput[]; marks: { start: number; name: string }[]; pickup?: number }
 export interface Layout {
   groups: Group[]; bars: number[]; xs: number[]; endX: number
   fifths: number; bpb: number; header: Shape[]; headerW: number; names: Shape[]
+  /** chord symbols above the treble staff (two-voice layouts only) */
+  marks: Shape[]
 }
+/** left-hand groups carry i = LH_BASE + index so hit/miss colours can address them */
+export const LH_BASE = 100000
 
 export const VH = 15
 const TREB_BOT = 6.5, BASS_BOT = 12.5
@@ -95,13 +102,13 @@ function restShapes(t: string, dotted: boolean, x: number, bass: boolean): Shape
 }
 
 interface P1 {
-  i: number; start: number; beats: number; t: string; dotted: boolean; rest: boolean; bass: boolean; x: number
+  id: number; i: number; voice: 0 | 1; start: number; beats: number; t: string; dotted: boolean; rest: boolean; bass: boolean; x: number
   heads: { m: number; d: number; acc: number; showAcc: boolean; bass: boolean }[]
 }
 
 const MIN_GAP = 2.7, SCALE = 2.3
 
-export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: number | undefined): Layout {
+export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: number | undefined, two?: TwoVoice, pickupIn?: number): Layout {
   const f = keyFifths(key)
   const ka = keyAccs(f)
   const bpb = bpbIn && bpbIn > 0 ? bpbIn : 4
@@ -124,55 +131,86 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
   const headerW = hx + 2.2
 
   // pass 1: spell, accidentals, x positions
+  // Every event (right hand = voice 0, left hand = voice 1) sits on an "onset"; both hands share one x per onset,
+  // so the two staves line up by beat position. One voice (no `two`) is the old single-line layout.
+  const pickup = two?.pickup ?? pickupIn ?? 0
+  const minGap = two ? 2.4 : MIN_GAP
+  interface Raw { i: number; voice: 0 | 1; start: number; beats: number; midis: number[] }
+  const raws: Raw[] = []
+  let tb = 0
+  input.forEach((n, i) => { raws.push({ i, voice: 0, start: tb, beats: n.beats, midis: n.midis ?? (n.note != null ? [n.note] : []) }); tb += n.beats })
+  if (two) two.lh.forEach((e, k) => raws.push({ i: LH_BASE + k, voice: 1, start: e.start, beats: e.beats, midis: e.midis }))
+  const key1 = (v: number) => Math.round(v * 1000)
+  const onsets = [...new Set(raws.map((r) => key1(r.start)))].sort((a, b) => a - b)
   const items: P1[] = []
-  let beat = 0, cx = headerW + 1.6, bar = 0, lastBass = false
+  for (const voice of [0, 1] as const) {
+    let lastBass = voice === 1
+    let bar = -2
+    let memo = new Map<number, number>()
+    raws.filter((r) => r.voice === voice).sort((a, b) => a.start - b.start).forEach((n) => {
+      const [t, dotted] = quant(n.beats)
+      const nb = n.start < pickup - 1e-6 ? -1 : Math.floor((n.start - pickup) / bpb + 1e-6)
+      if (nb !== bar) { bar = nb; memo = new Map() }
+      const rest = n.midis.length === 0
+      const heads: P1['heads'] = []
+      for (const m of [...n.midis].sort((a, b) => a - b)) {
+        const sp = spell(m, f, ka, leadPc)
+        const cur = memo.has(sp.d) ? memo.get(sp.d)! : ka[sp.letter]
+        heads.push({ m, d: sp.d, acc: sp.acc, showAcc: sp.acc !== cur, bass: two ? voice === 1 : m < 60 })
+        memo.set(sp.d, sp.acc)
+      }
+      if (!rest && !two) lastBass = heads[0].bass && heads[heads.length - 1].bass
+      items.push({ id: items.length, i: n.i, voice, start: n.start, beats: n.beats, t, dotted, rest, bass: two ? voice === 1 : lastBass, x: 0, heads })
+    })
+  }
   const bars: number[] = []
-  let memo = new Map<number, number>()
-  input.forEach((n, i) => {
-    const [t, dotted] = quant(n.beats)
-    const nb = Math.floor(beat / bpb + 1e-6)
-    if (nb > bar && i > 0) { bar = nb; bars.push(cx - 1.0); cx += 0.5; memo = new Map() }
-    const midis = n.midis ?? (n.note != null ? [n.note] : [])
-    const rest = midis.length === 0
-    const heads: P1['heads'] = []
-    const sorted = [...midis].sort((a, b) => a - b)
-    for (const m of sorted) {
-      const s = spell(m, f, ka, leadPc)
-      const cur = memo.has(s.d) ? memo.get(s.d)! : ka[s.letter]
-      heads.push({ m, d: s.d, acc: s.acc, showAcc: s.acc !== cur, bass: m < 60 })
-      memo.set(s.d, s.acc)
-    }
-    if (!rest) lastBass = heads[0].bass && heads[heads.length - 1].bass
-    const hasAcc = heads.some((h) => h.showAcc)
-    const x = cx + (hasAcc ? 1.6 : 0.2) + (heads.length > 1 ? 0.3 : 0)
-    items.push({ i, start: beat, beats: n.beats, t, dotted, rest, bass: lastBass, x, heads })
-    cx = x + Math.max(MIN_GAP - 0.2, n.beats * SCALE) + (dotted ? 0.5 : 0)
-    beat += n.beats
-  })
-  const xs = items.map((p) => p.x)
+  const xOn = new Map<number, number>()
+  let endCx = 0
+  {
+    let cx = headerW + 1.6, bar = -2
+    onsets.forEach((o, k) => {
+      const at = items.filter((p) => key1(p.start) === o)
+      const nb = o / 1000 < pickup - 1e-6 ? -1 : Math.floor((o / 1000 - pickup) / bpb + 1e-6)
+      if (k > 0 && nb > bar && nb >= 0) { bars.push(cx - 1.0); cx += 0.5 }
+      bar = Math.max(bar, nb)
+      const hasAcc = at.some((p) => p.heads.some((h) => h.showAcc))
+      const multi = at.some((p) => p.heads.length > 1)
+      const x = cx + (hasAcc ? 1.6 : 0.2) + (multi ? 0.3 : 0)
+      xOn.set(o, x)
+      const gap = k + 1 < onsets.length ? (onsets[k + 1] - o) / 1000 : Math.max(...at.map((p) => p.beats))
+      const dotted = at.some((p) => p.dotted && Math.abs(p.beats - gap) < 0.01)
+      cx = x + Math.max(minGap - 0.2, gap * SCALE) + (dotted ? 0.5 : 0)
+    })
+    endCx = cx
+  }
+  for (const p of items) p.x = xOn.get(key1(p.start))!
+  const rhItems = items.filter((p) => p.voice === 0)
+  const xs = rhItems.map((p) => p.x)
 
-  // beam groups: consecutive single notes with flags, same staff, same beat
+  // beam groups: consecutive single notes with flags, same staff, same beat (per hand)
   const beamed = new Map<number, { dir: -1 | 1; tip: number; members: number[] }>()
-  let run: P1[] = []
-  const flush = () => {
-    if (run.length >= 2) {
-      let sum = 0
-      for (const p of run) { const h = p.heads[0]; sum += h.d - (h.bass ? BASS_MID_D : TREB_MID_D) }
-      const dir: -1 | 1 = sum >= 0 ? 1 : -1 // 1 = stems down
-      const ys = run.map((p) => (p.heads[0].bass ? yB(p.heads[0].d) : yT(p.heads[0].d)))
-      const mid = run[0].heads[0].bass ? 10.5 : 4.5
-      const tip = dir === -1 ? Math.min(Math.min(...ys) - 3.4, mid) : Math.max(Math.max(...ys) + 3.4, mid)
-      const g = { dir, tip, members: run.map((p) => p.i) }
-      for (const p of run) beamed.set(p.i, g)
+  for (const voiceItems of [rhItems, items.filter((p) => p.voice === 1)]) {
+    let run: P1[] = []
+    const flush = () => {
+      if (run.length >= 2) {
+        let sum = 0
+        for (const p of run) { const h = p.heads[0]; sum += h.d - (h.bass ? BASS_MID_D : TREB_MID_D) }
+        const dir: -1 | 1 = sum >= 0 ? 1 : -1 // 1 = stems down
+        const ys = run.map((p) => (p.heads[0].bass ? yB(p.heads[0].d) : yT(p.heads[0].d)))
+        const mid = run[0].heads[0].bass ? 10.5 : 4.5
+        const tip = dir === -1 ? Math.min(Math.min(...ys) - 3.4, mid) : Math.max(Math.max(...ys) + 3.4, mid)
+        const g = { dir, tip, members: run.map((p) => p.id) }
+        for (const p of run) beamed.set(p.id, g)
+      }
+      run = []
     }
-    run = []
+    for (const p of voiceItems) {
+      const ok = !p.rest && p.heads.length === 1 && flagsOf(p.t) > 0
+      if (ok && run.length && (run[0].heads[0].bass !== p.heads[0].bass || Math.floor(run[0].start + 1e-6) !== Math.floor(p.start + 1e-6))) flush()
+      if (ok) run.push(p); else flush()
+    }
+    flush()
   }
-  for (const p of items) {
-    const ok = !p.rest && p.heads.length === 1 && flagsOf(p.t) > 0
-    if (ok && run.length && (run[0].heads[0].bass !== p.heads[0].bass || Math.floor(run[0].start + 1e-6) !== Math.floor(p.start + 1e-6))) flush()
-    if (ok) run.push(p); else flush()
-  }
-  flush()
 
   // pass 2: shapes
   const groups: Group[] = []
@@ -180,14 +218,14 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
   const done = new Set<object>()
   for (const p of items) {
     const sh: Shape[] = []
-    if (p.rest) { sh.push(...restShapes(p.t, p.dotted, p.x, p.bass)); groups.push({ i: p.i, x: p.x, shapes: sh, rest: true }); continue }
+    if (p.rest) { sh.push(...restShapes(p.t, p.dotted, p.x, p.bass)); groups.push({ i: p.i, x: p.x, shapes: sh, rest: true, lh: p.voice === 1 }); continue }
     for (const staffBass of [false, true]) {
       const hs = p.heads.filter((h) => h.bass === staffBass)
       if (!hs.length) continue
       const yOf = (d: number) => (staffBass ? yB(d) : yT(d))
       const midD = staffBass ? BASS_MID_D : TREB_MID_D
       const midY = staffBass ? 10.5 : 4.5
-      const bg = beamed.get(p.i)
+      const bg = beamed.get(p.id)
       const far = hs.reduce((a, h) => a + (h.d - midD), 0)
       const down = bg ? bg.dir === 1 : far / hs.length >= 0
       const hasStem = p.t !== 'w'
@@ -235,7 +273,7 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
         }
         if (bg && !done.has(bg)) {
           done.add(bg)
-          const mem = bg.members.map((i) => items[i])
+          const mem = bg.members.map((id) => items[id])
           const sxOf = (it: P1) => (bg.dir === 1 ? it.x - 0.58 : it.x + 0.58)
           const inward = bg.dir === 1 ? -1 : 1
           const by = (n: number) => bg.tip + inward * (0.22 + n * 0.68)
@@ -250,9 +288,9 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
         }
       }
     }
-    groups.push({ i: p.i, x: p.x, shapes: sh, rest: false })
-    const nm = p.heads.map((h) => LET[spell(h.m, f, ka, leadPc).letter]).join('')
-    names.push({ k: 't', x: p.x, y: VH - 0.35, s: nm, size: 1.25 })
+    groups.push({ i: p.i, x: p.x, shapes: sh, rest: false, lh: p.voice === 1 })
+    if (p.voice === 0) names.push({ k: 't', x: p.x, y: VH - 0.35, s: p.heads.map((h) => LET[spell(h.m, f, ka, leadPc).letter]).join(''), size: 1.25 })
   }
-  return { groups, bars, xs, endX: cx, fifths: f, bpb, header, headerW, names }
+  const marks: Shape[] = (two?.marks ?? []).map((m) => ({ k: 't', x: (xOn.get(key1(m.start)) ?? headerW) + 0.2, y: 1.75, s: m.name, size: 1.7 }) as Shape)
+  return { groups, bars, xs, endX: endCx, fifths: f, bpb, header, headerW, names, marks }
 }
