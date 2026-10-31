@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { useProfile } from '../../profile/profile'
 import { useDevices, setRole, type DeviceRole } from '../../music/devices'
 import { SOUNDS, chooseSound, useSound } from './soundChoice'
 import { unlockAudio } from '../../music/localNotes'
 import { setScreenMode, useSurface } from '../controller/surface'
+import { SplitControl } from '../split/SplitControl'
 import './devices.css'
 
 const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['off', 'Off']]
@@ -11,6 +13,7 @@ const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'
 export function DevicesControl() {
   const devices = useDevices((s) => s.devices)
   const sound = useSound((s) => s.id)
+  const mode = useProfile((s) => s.mode)
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -59,6 +62,7 @@ export function DevicesControl() {
             ))}
           </div>
           <p className="kg-dev-note">Turn SYNTHESIZER ON to hear it through the computer.</p>
+          {mode !== 'kid' && <><h4>✂️ Split and layers</h4><SplitControl /></>}
         </div>
       )}
     </div>

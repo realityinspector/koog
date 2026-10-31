@@ -21,3 +21,5 @@
 .kg-dev-sounds button { text-align: left; }
 .kg-dev-hint { margin: 6px 0 0; font-size: 12px; color: #ffd36b; }
 .kg-dev-none, .kg-dev-note { margin: 6px 0 0; font-size: 12px; color: #b9b6d8; }
+
+.kg-dev-pop { max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; }

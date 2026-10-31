@@ -6,6 +6,7 @@ import { playLocal } from '../../music/localNotes'
 import { typingCaps, useTyping } from '../../music/typing'
 import { buildLayout, noteHue, snapRange, type KeyShape } from './layout'
 import { useGuide, type GuideTone } from '../../music/guide'
+import { ZONE_COLORS, activeIdx, zoneRange, useZones } from '../../music/zones'
 import './keyboard.css'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -37,17 +38,20 @@ interface KeyProps {
   caps?: string | null
   /** lit by a game or song: "play this next" */
   guide?: GuideTone | null
+  /** colour of the keyboard zone this key belongs to (split/layer), or null */
+  zc?: string | null
   down: (n: number, e: React.PointerEvent) => void
   up: (n: number) => void
 }
 
-const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, down, up }: KeyProps) {
+const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, zc, down, up }: KeyProps) {
   const style = {
     left: k.left + '%',
     width: k.width + '%',
     ...(held ? { '--h': noteHue(k.note) } : {}),
+    ...(zc ? { '--zc': zc } : {}),
   } as React.CSSProperties
-  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '') + (guide ? ' guide guide-' + guide : '')
+  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '') + (guide ? ' guide guide-' + guide : '') + (zc ? ' zoned' : '')
   const label = k.black ? null : k.label && (showName || k.label.length > 1) ? k.label : null
   return (
     <div
@@ -90,6 +94,18 @@ export function PianoStrip() {
   const guideTargets = useGuide((g) => g.targets)
   const guideTone = useGuide((g) => g.tone)
   const guideSet = useMemo(() => new Set(guideTargets), [guideTargets])
+  const zMode = useZones((z) => z.mode)
+  const zSplit = useZones((z) => z.split)
+  const zones = useZones((z) => z.zones)
+  const zoneBands = useMemo(() => {
+    if (zMode === 'single') return []
+    return activeIdx(zMode).filter((i) => zones[i].on).map((i) => {
+      const [lo, hi] = zoneRange(zMode, zSplit, i)
+      const row = zMode === 'layer' ? i : zMode === 'both' && i === 2 ? 1 : 0
+      return { i, lo, hi, row }
+    })
+  }, [zMode, zSplit, zones])
+  const xOf = (n: number) => { const k = layout.find((x) => x.note >= n); return k ? (k.black ? k.left + k.width / 2 : k.left) : 100 }
   const status = useMemo(() => layout.map((k) => judge(k.note)), [layout, key])
 
   useEffect(() => {
@@ -157,9 +173,17 @@ export function PianoStrip() {
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (
-          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} down={down} up={up} />
+          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} zc={zoneBands.length ? ZONE_COLORS[zoneBands.find((b) => k.note >= b.lo && k.note <= b.hi)?.i ?? 0] : null} down={down} up={up} />
         ))}
       </div>
+      {zoneBands.length > 0 && (
+        <div className="kb-zones" style={{ height: (zMode === 'split' ? 1 : 2) * 14 }} aria-hidden="true">
+          {zoneBands.map((b) => {
+            const l = b.lo <= layout[0].note ? 0 : xOf(b.lo), r = b.hi >= layout[layout.length - 1].note ? 100 : xOf(b.hi + 1)
+            return <span key={b.i} className="kb-zone" style={{ left: l + '%', width: Math.max(0, r - l) + '%', top: b.row * 14, background: ZONE_COLORS[b.i] }}>{zMode === 'layer' ? ['A', 'B', 'C'][b.i] : ['L', 'R', '+'][b.i]}</span>
+          })}
+        </div>
+      )}
     </section>
   )
 }

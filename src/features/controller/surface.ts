@@ -6,6 +6,7 @@
 import { create } from 'zustand'
 import { onRoleChange, onSurfaceMessage, sendToDj, setRole, useDevices } from '../../music/devices'
 import { onInstrumentChange } from '../../music/instrument'
+import { onZonesChange } from '../../music/zones'
 import { decode, ledBytes } from '../dj/map'
 import { resyncLeds } from '../dj/engine'
 import { getSynth, setHold, setOctave, setPitchBend } from '../synth-history/engine'
@@ -235,13 +236,15 @@ export function toggleControllerMode() {
   if (target === 'surface') setRoleOn(true)
 }
 
+const retopo = () => { queueMicrotask(() => { const t = currentTopology(); if (t.id !== topo.id) { topo = t; for (const k of Object.keys(pick)) delete pick[k]; glide.clear(); ledsDark(); refreshView() } }) }
 function init() {
   hot.off?.()
   const offs = [
     onSurfaceMessage((data) => { const a = decode(data); if (!a || a.fine || a.id === 'jogtouch') return; surfaceInput(a.deck ? `${a.id}.${a.deck}` : a.id, a.value) }),
     onRoleChange((_n, role) => { if (role === 'surface') setRoleOn(true); else if (isController(role) || role === 'off' || role === 'piano') setRoleOn(false) }),
     useDevices.subscribe((st) => { if (st.devices.some((d) => d.connected && d.role === 'surface')) { if (!get().roleOn) setRoleOn(true) } }),
-    onInstrumentChange(() => { queueMicrotask(() => { const t = currentTopology(); if (t.id !== topo.id) { topo = t; for (const k of Object.keys(pick)) delete pick[k]; glide.clear(); ledsDark(); refreshView() } }) }),
+    onInstrumentChange(retopo),
+    onZonesChange(retopo), // split/layer: the focused zone's instrument is what the knobs drive
     onEmuSet(() => schedView()),
     getSynth().onParams?.(() => schedView()) ?? (() => {}),
     onProfileChange(() => { saved = pload<Saved>(KEY, {}); for (const k of Object.keys(pick)) delete pick[k]; refreshView() }),

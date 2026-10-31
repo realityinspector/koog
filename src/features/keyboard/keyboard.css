@@ -40,3 +40,8 @@
 .kb-cap { position: absolute; top: 66%; left: 0; right: 0; text-align: center; font-size: 9px; font-weight: 700; letter-spacing: .02em; opacity: .5; pointer-events: none; color: #3a3560; }
 .kb-key.black .kb-cap { top: auto; bottom: 5px; color: #d9d3f2; opacity: .6; }
 .kb-key.held .kb-cap { opacity: .85; color: #1b1633; }
+
+/* keyboard zones (split / layer): a coloured band under the keys with a small label, and a tick on each key */
+.kb-zones { position: relative; margin-top: 4px; }
+.kb-zone { position: absolute; height: 12px; line-height: 12px; font-size: 9px; font-weight: 800; color: #1b1633; text-align: center; border-radius: 3px; opacity: .8; overflow: hidden; box-sizing: border-box; pointer-events: none; }
+.kb-key.zoned::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--zc); opacity: .75; border-radius: 0 0 5px 5px; pointer-events: none; }

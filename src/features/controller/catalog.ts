@@ -7,7 +7,8 @@ import { type LfoShape, type LfoTarget, type SynthParams, type Wave } from '../s
 import { EMULATORS, getEmu } from '../synth-history/emu'
 import type { Engine } from '../synth-history/emu/core'
 import type { Ctl, EmuSpec } from '../synth-history/emu/types'
-import { newestEngine, emitSeqChange } from '../synth-history/emu/bus'
+import { emitSeqChange } from '../synth-history/emu/bus'
+import { controlEngine } from '../../music/zones'
 import type { Voice303 } from '../synth-history/emu/tb303'
 
 // ---------- the physical (logical-surface) controls, as the calibrated DJ map names them ----------
@@ -118,7 +119,7 @@ const koogParams = (): Param[] => [
 
 // ---------- emulators: params come straight from the EmuSpec controls ----------
 const pcache = new Map<string, number>()
-const eng = (spec: EmuSpec): Engine | null => { const e = newestEngine(); return e && e.spec.id === spec.id ? e : null }
+const eng = (spec: EmuSpec): Engine | null => { const e = controlEngine(); return e && e.spec.id === spec.id ? e : null }
 const quant = (c: Ctl, v: number) => { let q = c.step ? Math.round(v / c.step) * c.step : v; q = cl(q, c.min, c.max); return Number(q.toFixed(4)) }
 function ctlScale(c: Ctl): Scale { return c.min > 0 && c.max / c.min > 20 ? log(c.min, c.max) : lin(c.min, c.max) }
 const fmtVal = (c: Ctl, v: number) => {
@@ -247,7 +248,7 @@ function emuTopology(spec: EmuSpec): Topology {
 
 /** the topology for the instrument that is playing now: an open emulator (or the picked sound), else the Koog synth */
 export function currentTopology(): Topology {
-  const e = newestEngine()
+  const e = controlEngine() // the focused keyboard zone when split/layered, else the newest engine
   return e ? emuTopology(getEmu(e.spec.id) ?? EMULATORS[0]) : KOOG
 }
 export const topologyFor = (id: string): Topology => (id === 'koog' ? KOOG : emuTopology(getEmu(id) ?? EMULATORS[0]))
