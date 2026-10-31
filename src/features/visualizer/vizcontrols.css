@@ -10,7 +10,7 @@
 .viz .viz-bar button.vb-chip.vb-icon { padding: 0; font-size: 17px; }
 .viz .viz-bar button.vb-chip:focus-visible, .vb-theme:focus-visible, .vb-tog:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .vb-style { position: relative; }
-.vb-pop { position: absolute; bottom: calc(100% + 8px); right: 0; width: 230px; padding: 10px; border-radius: 14px; z-index: 9;
+.vb-pop { position: absolute; bottom: calc(100% + 8px); right: 0; width: 230px; padding: 10px; border-radius: 14px; z-index: var(--z-pop, 26);
   background: rgba(14, 9, 34, .94); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.5); animation: vb-in .15s ease-out; }
 @keyframes vb-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
 @media (prefers-reduced-motion: reduce) { .vb-pop { animation: none } }

@@ -4,7 +4,7 @@
 .sh-toggle.on { box-shadow: inset 0 3px 6px rgba(0, 0, 0, .6); border-color: var(--gold); background: linear-gradient(180deg, #3a3160, #231f40); }
 @media (max-width: 1100px) { .sh-toggle-t { display: none; } .sh-toggle { padding: 4px 10px; } }
 
-.sh-overlay { position: absolute; left: 0; right: 0; bottom: 0; height: var(--sheet-h); z-index: 25; pointer-events: none; overflow: hidden;
+.sh-overlay { position: absolute; left: 0; right: 0; bottom: 0; height: var(--sheet-h); z-index: var(--z-dock-sheet, 12); pointer-events: none; overflow: hidden;
   --ink: #2a2236; --sh-hit: #12994a; --sh-miss: #d6342f; --sh-paper: #f7efdc;
   background: linear-gradient(180deg, #fbf5e6, #f1e6c9); border-top: 2px solid rgba(60, 40, 20, .35); box-shadow: 0 -6px 18px rgba(0, 0, 0, .35); color: var(--ink); }
 .sh-svg { display: block; width: 100%; height: 100%; color: var(--ink); }
@@ -36,3 +36,8 @@
 .sh-lv + .sh-lv { border-left: 1px solid rgba(255, 255, 255, .18); }
 .sh-lv.on { background: #ffd76c; }
 .sh-lv:hover:not(.on) { background: rgba(255, 255, 255, .18); }
+
+/* the title pill used to sit on the chord symbols and notes: it stays small and faint until the strip is hovered or focused */
+.sh-overlay .sh-pill { max-width: 22vw; opacity: .3; transition: opacity .2s; }
+.sh-overlay:hover .sh-pill, .sh-overlay:focus-within .sh-pill { opacity: 1; max-width: 40vw; }
+@media (prefers-reduced-motion: reduce) { .sh-pill { transition: none !important; } }

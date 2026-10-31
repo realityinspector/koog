@@ -196,7 +196,7 @@ export function DuoDeck() {
         {v.anyPlaying && <i className="dj-chip-dot" aria-hidden />}
       </button>
       {open && (
-        <div className="dj-bar" role="group" aria-label="DJ decks">
+        <div className="dj-bar" tabIndex={-1} role="group" aria-label="DJ decks">
           {(v.needsTap || v.suspended) && <button type="button" className="dj-wake" onClick={() => void ensure()}>👆 Tap to wake the decks</button>}
           <DeckPanel deck="A" v={v.A} spinRef={(el) => { spin.current.A = el }} />
           <Middle v={v} />

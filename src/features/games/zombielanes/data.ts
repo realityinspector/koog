@@ -1,6 +1,6 @@
 // Zombie Lanes: levels, lessons, chords, save format. Pure data and helpers, no module-level state.
 import { PC_NAMES, pc } from '../../../music/theory'
-import { SONGS, type SongNote } from '../../songs/songs'
+import { SONGS, type Song, type SongNote } from '../../songs/songs'
 import type { Key } from '../../../music/theory'
 import { pload, psave } from '../../../profile/profile'
 
@@ -66,7 +66,7 @@ export function odeMelody(): number[] {
 
 /** Pieces the Zombie King can play. 'ode' stays the default; the rest are classical pieces from the song book. */
 export const BOSS_PIECE_IDS = ['ode', 'morning', 'moonlight', 'habanera', 'invention1', 'minuet', 'nachtmusik', 'king', 'turkish', 'elise', 'canon', 'toccata', 'beethoven5']
-export interface BossPiece { id: string; title: string; origin: string; melody: number[]; notes: SongNote[]; scoreIdx: number[]; key: Key; bpm: number }
+export interface BossPiece { id: string; title: string; origin: string; melody: number[]; notes: SongNote[]; scoreIdx: number[]; key: Key; bpm: number; beatsPerBar?: number; pickup?: number; beatUnit?: 4 | 8; style?: Song['style'] }
 export function bossPieces(): { id: string; title: string }[] {
   return BOSS_PIECE_IDS.map((id) => SONGS.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x).map((x) => ({ id: x.id, title: x.title.replace(/ \(.*\)$/, '') }))
 }
@@ -76,7 +76,7 @@ export function bossPiece(id: string): BossPiece {
   const melody: number[] = [], scoreIdx: number[] = []
   s.notes.forEach((n, i) => { if (n.note != null && melody.length < 32) { melody.push(n.note); scoreIdx.push(i) } })
   const last = scoreIdx.length ? scoreIdx[scoreIdx.length - 1] + 1 : s.notes.length
-  return { id: s.id, title: s.title, origin: s.origin, melody, notes: s.notes.slice(0, last), scoreIdx, key: s.key, bpm: s.bpm }
+  return { id: s.id, title: s.title, origin: s.origin, melody, notes: s.notes.slice(0, last), scoreIdx, key: s.key, bpm: s.bpm, beatsPerBar: s.beatsPerBar, pickup: s.pickup, beatUnit: s.beatUnit, style: s.style }
 }
 
 const SHARP = PC_NAMES

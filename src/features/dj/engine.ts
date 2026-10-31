@@ -172,7 +172,12 @@ if (import.meta.hot) (import.meta.hot.data as Hot).dj = S
 const { intent, queue, tempoMsb, ledState, padListeners, beatTimers, subs } = S
 
 const hasActivation = () => (typeof navigator !== 'undefined' && (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive) === true
-const masterLevel = () => MASTER_CAP * outputScale()
+// Mixer trim 0..1 (Pro/Boss mixer): scales the master under the cap, never above it. Shared via hot.data so an edit keeps it.
+const TRIM: { v: number } = (import.meta.hot?.data as { djTrim?: { v: number } } | undefined)?.djTrim ?? { v: 1 }
+if (import.meta.hot) (import.meta.hot.data as { djTrim?: { v: number } }).djTrim = TRIM
+const masterLevel = () => MASTER_CAP * outputScale() * TRIM.v
+export const getTrim = () => TRIM.v
+export function setTrim(v: number) { TRIM.v = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 1)); applyMaster() }
 
 // ---------- view / subscription ----------
 export const subscribe = (f: () => void) => { subs.add(f); return () => { subs.delete(f) } }

@@ -4,7 +4,7 @@
 // STABLE API: useDevices { devices }, setRole(id, role), onDjMessage(fn), sendToDj(bytes), guessRole(name).
 import { create } from 'zustand'
 
-export type DeviceRole = 'piano' | 'dj' | 'surface' | 'off'
+export type DeviceRole = 'piano' | 'dj' | 'surface' | 'loop' | 'off'
 export interface Device { id: string; name: string; role: DeviceRole; connected: boolean; hasOutput: boolean }
 export type DjListener = (data: Uint8Array, timeStamp: number, deviceId: string) => void
 
@@ -17,12 +17,13 @@ export const guessRole = (name: string): DeviceRole => (/mixtrack|numark|ddj|pio
 export const roleFor = (name: string): DeviceRole => loadRoles()[name] ?? guessRole(name)
 
 interface DevState { devices: Device[] }
-type Hot = { store?: ReturnType<typeof make>; dj?: Set<DjListener>; surf?: Set<DjListener>; roles?: Set<(name: string, role: DeviceRole) => void>; send?: { fn: ((b: number[]) => void) | null } }
+type Hot = { store?: ReturnType<typeof make>; dj?: Set<DjListener>; surf?: Set<DjListener>; loop?: Set<DjListener>; roles?: Set<(name: string, role: DeviceRole) => void>; send?: { fn: ((b: number[]) => void) | null } }
 const hot = (import.meta.hot?.data ?? {}) as Hot
 function make() { return create<DevState>()(() => ({ devices: [] })) }
 export const useDevices = hot.store ?? make()
 const djListeners: Set<DjListener> = hot.dj ?? new Set()
 const surfListeners: Set<DjListener> = hot.surf ?? new Set()
+const loopListeners: Set<DjListener> = hot.loop ?? new Set()
 const roleListeners: Set<(name: string, role: DeviceRole) => void> = hot.roles ?? new Set()
 const sender: { fn: ((b: number[]) => void) | null } = hot.send ?? { fn: null }
 
@@ -37,6 +38,9 @@ export function onRoleChange(fn: (name: string, role: DeviceRole) => void) { rol
 /** raw MIDI from any device whose role is 'surface' (a DJ controller used as knobs and faders for the synth; src/features/controller) */
 export function onSurfaceMessage(fn: DjListener) { surfListeners.add(fn); return () => { surfListeners.delete(fn) } }
 export function emitSurface(data: Uint8Array, t: number, id: string) { for (const f of [...surfListeners]) { try { f(data, t, id) } catch (e) { console.error('[surface]', e) } } }
+/** raw MIDI from any device whose role is 'loop' (the controller runs the Loop Station; src/features/loopstation) */
+export function onLoopMessage(fn: DjListener) { loopListeners.add(fn); return () => { loopListeners.delete(fn) } }
+export function emitLoop(data: Uint8Array, t: number, id: string) { for (const f of [...loopListeners]) { try { f(data, t, id) } catch (e) { console.error('[loop]', e) } } }
 /** raw MIDI from any device whose role is 'dj' */
 export function onDjMessage(fn: DjListener) { djListeners.add(fn); return () => { djListeners.delete(fn) } }
 /** connection.ts calls this for dj-role input messages */
@@ -50,6 +54,7 @@ if (import.meta.hot) {
   import.meta.hot.data.store = useDevices
   import.meta.hot.data.dj = djListeners
   import.meta.hot.data.surf = surfListeners
+  import.meta.hot.data.loop = loopListeners
   import.meta.hot.data.roles = roleListeners
   import.meta.hot.data.send = sender
   import.meta.hot.accept()

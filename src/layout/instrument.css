@@ -37,14 +37,13 @@
 .kg-display { position: absolute; inset: 7px; border-radius: 14px; overflow: hidden; background: #0b0b16; isolation: isolate; box-shadow: 0 0 0 1px rgba(255, 255, 255, .06), inset 0 0 40px rgba(0, 0, 0, .5); }
 .kg-display .viz:not(:fullscreen) { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; left: 0; transform: none; margin: 0; border-radius: 0; box-shadow: none; transition: filter .35s; }
 .kg-display[data-screen] .viz:not(:fullscreen) { filter: blur(7px) brightness(.45); }
-.kg-overlay { position: absolute; inset: 0; z-index: 6; pointer-events: none; transition: opacity .25s; }
+.kg-overlay { position: absolute; inset: 0; z-index: auto; pointer-events: none; transition: opacity .25s; } /* no z-index: its children join the display's stacking map */
 .kg-display[data-screen] .kg-overlay { opacity: 0; visibility: hidden; }
-.kg-glass { position: absolute; inset: 0; z-index: 30; pointer-events: none; border-radius: inherit; background: linear-gradient(112deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .02) 32%, transparent 32.2%), linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 18%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
+.kg-glass { position: absolute; inset: 0; z-index: var(--z-glass, 60); pointer-events: none; border-radius: inherit; background: linear-gradient(112deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .02) 32%, transparent 32.2%), linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 18%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); }
 .kg-display .viz-hint { left: 14px; bottom: 10px; }
-.kg-display .viz-bar { z-index: 7; }
 
 /* screens */
-.kg-screen { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; background: rgba(16, 12, 42, .78); backdrop-filter: blur(16px) saturate(1.2); border-radius: inherit; animation: kg-screen-in .25s ease-out; }
+.kg-screen { position: absolute; inset: 0; bottom: var(--stack-h, 0px); z-index: var(--z-screen, 30); display: flex; flex-direction: column; background: rgba(16, 12, 42, .78); backdrop-filter: blur(16px) saturate(1.2); border-radius: inherit; animation: kg-screen-in .25s ease-out; }
 .kg-screen[hidden] { display: none; }
 @keyframes kg-screen-in { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
 .kg-screen-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px 8px; border-bottom: 1px solid rgba(255, 255, 255, .09); }
@@ -115,11 +114,41 @@
 /* always-visible strip switches (sound, sheet music) */
 .kg-strip-mid { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .kg-strip-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-/* sheet music on: screens and games end above the sheet strip; the visualizer's controls move up */
-.kg-display { --sheet-h: 0px; }
-.kg-display[data-sheet] { --sheet-h: clamp(96px, 17vh, 140px); }
-.kg-display[data-sheet] .kg-screen { bottom: var(--sheet-h); }
-.kg-display[data-sheet] .viz .viz-bar { bottom: calc(var(--sheet-h) + 10px); }
+/* ================= The bottom stack: one layout system =================
+   Docks pile up from the bottom of .kg-display in a fixed order: SHEET (very bottom), then the DUO strip, then the Controller dock.
+   Each one publishes how much room it takes as a CSS var, and everything above it positions from the sum:
+     --sheet-h  sheet strip (this file, shrinks when compact)
+     --duo-h    DUO strip + its gap (stack.ts measures it; CSS fallback below)
+     --ctl-h    Controller dock + its gap (stack.ts measures it when open; CSS fallback below)
+     --stack-h  = sheet + duo + ctl   <- .viz-bar, .viz-hint, the Patch drawer and .kg-screen all read this
+   stack.ts also sets: data-compact on .kg-display (1 = short display with 2+ docks, 2 = still tight), --sr-bottom (bottom of the readouts),
+   --cap-top (where coach captions start), data-coop-slot (where the challenge card goes).
+   Compact (display under ~420px, 2+ docks): controller dock auto-slims (unless the player expanded it), DUO becomes one row, the sheet shrinks;
+   hover / focus / tap the slim DUO strip or controller bar to reveal it over the visuals. The visuals keep at least ~45% of the display.
+
+   Z-ORDER MAP inside .kg-display (low to high; it is an isolated stacking context, the tour and popups outside sit above all of it):
+     0   visualizer canvas        5  beat pulse edge glow (--z-pulse)
+     6   smart readouts (.sr)     7  coach captions (--z-caption)
+     8   viz-bar, viz-hint, DUO chip (--z-viz)
+     12  sheet strip   13 DUO strip   14 Controller dock (--z-dock-*)  (a peeked dock lifts to 18)
+     22  Patch drawer, challenge card (--z-drawer, --z-card)
+     26  popovers: style, key, band, DJ menu (--z-pop; an .sr with a popover open lifts to 26)
+     30  game / mode screens (--z-screen) -- they end above the docks via bottom: var(--stack-h)
+     34  Controller dock while a screen is open (--z-dock-screen)
+     40  DJ panels (calibrate / soundcheck)   60  glass sheen (--z-glass)
+   Outside the display: strip 40, idea popover 60, devices popover 60, tour 89-91, celebrations 9998+. */
+.kg-display { --sheet-h: 0px; --duo-h: 0px; --ctl-h: 0px; --stack-h: calc(var(--sheet-h) + var(--duo-h) + var(--ctl-h)); --sr-bottom: 100px; --cap-top: 112px; }
+.kg-display[data-sheet] { --sheet-h: clamp(92px, 15vh, 128px); }
+.kg-display[data-duo-open] { --duo-h: 138px; }
+.kg-display[data-duo-open][data-screen] { --duo-h: 0px; } /* the strip lives in PLAY only */
+.kg-display[data-surface='open'] { --ctl-h: 208px; } .kg-display[data-surface='min'] { --ctl-h: 52px; }
+/* compact: short display, 2+ docks */
+.kg-display[data-compact][data-sheet] { --sheet-h: 84px; }
+.kg-display[data-compact='2'][data-sheet] { --sheet-h: 70px; }
+.kg-display[data-compact][data-duo-open]:not([data-screen]) { --duo-h: 64px; }
+.kg-display .viz .viz-bar, .kg-display .viz .viz-hint { bottom: calc(var(--stack-h) + 10px); }
+.kg-display .peek-lift:hover, .kg-display .peek-lift:focus-within { z-index: 18; }
+.sr:has(.kp, .sb-pop) { z-index: var(--z-pop, 26); }
 /* a running game brings its own Back/Menu buttons: drop the screen header so the game gets the height */
 .kg-screen:has(.gm-stage) .kg-screen-head { display: none; }
-.kg-display[data-sheet] { --sheet-h: clamp(92px, 15vh, 128px); }
+@media (prefers-reduced-motion: reduce) { .kg-overlay { transition: none; } .kg-screen { animation: none; } }

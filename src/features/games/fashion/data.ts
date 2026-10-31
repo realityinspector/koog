@@ -345,6 +345,8 @@ export interface RunStats {
   inKey: number; allNotes: number
   homeFinish: boolean
   booms: number; fizzles: number; cadences: number; motifs: number
+  /** left-hand chord tones played on the chord (Easy/Full): a small STYLE bonus */
+  lhOn?: number
 }
 export const newStats = (total: number): RunStats => ({ total, hits: 0, wrong: 0, rhythmOn: 0, rhythmN: 0, inKey: 0, allNotes: 0, homeFinish: false, booms: 0, fizzles: 0, cadences: 0, motifs: 0 })
 
@@ -359,7 +361,7 @@ export interface Scores { style: number; rhythm: number; harmony: number; era: n
 export function computeScores(l: Look, st: RunStats, key: Key): Scores {
   const era = eraScore(l)
   const pal = palMatch(l.pal, key)
-  const style = Math.min(1, 0.55 * era + 0.45 * pal + Math.min(0.1, st.cadences * 0.04 + st.motifs * 0.03))
+  const style = Math.min(1, 0.55 * era + 0.45 * pal + Math.min(0.1, st.cadences * 0.04 + st.motifs * 0.03) + Math.min(0.08, (st.lhOn ?? 0) * 0.01))
   const rhythm = st.rhythmN > 0 ? st.rhythmOn / st.rhythmN : 0.6
   const harmony = st.allNotes > 0 ? st.inKey / st.allNotes : 0.6
   return { style, rhythm, harmony, era, pal }

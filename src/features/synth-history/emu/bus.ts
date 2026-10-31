@@ -4,10 +4,16 @@
 import type { Engine } from './core'
 
 type SetFn = (e: Engine, key: string, val: number) => void
-interface Bus { engines: Engine[]; sets: Set<SetFn>; seq: Set<() => void>; glow: { key: string; t: number }; glowFns: Set<() => void> }
+interface Bus { trim?: number; trimFns?: Set<() => void>; engines: Engine[]; sets: Set<SetFn>; seq: Set<() => void>; glow: { key: string; t: number }; glowFns: Set<() => void> }
 const hot = import.meta.hot?.data as { bus?: Bus } | undefined
 const B: Bus = hot?.bus ?? { engines: [], sets: new Set(), seq: new Set(), glow: { key: '', t: 0 }, glowFns: new Set() }
 
+B.trim ??= 1; B.trimFns ??= new Set()
+/** Mixer trim 0..1 for every emulator engine (multiplies the 0.15 cap x app volume; can only lower it) */
+export const getTrim = () => B.trim ?? 1
+export function setTrim(v: number) { B.trim = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 1)); for (const f of [...B.trimFns!]) f() }
+export const onTrim = (fn: () => void) => { B.trimFns!.add(fn); return () => { B.trimFns!.delete(fn) } }
+export const liveEngines = (): Engine[] => [...B.engines]
 export const registerEngine = (e: Engine) => { if (!B.engines.includes(e)) B.engines.push(e) }
 export const unregisterEngine = (e: Engine) => { B.engines = B.engines.filter((x) => x !== e) }
 /** the most recently created live engine (a panel opened later wins over the headless "sound" engine) */

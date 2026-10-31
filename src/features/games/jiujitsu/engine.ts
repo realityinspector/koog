@@ -4,6 +4,7 @@
 import { onJudge, type JudgeEvent, type NoteGrade } from '../../../music/judge'
 import { setGuide, clearGuide } from '../../../music/guide'
 import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
+import { GameLh } from '../../songs/gameLh'
 import { noteName } from '../../../music/theory'
 import { getSynth } from '../../synth-history/engine'
 import {
@@ -72,6 +73,9 @@ export class Game {
   // flow roll
   private songIx = 0
   private flowNotes: number[] = []
+  /** Easy/Full left-hand bonus for the flow roll; flowMap = score index of each sounding note */
+  private flowLh: GameLh | null = null
+  private flowMap: number[] = []
   private flowPos = 0
   private chain = 0
   private longest = 0
@@ -195,7 +199,10 @@ export class Game {
     this.cur = RUNG_POSE[0]; this.anim = null
     this.banner = `Flow roll: ${song.title}`
     this.tip = 'Play the melody smoothly and steadily. Every steady note chains a technique.'
-    setScore({ owner: 'jiujitsu', title: song.title, notes: shown, key: song.key, bpm: song.bpm })
+    this.flowMap = []; shown.forEach((n, i) => { if (n.note != null) this.flowMap.push(i) })
+    const sc = { owner: 'jiujitsu', title: song.title, notes: shown, key: song.key, bpm: song.bpm, beatsPerBar: song.beatsPerBar ?? 4, pickup: song.pickup, beatUnit: song.beatUnit, style: song.style, harmony: song.harmony }
+    this.flowLh = new GameLh(sc)
+    setScore(sc)
     this.flowGuide()
     this.emit()
   }
@@ -440,6 +447,14 @@ export class Game {
 
   private flowNote(g: NoteGrade) {
     const want = this.flowNotes[this.flowPos]
+    // Easy/Full: a low chord tone is left-hand play. In the flow roll it extends the chain; it never breaks it.
+    if (g.note !== want && g.note < want && this.flowLh?.press(g.note, this.flowMap[this.flowPos] ?? -1)) {
+      this.chain++
+      this.longest = Math.max(this.longest, this.chain)
+      this.pop('Harmony +chain', 'k', '#8fd4ff', 0.9)
+      this.emit()
+      return
+    }
     if (g.note !== want) {
       this.chain = 0
       this.pop('Find the note', 'k', '#ffb0a0', 0.7)

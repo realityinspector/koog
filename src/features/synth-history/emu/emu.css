@@ -122,3 +122,177 @@
 .emu-pick{flex-direction:row;align-items:center;gap:4px}.emu-pick b{max-width:52px}
 .skin-theremin{--pl:#3a2c18}.skin-juno{--pl:#2a2a33}.skin-303{--pl:#44474d}.skin-mellotron{--pl:#2e2216}
 .skin-theremin .emu-back,.skin-juno .emu-back,.skin-303 .emu-back{color:#f4f0e6}
+
+/* ===== graphics round 1: shaded knobs, scope, faceplate character ===== */
+.emu-knob{background:none;box-shadow:none;transform:none;width:42px;height:42px;border-radius:50%}
+.emu-knob svg{width:100%;height:100%;display:block;overflow:visible;pointer-events:none}
+.emu-knob .trk{fill:none;stroke:rgba(255,255,255,.18);stroke-width:2.6;stroke-linecap:round}
+.skin-theremin .emu-knob .trk,.skin-hammond .emu-knob .trk,.skin-mellotron .emu-knob .trk,.skin-303 .emu-knob .trk,.skin-juno .emu-knob .trk{stroke:rgba(0,0,0,.25)}
+.emu-knob .val{fill:none;stroke:var(--ac);stroke-width:2.8;stroke-linecap:round;filter:drop-shadow(0 0 2px var(--ac))}
+.emu-knob .cap{fill:var(--kn);stroke:rgba(0,0,0,.55);stroke-width:1.2;filter:drop-shadow(0 2px 2px #000a)}
+.emu-knob .shade{fill:none;stroke:rgba(255,255,255,.28);stroke-width:2;stroke-dasharray:22 70;transform:rotate(-125deg);transform-origin:22px 22px}
+.emu-knob .ptr{fill:#fff;stroke:rgba(0,0,0,.4);stroke-width:.5}
+.skin-moog .emu-knob .ptr,.skin-theremin .emu-knob .ptr,.skin-hammond .emu-knob .ptr{fill:#111}
+.skin-hammond .emu-knob .ptr,.skin-mellotron .emu-knob .ptr{fill:#efe4c8}.skin-theremin .emu-knob .ptr{fill:#f5e9c8}
+.skin-arp .emu-knob{outline:0}.skin-arp .emu-knob .cap{stroke:#ff7a1a;stroke-width:2}
+.emu-knob:focus-visible{outline:3px solid var(--cyan,#4ad0ff);outline-offset:2px}
+.emu-ctl.glow .emu-knob .cap{stroke:#fff;stroke-width:2.5;filter:drop-shadow(0 0 8px var(--ac))}
+.emu-ctl.glow b{color:var(--ac)}
+.emu-ctl b{text-shadow:0 1px 0 #0006}
+.emu-scope{width:132px;height:36px;border-radius:6px;background:radial-gradient(#06210f,#021008);border:1px solid #fff3;box-shadow:inset 0 0 10px #000,0 0 6px #0006;--scope:#7fffc0;flex:0 0 auto}
+.emu-plate-main{display:flex;gap:14px;align-items:flex-start}
+.emu-plate-main .emu-groups{flex:1 1 auto;min-width:0}
+.emu-keyleds{display:flex;gap:1px;height:8px;align-items:flex-end;margin-top:2px}
+.emu-keyleds i{flex:1;height:5px;border-radius:2px;background:rgba(255,255,255,.1)}
+.emu-keyleds i.blk{height:3px}
+.emu-keyleds i.on{height:8px;background:var(--ac);box-shadow:0 0 6px var(--ac)}
+
+/* wood end-cheeks with grain and brushed-metal plates */
+.skin-moog,.skin-prophet,.skin-ondes,.skin-theremin,.skin-hammond,.skin-mellotron,.skin-juno,.skin-arp,.skin-303,.skin-dx{
+ --wood:repeating-linear-gradient(0deg,#0002 0 1px,transparent 1px 5px),repeating-linear-gradient(0deg,#fff1 0 2px,transparent 2px 11px),linear-gradient(90deg,var(--cheek2),var(--cheek) 60%,var(--cheek2))}
+.skin-moog,.skin-prophet,.skin-ondes,.skin-theremin,.skin-hammond,.skin-mellotron{
+ background:var(--wood) left/16px 100% no-repeat,var(--wood) right/16px 100% no-repeat,radial-gradient(120% 90% at 50% 0,#fff1,transparent 60%),var(--pl);box-shadow:inset 0 0 0 1px #0008}
+.skin-moog .emu-plate,.skin-prophet .emu-plate{background:repeating-linear-gradient(90deg,#fff0 0 2px,#fff1 2px 3px),linear-gradient(#26211b,#17130f)}
+.skin-303 .emu-plate,.skin-juno .emu-plate{background:repeating-linear-gradient(90deg,#fff0 0 2px,#fff4 2px 3px),linear-gradient(#cfd2d6,#a9adb3);border-color:#0005;box-shadow:inset 0 1px 0 #fff8,inset 0 -3px 8px #0004}
+.skin-303 .emu-plate{border-top:6px solid #d94a1a}
+.skin-juno .emu-plate::before{content:"";display:block;height:6px;margin:-2px 0 2px;border-radius:3px;background:linear-gradient(90deg,#e0452b 0 25%,#f2992e 25% 50%,#3d9b6a 50% 75%,#2d6fb8 75%)}
+.skin-juno .emu-group h4,.skin-303 .emu-group h4{color:#7a2a12}
+.skin-juno .emu-group{border-left-color:#0004}
+.skin-arp .emu-plate{background:repeating-linear-gradient(0deg,#fff0 0 14px,#ff7a1a22 14px 15px),#0c0c0c;border-color:#ff7a1a66}
+.skin-arp .emu-group h4{color:#ff9a4a}
+.skin-dx .emu-plate{background:linear-gradient(#1b1e24,#101216);border-color:#3fe0c555}
+.skin-dx .emu-knob .cap{fill:#3a3f48}
+.skin-dx .emu-pick button{background:linear-gradient(#3a3f48,#23262c);border-color:#0008;box-shadow:inset 0 1px 0 #fff3,0 2px 3px #000a;border-radius:4px}
+.skin-dx .emu-pick button.on{background:linear-gradient(#5ff0d8,#2bb8a2);color:#042}
+.skin-prophet .emu-pick button,.skin-juno .emu-pick button,.skin-ondes .emu-pick button{box-shadow:inset 0 1px 0 #fff3,0 2px 3px #0008}
+.skin-prophet .emu-pick button.on,.skin-juno .emu-pick button.on,.skin-moog .emu-pick button.on{box-shadow:0 0 10px var(--ac),inset 0 0 6px #fff6}
+.skin-moog .emu-pick button{background:linear-gradient(#3a342c,#241f19);border-color:#0008}
+.skin-moog .emu-pick button.on{background:#ffb04a;color:#111}
+.skin-hammond .emu-plate{background:linear-gradient(#e8dcbc,#d4c59f);border:3px solid #5a3414;box-shadow:inset 0 0 0 2px #c9a86a,inset 0 4px 12px #0004}
+.skin-mellotron .emu-plate{background:linear-gradient(#cdbd96,#b9a97f);border:3px solid #3a2a18;box-shadow:inset 0 3px 10px #0005}
+.skin-theremin .emu-plate{background:linear-gradient(#efe6cc,#d9ccaa);border:3px solid #7a5a20}
+.skin-ondes .emu-plate{background:linear-gradient(#4a2e1a,#33200f);border:3px solid #b8923a}
+
+/* Hammond drawbars: coloured caps, track housing */
+.emu-vrange{width:26px}
+.skin-hammond .emu-vrange{accent-color:currentColor;background:none}
+.bar-0,.bar-1{color:#a5622a}.bar-2,.bar-3,.bar-6,.bar-7{color:#fafafa}.bar-4,.bar-5,.bar-8{color:#222}
+.skin-hammond .emu-bar{background:linear-gradient(90deg,#0003,#0001 50%,#0003);border-radius:4px;padding:3px 3px 1px;color:inherit}
+.skin-hammond .emu-bar.bar-0,.skin-hammond .emu-bar.bar-1{--ac:#a5622a}
+.skin-hammond .emu-bar b,.skin-hammond .emu-bar small{color:#2a1a0a}
+.skin-hammond .emu-vrange::-webkit-slider-thumb{border:1px solid #000;box-shadow:0 1px 3px #0008}
+.skin-hammond .emu-bar.bar-2 .emu-vrange,.skin-hammond .emu-bar.bar-3 .emu-vrange,.skin-hammond .emu-bar.bar-6 .emu-vrange,.skin-hammond .emu-bar.bar-7 .emu-vrange{accent-color:#fafafa;filter:drop-shadow(0 0 1px #000)}
+
+/* rotary speaker */
+.emu-rotary{flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:700;color:#2a1a0a}
+.emu-rotary .cab{position:relative;width:88px;height:84px;border-radius:8px;border:3px solid #5a3414;background:repeating-linear-gradient(90deg,#3a220f 0 3px,#4a2c14 3px 6px);box-shadow:inset 0 0 10px #000a;display:flex;flex-direction:column;align-items:center;justify-content:space-around;padding:4px}
+.emu-rotary .horn,.emu-rotary .drum{position:relative;width:60px;height:26px;border-radius:50%;background:radial-gradient(#111,#000);box-shadow:0 0 0 2px #9a7a3a}
+.emu-rotary .horn i,.emu-rotary .drum i{position:absolute;top:50%;left:50%;height:5px;border-radius:3px;margin-top:-2.5px;background:linear-gradient(90deg,#d9b25a,#8a6a26)}
+.emu-rotary .horn i{width:46px;margin-left:-23px}.emu-rotary .horn i+i{transform:rotate(90deg)}
+.emu-rotary .drum i{width:34px;margin-left:-17px;background:linear-gradient(90deg,#c0a060,#6a4a1a)}.emu-rotary .drum i+i{transform:rotate(90deg)}
+.emu-rotary .horn,.emu-rotary .drum{overflow:hidden}
+.emu-rotary .horn i,.emu-rotary .drum i{animation:emu-spin 3s linear infinite;animation-play-state:paused}
+.emu-rotary .horn i+i,.emu-rotary .drum i+i{animation-name:emu-spin2}
+.emu-rotary .drum i{animation-direction:reverse;animation-duration:4s}
+.emu-rotary.sp1 i{animation-play-state:running}
+.emu-rotary.sp2 .horn i,.emu-rotary.sp2 .drum i{animation-play-state:running;animation-duration:.7s}
+.emu-rotary.sp2 .drum i{animation-duration:1s}
+@keyframes emu-spin{to{transform:rotate(360deg)}}
+@keyframes emu-spin2{from{transform:rotate(90deg)}to{transform:rotate(450deg)}}
+
+/* ARP patch bay */
+.emu-patch{flex:0 0 250px;width:250px;height:auto}
+.emu-patch .pb-bg{fill:#050505;stroke:#ff7a1a66}
+.emu-patch .jack{fill:#444;stroke:#999;stroke-width:2}.emu-patch .jack.src{stroke:#ff7a1a}
+.emu-patch .hole{fill:#000}
+.emu-patch .pb-t{fill:#ffb070;font-size:9px;font-weight:700;text-anchor:middle;letter-spacing:.06em}
+
+/* DX LCD */
+.emu-lcd{flex:0 0 190px;padding:6px 8px;border-radius:4px;background:#a9c79a;color:#17281a;font:700 12px ui-monospace,Menlo,monospace;box-shadow:inset 0 0 12px #3a5a3088,0 0 0 3px #0b0c0f,0 0 0 4px #3fe0c566;text-shadow:none}
+.emu-lcd .lcd-row{display:flex;justify-content:space-between}
+.emu-lcd .lcd-svg{width:100%;height:auto;margin:2px 0}
+.lcd-car{fill:#17281a}.lcd-mod{fill:none;stroke:#17281a;stroke-width:1.5}.lcd-n{font-size:9px;text-anchor:middle}.lcd-car+.lcd-n{fill:#a9c79a}.lcd-mod+.lcd-n{fill:#17281a}
+.lcd-l{stroke:#17281a;stroke-width:1.5}
+
+/* 303 step LED row */
+.emu-ledrow{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;padding:0 2px}
+.emu-ledrow i{height:7px;border-radius:4px;background:#3a0a04;border:1px solid #0006}
+.emu-ledrow i.beat{background:#5a1408}
+.emu-ledrow i.on{background:#ff4a1a;box-shadow:0 0 8px #ff4a1a,0 0 2px #fff8}
+
+/* Mellotron tape window */
+.emu-tapewin{display:flex;align-items:center;width:120px;height:28px;border-radius:6px;background:#0a0806;border:2px solid #2a2010;padding:0 6px;gap:0;box-shadow:inset 0 0 8px #000}
+.emu-tapewin .spool{width:20px;height:20px;border-radius:50%;background:conic-gradient(#d8c9a4 0 25%,#3a2a18 0 50%,#d8c9a4 0 75%,#3a2a18 0);border:2px solid #7a5a2a;flex:0 0 auto}
+.emu-tapewin .strip{flex:1;height:5px;background:repeating-linear-gradient(90deg,#6a3a1a 0 6px,#8a5a2a 6px 12px);background-size:12px 100%}
+.emu-tapewin.run .spool{animation:emu-spin 1.2s linear infinite}.emu-tapewin.run .spool.r{animation-direction:reverse}
+.emu-tapewin.run .strip{animation:emu-tape .4s linear infinite}
+@keyframes emu-tape{to{background-position:12px 0}}
+
+/* Theremin: antennas, glow follows the hand */
+.skin-theremin .emu-field{background:radial-gradient(60% 120% at 50% 100%,color-mix(in srgb,var(--ac) 35%,transparent),transparent),linear-gradient(0deg,#0006,#fff3);border:2px solid #7a5a20;box-shadow:inset 0 0 18px #0006}
+.skin-theremin .emu-field em{color:#2b2418}
+.skin-theremin .emu-fdot{background:#fff6c8;box-shadow:0 0 22px 8px var(--ac)}
+.skin-theremin .emu-plate{position:relative;margin-right:26px;margin-top:6px}
+.skin-theremin .emu-plate::before{content:"";position:absolute;right:-18px;top:-8px;width:5px;height:60%;border-radius:3px;background:linear-gradient(90deg,#999,#fff,#888);box-shadow:0 0 6px #fff6}
+.skin-theremin .emu-plate::after{content:"";position:absolute;left:-14px;top:30%;width:14px;height:46px;border:4px solid #bbb;border-right:0;border-radius:24px 0 0 24px;box-shadow:0 0 6px #fff4}
+.skin-theremin .emu-plate{margin-left:18px}
+
+/* fit */
+.emu-groups{align-items:flex-start}
+.emu-plate{flex-shrink:0}
+@media (prefers-reduced-motion:reduce){.emu-rotary i,.emu-tapewin *{animation:none!important}}
+
+/* ===== fit pass: one header row, compact plate, 303 in two columns ===== */
+.emu{gap:5px;padding:5px 20px 4px}
+.emu-top{flex-wrap:nowrap;gap:6px}
+.emu-back{min-height:36px;padding:4px 10px;font-size:13px;flex:0 0 auto}
+.emu-title{min-width:0;flex:1 1 120px;flex-wrap:wrap;gap:0 6px;line-height:1.1}
+.emu-title h3{font-size:14px}.emu-title span{font-size:12px}
+.emu-presets{flex:0 1 auto;flex-wrap:nowrap}
+.emu-presets button{min-height:34px;padding:2px 8px;font-size:12px;white-space:nowrap}
+.emu-tabbtn{min-height:34px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;cursor:pointer;color:#f4f0e6;background:#000a;border:1px solid #fff6;white-space:nowrap;flex:0 0 auto}
+.emu-tabbtn.on{background:var(--ac);color:#111}
+.emu-scope{width:96px;height:32px;flex:0 0 auto}
+.emu-pop{top:52px}
+.emu-plate{padding:5px 8px;gap:4px}
+.emu-knob{width:38px;height:38px}
+.emu-ctl{min-width:50px}.emu-ctl b{font-size:10.5px}.emu-ctl small{font-size:10.5px;line-height:1}
+.emu-pick button{min-height:30px;min-width:38px;padding:1px 7px;font-size:12px}
+.emu-pick b{max-width:46px}
+.emu-groups{gap:4px 10px}
+.emu-group-row{gap:4px}
+.emu-vrange{height:46px}
+.emu-legal{display:block;font-size:10px;opacity:.6;text-align:left;line-height:1.1;margin-top:1px}
+.emu-keyleds{margin-top:0}
+.emu-plate.p303{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:10px;align-items:start}
+.emu-plate.p303 .emu-groups{grid-column:1;grid-row:1 / span 2}
+.emu-plate.p303 .emu-seq{grid-column:2;grid-row:1 / span 2}
+.emu-plate.p303 .emu-keyleds,.emu-plate.p303 .emu-legal{grid-column:1 / -1}
+.emu-plate.p303 .emu-cell{height:9px}.emu-plate.p303 .emu-flag{height:15px}
+.emu-seq-top .emu-btn{padding:2px 8px;font-size:12px;min-height:30px}
+.emu-seq-top .emu-btn.big{min-height:32px}
+.emu-rotary{flex-basis:84px}.emu-rotary .cab{width:78px;height:60px;flex-direction:row;padding:2px}
+.emu-rotary .horn,.emu-rotary .drum{width:32px;height:32px}
+.emu-rotary .horn i{width:26px;margin-left:-13px}.emu-rotary .drum i{width:22px;margin-left:-11px}
+.emu-patch{flex:0 0 200px;width:200px}
+.emu-lcd{flex:0 0 170px;font-size:11px}
+.skin-theremin .emu-plate{margin-top:8px}
+.skin-hammond .emu-bar{padding:2px 2px 0}
+.emu-title{flex-wrap:nowrap;overflow:hidden;align-items:baseline}
+.emu-title h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.emu-title span{white-space:nowrap;flex:0 0 auto}
+.emu-plate.p303{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.emu-plate.p303 .emu-pick button{min-width:30px;padding:1px 5px}
+.emu-plate.p303 .emu-pick{flex-wrap:wrap}
+.emu-group{flex-direction:column;gap:1px;align-items:stretch;border-left:0;padding-left:0}
+.emu-group h4{writing-mode:horizontal-tb;transform:none;font-size:9.5px;letter-spacing:.14em;text-align:left;margin:0;padding:0 0 1px;border-bottom:1px solid color-mix(in srgb,var(--ac) 45%,transparent)}
+.emu-group:first-child h4{margin-left:0}
+.emu-pick.dense button{min-width:24px;min-height:28px;padding:1px 3px;font-size:11.5px}
+.emu-pick.dense div{flex-wrap:nowrap;gap:2px}
+.emu-pick.dense b{max-width:34px}
+.emu-plate.p303{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+.emu-seq-top{gap:4px}.emu-seq-top .emu-btn{padding:2px 6px;font-size:11.5px}
+.emu-presets button{background:#000a;color:#f4f0e6;border-color:#fff5}
+.emu-presets button.on{background:var(--ac);color:#111;border-color:transparent}
+.skin-303 .emu-presets button,.skin-juno .emu-presets button{background:#000a;color:#f4f0e6}
+.skin-303 .emu-presets button.on,.skin-juno .emu-presets button.on{color:#fff}

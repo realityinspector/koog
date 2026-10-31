@@ -1,5 +1,5 @@
 /* Controller Mode overlay (ctl-*) and the lit controls on the drawn controller / emulator faceplates. */
-.ctl-dock { pointer-events: auto; position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h, 0px) + var(--duo-h, 0px) + 8px); z-index: 30; box-sizing: border-box; padding: 6px 10px 8px; border-radius: 16px; color: #dcd8f7;
+.ctl-dock { pointer-events: auto; position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h, 0px) + var(--duo-h, 0px) + 8px); z-index: var(--z-dock-ctl, 14); box-sizing: border-box; padding: 6px 10px 8px; border-radius: 16px; color: #dcd8f7;
   background: linear-gradient(180deg, rgba(26, 20, 62, .93), rgba(12, 9, 30, .95)); border: 1px solid rgba(255, 216, 108, .35); backdrop-filter: blur(10px); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
 .ctl-head { display: flex; align-items: center; gap: 6px; min-height: 28px; font-size: 12px; }
 .ctl-head b { letter-spacing: .08em; color: #ffd86c; white-space: nowrap; }
@@ -29,14 +29,9 @@
 .ctl-p.on { background: #ffd86c; color: #1b1832; font-weight: 800; }
 .ctl-dock.min .ctl-body { display: none; }
 
-/* room for the dock: PLAY lifts its own buttons, SYNTH panels end above it */
-.kg-display { --ctl-h: 0px; }
-.kg-display[data-surface='open'] { --ctl-h: 200px; } .kg-display[data-surface='min'] { --ctl-h: 44px; }
-.kg-display.kg-display.kg-display[data-duo-open] { --duo-h: 130px; } /* the DUO strip gained the DJ / Synth switch row */
-.kg-display.kg-display.kg-display[data-screen][data-duo-open] { --duo-h: 0px; }
-.kg-display.kg-display[data-surface]:not([data-screen]) .viz .viz-bar, .kg-display.kg-display[data-surface]:not([data-screen]) .viz .viz-hint { bottom: calc(var(--sheet-h, 0px) + var(--duo-h, 0px) + var(--ctl-h) + 14px); }
-.kg-display.kg-display[data-surface]:not([data-screen]) .pd { bottom: calc(var(--sheet-h, 0px) + var(--duo-h, 0px) + var(--ctl-h) + 14px); } /* the Patch drawer scrolls above the dock */
-.kg-display.kg-display[data-surface][data-screen] .kg-screen { bottom: calc(var(--sheet-h, 0px) + var(--ctl-h) + 8px); }
+/* room for the dock: --ctl-h / --stack-h come from layout/instrument.css + layout/stack.ts */
+.kg-display[data-screen] .ctl-dock { z-index: var(--z-dock-screen, 34); }
+.ctl-dock:not(.min) { max-height: calc(100% - 16px); overflow: auto; scrollbar-width: thin; }
 
 /* the drawn controller in Controller Mode */
 .dj-pic .pic-c.unbound .pic-shape, .dj-pic .pic-c.unbound .pic-track { opacity: .35; }
@@ -54,5 +49,5 @@
 .emu-ctl.glow.emu-bar .emu-vrange, .emu-ctl.glow.emu-pick > div { border-radius: 8px; }
 
 .dj-surf.on { background: #ffd86c; color: #1b1832; }
-@media (max-width: 1100px) { .ctl-stage-box small { display: none; } .ctl-body { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); } .kg-display[data-surface='open'] { --ctl-h: 190px; } .ctl-learnbox { max-height: 60px; } }
+@media (max-width: 1100px) { .ctl-stage-box small { display: none; } .ctl-body { grid-template-columns: minmax(250px, 300px) minmax(0, 1fr); } .ctl-learnbox { max-height: 60px; } }
 @media (prefers-reduced-motion: reduce) { .ctl-dock, .ctl-dock * , .pic-c { transition: none !important; animation: none !important; } }

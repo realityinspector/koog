@@ -1,6 +1,6 @@
 // Level data: the five maps (generated from a tiny room recipe), the rail path the camera glides along,
 // and the piece each level plays (split into one phrase per demon). Pure functions, no state.
-import { SONGS, type SongNote } from '../../songs/songs'
+import { SONGS, type Song, type SongNote } from '../../songs/songs'
 import type { Key } from '../../../music/theory'
 import { PRELUDE_C, PRELUDE_PHASES, preludeFigure } from '../../../music/scores'
 import { CEIL_KINDS, FLOOR_KINDS, WALL_KINDS } from './types'
@@ -234,7 +234,7 @@ export interface Piece {
   /** boss only */
   bars: number
   /** the piece as sheet-music notes (rests included), the score index of each entry of `notes`, key and bar length */
-  score: SongNote[]; scoreIdx: number[]; key: Key; beatsPerBar: number
+  score: SongNote[]; scoreIdx: number[]; key: Key; beatsPerBar: number; pickup?: number; beatUnit?: 4 | 8; style?: Song['style']
 }
 
 export function buildPiece(spec: LevelSpec): Piece {
@@ -269,7 +269,7 @@ export function buildPiece(spec: LevelSpec): Piece {
     const parts = Math.max(1, Math.ceil(len / 7))
     for (let p = 0; p < parts; p++) chunks.push({ s: a + Math.floor((len * p) / parts), e: a + Math.floor((len * (p + 1)) / parts) })
   }
-  return { title: song.title, origin: song.origin, bpm: song.bpm, notes, gap, chunks, bars: 0, score, scoreIdx, key: song.key, beatsPerBar: 4 }
+  return { title: song.title, origin: song.origin, bpm: song.bpm, notes, gap, chunks, bars: 0, score, scoreIdx, key: song.key, beatsPerBar: song.beatsPerBar ?? 4, pickup: (song.pickup ?? 0) || undefined, beatUnit: song.beatUnit, style: song.style }
 }
 
 /** how many demons per room: spread evenly, extras to the later rooms */

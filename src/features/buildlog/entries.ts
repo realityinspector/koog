@@ -336,4 +336,11 @@ export const entries: Entry[] = [
     title: '🎛️ Controller Mode: the DJ board becomes a synthesizer',
     body: 'Flip the DJ controller to 🎛️ Synth and it turns into the knobs of a Moog-style synthesizer for the piano. The crossfader sweeps the FILTER (that classic "wow" sound), the knobs set resonance, envelope, glide and wobble, the faders shape each note (attack, decay, sustain, release), the jog wheel bends the pitch, and the pads pick the waveform. Open a synth from the timeline and the knobs re-map to THAT instrument: organ drawbars, a 303\'s sequencer steps, a DX7\'s FM ratios. The screen labels every knob, and 🎓 Learn lets you put any setting on any knob. Also: drum-only beats no longer force a key. Drums don\'t have a key, so play in any key you like.',
   },
+  {
+    id: 47,
+    time: 'Night',
+    stage: 'ship',
+    title: '🏢 Boss mode, 🔁 Loop station, split keyboards and fancier synth panels',
+    body: 'Dad mode is now BOSS MODE: a grown-up studio with no games or fireworks. It has a mixer for every sound engine, a loop station, a MIDI monitor, and saved "scenes" that remember a whole setup. The loop station records what you PLAY (notes and knob moves), not the sound itself, so you can change the instrument after you record. The piano can split: bass on the left hand, pads on the right. The historical synths got real faceplates: wood sides, glowing knobs, a spinning organ speaker and a mini oscilloscope. Sheet music gets new tricks too: Für Elise now reads in 3/8, the left hand earns bonus points in every game, and minor keys finally use their big "V" chord (E major in A minor). That\'s what makes them sound dramatic.',
+  },
 ]

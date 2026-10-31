@@ -109,6 +109,10 @@ function make() {
 
 export const useProfile = (import.meta.hot?.data.profile as ReturnType<typeof make> | undefined) ?? make()
 
+/** BOSS mode IS Dad mode: a lean studio for the grown-up. A view-time unlock only: never write kid progress because of it. */
+export const isPro = () => useProfile.getState().mode === 'dad'
+export const usePro = () => useProfile((s) => s.mode === 'dad')
+
 export const isGuest = (code = useProfile.getState().active) => code === GUEST
 
 /** Storage key for the active kid. */

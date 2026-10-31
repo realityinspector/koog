@@ -7,10 +7,14 @@ import { ControllerPic } from '../dj/Controller'
 import { cancelLearn, resetLayout, setPickupMode, startLearn, surfaceInput, toggleControllerMode, unassign, useSurface } from './surface'
 import { CLASS_OF, physName } from './catalog'
 import { useScreen } from '../../layout/screenStore'
+import { useStackCompact } from '../../layout/stack'
 
 // the full overlay opens in PLAY; over the SYNTH panels it starts as a slim bar so the faceplate (and its glowing knobs) stay visible
 const minKey = (screen: boolean) => 'koog.ctl.min.' + (screen ? 'screen' : 'play')
 const loadMin = (screen: boolean) => { try { const v = localStorage.getItem(minKey(screen)); return v == null ? screen : v === '1' } catch { return screen } }
+// the player's explicit "keep it expanded" choice: on a short display the dock otherwise slims itself (stack.ts)
+const expKey = (screen: boolean) => 'koog.ctl.exp.' + (screen ? 'screen' : 'play')
+const loadExp = (screen: boolean) => { try { return localStorage.getItem(expKey(screen)) === '1' } catch { return false } }
 const KIND_ICON: Record<string, string> = { cont: '🎚️', pick: '🔘', action: '🟦', bend: '🎡' }
 
 export function ControllerOverlay() {
@@ -18,7 +22,16 @@ export function ControllerOverlay() {
   const screenId = useScreen((x) => x.screen)
   const inScreen = screenId !== 'play'
   const [mins, setMins] = useState({ play: loadMin(false), screen: loadMin(true) })
-  const min = inScreen ? mins.screen : mins.play
+  const [exps, setExps] = useState({ play: loadExp(false), screen: loadExp(true) })
+  const compact = useStackCompact() > 0
+  const [hover, setHover] = useState(false)
+  const [pinned, setPinned] = useState(false)
+  const prefMin = inScreen ? mins.screen : mins.play
+  const exp = inScreen ? exps.screen : exps.play
+  const autoMin = compact && !exp && !prefMin
+  const min = prefMin || autoMin
+  const peek = autoMin && (hover || pinned)
+  const full = !min || peek // the body is showing
   const [learnOpen, setLearnOpen] = useState(false)
   const [, force] = useState(0)
   const root = useRef<HTMLDivElement>(null)
@@ -43,7 +56,12 @@ export function ControllerOverlay() {
   const ghost = useMemo(() => Object.fromEntries(Object.entries(s.locked).filter(([, l]) => l).map(([k]) => [k, s.ghost[k]]).filter(([, g]) => g != null)), [s.locked, s.ghost])
   const lockedRows = s.rows.filter((r) => s.locked[r.phys])
 
-  const toggleMin = () => { const n = !min; try { localStorage.setItem(minKey(inScreen), n ? '1' : '0') } catch { /* ignore */ } setMins((m) => ({ ...m, [inScreen ? 'screen' : 'play']: n })) }
+  const toggleMin = () => {
+    const n = !min // true = the player is slimming it, false = expanding it (remember that, even on a short display)
+    const k = inScreen ? 'screen' : 'play'
+    try { localStorage.setItem(minKey(inScreen), n ? '1' : '0'); localStorage.setItem(expKey(inScreen), n ? '0' : '1') } catch { /* ignore */ }
+    setMins((m) => ({ ...m, [k]: n })); setExps((m) => ({ ...m, [k]: !n })); setPinned(false)
+  }
   const statusLine = s.learn ? <span className="ctl-learn">🎓 {s.learnMsg}</span>
     : lockedRows.length ? <span className="ctl-wait">🧲 {physName(lockedRows[0].phys)} waits: move it to the dotted marker to pick up {lockedRows[0].short}{lockedRows.length > 1 ? ` (+${lockedRows.length - 1} more)` : ''}.</span>
     : s.last ? <span className="ctl-last">{physName(s.last.phys)} → {s.last.text}</span>
@@ -52,12 +70,13 @@ export function ControllerOverlay() {
   const learnParam = s.params.find((p) => p.id === s.learn)
 
   return (
-    <div className={'ctl-dock' + (min ? ' min' : '')} ref={root} role="region" aria-label="Controller Mode: the synth control surface">
+    <div className={'ctl-dock' + (full ? '' : ' min') + (autoMin ? ' peek-lift' : '')} ref={root}
+      onPointerEnter={(e) => { if (e.pointerType !== 'touch') setHover(true) }} onPointerLeave={() => setHover(false)} role="region" aria-label="Controller Mode: the synth control surface">
       <div className="ctl-head">
         <b>🎛️ Synth controller</b>
         <span className="ctl-inst" title={s.instName}>{s.instName}</span>
-        {min ? <span className="ctl-status ctl-slim" aria-live="polite">{statusLine}</span> : <span className="ctl-spacer" />}
-        {!min && <>
+        {!full ? <span className="ctl-status ctl-slim" aria-live="polite" onClick={() => autoMin && setPinned((p) => !p)}>{statusLine}</span> : <span className="ctl-spacer" />}
+        {full && <>
           <button type="button" className={'ctl-b' + (s.pickupMode === 'pickup' ? ' on' : '')} aria-pressed={s.pickupMode === 'pickup'}
             title="Pickup: a knob waits until it reaches the sound's current setting (no sudden jumps). Jump: it takes over right away."
             onClick={() => setPickupMode(s.pickupMode === 'pickup' ? 'jump' : 'pickup')}>{s.pickupMode === 'pickup' ? '🧲 Pickup' : '⚡ Jump'}</button>
@@ -68,7 +87,7 @@ export function ControllerOverlay() {
         <button type="button" className="ctl-b" onClick={() => toggleControllerMode()} title="Switch the controller back to the DJ decks">🎧 DJ</button>
         <button type="button" className="ctl-b" aria-label={min ? 'Show the controller' : 'Hide the controller'} aria-expanded={!min} onClick={toggleMin}>{min ? '▲' : '▼'}</button>
       </div>
-      {!min && (
+      {full && (
         <div className="ctl-body">
           <div className="ctl-pic">
             <ControllerPic ctl={ctl} labels={s.labels} ghost={ghost} hot={hot} interactive onSend={surfaceInput} noQ />

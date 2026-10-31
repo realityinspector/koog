@@ -35,13 +35,16 @@ export function candidateChords(key: Key): Chord[] {
   const sc = minor ? MINOR : MAJOR
   // major: I IV V vi, then ii iii.  minor: i iv v VI, then VII.
   const degrees = minor ? [0, 3, 4, 5, 6] : [0, 3, 4, 5, 1, 2]
-  return degrees.map((d, i) => {
+  const out = degrees.map((d, i) => {
     const root = (key.tonic + sc[d]) % 12
     const third = (sc[(d + 2) % 7] - sc[d] + 12) % 12
     const fifth = (sc[(d + 4) % 7] - sc[d] + 12) % 12
     const q: Quality = third === 3 && fifth === 6 ? 'dim' : third === 3 ? 'min' : 'maj'
     return makeChord(root, q, i < 4)
   })
+  // minor keys: also the harmonic-minor V (major, with the raised 7th), the chord real minor music cadences on
+  if (minor) out.push(makeChord((key.tonic + 7) % 12, 'maj', true))
+  return out
 }
 
 /** Turn a chord name from detectChord ("A minor", "G7", "C maj7") into a Chord, or null. */

@@ -23,6 +23,8 @@ import { StripControls } from './layout/StripControls'
 import { SheetOverlay } from './features/sheet/SheetOverlay'
 import { DuoDeck } from './features/dj/DjDeck'
 import { ControllerOverlay } from './features/controller/ControllerOverlay'
+import { ProStudio } from './features/pro/ProStudio'
+import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
 import './music/judge'
 
 export function App() {
@@ -40,11 +42,22 @@ export function App() {
     { id: 'synth', icon: '🎛️', label: 'SYNTH', title: 'Synth History', node: <SynthHistoryPanel /> },
     { id: 'log', icon: '🔧', label: 'LOG', title: 'Behind the scenes', node: <BuildLog /> },
   ]
+  // BOSS mode (= Dad mode): a lean studio. No visualizer, songs, games, challenges, build log, idea box, coach or tour.
   if (dad) {
-    modes.push({
-      id: 'dev', icon: '🛠️', label: 'DEV', title: 'Dev tools', dev: true,
-      node: (<><ProfileManager /><MidiStatus /><PreflightPanel /><TestRigPanel /><NoteReadout /><Scratchpad /></>),
-    })
+    const diag = (<><ProfileManager /><MidiStatus /><PreflightPanel /><TestRigPanel /><NoteReadout /><Scratchpad /></>)
+    const boss: ModeDef[] = [
+      { id: 'play', icon: '🎚️', label: 'STUDIO', title: 'Studio' },
+      { id: 'dj', icon: '🎧', label: 'DJ', title: 'DJ decks', node: <DjScreen /> },
+      { id: 'loops', icon: '🔁', label: 'LOOPS', title: 'Loop station', node: <LoopsScreen /> },
+      { id: 'synth', icon: '🎛️', label: 'SYNTHS', title: 'Emulator rack', node: <SynthsScreen /> },
+      { id: 'scenes', icon: '🎬', label: 'SCENES', title: 'Scenes', node: <ScenesScreen key={'sc-' + player} /> },
+    ]
+    return (
+      <>
+        <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<DuoDeck />} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
+        <WhoIsPlaying />
+      </>
+    )
   }
   return (
     <>

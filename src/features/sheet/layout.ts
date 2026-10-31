@@ -3,12 +3,14 @@
 import type { Key } from '../../music/theory'
 
 export type Shape =
-  | { k: 'e'; x: number; y: number; open: boolean; rx?: number }
+  | { k: 'e'; x: number; y: number; open: boolean; rx?: number; o?: number }
   | { k: 'l'; x1: number; y1: number; x2: number; y2: number; w: number }
   | { k: 'p'; d: string; w: number; fill?: boolean }
   | { k: 't'; x: number; y: number; s: string; size: number }
 export interface Group { i: number; x: number; shapes: Shape[]; rest: boolean; lh?: boolean }
-export interface LayoutInput { note: number | null; midis?: number[]; beats: number }
+export interface LayoutInput { note: number | null; midis?: number[]; beats: number; /** added harmony notes drawn small and light (not part of what is judged) */ cue?: number[] }
+/** unit: 4 = a beat is a quarter note (default), 8 = a beat is an eighth (3/8). trebleOnly: keep every note on the treble staff (ledger lines below middle C). */
+export interface LayoutOpts { unit?: 4 | 8; trebleOnly?: boolean }
 /** left-hand event for the two-voice layout (empty midis = rest) */
 export interface LhInput { start: number; beats: number; midis: number[] }
 export interface TwoVoice { lh: LhInput[]; marks: { start: number; name: string }[]; pickup?: number }
@@ -103,12 +105,14 @@ function restShapes(t: string, dotted: boolean, x: number, bass: boolean): Shape
 
 interface P1 {
   id: number; i: number; voice: 0 | 1; start: number; beats: number; t: string; dotted: boolean; rest: boolean; bass: boolean; x: number
-  heads: { m: number; d: number; acc: number; showAcc: boolean; bass: boolean }[]
+  heads: { m: number; d: number; acc: number; showAcc: boolean; bass: boolean; cue?: boolean }[]
 }
 
 const MIN_GAP = 2.7, SCALE = 2.3
 
-export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: number | undefined, two?: TwoVoice, pickupIn?: number): Layout {
+export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: number | undefined, two?: TwoVoice, pickupIn?: number, opt?: LayoutOpts): Layout {
+  const unit = opt?.unit ?? 4
+  const trebleOnly = !!opt?.trebleOnly && !two
   const f = keyFifths(key)
   const ka = keyAccs(f)
   const bpb = bpbIn && bpbIn > 0 ? bpbIn : 4
@@ -126,8 +130,8 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
     hx += 1.15
   }
   if (sig.length) hx += 0.4
-  header.push({ k: 't', x: hx + 0.6, y: 4.5, s: String(bpb), size: 2.85 }, { k: 't', x: hx + 0.6, y: 6.5, s: '4', size: 2.85 })
-  header.push({ k: 't', x: hx + 0.6, y: 10.5, s: String(bpb), size: 2.85 }, { k: 't', x: hx + 0.6, y: 12.5, s: '4', size: 2.85 })
+  header.push({ k: 't', x: hx + 0.6, y: 4.5, s: String(bpb), size: 2.85 }, { k: 't', x: hx + 0.6, y: 6.5, s: String(unit), size: 2.85 })
+  header.push({ k: 't', x: hx + 0.6, y: 10.5, s: String(bpb), size: 2.85 }, { k: 't', x: hx + 0.6, y: 12.5, s: String(unit), size: 2.85 })
   const headerW = hx + 2.2
 
   // pass 1: spell, accidentals, x positions
@@ -135,10 +139,10 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
   // so the two staves line up by beat position. One voice (no `two`) is the old single-line layout.
   const pickup = two?.pickup ?? pickupIn ?? 0
   const minGap = two ? 2.4 : MIN_GAP
-  interface Raw { i: number; voice: 0 | 1; start: number; beats: number; midis: number[] }
+  interface Raw { i: number; voice: 0 | 1; start: number; beats: number; midis: number[]; cue?: number[] }
   const raws: Raw[] = []
   let tb = 0
-  input.forEach((n, i) => { raws.push({ i, voice: 0, start: tb, beats: n.beats, midis: n.midis ?? (n.note != null ? [n.note] : []) }); tb += n.beats })
+  input.forEach((n, i) => { raws.push({ i, voice: 0, start: tb, beats: n.beats, midis: n.midis ?? (n.note != null ? [n.note] : []), cue: n.cue }); tb += n.beats })
   if (two) two.lh.forEach((e, k) => raws.push({ i: LH_BASE + k, voice: 1, start: e.start, beats: e.beats, midis: e.midis }))
   const key1 = (v: number) => Math.round(v * 1000)
   const onsets = [...new Set(raws.map((r) => key1(r.start)))].sort((a, b) => a - b)
@@ -148,7 +152,7 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
     let bar = -2
     let memo = new Map<number, number>()
     raws.filter((r) => r.voice === voice).sort((a, b) => a.start - b.start).forEach((n) => {
-      const [t, dotted] = quant(n.beats)
+      const [t, dotted] = quant(unit === 8 ? n.beats / 2 : n.beats)
       const nb = n.start < pickup - 1e-6 ? -1 : Math.floor((n.start - pickup) / bpb + 1e-6)
       if (nb !== bar) { bar = nb; memo = new Map() }
       const rest = n.midis.length === 0
@@ -156,7 +160,7 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
       for (const m of [...n.midis].sort((a, b) => a - b)) {
         const sp = spell(m, f, ka, leadPc)
         const cur = memo.has(sp.d) ? memo.get(sp.d)! : ka[sp.letter]
-        heads.push({ m, d: sp.d, acc: sp.acc, showAcc: sp.acc !== cur, bass: two ? voice === 1 : m < 60 })
+        heads.push({ m, d: sp.d, acc: sp.acc, showAcc: sp.acc !== cur, bass: two ? voice === 1 : trebleOnly ? false : m < 60, cue: n.cue?.includes(m) })
         memo.set(sp.d, sp.acc)
       }
       if (!rest && !two) lastBass = heads[0].bass && heads[heads.length - 1].bass
@@ -253,7 +257,7 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
       })
       hs.forEach((h, k) => {
         const y = yOf(h.d)
-        sh.push({ k: 'e', x: p.x + off[k], y, open: p.t === 'w' || p.t === 'h', rx: p.t === 'w' ? 0.75 : undefined })
+        sh.push(h.cue ? { k: 'e', x: p.x + off[k], y, open: p.t === 'w' || p.t === 'h', rx: 0.46, o: 0.5 } : { k: 'e', x: p.x + off[k], y, open: p.t === 'w' || p.t === 'h', rx: p.t === 'w' ? 0.75 : undefined })
         if (p.dotted) sh.push({ k: 'e', x: p.x + 1.15 + Math.max(0, ...off), y: h.d % 2 === (staffBass ? 18 : 30) % 2 ? y - 0.5 : y, open: false, rx: 0.2 })
       })
       if (hasStem) {
@@ -289,7 +293,7 @@ export function layoutSheet(input: LayoutInput[], key: Key | undefined, bpbIn: n
       }
     }
     groups.push({ i: p.i, x: p.x, shapes: sh, rest: false, lh: p.voice === 1 })
-    if (p.voice === 0) names.push({ k: 't', x: p.x, y: VH - 0.35, s: p.heads.map((h) => LET[spell(h.m, f, ka, leadPc).letter]).join(''), size: 1.25 })
+    if (p.voice === 0) names.push({ k: 't', x: p.x, y: VH - 0.35, s: p.heads.filter((h) => !h.cue).map((h) => LET[spell(h.m, f, ka, leadPc).letter]).join(''), size: 1.25 })
   }
   const marks: Shape[] = (two?.marks ?? []).map((m) => ({ k: 't', x: (xOn.get(key1(m.start)) ?? headerW) + 0.2, y: 1.75, s: m.name, size: 1.7 }) as Shape)
   return { groups, bars, xs, endX: endCx, fifths: f, bpb, header, headerW, names, marks }

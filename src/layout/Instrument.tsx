@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { StackLayout } from './StackLayout'
 import { Celebration } from '../features/celebrate/Celebration'
 import { useScreen } from './screenStore'
 import { useScore, useSheet } from '../music/scoreStore'
@@ -12,10 +13,12 @@ function loadMode(): string {
 }
 
 /** The Koog instrument: strip, display (hero), control rail of modes, keybed. Modes with a node open as screens over the display. */
-export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet }: {
+export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet, lean }: {
   strip: ReactNode; idea: ReactNode; display: ReactNode; overlay: ReactNode; keybed: ReactNode; modes: ModeDef[]
   /** sheet-music strip along the bottom of the display, above every screen and game */
   sheet?: ReactNode
+  /** Boss mode: no 💡 Idea button and no kid celebrations */
+  lean?: boolean
 }) {
   const [saved, setSaved] = useState(loadMode)
   // Saved mode may be gone (e.g. DEV after leaving Dad mode): fall back to PLAY.
@@ -59,11 +62,11 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
           <header className="kg-strip">
             <span className="kg-badge" aria-label="Koog smart synthesizer"><span className="kg-logo">Koog</span><span className="kg-sub">smart synth</span></span>
             <div className="kg-strip-mid">{strip}</div>
-            <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
+            {!lean && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
               <span aria-hidden>💡</span> <span className="kg-idea-t">Idea?</span>
-            </button>
+            </button>}
             {/* stays mounted when closed so a half-typed idea isn't lost */}
-            <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>
+            {!lean && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}
           </header>
 
           <div className="kg-bezel">
@@ -80,6 +83,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
                 </div>
               ))}
               {sheet}
+              <StackLayout />
               <div className="kg-glass" aria-hidden />
             </div>
           </div>
@@ -99,7 +103,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
         </div>
         <div className="kg-cheek kg-cheek-r" aria-hidden />
       </div>
-      <Celebration />
+      {!lean && <Celebration />}
     </div>
   )
 }

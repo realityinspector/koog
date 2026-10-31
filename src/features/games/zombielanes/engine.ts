@@ -6,6 +6,7 @@ import { onJudge, type JudgeEvent, type NoteGrade } from '../../../music/judge'
 import { setGuide, clearGuide } from '../../../music/guide'
 import { pc } from '../../../music/theory'
 import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
+import { GameLh } from '../../songs/gameLh'
 import { buildLayout, noteHue } from '../../keyboard/layout'
 import { Sprites, SKINS, EXTRAS, ZH, ZFEET, KH, KFEET, SIGN_Y, KSIGN_Y, CONFETTI_FRAMES } from './sprites'
 import { renderBackground, renderVignette, type Lane } from './background'
@@ -75,6 +76,9 @@ export class Game {
   // wave state
   private zombies: Zombie[] = []
   private boss: Boss | null = null
+  /** Easy/Full left-hand bonus (boss fight only, where the sheet is published) and the harmony shield it earns */
+  private lh: GameLh | null = null
+  private shield = false
   private spawned = 0
   private spawnLeft = 0
   private spawnTimer = 0
@@ -184,7 +188,9 @@ export class Game {
       const bp = bossPiece(this.save.boss)
       const melody = bp.melody
       this.boss = { scoreIdx: bp.scoreIdx, p: 0, idx: 0, max: melody.length, melody, flinch: 0, age: 0 }
-      setScore({ owner: 'zombielanes', title: bp.title, notes: bp.notes, key: bp.key, bpm: bp.bpm, beatsPerBar: 4 }, bp.scoreIdx[0] ?? 0)
+      const sc = { owner: 'zombielanes', title: bp.title, notes: bp.notes, key: bp.key, bpm: bp.bpm, beatsPerBar: bp.beatsPerBar ?? 4, pickup: bp.pickup, beatUnit: bp.beatUnit, style: bp.style }
+      this.lh = new GameLh(sc); this.shield = false
+      setScore(sc, bp.scoreIdx[0] ?? 0)
       this.spawnLeft = 0
     }
     this.emit()
@@ -306,6 +312,8 @@ export class Game {
 
     if (this.boss) {
       const b = this.boss
+      // Easy/Full: a low chord tone is left-hand play. It charges a harmony shield and never counts as a wrong melody note.
+      if (!this.matches(b.melody[b.idx], g.note) && g.note < b.melody[b.idx] && this.lh?.press(g.note, b.scoreIdx[b.idx] ?? -1)) { this.harmonyShield(); return }
       if (this.matches(b.melody[b.idx], g.note)) this.hitBoss(g)
       else { setScorePos(b.scoreIdx[b.idx] ?? 0, 'miss'); this.miss(g.note) }
       return
@@ -494,7 +502,15 @@ export class Game {
     this.zombies.splice(this.zombies.indexOf(z), 1)
     this.loseBrain(x)
   }
+  private harmonyShield() {
+    const c = this.bossCenter()
+    this.score += 50
+    if (!this.shield) this.pop('HARMONY SHIELD!', c.x, c.top - 30, '#8fd4ff', 24, 1.1)
+    this.shield = true
+    this.emit()
+  }
   private loseBrain(x: number) {
+    if (this.shield) { this.shield = false; this.pop('SHIELDED!', clamp(x, 70, this.w - 70), this.h - 70, '#8fd4ff', 30, 1.1); this.emit(); return }
     this.lives = Math.max(0, this.lives - 1)
     this.combo = 0
     this.pulse = Math.max(this.pulse, 0.95)
@@ -594,7 +610,7 @@ export class Game {
         b.age += dt; b.flinch = Math.max(0, b.flinch - dt * 4)
         if (!this.ending) {
           b.p += dt / (lv.travel * slow)
-          if (b.p >= 1) { this.boss = null; this.lives = 1; this.loseBrain(this.w / 2) }
+          if (b.p >= 1 && this.shield) { this.shield = false; b.p = 0.7; this.pop('SHIELDED!', this.w / 2, this.h - 90, '#8fd4ff', 30, 1.1) } else if (b.p >= 1) { this.boss = null; this.lives = 1; this.loseBrain(this.w / 2) }
         }
       } else if (!this.ending) {
         this.spawnTimer -= dt

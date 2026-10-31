@@ -3,7 +3,7 @@
 import { adsr, clamp, hz, vel01 } from './core'
 import type { EmuSpec } from './types'
 
-const RATIOS = [0.5, 1, 2, 3, 3.5, 4, 5, 7, 14]
+export const RATIOS = [0.5, 1, 2, 3, 3.5, 4, 5, 7, 14]
 const VOICES = 8
 
 interface V {

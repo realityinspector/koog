@@ -26,7 +26,7 @@ export function ProfileBar() {
       <span className="pf-mode">
         {mode === 'dad' ? (
           <>
-            <span className="pf-tag">🛠️ Dad mode: dev tools showing</span>
+            <span className="pf-tag">🛠️ Boss mode</span>
             <button onClick={() => setMode('kid')}>Back to Kid mode</button>
           </>
         ) : (

@@ -17,6 +17,8 @@ export interface Score {
   beatsPerBar?: number
   /** upbeat beats before the first full bar */
   pickup?: number
+  /** 4 (default) = a beat is a quarter note; 8 = a beat is an eighth (3/8) */
+  beatUnit?: 4 | 8
   /** left-hand pattern the arranger should prefer (Full level) */
   style?: ArrStyle
   /** real chords for the piece, if known (used instead of generated ones) */

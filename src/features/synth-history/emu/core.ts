@@ -1,7 +1,7 @@
 // Audio plumbing shared by every emulator: lazy AudioContext (only inside a user gesture), a master gain with the
 // 0.15 peak cap x the app volume/mute, a limiter, and a dev peak meter. One Engine per open panel.
 import { outputScale, useAudioSettings } from '../../../music/audioSettings'
-import { emitEmuSet, registerEngine, unregisterEngine } from './bus'
+import { emitEmuSet, getTrim, onTrim, registerEngine, unregisterEngine } from './bus'
 import type { EmuAudio, EmuSpec, Params, Voice } from './types'
 
 export const EMU_CAP = 0.15
@@ -21,6 +21,8 @@ export interface Engine {
   voice(): Voice | null
   ctx(): AudioContext | null
   peak(): number
+  /** copy the latest output waveform into out (read-only tap for the panel scope); false if no audio yet */
+  wave(out: Float32Array<ArrayBuffer>): boolean
   dispose(): void
 }
 
@@ -34,8 +36,10 @@ export function createEngine(spec: EmuSpec): Engine {
   let dead = false
   const held = new Set<number>()
   const buf = new Float32Array(1024)
-  const applyGain = () => { if (ctx && master) master.gain.setTargetAtTime(EMU_CAP * outputScale(), ctx.currentTime, 0.03) }
-  const unsub = useAudioSettings.subscribe(applyGain)
+  const applyGain = () => { if (ctx && master) master.gain.setTargetAtTime(EMU_CAP * outputScale() * getTrim(), ctx.currentTime, 0.03) }
+  const unsubS = useAudioSettings.subscribe(applyGain)
+  const unsubT = onTrim(applyGain)
+  const unsub = () => { unsubS(); unsubT() }
   const onBlur = () => eng.allOff()
   window.addEventListener('blur', onBlur)
 
@@ -77,6 +81,7 @@ export function createEngine(spec: EmuSpec): Engine {
       for (let i = 0; i < buf.length; i++) m = Math.max(m, Math.abs(buf[i]))
       return m
     },
+    wave(out) { if (!an) return false; an.getFloatTimeDomainData(out); return true },
     dispose() {
       dead = true
       unregisterEngine(eng)

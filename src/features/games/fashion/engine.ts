@@ -3,6 +3,7 @@
 import { onJudge, type JudgeEvent } from '../../../music/judge'
 import { useHarmonyStore } from '../../../music/harmonyStore'
 import { setGuide, clearGuide } from '../../../music/guide'
+import { GameLh } from '../../songs/gameLh'
 import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
 import { pc, noteName } from '../../../music/theory'
 import {
@@ -70,6 +71,7 @@ export class Game {
   private toast: Toast | null = null; private toastUntil = 0; private toastId = 0
   private faceUntil = 0; private face: Pose['face'] = 'happy'
   private styleBounce = -9
+  private lh: GameLh | null = null
   private run: Run | null = null
   private says: JudgeSay[] | null = null; private scores: Scores | null = null; private stars = 0; private saved = false; private newUnlock: string | null = null
   private prevKey: { tonic: number; scale: import('../../../music/theory').ScaleType } | null = null
@@ -210,7 +212,9 @@ export class Game {
     const hs = useHarmonyStore.getState()
     this.prevKey = { ...hs.key }
     hs.setKey(piece.song.key)
-    setScore({ owner: 'fashion', title: piece.title, notes: notes.map((n) => ({ note: n.note, beats: n.beats })), key: piece.song.key, bpm: piece.song.bpm }, idx)
+    const sc = { owner: 'fashion', title: piece.title, notes: notes.map((n) => ({ note: n.note, beats: n.beats })), key: piece.song.key, bpm: piece.song.bpm, beatsPerBar: piece.song.beatsPerBar ?? 4, pickup: piece.song.pickup, beatUnit: piece.song.beatUnit, style: piece.song.style, harmony: piece.song.harmony }
+    this.lh = new GameLh(sc)
+    setScore(sc, idx)
     this.updateGuide()
     this.hat.fly = false; this.ovation = 0
   }
@@ -260,8 +264,16 @@ export class Game {
     if (!r || r.ended || g.chordMember) return
     const exp = r.notes[r.idx]?.note
     if (exp == null) return
-    r.started = true
     const st = r.stats
+    // Easy/Full: a low chord tone is left-hand play. It adds a sparkle and a little STYLE, and never counts as a wrong note or touches rhythm.
+    if (pc(g.note) !== pc(exp) && g.note < exp && this.lh?.press(g.note, r.idx)) {
+      r.stats.lhOn = (r.stats.lhOn ?? 0) + 1
+      this.sparkleAroundModel('#ffe36e', 5)
+      if (r.stats.lhOn % 3 === 1) this.floatText('Style!', '#ffe36e')
+      this.emit()
+      return
+    }
+    r.started = true
     st.allNotes++
     if (g.kind !== 'spicy') st.inKey++
     const onBeat = g.rhythm == null || g.rhythm >= 0.6

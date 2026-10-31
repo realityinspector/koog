@@ -6,6 +6,7 @@ import { clearGuide, setGuide } from '../../../music/guide'
 import { clearScore, setScore, setScorePos } from '../../../music/scoreStore'
 import type { NoteResult } from '../../../music/scoreStore'
 import { pload, psave } from '../../../profile/profile'
+import { GameLh } from '../../songs/gameLh'
 import type { JudgeEvent, NoteGrade } from '../../../music/judge'
 import type { DemonKind } from './types'
 import { LEVELS, buildMap, buildPiece, pathAt, roomCounts } from './levels'
@@ -75,6 +76,9 @@ export class Game {
   lastBar = -1
   chordT = 0
   // player
+  /** Easy/Full left-hand bonus judge (null while the Prelude, which has its own chords, is the piece) */
+  private lh: GameLh | null = null
+  private lhPopAt = -9
   harmony = 100; armor = 0; streak = 0; jamT = 0; recoilT = 0
   face: FaceName = 'center'
   faceHurtT = 0; faceGrinT = 0; lookT = 1; look: FaceName = 'center'
@@ -138,9 +142,10 @@ export class Game {
     this.clearAll()
     this.introT = 3.4
     const pc0 = this.piece
-    setScore({ owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar,
-      // the Prelude's real chords (every bar is one chord), so Easy/Full show Bach's harmony instead of a guess
-      harmony: pc0.score.length && pc0.score.every((n) => n.beats === 0.25) ? PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) : undefined }, pc0.scoreIdx[0] ?? 0)
+    const harm = pc0.score.length && pc0.score.every((n) => n.beats === 0.25) ? PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) : undefined
+    const sc0 = { owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar, pickup: pc0.pickup, beatUnit: pc0.beatUnit, style: pc0.style, harmony: harm }
+    this.lh = harm ? null : new GameLh(sc0)
+    setScore(sc0, pc0.scoreIdx[0] ?? 0)
     this.emit()
   }
   retry() { this.start(this.levelIdx, this.diff) }
@@ -379,6 +384,12 @@ export class Game {
     // between rooms (the last demon is fading) the notes just wait for the next wave
     if (!this.isBoss && !this.target) return
     const ok = this.diff === 'story' ? pc(g.note) === pc(exp) : g.note === exp
+    // Easy/Full: a low chord tone is left-hand play, not a wrong melody note. It earns TEMPO armor and never costs the tune.
+    if (!ok && this.lh && g.note < exp && this.lh.press(g.note, this.piece.scoreIdx[this.ptr] ?? -1)) {
+      this.armor = Math.min(100, this.armor + 6)
+      if (this.clock - this.lhPopAt > 1.2) { this.lhPopAt = this.clock; this.addPop('LEFT HAND! +TEMPO', '#8fd4ff', false, undefined, 0.62, 0.3) }
+      return
+    }
     if (!ok) this.pend.push({ t: this.clock + 0.11, g, exp })
     else this.hit(g)
   }

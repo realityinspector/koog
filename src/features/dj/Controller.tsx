@@ -44,6 +44,8 @@ interface Props {
   ghost?: Record<string, number>
   hot?: Record<string, boolean>
   onSend?: (id: string, value: number) => void
+  /** the big word in the middle (default: SYNTH when labelled, else DJ) */
+  title?: string
 }
 function valueOf(id: string, ctl: Props['ctl'], v: ReturnType<typeof getView>): number {
   if (ctl[id]) return ctl[id].v
@@ -56,7 +58,7 @@ function valueOf(id: string, ctl: Props['ctl'], v: ReturnType<typeof getView>): 
   return 0
 }
 
-export function ControllerPic({ ctl, target, interactive, showTested, noQ, labels, ghost, hot: touchedIds, onSend }: Props) {
+export function ControllerPic({ ctl, target, interactive, showTested, noQ, labels, ghost, hot: touchedIds, onSend, title }: Props) {
   useSyncExternalStore(subscribe, getVersion)
   const view = getView()
   const svg = useRef<SVGSVGElement>(null)
@@ -89,7 +91,7 @@ export function ControllerPic({ ctl, target, interactive, showTested, noQ, label
       onPointerUp={() => { const dr = drag.current; if (dr && LAYOUT[dr.id].k !== 'vfader' && (LAYOUT[dr.id].k === 'btn' || LAYOUT[dr.id].k === 'pad')) send(dr.id, 0); drag.current = null }}
       onPointerLeave={() => { const dr = drag.current; if (dr && (LAYOUT[dr.id].k === 'btn' || LAYOUT[dr.id].k === 'pad')) send(dr.id, 0); drag.current = null }}>
       <rect x="4" y="4" width="632" height="282" rx="22" className="pic-body" />
-      <text x="320" y="196" className="pic-lbl big" textAnchor="middle">{labels ? 'SYNTH' : 'DJ'}</text>
+      <text x="320" y="196" className="pic-lbl big" textAnchor="middle">{title ?? (labels ? 'SYNTH' : 'DJ')}</text>
       {ids.map((id) => {
         if (id.startsWith('jogtouch')) return null
         const s = LAYOUT[id]

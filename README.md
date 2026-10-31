@@ -31,6 +31,7 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | **🎧 DUO (DJ + piano)** | Plug in a DJ controller (made for the Numark Mixtrack Go) and a piano at the same time. 🎛️ Devices gives each one a role. The DJ's decks set the key and the beat for the piano player, and good piano playing fires DJ effects back. 🎹 Sound swaps the piano's instrument (organ, Moog-style, FM electric piano, tape strings and more). |
 | **🎛️ Controller Mode** | Switch the DJ controller to 🎛️ Synth and it becomes the control surface for the piano. The crossfader controls the filter cutoff, and the knobs, faders, jogs and pads drive the Koog synth or the open emulator's own parameters. It has soft takeover, MIDI learn, and on-screen labels for every control. |
 | **🎼 Sheet levels** | Single notes, Easy chords (chord symbols and left-hand roots) or Full (an arranged left-hand part). SONGS grades the left hand too. |
+| **🏢 Boss mode** (Dad mode) | A lean studio for grown-ups, with the visualizer and the kid features off. The rail is STUDIO (master clock, mixer, instrument rack, routing, MIDI monitor, 8 scenes), DJ, LOOPS, SYNTHS and SCENES, plus a Stage performance view. Includes the keyboard split and layers and the 🔁 loop station: 8 layers of recorded notes and knob moves, controllable from the DJ controller, exportable as MIDI. |
 | **Kid / Dad mode** | Each kid signs in with a short code word. Dad mode (press and hold) adds a DEV screen with MIDI, pre-flight and test tools. |
 
 ## Quick start

@@ -17,9 +17,10 @@ function draw(s: Shape, k: number) {
       const rx = s.rx ?? 0.64
       const ry = rx === 0.64 ? 0.45 : rx * 0.7
       const rot = rx < 0.4 ? 0 : -20
+      const op = s.o
       return s.open
-        ? <ellipse key={k} cx={s.x} cy={s.y} rx={rx} ry={ry} transform={`rotate(${rot} ${s.x} ${s.y})`} fill="none" stroke="currentColor" strokeWidth={rx > 0.7 ? 0.24 : 0.2} />
-        : <ellipse key={k} cx={s.x} cy={s.y} rx={rx} ry={ry} transform={`rotate(${rot} ${s.x} ${s.y})`} fill="currentColor" />
+        ? <ellipse key={k} cx={s.x} cy={s.y} rx={rx} ry={ry} transform={`rotate(${rot} ${s.x} ${s.y})`} fill="none" stroke="currentColor" strokeWidth={rx > 0.7 ? 0.24 : 0.2} opacity={op} />
+        : <ellipse key={k} cx={s.x} cy={s.y} rx={rx} ry={ry} transform={`rotate(${rot} ${s.x} ${s.y})`} fill="currentColor" opacity={op} />
     }
     case 'l': return <line key={k} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke="currentColor" strokeWidth={s.w} />
     case 'p': return <path key={k} d={s.d} fill={s.fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={s.w} strokeLinecap="round" strokeLinejoin="round" />
@@ -132,11 +133,11 @@ export function SheetOverlay() {
   const level = useSheetLevel((s) => s.level)
   // The arrangement follows the sheet level: single = the tune, easy = + chord names and a root note, full = + a left-hand pattern.
   const arr = useMemo(() => (score && level !== 'single'
-    ? arrange({ notes: score.notes, key: score.key, beatsPerBar: score.beatsPerBar, pickup: score.pickup, title: score.title, style: score.style, harmony: score.harmony }, level)
+    ? arrange({ notes: score.notes, key: score.key, beatsPerBar: score.beatsPerBar, beatUnit: score.beatUnit, pickup: score.pickup, title: score.title, style: score.style, harmony: score.harmony }, level)
     : null), [score, level])
   const lay = useMemo(() => {
-    if (score && arr) return layoutSheet(arr.rh.map((n) => ({ note: n.note, midis: n.midis, beats: n.beats })), arr.key, arr.bpb, { lh: arr.lh, marks: arr.marks, pickup: arr.pickup })
-    if (score) return layoutSheet(score.notes.map((n) => ({ note: n.note, beats: n.beats })), score.key, score.beatsPerBar, undefined, score.pickup)
+    if (score && arr) return layoutSheet(arr.rh.map((n) => ({ note: n.note, midis: n.midis, cue: n.cue, beats: n.beats })), arr.key, arr.bpb, { lh: arr.lh, marks: arr.marks, pickup: arr.pickup }, undefined, { unit: arr.unit })
+    if (score) return layoutSheet(score.notes.map((n) => ({ note: n.note, beats: n.beats })), score.key, score.beatsPerBar, undefined, score.pickup, { unit: score.beatUnit, trebleOnly: true })
     return layoutSheet(groups.map((g) => ({ note: g.midis[0] ?? null, midis: g.midis, beats: g.beats })), undefined, 4)
   }, [score, groups, arr])
   // Only take space when there's something to read: a published piece, or free play on the PLAY screen.

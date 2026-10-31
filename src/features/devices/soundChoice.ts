@@ -47,6 +47,9 @@ function apply(id: string) {
   setActiveInstrument(cur.inst)
 }
 
+/** the headless emulator engine behind the picked sound (null for the Koog synth); Boss scenes read and restore its params */
+export const soundEngine = (): Engine | null => cur.e
+
 /** Pick a sound for the piano (saved for the active kid). */
 export function chooseSound(id: string) { psave(KEY, id); apply(id) }
 

@@ -19,11 +19,13 @@ export type ArrStyle = 'auto' | 'alberti' | 'broken' | 'oompah' | 'block'
 export interface HarmonyBar { start: number; beats: number; name: string; pcs: number[]; bass: number }
 export interface ArrInput {
   notes: SongNote[]; key?: Key; beatsPerBar?: number
+  /** 4 (default): a beat is a quarter note. 8: a beat is an eighth (3/8) */
+  beatUnit?: 4 | 8
   /** beats before the first full bar (an upbeat) */
   pickup?: number
   title: string; style?: ArrStyle; harmony?: HarmonyBar[]
 }
-export interface RhEvent { note: number | null; midis?: number[]; beats: number }
+export interface RhEvent { note: number | null; midis?: number[]; /** midis that are only cues (added harmony), not judged */ cue?: number[]; beats: number }
 /** one left-hand event; midis empty = rest */
 export interface LhEvent { start: number; beats: number; midis: number[]; seg: number }
 export interface ChordSeg { start: number; beats: number; name: string; root: number; pcs: number[]; seventh: boolean; roman: string }
@@ -38,7 +40,7 @@ export interface Arrangement {
   /** chord symbols to print (only where the chord changes) */
   marks: { start: number; name: string }[]
   targets: LhTarget[]
-  bpb: number; pickup: number; total: number
+  bpb: number; unit: 4 | 8; pickup: number; total: number
   /** the key used (given, or guessed) */
   key: Key
   style: ArrStyle
@@ -81,8 +83,9 @@ function mkChord(root: number, quality: 'maj' | 'min' | 'dim', primary: boolean,
 function candidates(key: Key, leading: boolean, names: string[]): Chord[] {
   const base = candidateChords(key).map((c) => mkChord(c.root, c.quality, c.primary, names))
   if (minorish(key) && leading) {
+    // the tune uses the raised 7th: the natural-minor v (with its flat 7th) is out, the major V stays
     const v = (key.tonic + 7) % 12
-    return base.map((c) => (c.root === v ? mkChord(v, 'maj', true, names) : c))
+    return base.filter((c) => !(c.root === v && c.quality === 'min'))
   }
   return base
 }
@@ -113,6 +116,8 @@ function best(cands: Chord[], p: Piece[], prev: Chord | null, first: boolean, ke
     let s = scoreChord(c, mel(p))
     if (prev && prev.root === c.root && prev.quality === c.quality) s += 0.2 * W
     s += (c.primary ? 0.12 : -0.12) * W + (c.root === key.tonic ? 0.1 * W : 0)
+    // minor: the raised 7th in the tune calls for V (E / E7 in A minor)
+    if (minorish(key) && c.quality === 'maj' && c.root === (key.tonic + 7) % 12 && p.some((x) => x.pc === (key.tonic + 11) % 12)) s += 0.45 * W
     if (first && c.root === key.tonic) s += 0.3 * W
     if (s > bs) { bs = s; bc = c }
   }
@@ -166,13 +171,14 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
   const key = input.key && input.key.scale !== 'chromatic' ? input.key : inferKey(notes)
   const bpb = input.beatsPerBar && input.beatsPerBar > 0 ? input.beatsPerBar : 4
   const style = input.style ?? 'auto'
+  const unit: 4 | 8 = input.beatUnit === 8 ? 8 : 4
   const starts: number[] = []
   let t = 0
   for (const n of notes) { starts.push(t); t += n.beats }
   const tot = t
   const rh: RhEvent[] = notes.map((n) => ({ note: n.note, beats: n.beats }))
   const pickup = Math.max(0, Math.min(input.pickup ?? 0, bpb, tot))
-  const base: Arrangement = { level, title: input.title, generated: false, rh, lh: [], segs: [], marks: [], targets: [], bpb, pickup, total: tot, key, style }
+  const base: Arrangement = { level, title: input.title, generated: false, rh, lh: [], segs: [], marks: [], targets: [], bpb, unit, pickup, total: tot, key, style }
   if (level === 'single' || tot <= 0 || !notes.some((n) => n.note != null)) return { ...base, level: level === 'single' ? level : base.level }
 
   const names = usesFlats(key) ? FLAT_NAMES : SHARP_NAMES
@@ -225,7 +231,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
       chosen[L].c = tonic
       if (L >= 1 && chosen[L - 1].a >= pickup) {
         const v = cands.find((c) => c.root === dom && c.quality === 'maj') ?? cands.find((c) => c.root === dom)
-        if (v && !sameC(chosen[L - 1].c, v) && share(v, chosen[L - 1].p) >= 0.25) chosen[L - 1].c = v
+        if (v && !sameC(chosen[L - 1].c, v) && (minorish(key) || share(v, chosen[L - 1].p) >= 0.25)) chosen[L - 1].c = v
         else if (v && sameC(chosen[L - 1].c, v)) { /* already V */ }
       }
     }
@@ -247,7 +253,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
   const lowMel = Math.min(...mids)
   let prevV: number[] | null = null
   const harmonic = !!input.harmony?.length
-  const effStyle: ArrStyle = style !== 'auto' ? style : bpb % 3 === 0 ? 'oompah' : bpb === 2 ? 'oompah' : 'alberti'
+  const effStyle: ArrStyle = unit === 8 ? 'broken' : style !== 'auto' ? style : bpb % 3 === 0 ? 'oompah' : bpb === 2 ? 'oompah' : 'alberti'
   const waltz = bpb % 3 === 0
   const targets: LhTarget[] = []
   segs.forEach((sg, si) => {
@@ -264,9 +270,9 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
     // FULL
     const tri = triad({ root: sg.root, quality: 'maj', name: '', pcs: sg.pcs.slice(0, 3), primary: true }, sg.seventh)
     const idx0 = lh.length
-    let st = style === 'auto' ? effStyle : style
+    let st: ArrStyle = unit === 8 ? 'broken' : style === 'auto' ? effStyle : style
     const mel0 = piecesIn(starts, notes, s0, s0 + L)
-    if (st === 'alberti' && mel0.length >= 7) st = 'broken'
+    if (st === 'alberti' && (mel0.length >= 7 || unit === 8)) st = 'broken'
     if (st === 'oompah') {
       const bass = inWindow(sg.root, Math.max(36, 40 + shift))
       const vo = voiceLead(tri, 51 + shift, 64 + shift, prevV); prevV = vo
@@ -282,17 +288,17 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
       while (r > EPS) { const d = Math.min(2, r); for (const p of pieces(d)) { note(s, p, vo, si); s += p } ; r -= d }
     } else {
       const vo = voiceLead(tri, 48 + shift, 64 + shift, prevV); prevV = vo
-      const seq = st === 'broken' ? [vo[0], vo[1], vo[2], vo[1]] : [vo[0], vo[2], vo[1], vo[2]]
+      const seq = unit === 8 && bpb === 3 ? [vo[0], vo[1], vo[2]] : st === 'broken' ? [vo[0], vo[1], vo[2], vo[1]] : [vo[0], vo[2], vo[1], vo[2]]
       const step = st === 'broken' ? 1 : 0.5
       let s = s0, k = 0
-      while (s0 + L - s > EPS) { const d = Math.min(step, s0 + L - s); note(s, d, [seq[k % 4]], si); s += d; k++ }
+      while (s0 + L - s > EPS) { const d = Math.min(step, s0 + L - s); note(s, d, [seq[k % seq.length]], si); s += d; k++ }
     }
     // judging targets: one per beat (consecutive events in the same beat are one target)
     let cur: LhTarget | null = null, curBeat = -1
     for (let i = idx0; i < lh.length; i++) {
       const e = lh[i]
       if (!e.midis.length) continue
-      const bt = Math.floor(e.start - s0 + EPS)
+      const bt = unit === 8 ? 0 : Math.floor(e.start - s0 + EPS)
       if (cur && curBeat === bt) { cur.end = e.start + e.beats; cur.idxs.push(i) }
       else { cur = { start: e.start, end: e.start + e.beats, pcs: sg.pcs, idxs: [i] }; curBeat = bt; targets.push(cur) }
     }
@@ -314,7 +320,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
       let m = n.note - 3
       while (mod12(m) !== lowPc && m > n.note - 6) m--
       if (mod12(m) !== lowPc || n.note - m < 3 || n.note - m > 4 || m < 55) return
-      rh[i] = { note: n.note, midis: [m, n.note], beats: n.beats }
+      rh[i] = { note: n.note, midis: [m, n.note], cue: [m], beats: n.beats }
     })
   }
 

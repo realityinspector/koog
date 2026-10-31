@@ -1,12 +1,12 @@
 /* DUO: the DJ deck strip docked at the bottom of the display (inside PLAY). Own file, own class names (dj-*). */
 .dj-root { position: absolute; inset: 0; pointer-events: none; }
-.dj-chip { pointer-events: auto; position: absolute; top: 12px; right: 12px; z-index: 8; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 14px; border-radius: 999px; cursor: pointer;
+.dj-chip { pointer-events: auto; position: absolute; top: 12px; right: 12px; z-index: var(--z-viz, 8); display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 14px; border-radius: 999px; cursor: pointer;
   color: #e9e6ff; font-size: 13px; letter-spacing: .12em; background: rgba(18, 14, 44, .72); border: 1px solid rgba(255, 255, 255, .2); backdrop-filter: blur(8px); }
 .dj-chip:hover { background: rgba(40, 32, 90, .85); }
 .dj-chip.on { border-color: #7fe3ff; box-shadow: 0 0 12px rgba(127, 227, 255, .35); }
 .dj-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #6cffa8; box-shadow: 0 0 8px #6cffa8; }
 
-.dj-bar { pointer-events: auto; position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h, 0px) + 10px); z-index: 8; box-sizing: border-box; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+.dj-bar { pointer-events: auto; position: absolute; left: 10px; right: 10px; bottom: calc(var(--sheet-h, 0px) + 8px); z-index: var(--z-dock-duo, 13); box-sizing: border-box; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
   padding: 7px 10px; border-radius: 16px; color: #dcd8f7; font-variant-numeric: tabular-nums;
   background: linear-gradient(180deg, rgba(26, 20, 62, .86), rgba(12, 9, 30, .9)); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(10px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .12); }
@@ -54,13 +54,10 @@
 .dj-go:disabled { opacity: .4; cursor: default; }
 .dj-status { min-height: 13px; font-size: 10px; text-align: center; color: #ffd86c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* make room: the visualizer's own controls ride above the strip (the bar is ~86px tall; sheet strip stacks under it) */
-.kg-display.kg-display[data-duo-open] { --duo-h: 108px; }
-.kg-display.kg-display[data-duo-open] .viz .viz-bar { bottom: calc(var(--sheet-h, 0px) + var(--duo-h) + 10px); }
-.kg-display.kg-display[data-duo-open] .viz .viz-hint { bottom: calc(var(--sheet-h, 0px) + var(--duo-h) + 10px); }
+/* room for the strip: --duo-h and the visual controls live in the one stack system (layout/instrument.css, layout/stack.ts) */
 
 /* the beat pulse: a soft glow on the display EDGE only (set by pulse.ts); never a full-screen flash */
-.kg-display[data-duo-on]::after { content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
+.kg-display[data-duo-on]::after { content: ''; position: absolute; inset: 0; z-index: var(--z-pulse, 5); pointer-events: none; border-radius: inherit;
   box-shadow: inset 0 0 calc(var(--dj-beat, 0) * 46px) calc(var(--dj-beat, 0) * 4px) rgba(120, 205, 255, calc(var(--dj-beat, 0) * .4)); }
 
 @media (max-width: 1100px) {
@@ -72,20 +69,19 @@
   .dj-bar { gap: 4px; padding: 6px 8px; }
 }
 @media (max-width: 960px) { .dj-sl span { display: none; } .dj-bpm { display: none; } }
-@media (max-height: 560px) { .kg-display.kg-display[data-duo-open] { --duo-h: 100px; } }
 @media (prefers-reduced-motion: reduce) { .kg-display[data-duo-on]::after { display: none; } .dj-btn:active, .dj-pad:active { transform: none; } }
 
 /* ---------- calibration, knob check, co-op ---------- */
 .dj-key { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .dj-band { height: 20px; padding: 0 6px; font-size: 12px; }
-.dj-menu { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); z-index: 20; width: 480px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 10px; padding: 8px; border-radius: 14px; text-align: left;
+.dj-menu { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); z-index: var(--z-pop, 26); width: 480px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 10px; padding: 8px; border-radius: 14px; text-align: left;
   background: rgba(16, 12, 40, .97); border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 10px 30px rgba(0, 0, 0, .6); letter-spacing: 0; white-space: normal; }
 .dj-menu button { text-align: left; padding: 7px 10px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .07); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
 .dj-menu button:hover, .dj-menu button:focus-visible { background: rgba(127, 227, 255, .25); outline: none; }
 .dj-menu small { opacity: .75; font-weight: 600; margin-left: 4px; }
 .dj-menu-h { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #a8a2d0; padding: 4px 4px 0; }
 
-.dj-panel { pointer-events: auto; position: absolute; inset: 8px; z-index: 60; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 12px; border-radius: 18px; color: #ece9ff; overflow: hidden;
+.dj-panel { pointer-events: auto; position: absolute; inset: 8px; z-index: var(--z-panel, 40); box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 12px; border-radius: 18px; color: #ece9ff; overflow: hidden;
   background: linear-gradient(180deg, rgba(28, 22, 68, .97), rgba(10, 8, 28, .98)); border: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 12px 40px rgba(0, 0, 0, .65); }
 .dj-panel header { display: flex; align-items: center; justify-content: space-between; }
 .dj-panel h2 { margin: 0; font-size: 17px; letter-spacing: .02em; }
@@ -140,7 +136,7 @@
 .dj-lights i:nth-child(3) { background: conic-gradient(from 160deg at 50% 0, transparent 0 0deg, rgba(255, 143, 196, .55) 20deg, transparent 40deg); animation-delay: -2s; }
 @keyframes dj-sweep { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
 
-.dj-coop { pointer-events: auto; position: absolute; top: 54px; right: 12px; z-index: 9; width: min(400px, calc(100% - 30px)); box-sizing: border-box; padding: 8px 12px; border-radius: 14px; color: #fff;
+.dj-coop { pointer-events: auto; position: absolute; top: 54px; right: 12px; z-index: var(--z-card, 22); width: min(400px, calc(100% - 30px)); box-sizing: border-box; padding: 8px 12px; border-radius: 14px; color: #fff;
   background: rgba(18, 14, 44, .93); border: 1px solid rgba(255, 255, 255, .22); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); display: flex; flex-direction: column; gap: 6px; }
 .dj-coop.won, .dj-coop.done { border-color: #ffd86c; box-shadow: 0 0 22px rgba(255, 216, 108, .45); }
 .dj-coop-h { display: flex; align-items: center; gap: 10px; font-size: 13px; } .dj-coop-h b { flex: 1; } .dj-coop-st { color: #ffd86c; letter-spacing: .1em; font-size: 16px; }
@@ -161,3 +157,29 @@
 
 .dj-menu-col { display: flex; flex-direction: column; gap: 3px; }
 .kg-display[data-dj-menu] .viz .viz-bar, .kg-display[data-dj-menu] .viz .viz-hint { visibility: hidden; }
+
+/* ---------- compact DUO (short display, 2+ docks): one row, full strip on hover / focus / tap. The reserved height stays 56px, a peek grows upward over the visuals. ---------- */
+.dj-bar:focus { outline: none; }
+.kg-display[data-compact] .dj-bar { height: 56px; padding-top: 3px; padding-bottom: 3px; align-content: center; }
+.kg-display[data-compact] .dj-bar:hover, .kg-display[data-compact] .dj-bar:focus-within { height: auto; padding-top: 7px; padding-bottom: 7px; z-index: 18; background: linear-gradient(180deg, rgba(26, 20, 62, .97), rgba(12, 9, 30, .98)); }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) :is(.dj-sls, .dj-pad, .dj-mode, .dj-status, .dj-surf, .dj-dots) { display: none; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-jog { width: 38px; height: 38px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-jog-lb { font-size: 12px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-mid { width: 190px; gap: 2px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-key { font-size: 0; gap: 4px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-key :is(b, button) { font-size: 11px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-xf input { height: 14px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-info { justify-content: center; gap: 8px; }
+.kg-display[data-compact] .dj-bar:not(:hover):not(:focus-within) .dj-btn { height: 26px; }
+
+/* the challenge card has its own safe slot (stack.ts sets data-coop-slot): right of the readouts when there is room, else under them.
+   It never covers the readouts; it hides while the 🤝 menu is open so it can't sit on the menu. */
+.kg-display[data-coop-slot='below'] .dj-coop { top: calc(var(--sr-bottom) + 8px); right: auto; left: 12px; width: min(380px, calc(100% - 24px)); }
+.kg-display[data-dj-menu] .dj-coop { visibility: hidden; }
+.dj-bar:has(.dj-menu) { z-index: var(--z-pop, 26); } /* the 🤝 menu rises over the controller dock, never under it */
+.dj-menu { max-height: calc(var(--disp-h, 400px) - var(--sheet-h, 0px) - var(--duo-h, 0px) - 24px); overflow: auto; }
+/* compact: the challenge card is one slim row at the left, the caption moves beside it, so neither covers the visual buttons or the docks */
+.kg-display[data-compact] .dj-coop { width: min(340px, calc(100% - 24px)); padding: 5px 10px; gap: 2px; }
+.kg-display[data-compact] .dj-coop :is(.dj-coop-who, .dj-coop-beats) { display: none; }
+.kg-display[data-compact] .dj-coop-msg { font-size: 12px; }
+.kg-display[data-compact][data-coop-slot='below'] .coach { left: 372px; transform: none; max-width: calc(100% - 384px); animation: none; }

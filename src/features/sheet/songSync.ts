@@ -16,7 +16,7 @@ export function syncSongScore(song: Song, live: boolean, notes: { st: number; st
   if (st.score?.owner !== OWNER || mapFor !== song.id + getSheetLevel()) {
     map = []; song.notes.forEach((n, i) => { if (n.note != null) map.push(i) })
     mapFor = song.id + getSheetLevel()
-    setScore({ owner: OWNER, title: song.title, notes: song.notes, key: song.key, bpm: song.bpm, beatsPerBar: song.beatsPerBar, pickup: song.pickup, style: song.style, harmony: song.harmony }, 0)
+    setScore({ owner: OWNER, title: song.title, notes: song.notes, key: song.key, bpm: song.bpm, beatsPerBar: song.beatsPerBar, pickup: song.pickup, beatUnit: song.beatUnit, style: song.style, harmony: song.harmony }, 0)
   }
   let sp = 0
   if (done) sp = notes.length

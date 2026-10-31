@@ -34,6 +34,13 @@ function useGlowKey() {
   return k
 }
 
+/** SVG arc from angle a0 to a1 (degrees, 0 = straight up) */
+const arc = (r: number, a0: number, a1: number) => {
+  const pt = (a: number) => [22 + r * Math.sin((a * Math.PI) / 180), 22 - r * Math.cos((a * Math.PI) / 180)]
+  const [x0, y0] = pt(a0), [x1, y1] = pt(a1)
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`
+}
+
 export function Knob({ c, value, onChange, glow }: { c: Ctl; value: number; onChange: (v: number) => void; glow?: boolean }) {
   const drag = useRef<{ y: number; p: number } | null>(null)
   const pos = toPos(c, value)
@@ -52,9 +59,15 @@ export function Knob({ c, value, onChange, glow }: { c: Ctl; value: number; onCh
           const d = e.key === 'ArrowUp' || e.key === 'ArrowRight' ? 0.05 : e.key === 'ArrowDown' || e.key === 'ArrowLeft' ? -0.05 : 0
           if (d) { e.preventDefault(); e.stopPropagation(); onChange(fromPos(c, pos + d)) }
         }}
-        style={{ ['--ang' as string]: angle + 'deg' }}
+        title={c.label + ': ' + fmt(c, value)}
       >
-        <i />
+        <svg viewBox="0 0 44 44" aria-hidden="true">
+          <path d={arc(20, -135, 135)} className="trk" />
+          {pos > 0.005 && <path d={arc(20, -135, angle)} className="val" />}
+          <circle cx="22" cy="22" r="14.5" className="cap" />
+          <circle cx="22" cy="22" r="14.5" className="shade" />
+          <g transform={`rotate(${angle} 22 22)`}><rect x="20.4" y="9" width="3.2" height="9" rx="1.4" className="ptr" /></g>
+        </svg>
       </div>
       <b>{c.label}</b>
       <small>{fmt(c, value)}</small>
@@ -66,7 +79,7 @@ export function Drawbar({ c, value, onChange, idx, glow }: { c: Ctl; value: numb
   return (
     <div className={'emu-ctl emu-bar bar-' + (idx % 9) + (glow ? ' glow' : '')}>
       <input
-        type="range" className="emu-vrange" min={c.min} max={c.max} step={c.step ?? 1} value={value} aria-label={c.label}
+        type="range" className="emu-vrange" title={c.label + ': ' + Math.round(value)} min={c.min} max={c.max} step={c.step ?? 1} value={value} aria-label={c.label}
         onChange={(e) => onChange(+e.target.value)}
         onKeyDown={(e) => { if (e.key.startsWith('Arrow')) e.stopPropagation() }}
       />
@@ -78,7 +91,7 @@ export function Drawbar({ c, value, onChange, idx, glow }: { c: Ctl; value: numb
 
 export function Pick({ c, value, onChange, glow }: { c: Ctl; value: number; onChange: (v: number) => void; glow?: boolean }) {
   return (
-    <div className={'emu-ctl emu-pick' + (glow ? ' glow' : '')}>
+    <div className={'emu-ctl emu-pick' + ((c.opts?.length ?? 0) > 6 ? ' dense' : '') + (glow ? ' glow' : '')}>
       <b>{c.label}</b>
       <div role="radiogroup" aria-label={c.label}>
         {(c.opts ?? []).map((o, i) => (
@@ -89,7 +102,7 @@ export function Pick({ c, value, onChange, glow }: { c: Ctl; value: number; onCh
   )
 }
 
-export function ControlRow({ ctls, values, onChange }: { ctls: Ctl[]; values: Record<string, number>; onChange: (k: string, v: number) => void }) {
+export function ControlRow({ ctls, values, onChange, aside }: { ctls: Ctl[]; values: Record<string, number>; onChange: (k: string, v: number) => void; aside?: React.ReactNode }) {
   // split into groups at each ctl that has a `group`
   const groups: { name: string; items: Ctl[] }[] = []
   for (const c of ctls) {
@@ -112,6 +125,7 @@ export function ControlRow({ ctls, values, onChange }: { ctls: Ctl[]; values: Re
           </div>
         </div>
       ))}
+      {aside}
     </div>
   )
 }

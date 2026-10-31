@@ -204,6 +204,9 @@ export function resetLayout() {
 }
 export function setPickupMode(m: 'pickup' | 'jump') { for (const k of Object.keys(pick)) delete pick[k]; set({ pickupMode: m }); refreshView() }
 export const surfaceActive = () => get().on
+/** Boss scenes: the saved per-topology layout overrides, and a way to put a snapshot back */
+export const getSavedLayout = (): Record<string, Record<string, string>> => JSON.parse(JSON.stringify(saved))
+export function setSavedLayout(v: Record<string, Record<string, string>>) { saved = v ?? {}; psave(KEY, saved); for (const k of Object.keys(pick)) delete pick[k]; refreshView() }
 
 // ---------- mode ----------
 function enter() {
@@ -225,7 +228,7 @@ function apply(on: boolean) {
 }
 export function setScreenMode(v: boolean) { set({ screenOn: v }); apply(v || get().roleOn) }
 function setRoleOn(v: boolean) { set({ roleOn: v }); apply(v || get().screenOn) }
-const isController = (r: string) => r === 'dj' || r === 'surface'
+const isController = (r: string) => r === 'dj' || r === 'surface' || r === 'loop'
 /** The 🎧 DJ <-> 🎛️ Synth switch: flips every connected DJ controller between its two roles (no controller: just the on-screen surface) */
 export function toggleControllerMode() {
   const devs = useDevices.getState().devices.filter((d) => isController(d.role))
