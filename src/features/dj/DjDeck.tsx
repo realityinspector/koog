@@ -10,6 +10,7 @@ import { onBeat } from './clock'
 import { BEAT } from './synth'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
 import type { DeckId } from './map'
+import { SurfaceToggle } from '../controller/SurfaceToggle'
 
 const OPEN_KEY = 'koog.dj.open'
 const loadOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
@@ -135,6 +136,7 @@ function Middle({ v }: { v: ReturnType<typeof getView> }) {
           : <button type="button" className="dj-go" onClick={() => cancelChallenge()}>✕</button>}
       </div>
       <div className="dj-status" aria-live="polite">{status}</div>
+      <SurfaceToggle />
     </div>
   )
 }

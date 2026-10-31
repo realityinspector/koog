@@ -1,6 +1,8 @@
 // Faceplate controls: Knob (drag / wheel / arrow keys), Drawbar (vertical slider), Pick (stepped buttons).
 import { useRef } from 'react'
+import { useEffect, useState } from 'react'
 import type { Ctl } from './types'
+import { glowState, onGlow } from './bus'
 
 const fmt = (c: Ctl, v: number) => {
   if (c.kind === 'pick') return c.opts?.[Math.round(v)] ?? String(v)
@@ -20,12 +22,24 @@ const fromPos = (c: Ctl, p: number) => {
   return Math.min(c.max, Math.max(c.min, v))
 }
 
-export function Knob({ c, value, onChange }: { c: Ctl; value: number; onChange: (v: number) => void }) {
+/** the key of the control the hardware touched in the last 0.7 s (it glows), else '' */
+function useGlowKey() {
+  const [k, setK] = useState('')
+  useEffect(() => {
+    let h = 0
+    const on = () => { setK(glowState().key); clearTimeout(h); h = window.setTimeout(() => setK(''), 700) }
+    const off = onGlow(on)
+    return () => { off(); clearTimeout(h) }
+  }, [])
+  return k
+}
+
+export function Knob({ c, value, onChange, glow }: { c: Ctl; value: number; onChange: (v: number) => void; glow?: boolean }) {
   const drag = useRef<{ y: number; p: number } | null>(null)
   const pos = toPos(c, value)
   const angle = -135 + pos * 270
   return (
-    <div className="emu-ctl">
+    <div className={'emu-ctl' + (glow ? ' glow' : '')}>
       <div
         className="emu-knob"
         role="slider" tabIndex={0} aria-label={c.label} aria-valuemin={c.min} aria-valuemax={c.max} aria-valuenow={value}
@@ -48,9 +62,9 @@ export function Knob({ c, value, onChange }: { c: Ctl; value: number; onChange: 
   )
 }
 
-export function Drawbar({ c, value, onChange, idx }: { c: Ctl; value: number; onChange: (v: number) => void; idx: number }) {
+export function Drawbar({ c, value, onChange, idx, glow }: { c: Ctl; value: number; onChange: (v: number) => void; idx: number; glow?: boolean }) {
   return (
-    <div className={'emu-ctl emu-bar bar-' + (idx % 9)}>
+    <div className={'emu-ctl emu-bar bar-' + (idx % 9) + (glow ? ' glow' : '')}>
       <input
         type="range" className="emu-vrange" min={c.min} max={c.max} step={c.step ?? 1} value={value} aria-label={c.label}
         onChange={(e) => onChange(+e.target.value)}
@@ -62,9 +76,9 @@ export function Drawbar({ c, value, onChange, idx }: { c: Ctl; value: number; on
   )
 }
 
-export function Pick({ c, value, onChange }: { c: Ctl; value: number; onChange: (v: number) => void }) {
+export function Pick({ c, value, onChange, glow }: { c: Ctl; value: number; onChange: (v: number) => void; glow?: boolean }) {
   return (
-    <div className="emu-ctl emu-pick">
+    <div className={'emu-ctl emu-pick' + (glow ? ' glow' : '')}>
       <b>{c.label}</b>
       <div role="radiogroup" aria-label={c.label}>
         {(c.opts ?? []).map((o, i) => (
@@ -83,6 +97,7 @@ export function ControlRow({ ctls, values, onChange }: { ctls: Ctl[]; values: Re
     groups[groups.length - 1].items.push(c)
   }
   let bar = 0
+  const glow = useGlowKey()
   return (
     <div className="emu-groups">
       {groups.map((g, gi) => (
@@ -90,9 +105,9 @@ export function ControlRow({ ctls, values, onChange }: { ctls: Ctl[]; values: Re
           {g.name && <h4>{g.name}</h4>}
           <div className="emu-group-row">
             {g.items.map((c) =>
-              c.kind === 'pick' ? <Pick key={c.key} c={c} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />
-              : c.kind === 'slider' ? <Drawbar key={c.key} c={c} idx={bar++} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />
-              : <Knob key={c.key} c={c} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />,
+              c.kind === 'pick' ? <Pick key={c.key} glow={glow === c.key} c={c} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />
+              : c.kind === 'slider' ? <Drawbar key={c.key} glow={glow === c.key} c={c} idx={bar++} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />
+              : <Knob key={c.key} glow={glow === c.key} c={c} value={values[c.key]} onChange={(v) => onChange(c.key, v)} />,
             )}
           </div>
         </div>

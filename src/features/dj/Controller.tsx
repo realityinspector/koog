@@ -38,6 +38,12 @@ interface Props {
   interactive?: boolean
   showTested?: boolean
   noQ?: boolean
+  /** Controller Mode: what each control drives (text on the control), where the real knob is while it has not picked the value up,
+   *  which controls were just touched, and where the clicks go (the synth surface instead of the decks). Unlabelled controls dim. */
+  labels?: Record<string, string>
+  ghost?: Record<string, number>
+  hot?: Record<string, boolean>
+  onSend?: (id: string, value: number) => void
 }
 function valueOf(id: string, ctl: Props['ctl'], v: ReturnType<typeof getView>): number {
   if (ctl[id]) return ctl[id].v
@@ -50,12 +56,13 @@ function valueOf(id: string, ctl: Props['ctl'], v: ReturnType<typeof getView>): 
   return 0
 }
 
-export function ControllerPic({ ctl, target, interactive, showTested, noQ }: Props) {
+export function ControllerPic({ ctl, target, interactive, showTested, noQ, labels, ghost, hot: touchedIds, onSend }: Props) {
   useSyncExternalStore(subscribe, getVersion)
   const view = getView()
   const svg = useRef<SVGSVGElement>(null)
   const drag = useRef<{ id: string; y0: number; v0: number; a0?: number } | null>(null)
   const send = (id: string, value: number) => {
+    if (onSend) { onSend(id, value); return }
     const [base, d] = id.split('.')
     dispatch({ id: base as CtrlBase, deck: d === 'A' || d === 'B' ? d : null, value })
   }
@@ -82,7 +89,7 @@ export function ControllerPic({ ctl, target, interactive, showTested, noQ }: Pro
       onPointerUp={() => { const dr = drag.current; if (dr && LAYOUT[dr.id].k !== 'vfader' && (LAYOUT[dr.id].k === 'btn' || LAYOUT[dr.id].k === 'pad')) send(dr.id, 0); drag.current = null }}
       onPointerLeave={() => { const dr = drag.current; if (dr && (LAYOUT[dr.id].k === 'btn' || LAYOUT[dr.id].k === 'pad')) send(dr.id, 0); drag.current = null }}>
       <rect x="4" y="4" width="632" height="282" rx="22" className="pic-body" />
-      <text x="320" y="196" className="pic-lbl big" textAnchor="middle">DJ</text>
+      <text x="320" y="196" className="pic-lbl big" textAnchor="middle">{labels ? 'SYNTH' : 'DJ'}</text>
       {ids.map((id) => {
         if (id.startsWith('jogtouch')) return null
         const s = LAYOUT[id]
@@ -91,7 +98,9 @@ export function ControllerPic({ ctl, target, interactive, showTested, noQ }: Pro
         const tested = !!c
         const val = valueOf(id, ctl, view)
         const hot = target === id
-        const cls = 'pic-c ' + s.k + (mapped ? '' : ' unmapped') + (tested && showTested ? ' tested' : '') + (showTested && !noQ && mapped && !tested ? ' untested' : '') + (hot ? ' target' : '')
+        const txt = labels ? labels[id] ?? '' : s.text
+        const gh = ghost?.[id]
+        const cls = 'pic-c ' + s.k + (labels && !labels[id] ? ' unbound' : '') + (touchedIds?.[id] ? ' touched' : '') + (mapped ? '' : ' unmapped') + (tested && showTested ? ' tested' : '') + (showTested && !noQ && mapped && !tested ? ' untested' : '') + (hot ? ' target' : '')
         const down = (e: React.PointerEvent) => {
           if (!interactive) return
           e.preventDefault()
@@ -105,26 +114,29 @@ export function ControllerPic({ ctl, target, interactive, showTested, noQ }: Pro
         let shape: React.ReactNode
         if (s.k === 'btn' || s.k === 'pad') {
           const on = c ? c.v >= 1 : id.startsWith('play') && val === 1
-          shape = <><rect x={s.x - s.w! / 2} y={s.y - s.h! / 2} width={s.w} height={s.h} rx={s.k === 'pad' ? 6 : 8} className={'pic-shape' + (on ? ' on' : '')} /><text x={s.x} y={s.y + 4} textAnchor="middle" className="pic-lbl">{s.text}</text></>
+          shape = <><rect x={s.x - s.w! / 2} y={s.y - s.h! / 2} width={s.w} height={s.h} rx={s.k === 'pad' ? 6 : 8} className={'pic-shape' + (on ? ' on' : '')} /><text x={s.x} y={s.y + 4} textAnchor="middle" className="pic-lbl">{txt}</text></>
         } else if (s.k === 'jog') {
           const ang = c ? c.v : 0
           const touch = ctl[id.replace('jog', 'jogtouch')]
           shape = <><circle cx={s.x} cy={s.y} r={s.r! + 8} className={'pic-touch' + (touch ? ' tested' : '') + (target === id.replace('jog', 'jogtouch') ? ' target' : '')} />
             <circle cx={s.x} cy={s.y} r={s.r} className="pic-shape" /><circle cx={s.x} cy={s.y} r={s.r! * 0.55} className="pic-hub" />
             <line x1={s.x} y1={s.y - s.r! + 4} x2={s.x} y2={s.y - s.r! * 0.6} className="pic-mark" transform={`rotate(${ang} ${s.x} ${s.y})`} />
-            <text x={s.x} y={s.y + 5} textAnchor="middle" className="pic-lbl big">{s.text}</text></>
+            <text x={s.x} y={s.y + 5} textAnchor="middle" className="pic-lbl big">{txt}</text></>
         } else if (s.k === 'vfader') {
           const y1 = s.y - s.h! / 2, y = y1 + (1 - val) * s.h!
           shape = <><rect x={s.x - 3} y={y1} width={6} height={s.h} rx={3} className="pic-track" /><rect x={s.x - 12} y={y - 7} width={24} height={14} rx={4} className="pic-shape handle" />
-            <text x={s.x} y={y1 - 6} textAnchor="middle" className="pic-lbl">{s.text}</text></>
+            {gh != null && <rect x={s.x - 12} y={y1 + (1 - gh) * s.h! - 7} width={24} height={14} rx={4} className="pic-ghost" />}
+            <text x={s.x} y={y1 - 6} textAnchor="middle" className="pic-lbl">{txt}</text></>
         } else if (s.k === 'hfader') {
           const x1 = s.x - s.w! / 2, x = x1 + val * s.w!
           shape = <><rect x={x1} y={s.y - 3} width={s.w} height={6} rx={3} className="pic-track" /><rect x={x - 7} y={s.y - 12} width={14} height={24} rx={4} className="pic-shape handle" />
-            <text x={s.x} y={s.y + 26} textAnchor="middle" className="pic-lbl">{s.text}</text></>
+            {gh != null && <rect x={x1 + gh * s.w! - 7} y={s.y - 12} width={14} height={24} rx={4} className="pic-ghost" />}
+            <text x={s.x} y={s.y + 26} textAnchor="middle" className="pic-lbl">{txt}</text></>
         } else {
           const ang = -135 + val * 270
           shape = <><circle cx={s.x} cy={s.y} r={s.r} className="pic-shape" /><line x1={s.x} y1={s.y} x2={s.x} y2={s.y - s.r! + 3} className="pic-mark" transform={`rotate(${ang} ${s.x} ${s.y})`} />
-            <text x={s.x} y={s.y + s.r! + 11} textAnchor="middle" className="pic-lbl">{s.text}</text></>
+            {gh != null && <line x1={s.x} y1={s.y} x2={s.x} y2={s.y - s.r! - 4} className="pic-ghost-line" transform={`rotate(${-135 + gh * 270} ${s.x} ${s.y})`} />}
+            <text x={s.x} y={s.y + s.r! + 11} textAnchor="middle" className="pic-lbl">{txt}</text></>
         }
         return (
           <g key={id} className={cls} onPointerDown={down} data-id={id}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { setActiveInstrument } from '../../music/instrument'
 import { createEngine, type Engine } from './emu/core'
+import { onEmuSet } from './emu/bus'
 import { getEmu } from './emu'
 import { ControlRow } from './emu/EmuControls'
 import { FieldPad, Seq303, TapeBar } from './emu/EmuExtras'
@@ -34,9 +35,12 @@ export function EmulatorPanel({ id, preset = 0, onBack }: { id: string; preset?:
       noteOn: (n, v) => engine.noteOn(n, v), noteOff: (n) => engine.noteOff(n),
       allOff: () => engine.allOff(), unlock: () => engine.unlock(),
     })
+    // Controller Mode (a knob on the hardware) changes engine params from outside: keep the faceplate in step
+    const offSet = onEmuSet((e, k, v) => { if (e === engine) setVals((s) => (s[k] === v ? s : { ...s, [k]: v })) })
     const w = window as unknown as { __emuPeak?: () => number; __emu?: Engine }
     w.__emuPeak = () => engine.peak(); w.__emu = engine
     return () => {
+      offSet()
       setActiveInstrument(null)
       engine.allOff(); engine.dispose()
       delete w.__emuPeak; delete w.__emu

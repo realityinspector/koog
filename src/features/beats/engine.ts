@@ -201,8 +201,13 @@ function onPlayed(e: { note: number; on: boolean }) {
 export const pocketPct = () => (S.recent.length ? S.recent.filter(Boolean).length / S.recent.length : 0)
 
 // ---- control ----
+/** drums have no key: with bass and chords both off, the beat leaves the key alone (auto-detect follows the player) */
+export const isDrumsOnly = () => !S.bass && !S.chords
 function applyKey() {
-  useHarmonyStore.getState().setKey(jamKey())
+  const h = useHarmonyStore.getState()
+  if (isDrumsOnly()) { if (S.prevKey) { h.setKey(S.prevKey.key); h.setAutoDetect(true) } return }
+  if (h.autoDetect) h.setAutoDetect(false)
+  h.setKey(jamKey())
 }
 
 export function start() {
@@ -225,7 +230,6 @@ export function start() {
   S.next = ctx.currentTime + 0.08
   const h = useHarmonyStore.getState()
   S.prevKey = { key: h.key, auto: h.autoDetect }
-  h.setAutoDetect(false)
   applyKey()
   S.offNote = onNote(onPlayed)
   S.playing = true
@@ -268,7 +272,9 @@ export function setGain(v: number) {
   if (S.ctx && S.master) S.master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), S.ctx.currentTime, 0.03)
   emit()
 }
-export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on; emit() }
+export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on; if (S.playing) applyKey(); emit() }
+/** just the kit, in any key */
+export function setDrumsOnly(on: boolean) { S.bass = !on; S.chords = !on; if (S.playing) applyKey(); emit() }
 export function setPent(on: boolean) { S.pent = on; if (S.playing) applyKey(); S.recent = []; emit() }
 
 // ---- backing drums for Songs Flow mode (own AudioContext, reuses the drum voices above) ----

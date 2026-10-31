@@ -1,6 +1,7 @@
 // Audio plumbing shared by every emulator: lazy AudioContext (only inside a user gesture), a master gain with the
 // 0.15 peak cap x the app volume/mute, a limiter, and a dev peak meter. One Engine per open panel.
 import { outputScale, useAudioSettings } from '../../../music/audioSettings'
+import { emitEmuSet, registerEngine, unregisterEngine } from './bus'
 import type { EmuAudio, EmuSpec, Params, Voice } from './types'
 
 export const EMU_CAP = 0.15
@@ -65,7 +66,7 @@ export function createEngine(spec: EmuSpec): Engine {
     noteOff(n) { held.delete(n); voice?.noteOff(n) },
     allOff() { held.clear(); voice?.allOff() },
     unlock,
-    set(key, val) { P[key] = val; voice?.param?.(key, val) },
+    set(key, val) { P[key] = val; voice?.param?.(key, val); emitEmuSet(eng, key, val) },
     field(x, y) { voice?.field?.(x, y) },
     voice: () => voice,
     ctx: () => ctx,
@@ -78,6 +79,7 @@ export function createEngine(spec: EmuSpec): Engine {
     },
     dispose() {
       dead = true
+      unregisterEngine(eng)
       held.clear()
       try { voice?.allOff(); voice?.dispose() } catch { /* ignore */ }
       unsub(); window.removeEventListener('blur', onBlur)
@@ -86,6 +88,7 @@ export function createEngine(spec: EmuSpec): Engine {
       ctx = null; voice = null
     },
   }
+  registerEngine(eng)
   return eng
 }
 

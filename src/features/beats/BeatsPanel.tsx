@@ -2,7 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { keyName } from '../../music/theory'
 import { GROOVES } from './grooves'
 import {
-  subscribe, getVersion, getState, start, stop, setGroove, setBpmAdj, setGain, setLayer, setPent,
+  subscribe, getVersion, getState, start, stop, setGroove, setBpmAdj, setGain, setLayer, setPent, setDrumsOnly,
   bpm, jamKey, safeNotes, currentStep, pocketPct, MAX_GAIN,
 } from './engine'
 import './beats.css'
@@ -86,6 +86,7 @@ export function BeatsPanel() {
         <div className="bt-toggles">
           <label><input type="checkbox" checked={S.bass} onChange={(e) => setLayer('bass', e.target.checked)} /> Bass</label>
           <label><input type="checkbox" checked={S.chords} onChange={(e) => setLayer('chords', e.target.checked)} /> Chords</label>
+          <label title="Just the drum kit. Drums have no key, so play in ANY key and Koog figures it out."><input type="checkbox" checked={!S.bass && !S.chords} onChange={(e) => setDrumsOnly(e.target.checked)} /> 🥁 Drums only (any key)</label>
           <label title="Five notes only. Every one sounds good."><input type="checkbox" checked={S.pent} onChange={(e) => setPent(e.target.checked)} /> Can't-miss</label>
         </div>
       </div>

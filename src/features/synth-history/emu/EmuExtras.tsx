@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ROWS, type SeqApi, type Voice303 } from './tb303'
 import type { Engine } from './core'
 import { onNote } from '../../../music/notes'
+import { onSeqChange } from './bus'
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
@@ -46,6 +47,7 @@ export function Seq303({ engine }: { engine: Engine }) {
     const s = engine.voice() as Voice303 | null
     return s?.seq.onStep(setCur)
   }, [engine, seq])
+  useEffect(() => onSeqChange(() => tick((n) => n + 1)), []) // pads / buttons on the hardware edit the pattern
   useEffect(() => {
     if (seq) return
     const t = window.setInterval(() => { if (engine.voice()) tick((n) => n + 1) }, 250)

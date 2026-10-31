@@ -15,7 +15,9 @@ interface Voice {
   t: number; released: boolean; timer: number; vel: number
 }
 interface Lfo { osc: OscillatorNode; pitchG: GainNode; filtG: GainNode; ampG: GainNode }
-interface Shared { lfo?: Lfo; ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void> }
+interface Shared { lfo?: Lfo; ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void>
+  /** Controller Mode extras: pitch-bend source (cents), sustain-pedal style hold, octave transpose */
+  bend?: ConstantSourceNode; bendCents?: number; hold?: boolean; sustained?: Set<number>; trans?: number; tmap?: Map<number, number> }
 
 const hot = import.meta.hot
 const S: Shared = hot ? (hot.data.synth ??= { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }) : { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }
@@ -46,6 +48,7 @@ function sanitize(p: SynthParams): SynthParams {
 }
 S.params = sanitize(S.params)
 S.subs ??= new Set()
+S.sustained ??= new Set(); S.tmap ??= new Map(); S.trans ??= 0; S.bendCents ??= 0; S.hold ??= false
 
 /** dev/test getter: current master gain value (0 until audio starts) */
 export const masterGainValue = () => S.master?.gain.value ?? null
@@ -67,6 +70,14 @@ function ensureLfo() {
   osc.start()
   S.lfo = { osc, pitchG, filtG, ampG }
   applyLfo()
+}
+
+/** one shared constant source summed into every oscillator's detune (cents): the pitch-bend wheel */
+function ensureBend() {
+  const c = S.ctx
+  if (!c || S.bend) return
+  const b = c.createConstantSource(); b.offset.value = S.bendCents ?? 0; b.start()
+  S.bend = b
 }
 
 function applyLfo() {
@@ -98,6 +109,7 @@ function release(v: Voice, fast = false) {
     S.voices = S.voices.filter(x => x !== v)
     try { v.vca.disconnect() } catch { /* noop */ }
     try { v.trem?.disconnect() } catch { /* noop */ }
+    if (S.bend) for (const o of v.oscs) { try { S.bend.disconnect(o.detune) } catch { /* noop */ } }
     const l = S.lfo
     if (l) for (const o of v.oscs) { try { l.pitchG.disconnect(o.detune) } catch { /* noop */ } }
     if (l) for (const f of [v.f1, v.f2]) { try { l.filtG.disconnect(f.frequency) } catch { /* noop */ } }
@@ -149,6 +161,8 @@ function makeVoice(note: number, vel: number): Voice {
   o1.connect(m); o2.connect(m); m.connect(f1); f1.connect(f2); f2.connect(vca); vca.connect(trem); trem.connect(S.master!)
   const l = S.lfo
   if (l) { l.pitchG.connect(o1.detune); l.pitchG.connect(o2.detune); l.filtG.connect(f1.frequency); l.filtG.connect(f2.frequency); l.ampG.connect(trem.gain) }
+  ensureBend()
+  if (S.bend) { S.bend.connect(o1.detune); S.bend.connect(o2.detune) }
   o1.start(t); o2.start(t)
   const v: Voice = { note, oscs: [o1, o2], f1, f2, cut, vca, trem, t: performance.now(), released: false, timer: 0, vel }
   v.timer = window.setTimeout(() => release(v), STUCK_MS)
@@ -181,9 +195,11 @@ const synth: SynthEngine = {
   },
   analyser: () => S.analyser ?? null,
   onParams(fn) { S.subs!.add(fn); return () => { S.subs!.delete(fn) } },
-  noteOn(note, velocity) {
+  noteOn(played, velocity) {
     const c = S.ctx
-    if (!c || !S.master || c.state !== 'running' || note < 0 || note > 127) return
+    if (!c || !S.master || c.state !== 'running' || played < 0 || played > 127) return
+    const note = clamp(played + 12 * (S.trans ?? 0), 0, 127)
+    S.tmap!.set(played, note); S.sustained!.delete(note)
     const vel = clamp(velocity, 1, 127) / 127
     const p = S.params
     S.stack = S.stack.filter(n => n !== note); S.stack.push(note)
@@ -208,7 +224,20 @@ const synth: SynthEngine = {
     S.voices.push(v)
     startEnv(v)
   },
-  noteOff(note) {
+  noteOff(played) {
+    const note = S.tmap!.get(played) ?? played
+    S.tmap!.delete(played)
+    if (S.hold) { S.sustained!.add(note); return } // latched: the key is up but the note rings until HOLD is released
+    releaseNote(note)
+  },
+  panic() {
+    S.stack = []; S.sustained!.clear(); S.tmap!.clear()
+    for (const v of [...S.voices]) release(v, true)
+  },
+}
+
+function releaseNote(note: number) {
+  {
     S.stack = S.stack.filter(n => n !== note)
     const c = S.ctx; if (!c) return
     if (S.params.glide > 0) {
@@ -225,14 +254,27 @@ const synth: SynthEngine = {
       return
     }
     for (const v of S.voices) if (v.note === note && !v.released) release(v)
-  },
-  panic() {
-    S.stack = []
-    for (const v of [...S.voices]) release(v, true)
-  },
+  }
 }
 
 export function getSynth(): SynthEngine { return synth }
+
+/** Controller Mode: pitch bend in cents (clamped to +-200). Smoothed, applies to sounding and future voices. */
+export function setPitchBend(cents: number) {
+  S.bendCents = clamp(cents, -200, 200)
+  if (S.ctx && S.bend) S.bend.offset.setTargetAtTime(S.bendCents, S.ctx.currentTime, 0.015)
+}
+export const getPitchBend = () => S.bendCents ?? 0
+/** Controller Mode: latch the notes (like a sustain pedal). Letting go releases everything that was held. */
+export function setHold(on: boolean) {
+  if (!!S.hold === on) return
+  S.hold = on
+  if (!on) { const n = [...S.sustained!]; S.sustained!.clear(); for (const note of n) releaseNote(note); if (!S.voices.length) S.stack = [] }
+}
+export const getHold = () => !!S.hold
+/** Controller Mode: shift what the piano plays by whole octaves (-2..+2). Notes already sounding keep their pitch. */
+export function setOctave(o: number) { S.trans = clamp(Math.round(o), -2, 2) }
+export const getOctave = () => S.trans ?? 0
 
 if (import.meta.hot) {
   const offSettings = useAudioSettings.subscribe(() => applyLevel())

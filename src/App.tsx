@@ -22,6 +22,7 @@ import { GamesPanel } from './features/games/GamesPanel'
 import { StripControls } from './layout/StripControls'
 import { SheetOverlay } from './features/sheet/SheetOverlay'
 import { DuoDeck } from './features/dj/DjDeck'
+import { ControllerOverlay } from './features/controller/ControllerOverlay'
 import './music/judge'
 
 export function App() {
@@ -47,7 +48,7 @@ export function App() {
   }
   return (
     <>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /></>} keybed={<PianoStrip />} sheet={<SheetOverlay />} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <Tour />
     </>

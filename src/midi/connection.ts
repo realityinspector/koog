@@ -1,5 +1,5 @@
 import { useAppStore } from '../store/appStore'
-import { useDevices, roleFor, emitDj, setDjSender, type Device, type DeviceRole } from '../music/devices'
+import { useDevices, roleFor, emitDj, emitSurface, setDjSender, type Device, type DeviceRole } from '../music/devices'
 
 const PREFERRED = 'USB MIDI'
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
@@ -44,6 +44,7 @@ function route(role: DeviceRole, d: Uint8Array, t: number, id: string) {
   if (!d) return
   if (role === 'piano') pianoMessage(d, t)
   else if (role === 'dj') emitDj(d, t, id)
+  else if (role === 'surface') emitSurface(d, t, id)
 }
 const liveRole = (id: string, name: string): DeviceRole => useDevices.getState().devices.find((x) => x.id === id)?.role ?? roleFor(name)
 
@@ -82,7 +83,7 @@ function refresh(access: MIDIAccess) {
 function applyDevices(access: MIDIAccess) {
   const devs = useDevices.getState().devices
   const pianos = devs.filter((d) => d.connected && d.role === 'piano')
-  const djs = devs.filter((d) => d.connected && d.role === 'dj')
+  const djs = devs.filter((d) => d.connected && (d.role === 'dj' || d.role === 'surface')) // a synth control surface is still a DJ-style controller: LEDs and output
   const outs = [...access.outputs.values()].filter((p) => p.state === 'connected')
   const cur = useAppStore.getState()
   const pn = pianos.find((d) => d.name === PREFERRED) ?? pianos[0]

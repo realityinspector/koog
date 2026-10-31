@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useDevices, setRole, type DeviceRole } from '../../music/devices'
 import { SOUNDS, chooseSound, useSound } from './soundChoice'
 import { unlockAudio } from '../../music/localNotes'
+import { setScreenMode, useSurface } from '../controller/surface'
 import './devices.css'
 
-const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['off', 'Off']]
+const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['off', 'Off']]
 
 /** Top-strip chip: connected MIDI devices + their roles, and the piano's sound ("change instruments"). */
 export function DevicesControl() {
@@ -21,7 +22,8 @@ export function DevicesControl() {
   }, [open])
 
   const live = devices.filter((d) => d.connected)
-  const hasDj = live.some((d) => d.role === 'dj')
+  const hasDj = live.some((d) => d.role === 'dj' || d.role === 'surface')
+  const surfaceOn = useSurface((s) => s.on)
   const cur = SOUNDS.find((s) => s.id === sound) ?? SOUNDS[0]
   const n = live.length
   return (
@@ -41,11 +43,14 @@ export function DevicesControl() {
               <span className={'kg-dev-dot' + (d.connected ? ' on' : '')} title={d.connected ? 'Connected' : 'Unplugged'} />
               <span className="kg-dev-name" title={d.name}>{d.name}</span>
               <div className="kg-dev-roles" role="group" aria-label={'Role for ' + d.name}>
-                {ROLES.map(([r, l]) => <button key={r} type="button" className={d.role === r ? 'on' : ''} aria-pressed={d.role === r} onClick={() => setRole(d.name, r)}>{l}</button>)}
+                {ROLES.map(([r, l]) => <button key={r} type="button" className={d.role === r ? 'on' : ''} aria-pressed={d.role === r} title={r === 'surface' ? 'Synth controller: its knobs and faders shape the synth sound' : undefined} onClick={() => setRole(d.name, r)}>{l}</button>)}
               </div>
             </div>
           ))}
           {hasDj && <p className="kg-dev-hint">Quit Serato if it's open: it grabs the controller.</p>}
+          {live.length === 0 && (
+            <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
+          )}
           <h4>🎹 Sound (what the piano plays)</h4>
           <div className="kg-dev-sounds">
             {SOUNDS.map((s) => (

@@ -329,4 +329,11 @@ export const entries: Entry[] = [
     title: '🎼 Sheet music levels: Single, Easy chords, Full',
     body: 'The sheet music now matches how much you want to play. 🎵 Single shows just the melody. 🎶 Easy chords adds chord names on top and one simple left-hand note per chord. 🎼 Full writes a real left-hand part: "Alberti bass" (a rolling pattern Mozart loved) in 4/4, "oom-pah-pah" for waltzes in 3/4. Koog writes these arrangements itself using music theory: it picks chords that fit the melody and always ends with the classic V→I cadence. In SONGS, your left hand earns bonus points for chord notes.',
   },
+  {
+    id: 46,
+    time: 'Evening',
+    stage: 'ship',
+    title: '🎛️ Controller Mode: the DJ board becomes a synthesizer',
+    body: 'Flip the DJ controller to 🎛️ Synth and it turns into the knobs of a Moog-style synthesizer for the piano. The crossfader sweeps the FILTER (that classic "wow" sound), the knobs set resonance, envelope, glide and wobble, the faders shape each note (attack, decay, sustain, release), the jog wheel bends the pitch, and the pads pick the waveform. Open a synth from the timeline and the knobs re-map to THAT instrument: organ drawbars, a 303\'s sequencer steps, a DX7\'s FM ratios. The screen labels every knob, and 🎓 Learn lets you put any setting on any knob. Also: drum-only beats no longer force a key. Drums don\'t have a key, so play in any key you like.',
+  },
 ]

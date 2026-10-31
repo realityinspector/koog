@@ -46,7 +46,8 @@ export const holdKey = (on: boolean) => { D.hold = on; if (!on) followKey() }
 function followKey() {
   if (D.hold) return
   const v = getView()
-  const lead = v.lead
+  // drums have no key: a deck only sets the song key while a pitched stem (bass, synth, vox) is audible
+  const lead = v.lead && v[v.lead].mask.slice(1).some(Boolean) ? v.lead : null
   if (lead) {
     const target = TRACKS[lead].key
     if (pendingKey && sameKey(pendingKey, target)) return
