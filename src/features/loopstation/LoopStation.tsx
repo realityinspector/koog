@@ -1,28 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './loopstation.css'
 import { ControllerPic } from '../dj/Controller'
 import { BPM_MAX, BPM_MIN, setBpm, setLink, tapTempo, useMaster } from '../../music/masterClock'
 import {
-  INSTRUMENTS, LAYERS, LEN_CHOICES, clearAll, clearLayer, downloadMidi, instLabel, listSessions, loadSession, loopPos, padAction, pressLayer, redo, saveSession,
-  select, setLayerInst, setLayerParam, setLayerVol, setLenBars, setOpt, stopAll, togglePlay, toggleMute, toggleSolo, undo, useLoop, type Layer,
+  INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
+  saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopAll, stopLayer, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
 } from './loopEngine'
-import { LOOP_LABELS, currentPage, loopInput, setControllerPage, useLoopPage, useLoopView } from './loopSurface'
+import { GUIDE_PATS, setGuide, unlockGuide, useGuide, type GuidePat } from './guide'
+import { currentPage, loopInput, loopLabels, setControllerPage, useLoopPage, useLoopView } from './loopSurface'
 import { useSurface } from '../controller/surface'
 
-const STATE_ICON: Record<Layer['state'], string> = { empty: '○', rec: '●', over: '◉', play: '▶', stop: '■' }
-const STATE_TXT: Record<Layer['state'], string> = { empty: 'empty', rec: 'recording', over: 'overdubbing', play: 'playing', stop: 'stopped' }
+// A loop-pedal style panel: track strips with one big REC/PLAY/DUB button each (coloured ring), a fader, STOP, and an LCD.
+const CIRC = 2 * Math.PI * 40
+const WORD: Record<string, string> = { empty: 'EMPTY', rec: 'REC', over: 'DUB', play: 'PLAY', stop: 'STOP' }
+const ICON: Record<string, string> = { empty: '●', rec: '●', over: '◉', play: '▶', stop: '▶' }
 const QUANTS: [number, string][] = [[0, 'Off'], [0.5, '1/8'], [0.25, '1/16']]
+const stateClass = (l: Layer) => (l.pend ? 'wait' : l.state)
 
-/** keeps --ls-pos (0..1 through the loop) up to date on the root; slower when the person prefers reduced motion */
-function usePlayhead(root: React.RefObject<HTMLElement | null>) {
+/** rings follow the loop (rAF; 4 Hz when the person prefers reduced motion), and the hold ring fills while a button is held */
+function useRings(root: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     let raf = 0, h = 0
-    const len = () => useLoop.getState().lenBeats
     const step = () => {
-      const p = loopPos(), l = len()
-      root.current?.style.setProperty('--ls-pos', p && !p.counting && l > 0 ? String(p.pos / l) : '0')
-      root.current?.setAttribute('data-count', p?.counting ? String(p.bar) : '')
+      const el = root.current; if (!el) return
+      el.querySelectorAll<SVGCircleElement>('[data-ring]').forEach((c) => {
+        const i = Number(c.dataset.ring), p = layerProgress(i)
+        c.style.strokeDashoffset = String(CIRC * (1 - (p < 0 ? (p === -2 ? 1 : 0) : p)))
+      })
+      el.querySelectorAll<SVGCircleElement>('[data-hold]').forEach((c) => { c.style.strokeDashoffset = String(CIRC * (1 - holdProgress(Number(c.dataset.hold)))) })
     }
     if (calm) h = window.setInterval(step, 250)
     else { const loop = () => { step(); raf = requestAnimationFrame(loop) }; raf = requestAnimationFrame(loop) }
@@ -30,143 +36,169 @@ function usePlayhead(root: React.RefObject<HTMLElement | null>) {
   }, [root])
 }
 
-function Roll({ layer, len }: { layer: Layer; len: number }) {
-  const notes = useMemo(() => layer.takes.flatMap((t) => t.notes), [layer.takes])
-  const lanes = useMemo(() => layer.takes.flatMap((t) => Object.entries(t.auto)), [layer.takes])
-  const L = Math.max(len, 4)
-  const lo = notes.length ? Math.min(...notes.map((n) => n.n)) - 1 : 55, hi = notes.length ? Math.max(...notes.map((n) => n.n)) + 1 : 79
-  const span = Math.max(12, hi - lo)
+function RingButton({ i, l, mini }: { i: number; l: Layer; mini?: boolean }) {
+  const cls = stateClass(l)
+  const down = (e: React.PointerEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); buttonDown(i) }
+  const up = () => buttonUp(i)
+  const kd = (e: React.KeyboardEvent) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); buttonDown(i) } }
+  const ku = (e: React.KeyboardEvent) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); buttonUp(i) } }
+  const what = l.pend ? `waiting to ${l.pend.to === 'over' ? 'dub' : l.pend.to}` : WORD[l.state].toLowerCase()
   return (
-    <div className="ls-roll" aria-hidden="true">
-      <svg viewBox={`0 0 ${L * 10} 40`} preserveAspectRatio="none">
-        {Array.from({ length: Math.floor(L / 4) }, (_, i) => <line key={i} x1={i * 40} x2={i * 40} y1={0} y2={40} className="ls-bar" />)}
-        {notes.map((n, i) => <rect key={i} x={((n.t + layer.nudge + L) % L) * 10} y={36 - ((n.n - lo) / span) * 34} width={Math.max(2, n.d * 10)} height={3} rx={1} className="ls-note" opacity={0.4 + (n.v / 127) * 0.6} />)}
-        {lanes.map(([k, pts], i) => {
-          const vs = pts.map((p) => p.v), a = Math.min(...vs), b = Math.max(...vs)
-          return <polyline key={k + i} className="ls-auto" fill="none" points={pts.map((p) => `${p.t * 10},${38 - (b === a ? 0.5 : (p.v - a) / (b - a)) * 10}`).join(' ')} />
-        })}
+    <button type="button" className={'lp-ring rs-' + cls + (mini ? ' mini' : '')} onPointerDown={down} onPointerUp={up} onPointerCancel={up} onKeyDown={kd} onKeyUp={ku}
+      aria-label={`Track ${i + 1}: ${what}. Tap: record, then play or dub. Double-tap: stop. Hold 2 seconds: undo. Hold while stopped: clear.`}
+      title="Tap REC / PLAY / DUB  ·  double-tap STOP  ·  hold 2 s UNDO (again REDO)  ·  hold while stopped CLEAR">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" className="lp-track" />
+        <circle cx="50" cy="50" r="40" className="lp-arc" data-ring={i} strokeDasharray={CIRC} transform="rotate(-90 50 50)" />
+        <circle cx="50" cy="50" r="33" className="lp-hold" data-hold={i} strokeDasharray={2 * Math.PI * 40} transform="rotate(-90 50 50)" />
+        <circle cx="50" cy="50" r="28" className="lp-cap" />
+        <text x="50" y={mini ? 58 : 54} textAnchor="middle" className="lp-glyph">{mini ? i + 1 : ICON[l.state]}</text>
+        {!mini && <text x="50" y="68" textAnchor="middle" className="lp-word">{l.pend ? 'WAIT' : WORD[l.state]}</text>}
       </svg>
-      <i className="ls-head" />
-    </div>
+    </button>
   )
 }
 
-function LaneRow({ i, layer, len, sel }: { i: number; layer: Layer; len: number; sel: boolean }) {
-  const lanes = layer.takes.reduce((n, t) => n + Object.keys(t.auto).length, 0)
+function Strip({ i, l, sel }: { i: number; l: Layer; sel: boolean }) {
   return (
-    <div className={'ls-lane s-' + layer.state + (sel ? ' sel' : '') + (layer.mute ? ' muted' : '')} onPointerDown={() => select(i)}>
-      <button type="button" className="ls-pad" title={`Layer ${i + 1}: ${STATE_TXT[layer.state]}. Tap to ${layer.state === 'empty' ? 'record' : layer.state === 'rec' ? 'finish and play' : layer.state === 'play' ? 'overdub' : layer.state === 'over' ? 'stop overdubbing' : 'play'}.`}
-        onClick={() => pressLayer(i)}><b>{i + 1}</b><span aria-hidden="true">{STATE_ICON[layer.state]}</span><span className="ls-sr">{STATE_TXT[layer.state]}</span></button>
-      <select className="ls-inst" aria-label={`Layer ${i + 1} sound`} value={layer.inst} onChange={(e) => setLayerInst(i, e.target.value)}>
-        {INSTRUMENTS().map((x) => <option key={x} value={x}>{instLabel(x)}</option>)}
-        {!INSTRUMENTS().includes(layer.inst) && <option value={layer.inst}>{instLabel(layer.inst)}</option>}
-      </select>
-      <input className="ls-vol" type="range" min={0} max={1} step={0.01} value={layer.vol} aria-label={`Layer ${i + 1} volume`} onChange={(e) => setLayerVol(i, Number(e.target.value))} />
-      <button type="button" className={'ls-b' + (layer.mute ? ' on' : '')} aria-pressed={layer.mute} title="Mute" onClick={() => toggleMute(i)}>M</button>
-      <button type="button" className={'ls-b' + (layer.solo ? ' on' : '')} aria-pressed={layer.solo} title="Solo" onClick={() => toggleSolo(i)}>S</button>
-      <button type="button" className="ls-b" title="Undo the last take" disabled={!layer.takes.length && layer.state !== 'rec' && layer.state !== 'over'} onClick={() => undo(i)}>↶</button>
-      <button type="button" className="ls-b" title="Redo" disabled={!layer.redo.length} onClick={() => redo(i)}>↷</button>
-      <button type="button" className="ls-b" title="Clear this layer" disabled={layer.state === 'empty'} onClick={() => clearLayer(i)}>✕</button>
-      <Roll layer={layer} len={len} />
-      {sel && layer.state !== 'empty' && (
-        <div className="ls-params">
-          <label>Transpose <input type="number" min={-24} max={24} value={layer.transpose} onChange={(e) => setLayerParam(i, 'transpose', Number(e.target.value))} /></label>
-          <label>Gate <input type="number" min={0.2} max={2} step={0.05} value={layer.gate} onChange={(e) => setLayerParam(i, 'gate', Number(e.target.value))} /></label>
-          <label>Nudge <input type="number" min={-1} max={1} step={0.03125} value={layer.nudge} onChange={(e) => setLayerParam(i, 'nudge', Number(e.target.value))} /></label>
-          {lanes > 0 && <span className="ls-chip" title="Knob moves recorded on this layer">🎚️ {lanes} automation lane{lanes > 1 ? 's' : ''}</span>}
+    <section className={'lp-strip' + (sel ? ' sel' : '') + ' ss-' + stateClass(l)} onPointerDown={() => { if (!sel) select(i) }} aria-label={`Track ${i + 1}`}>
+      <header>
+        <b>{i + 1}</b>
+        <select className="lp-inst" aria-label={`Track ${i + 1} sound`} value={l.inst} onChange={(e) => setLayerInst(i, e.target.value)}>
+          {INSTRUMENTS().map((x) => <option key={x} value={x}>{instLabel(x)}</option>)}
+          {!INSTRUMENTS().includes(l.inst) && <option value={l.inst}>{instLabel(l.inst)}</option>}
+        </select>
+        <button type="button" className={'lp-mini' + (l.mute ? ' on' : '')} aria-pressed={l.mute} title="Mute" onClick={() => toggleMute(i)}>M</button>
+        <button type="button" className={'lp-mini' + (l.solo ? ' on' : '')} aria-pressed={l.solo} title="Solo" onClick={() => toggleSolo(i)}>S</button>
+      </header>
+      <div className="lp-mid">
+        <input className="lp-fader" type="range" min={0} max={1} step={0.01} value={l.vol} aria-label={`Track ${i + 1} level`} onChange={(e) => setLayerVol(i, Number(e.target.value))} />
+        <div className="lp-btncol">
+          <RingButton i={i} l={l} />
+          <button type="button" className="lp-stop" disabled={l.state === 'empty'} onClick={() => stopLayer(i)} title="Stop this track (follows its STOP mode)">■ STOP</button>
         </div>
-      )}
+      </div>
+    </section>
+  )
+}
+
+/** pedal options + FX of the SELECTED track, in one slim row under the strips */
+function EditBar({ i, l }: { i: number; l: Layer }) {
+  const set = <K extends Parameters<typeof setLayerOpt>[1]>(k: K, v: Layer[K]) => setLayerOpt(i, k, v)
+  const filt = canFilter(l.inst)
+  return (
+    <div className="lp-edit" role="group" aria-label={`Track ${i + 1} options`}>
+      <b>TRACK {i + 1}</b>
+        <button type="button" className={'lp-chip' + (l.oneShot ? ' on' : '')} aria-pressed={l.oneShot} title="Play once, then stop" onClick={() => set('oneShot', !l.oneShot)}>1-SHOT</button>
+        <button type="button" className={'lp-chip' + (l.reverse ? ' on' : '')} aria-pressed={l.reverse} title="Play the loop backwards" onClick={() => set('reverse', !l.reverse)}>REV</button>
+        <select className="lp-chip" aria-label="Speed" value={l.speed} onChange={(e) => set('speed', Number(e.target.value) as Layer['speed'])} title="Playback speed"><option value={0.5}>½ speed</option><option value={1}>1× speed</option><option value={2}>2× speed</option></select>
+        <select className="lp-chip" aria-label="Start mode" value={l.startMode} onChange={(e) => set('startMode', e.target.value as Layer['startMode'])} title="When PLAY starts"><option value="now">start: now</option><option value="end">start: loop end</option></select>
+        <select className="lp-chip" aria-label="Stop mode" value={l.stopMode} onChange={(e) => set('stopMode', e.target.value as Layer['stopMode'])} title="When STOP stops"><option value="now">stop: now</option><option value="end">stop: loop end</option><option value="fade">stop: fade</option></select>
+        <select className="lp-chip" aria-label="Loop length" value={l.mult} onChange={(e) => set('mult', Number(e.target.value) as Layer['mult'])} title="Length as a multiple of track 1 (LOOP SYNC)"><option value={1}>len ×1</option><option value={2}>len ×2</option><option value={4}>len ×4</option><option value={8}>len ×8</option></select>
+        <button type="button" className={'lp-chip fx' + (l.fxFilter ? ' on' : '')} disabled={!filt} title={filt ? 'Filter sweep (click: off / half / full)' : 'This sound has no filter'} onClick={() => set('fxFilter', l.fxFilter === 0 ? 0.5 : l.fxFilter < 1 ? 1 : 0)}>FILT{l.fxFilter ? ' ' + Math.round(l.fxFilter * 100) : ''}</button>
+        <button type="button" className={'lp-chip fx' + (l.fxStutter ? ' on' : '')} title="Stutter roll (click: off / 1/8 / 1/16)" onClick={() => set('fxStutter', ((l.fxStutter + 1) % 3) as 0 | 1 | 2)}>ROLL{l.fxStutter ? (l.fxStutter === 1 ? ' ⅛' : ' 1/16') : ''}</button>
+        <button type="button" className={'lp-chip fx' + (l.transpose === -12 ? ' on' : '')} title="Down an octave" onClick={() => setLayerParam(i, 'transpose', l.transpose === -12 ? 0 : -12)}>−8va</button>
+        <button type="button" className={'lp-chip fx' + (l.transpose === 12 ? ' on' : '')} title="Up an octave" onClick={() => setLayerParam(i, 'transpose', l.transpose === 12 ? 0 : 12)}>+8va</button>
     </div>
   )
 }
 
-function Position() {
-  const lenBeats = useLoop((s) => s.lenBeats)
-  return <div className="ls-pos" aria-hidden="true"><i /><span>{lenBeats ? `${lenBeats / 4} bar${lenBeats > 4 ? 's' : ''}` : 'length: first take'}</span></div>
+/** the LCD: track, mode, bar.beat, bpm, settings */
+function Lcd() {
+  const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following)
+  const [, tick] = useState(0)
+  useEffect(() => { const h = window.setInterval(() => tick((n) => n + 1), 100); return () => clearInterval(h) }, [])
+  const L = s.layers[s.sel], info = lcdInfo()
+  const mode = L.pend ? 'WAIT' : WORD[L.state]
+  const pos = info.running ? (info.counting ? `COUNT ${info.count}` : `${String(info.bar).padStart(2, '0')}.${info.beat}`) : '--.-'
+  return (
+    <div className="lp-lcd" role="status" aria-live="off">
+      <div className="l1"><span>TRACK {s.sel + 1}</span><b>{mode}</b><span>{pos}{info.bars ? ' / ' + (Math.round(info.bars * 10) / 10) + ' BARS' : ''}</span></div>
+      <div className="l2"><span>{Math.round(bpm * 10) / 10} BPM{following ? ' DJ' : ''}</span><span>{s.recNext === 'play' ? 'REC>PLAY' : 'REC>DUB'}</span><span>{s.sync ? 'SYNC' : 'FREE'}</span><span>{s.measure ? 'MEASURE' : 'LIVE'}</span><span>{g.on ? 'GUIDE ' + g.pat.toUpperCase() : 'GUIDE OFF'}</span></div>
+    </div>
+  )
 }
 
-function BpmBox() {
-  const bpm = useMaster((s) => s.bpm), following = useMaster((s) => s.following)
+function Seg({ on, onClick, children, title }: { on: boolean; onClick: () => void; children: React.ReactNode; title?: string }) {
+  return <button type="button" className={'lp-chip big' + (on ? ' on' : '')} aria-pressed={on} title={title} onClick={onClick}>{children}</button>
+}
+
+function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: boolean) => void; pic: boolean; setPic: (b: boolean) => void }) {
+  const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following), link = useMaster((m) => m.link)
+  const [slot, setSlot] = useState('1'), [, bump] = useState(0)
+  const all = listSessions()
   return (
-    <span className="ls-bpm">
-      <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={Math.round(bpm * 10) / 10} aria-label="Tempo in beats per minute" onChange={(e) => setBpm(Number(e.target.value))} disabled={following} />
-      <button type="button" className="ls-b" title="Tap tempo" onClick={() => tapTempo()}>TAP</button>
-      {following && <span className="ls-chip" title="The DJ decks are playing, so the loop follows their tempo">🎧 follows DJ</span>}
-    </span>
+    <>
+      <div className="lp-top">
+        <Lcd />
+        <button type="button" className={'lp-all' + (s.running ? ' on' : '')} aria-pressed={s.running} onClick={() => { unlockGuide(); togglePlay() }} title="ALL START / STOP">{s.running ? '■ ALL STOP' : '▶ ALL START'}</button>
+        <span className="lp-grp"><b>BPM</b>
+          <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={Math.round(bpm * 10) / 10} disabled={following} aria-label="Tempo in beats per minute" onChange={(e) => setBpm(Number(e.target.value))} />
+          <button type="button" className="lp-chip" onClick={() => tapTempo()} title="Tap tempo">TAP</button></span>
+      </div>
+      <div className="lp-set">
+        <span className="lp-grp"><b>REC →</b>
+          <Seg on={s.recNext === 'play'} onClick={() => setOpt('recNext', 'play')} title="Second press goes to PLAY">PLAY</Seg>
+          <Seg on={s.recNext === 'dub'} onClick={() => setOpt('recNext', 'dub')} title="Second press goes straight to DUB">DUB</Seg></span>
+        <Seg on={s.sync} onClick={() => setOpt('sync', !s.sync)} title="LOOP SYNC: tracks lock to the first track's length (or a multiple)">LOOP SYNC</Seg>
+        <Seg on={s.measure} onClick={() => setOpt('measure', !s.measure)} title="MEASURE: REC / DUB / PLAY wait for the next bar line (the ring blinks while waiting)">MEASURE</Seg>
+        <span className="lp-grp"><Seg on={g.on} onClick={() => { unlockGuide(); setGuide({ on: !g.on }) }} title="Rhythm guide: a light drum pattern on the loop's tempo">GUIDE</Seg>
+          <select aria-label="Guide pattern" value={g.pat} onChange={(e) => setGuide({ pat: e.target.value as GuidePat })}>{GUIDE_PATS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></span>
+        <Seg on={more} onClick={() => setMore(!more)} title="Show tracks 6 to 8">{more ? '◂ 1-5' : '6-8 ▸'}</Seg>
+        <details className="lp-more"><summary title="More settings: quantise, bars, save / load, export">⋯ MORE</summary>
+          <div className="lp-more-body">
+            <label>Count-in <select value={s.countIn} onChange={(e) => setOpt('countIn', Number(e.target.value))}>{[0, 1, 2].map((n) => <option key={n} value={n}>{n} bar{n === 1 ? '' : 's'}</option>)}</select></label>
+            <label title="Loop main volume (under every engine's own safety cap)">Main <input type="range" min={0} max={1} step={0.01} value={s.master} aria-label="Loop main volume" onChange={(e) => setOpt('master', Number(e.target.value))} /></label>
+            <label>Quantise <select value={s.quant} onChange={(e) => setOpt('quant', Number(e.target.value))}>{QUANTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+            <label>Bars <select value={s.lenBars} onChange={(e) => setLenBars(Number(e.target.value))}><option value={0}>auto</option>{LEN_CHOICES.map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
+            <label title="Make the beat machine follow this tempo"><input type="checkbox" checked={link} onChange={(e) => setLink(e.target.checked)} /> link beats</label>
+            <label title="Also record DJ pad hits"><input type="checkbox" checked={s.recPads} onChange={(e) => setOpt('recPads', e.target.checked)} /> DJ pads</label>
+            <label title="Show the selected track on the sheet music while it plays"><input type="checkbox" checked={s.sheet} onChange={(e) => setOpt('sheet', e.target.checked)} /> sheet</label>
+            <Seg on={pic} onClick={() => setPic(!pic)} title="The drawn controller for the Loop page">controller</Seg>
+            <span className="lp-grp"><select aria-label="Save slot" value={slot} onChange={(e) => setSlot(e.target.value)}>{['1', '2', '3', '4'].map((k) => <option key={k} value={k}>slot {k}{all[k] ? ' ●' : ''}</option>)}</select>
+              <button type="button" className="lp-chip" onClick={() => { saveSession(slot); bump((n) => n + 1) }}>SAVE</button>
+              <button type="button" className="lp-chip" disabled={!all[slot]} onClick={() => loadSession(slot)}>LOAD</button></span>
+            <button type="button" className="lp-chip" disabled={!s.layers.some((l) => l.takes.length)} onClick={() => downloadMidi(1)} title="Download as a Standard MIDI File">⬇ .MID</button>
+            <button type="button" className="lp-chip" onClick={() => stopAll()}>■ stop</button>
+            <button type="button" className="lp-chip" onClick={() => clearAll()} title="Clear every track">CLEAR ALL</button>
+          </div>
+        </details>
+      </div>
+    </>
   )
 }
 
 export function LoopStation({ compact }: { compact?: boolean }) {
   const s = useLoop()
   const root = useRef<HTMLDivElement>(null)
-  usePlayhead(root)
-  const countLeft = s.countLeft
-  const rec = s.layers.findIndex((l) => l.state === 'rec' || l.state === 'over')
-  const playing = s.running
+  const [more, setMore] = useState(false), [pic, setPic] = useState(false)
+  useRings(root)
+  const bpm = useMaster((m) => m.bpm), guideOn = useGuide((g) => g.on)
 
   if (compact) {
     return (
-      <div className="ls ls-compact" ref={root} role="group" aria-label="Loop station">
-        <button type="button" className={'ls-b big' + (playing ? ' on' : '')} aria-pressed={playing} title={playing ? 'Stop all layers' : 'Play all layers'} onClick={() => togglePlay()}>{playing ? '■' : '▶'}</button>
-        <button type="button" className={'ls-b big rec' + (rec >= 0 ? ' on' : '')} title="Record / overdub the selected layer" onClick={() => padAction(s.sel)}>●</button>
-        <BpmBox />
-        <span className="ls-dots" role="group" aria-label="Layers">
-          {s.layers.map((l, i) => <button key={i} type="button" className={'ls-dot s-' + l.state + (i === s.sel ? ' sel' : '')} aria-label={`Layer ${i + 1} ${STATE_TXT[l.state]}`} onClick={() => padAction(i)}>{i + 1}</button>)}
-        </span>
-        <span className="ls-count" aria-live="polite">{countLeft > 0 ? `count-in ${countLeft}` : ''}</span>
-        <Position />
+      <div className="lp lp-compact" ref={root} role="group" aria-label="Loop station">
+        <div className="lp-crow">
+          <button type="button" className={'lp-all sm' + (s.running ? ' on' : '')} aria-pressed={s.running} onClick={() => { unlockGuide(); togglePlay() }} title="ALL START / STOP">{s.running ? '■' : '▶'}</button>
+          {s.layers.slice(0, 5).map((l, i) => <RingButton key={i} i={i} l={l} mini />)}
+        </div>
+        <div className="lp-crow">
+          <span className="lp-lcd sm"><b>{Math.round(bpm)}</b> BPM{s.countLeft > 0 ? ' · COUNT ' + s.countLeft : ''}</span>
+          <button type="button" className={'lp-chip' + (guideOn ? ' on' : '')} aria-pressed={guideOn} onClick={() => { unlockGuide(); setGuide({ on: !guideOn }) }} title="Rhythm guide">GUIDE</button>
+        </div>
       </div>
     )
   }
-
+  const shown = more ? s.layers : s.layers.slice(0, 5)
   return (
-    <div className="ls" ref={root} role="region" aria-label="Loop station">
-      <div className="ls-head-row">
-        <b className="ls-title">🔁 Loop Station</b>
-        <button type="button" className={'ls-b big' + (playing ? ' on' : '')} aria-pressed={playing} onClick={() => togglePlay()} title="Start / stop all layers">{playing ? '■ Stop' : '▶ Play'}</button>
-        <BpmBox />
-        <label>Bars <select value={s.lenBars} onChange={(e) => setLenBars(Number(e.target.value))}><option value={0}>Auto (first take)</option>{LEN_CHOICES.map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
-        <label>Count-in <select value={s.countIn} onChange={(e) => setOpt('countIn', Number(e.target.value))}>{[0, 1, 2].map((n) => <option key={n} value={n}>{n} bar{n === 1 ? '' : 's'}</option>)}</select></label>
-        <label>Quantise <select value={s.quant} onChange={(e) => setOpt('quant', Number(e.target.value))}>{QUANTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-        <span className="ls-count" aria-live="polite">{countLeft > 0 ? `Count-in: ${countLeft}` : ''}</span>
+    <div className="lp" ref={root} role="region" aria-label="Loop station" data-n={shown.length}>
+      <Settings more={more} setMore={setMore} pic={pic} setPic={setPic} />
+      <div className="lp-strips" style={{ ['--n' as string]: shown.length }}>
+        {shown.map((l, i) => <Strip key={i} i={i} l={l} sel={i === s.sel} />)}
       </div>
-      <div className="ls-opts">
-        <label><input type="checkbox" checked={s.metro} onChange={(e) => setOpt('metro', e.target.checked)} /> Click</label>
-        <label title="Also record DJ pad hits"><input type="checkbox" checked={s.recPads} onChange={(e) => setOpt('recPads', e.target.checked)} /> DJ pads</label>
-        <label title="Show the selected layer on the sheet music while it plays"><input type="checkbox" checked={s.sheet} onChange={(e) => setOpt('sheet', e.target.checked)} /> Sheet</label>
-        <LinkBox />
-        <label>Main <input type="range" min={0} max={1} step={0.01} value={s.master} aria-label="Loop main volume" onChange={(e) => setOpt('master', Number(e.target.value))} /></label>
-        <label title="Blend layers 1-4 against 5-8">1-4 ⇄ 5-8 <input type="range" min={0} max={1} step={0.01} value={s.xf} aria-label="Layer blend" onChange={(e) => setOpt('xf', Number(e.target.value))} /></label>
-        <span className="ls-sp" />
-        <Sessions />
-        <button type="button" className="ls-b" onClick={() => downloadMidi(1)} disabled={!s.layers.some((l) => l.takes.length)} title="Download the loop as a Standard MIDI File">⬇ .mid</button>
-        <button type="button" className="ls-b" onClick={() => stopAll()}>■ Stop</button>
-        <button type="button" className="ls-b" onClick={() => clearAll()}>Clear all</button>
-      </div>
-      <div className="ls-lanes">
-        {s.layers.map((l, i) => <LaneRow key={i} i={i} layer={l} len={s.lenBeats} sel={i === s.sel} />)}
-      </div>
-      <Position />
-      <PadsPicture />
+      <EditBar i={s.sel} l={s.layers[s.sel]} />
+      {pic && <div className="lp-picwrap"><PadsPicture /></div>}
     </div>
-  )
-}
-
-function LinkBox() {
-  const link = useMaster((s) => s.link)
-  return <label title="Make the beat machine follow this tempo"><input type="checkbox" checked={link} onChange={(e) => setLink(e.target.checked)} /> Link beats</label>
-}
-
-function Sessions() {
-  const [slot, setSlot] = useState('1')
-  const [, bump] = useState(0)
-  const all = listSessions()
-  return (
-    <span className="ls-sess">
-      <select aria-label="Save slot" value={slot} onChange={(e) => setSlot(e.target.value)}>{['1', '2', '3', '4'].map((k) => <option key={k} value={k}>Slot {k}{all[k] ? ' ●' : ''}</option>)}</select>
-      <button type="button" className="ls-b" onClick={() => { saveSession(slot); bump((n) => n + 1) }}>Save</button>
-      <button type="button" className="ls-b" disabled={!all[slot]} onClick={() => loadSession(slot)}>Load</button>
-    </span>
   )
 }
 
@@ -174,21 +206,18 @@ function PadsPicture() {
   const v = useLoopView()
   const synth = useSurface((s) => s.on)
   const page = currentPage(synth, v.on)
-  const fn = useLoop((s) => s.fn)
   const now = performance.now()
-  const labels = { ...LOOP_LABELS, 'padmode.A': fn.toUpperCase(), 'padmode.B': fn.toUpperCase() }
   const ctl = Object.fromEntries(Object.entries(v.values).map(([k, x]) => [k, { v: x, n: 1 }]))
   const hot = Object.fromEntries(Object.entries(v.touched).filter(([, t]) => now - t < 600).map(([k]) => [k, true]))
   return (
-    <div className="ls-pic">
-      <div className="ls-pic-head">
-        <b>Controller</b>
-        <button type="button" className={'ls-b' + (page === 'loop' ? ' on' : '')} aria-pressed={page === 'loop'} onClick={() => setControllerPage(page === 'loop' ? 'dj' : 'loop')}>
+    <div className="lp-pic">
+      <div className="lp-pic-head">
+        <button type="button" className={'lp-chip big' + (page === 'loop' ? ' on' : '')} aria-pressed={page === 'loop'} onClick={() => setControllerPage(page === 'loop' ? 'dj' : 'loop')}>
           {page === 'loop' ? '🔁 Controller is on the Loop page' : '🔁 Put the controller on the Loop page'}
         </button>
-        <small>{v.last || 'Tap a numbered pad to record. PAD MODE: REC / MUTE / SOLO.'}</small>
+        <small>{v.last || 'Pads 1-5 are the track buttons: tap, double-tap, hold. PAD MODE flips to tracks 6-8.'}</small>
       </div>
-      <ControllerPic ctl={ctl} labels={labels} ghost={v.ghost} hot={hot} interactive title="LOOP" onSend={(id, val) => loopInput(id, val)} />
+      <ControllerPic ctl={ctl} labels={loopLabels()} ghost={v.ghost} hot={hot} interactive title="LOOP" onSend={(id, val) => loopInput(id, val)} />
     </div>
   )
 }

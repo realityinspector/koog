@@ -1,42 +1,71 @@
-/* Loop Station (ls-*). Calm by design: no flashing; playhead is a thin moving line, steadier under prefers-reduced-motion. */
-.ls { --ls-pos: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; color: #e6e2ff; font-size: 12px;
-  background: linear-gradient(180deg, rgba(26, 20, 62, .9), rgba(12, 9, 30, .93)); border: 1px solid rgba(124, 227, 255, .3); box-sizing: border-box; max-width: 100%; }
-.ls label { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.ls select, .ls input[type='number'] { font: inherit; font-size: 12px; color: #fff; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .22); border-radius: 7px; padding: 2px 4px; }
-.ls input[type='number'] { width: 58px; }
-.ls option { color: #111; }
-.ls-head-row, .ls-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.ls-title { color: #7fe3ff; letter-spacing: .06em; font-size: 14px; }
-.ls-sp { flex: 1; }
-.ls-b { font: inherit; font-size: 11px; font-weight: 800; color: #f4f2ff; cursor: pointer; padding: 4px 9px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); white-space: nowrap; }
-.ls-b:hover:not(:disabled) { border-color: #7fe3ff; } .ls-b:disabled { opacity: .4; cursor: default; }
-.ls-b.on { background: #7fe3ff; color: #10122a; border-color: #7fe3ff; } .ls-b.big { font-size: 13px; padding: 5px 12px; } .ls-b.rec.on { background: #ff6b81; border-color: #ff6b81; }
-.ls button:focus-visible, .ls select:focus-visible, .ls input:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
-.ls-chip { font-size: 10px; font-weight: 800; padding: 1px 7px; border-radius: 6px; background: rgba(255, 216, 108, .14); color: #ffe9a8; }
-.ls-count { color: #ffd86c; font-weight: 800; min-width: 80px; }
-.ls-bpm { display: inline-flex; align-items: center; gap: 4px; }
-.ls-lanes { display: flex; flex-direction: column; gap: 4px; }
-.ls-lane { position: relative; display: grid; grid-template-columns: 44px minmax(120px, 170px) 90px auto auto auto auto auto minmax(160px, 1fr); align-items: center; gap: 5px; padding: 4px 6px; border-radius: 10px; background: rgba(255, 255, 255, .04); border: 1px solid transparent; }
-.ls-lane.sel { border-color: rgba(127, 227, 255, .6); background: rgba(127, 227, 255, .07); }
-.ls-lane.muted { opacity: .55; }
-.ls-pad { display: flex; align-items: center; justify-content: center; gap: 3px; height: 30px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .07); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
-.s-rec .ls-pad { background: #ff6b81; color: #1b1832; } .s-over .ls-pad { background: #ffb35c; color: #1b1832; } .s-play .ls-pad { background: #6cffa8; color: #10122a; } .s-stop .ls-pad { background: rgba(108, 255, 168, .22); }
-.ls-inst { min-width: 0; } .ls-vol { width: 100%; min-width: 0; }
-.ls-roll { position: relative; height: 40px; min-width: 0; border-radius: 6px; background: rgba(0, 0, 0, .3); overflow: hidden; }
-.ls-roll svg { display: block; width: 100%; height: 100%; } .ls-bar { stroke: rgba(255, 255, 255, .12); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.ls-note { fill: #7fe3ff; } .ls-auto { stroke: #ffd86c; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.s-play .ls-head, .s-over .ls-head, .s-rec .ls-head { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; opacity: .8; left: calc(var(--ls-pos) * 100%); }
-.ls-head { display: none; } .s-play .ls-head, .s-over .ls-head, .s-rec .ls-head { display: block; }
-.ls-params { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 2px 4px; }
-.ls-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.ls-pos { position: relative; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .12); } .ls-pos i { position: absolute; top: -2px; height: 8px; width: 3px; background: #7fe3ff; left: calc(var(--ls-pos) * 100%); }
-.ls-pos span { position: absolute; right: 0; top: 8px; font-size: 10px; opacity: .6; }
-.ls-pic { max-width: 560px; } .ls-pic-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; } .ls-pic small { opacity: .7; }
-.ls-pic .dj-pic { display: block; width: 100%; height: auto; }
-.ls-sess { display: inline-flex; gap: 4px; align-items: center; }
-.ls-compact { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 4px 8px; border-radius: 10px; position: relative; }
-.ls-compact .ls-pos { flex: 1 1 80px; min-width: 60px; } .ls-compact .ls-pos span { display: none; }
-.ls-dots { display: inline-flex; gap: 3px; }
-.ls-dot { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .06); color: #fff; font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; padding: 0; }
-.ls-dot.s-play { background: #6cffa8; color: #10122a; } .ls-dot.s-rec { background: #ff6b81; color: #10122a; } .ls-dot.s-over { background: #ffb35c; color: #10122a; } .ls-dot.s-stop { background: rgba(108, 255, 168, .25); } .ls-dot.sel { outline: 2px solid #7fe3ff; }
-@media (max-width: 800px) { .ls-lane { grid-template-columns: 44px minmax(100px, 1fr) 80px auto auto auto auto auto; } .ls-roll { grid-column: 1 / -1; } }
+/* Loop Station: loop-pedal style (lp-*). Dark brushed metal, chunky buttons with LED rings, an LCD.
+   Calm by design: the only motion is a slow ring blink (<= 1 Hz) and the progress arc; both stop under prefers-reduced-motion. */
+.lp { --metal: #1c1d24; --metal2: #101116; --edge: #3a3c48; --led-red: #ff4d5e; --led-amber: #ffae3d; --led-green: #4dff9a; --lcdc: #8dffb4; --lcdbg: #07110c;
+  display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; max-width: 100%; height: 100%; min-height: 0; padding: 8px 10px; position: relative; border-radius: 16px; color: #d9d7ea; font-size: 12px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px), linear-gradient(180deg, #23242d, #121319); border: 2px solid var(--edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 -3px 12px rgba(0, 0, 0, .5), 0 6px 18px rgba(0, 0, 0, .45); }
+.lp select, .lp input[type='number'] { font: inherit; font-size: 11px; color: #e8e6f6; background: #0d0e13; border: 1px solid var(--edge); border-radius: 6px; padding: 2px 3px; min-width: 0; }
+.lp input[type='number'] { width: 54px; } .lp option { color: #111; }
+.lp button:focus-visible, .lp select:focus-visible, .lp input:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
+.lp label { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 11px; color: #b9b6d2; }
+
+/* top: brand plate + LCD */
+.lp-top { display: flex; align-items: center; gap: 8px; flex: none; }
+.lp-brand { font-weight: 900; letter-spacing: .22em; font-size: 11px; color: #8d8aa8; text-shadow: 0 1px 0 #000; white-space: nowrap; }
+.lp-lcd { flex: 1; min-width: 0; font: 600 12px ui-monospace, Menlo, monospace; color: var(--lcdc); background: var(--lcdbg); border: 2px solid #000; border-radius: 6px; padding: 3px 8px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, .8), 0 0 0 1px #2d303b; text-shadow: 0 0 6px rgba(141, 255, 180, .45); }
+.lp-lcd .l1, .lp-lcd .l2 { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; overflow: hidden; } .lp-lcd .l1 { font-size: 14px; } .lp-lcd .l2 { opacity: .75; font-size: 10.5px; }
+.lp-lcd b { color: #fff; letter-spacing: .1em; }
+
+/* settings rail */
+.lp-set { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; flex: none; }
+.lp-more { position: static; margin-left: auto; } .lp-more > summary { list-style: none; cursor: pointer; font-size: 10px; font-weight: 800; letter-spacing: .06em; color: #cfcce6; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--edge); background: linear-gradient(180deg, #2a2c37, #1a1b22); } .lp-more > summary::-webkit-details-marker { display: none; }
+.lp-more-body { position: absolute; right: 8px; top: 100%; z-index: 20; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; width: min(430px, calc(100% - 16px)); padding: 10px; border-radius: 12px; background: #15161d; border: 2px solid var(--edge); box-shadow: 0 10px 24px rgba(0, 0, 0, .6); }
+.lp-grp { display: inline-flex; align-items: center; gap: 4px; } .lp-grp > b { font-size: 10px; letter-spacing: .12em; color: #8d8aa8; } .lp-sp { flex: 1; }
+.lp-all { font: inherit; font-weight: 900; letter-spacing: .1em; font-size: 12px; color: #eafff2; cursor: pointer; padding: 7px 14px; border-radius: 10px; border: 2px solid #2e6b4a; background: linear-gradient(180deg, #1d4a35, #0f2c1f); box-shadow: 0 2px 0 #000; }
+.lp-all.on { background: linear-gradient(180deg, #5d3030, #331616); border-color: #8a3b3b; color: #ffe3e3; } .lp-all.sm { padding: 3px 8px; font-size: 12px; flex: none; }
+.lp-chip { font: inherit; font-size: 10px; font-weight: 800; letter-spacing: .05em; color: #cfcce6; cursor: pointer; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--edge); background: linear-gradient(180deg, #2a2c37, #1a1b22); white-space: nowrap; min-height: 22px; }
+.lp-chip:hover:not(:disabled) { border-color: #8d8aa8; } .lp-chip:disabled { opacity: .35; cursor: default; }
+.lp-chip.on { color: #10122a; background: linear-gradient(180deg, #ffe08a, #ffbf3c); border-color: #ffbf3c; } .lp-chip.big { font-size: 11px; padding: 4px 10px; }
+select.lp-chip { padding: 2px 3px; font-weight: 700; letter-spacing: 0; }
+
+/* the track strips */
+.lp-strips { container-type: size; flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 8px; align-items: stretch; overflow: auto; }
+.lp-strip { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; padding: 5px; border-radius: 12px; border: 2px solid #2b2d38; background: linear-gradient(180deg, #1f2029, #14151b); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.lp-strip.sel { border-color: #7d83b8; box-shadow: 0 0 0 1px #7d83b8, inset 0 1px 0 rgba(255, 255, 255, .06); }
+.lp-strip header { display: flex; align-items: center; gap: 3px; } .lp-strip header b { font: 900 14px ui-monospace, monospace; color: #fff; background: #000; border-radius: 4px; padding: 0 5px; }
+.lp-inst { flex: 1; min-width: 0; text-overflow: ellipsis; }
+.lp-mini { font: inherit; font-size: 10px; font-weight: 900; width: 20px; height: 20px; padding: 0; color: #cfcce6; border-radius: 5px; border: 1px solid var(--edge); background: #1a1b22; cursor: pointer; } .lp-mini.on { background: #ffbf3c; color: #10122a; }
+.lp-mid { flex: 1; min-height: 0; display: flex; gap: 6px; align-items: stretch; justify-content: center; }
+.lp-fader { writing-mode: vertical-lr; direction: rtl; width: 22px; flex: none; min-height: 40px; height: 100%; accent-color: #b8bce8; background: transparent; }
+.lp-btncol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.lp-stop { font: inherit; font-size: 10px; font-weight: 900; letter-spacing: .08em; color: #d9d7ea; padding: 4px 12px; border-radius: 7px; border: 1px solid var(--edge); background: linear-gradient(180deg, #2c2e3a, #1a1b22); cursor: pointer; box-shadow: 0 2px 0 #000; } .lp-stop:disabled { opacity: .35; cursor: default; }
+.lp-edit { flex: none; display: flex; align-items: center; gap: 4px; overflow-x: auto; padding: 4px 6px; border-radius: 8px; background: #0f1015; border: 1px solid #2b2d38; scrollbar-width: thin; } .lp-edit > b { font: 900 10px ui-monospace, monospace; letter-spacing: .1em; color: #fff; background: #000; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.lp-edit .lp-chip { flex: none; }
+
+/* the big round button + LED ring */
+.lp-ring { --c: #3a3d4d; position: relative; padding: 0; border: 0; background: none; cursor: pointer; width: clamp(44px, min(100cqh - 76px, 100cqw / var(--n, 5) - 66px), 132px); aspect-ratio: 1; flex: none; border-radius: 50%; touch-action: none; user-select: none; -webkit-user-select: none; }
+.lp-ring svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lp-ring .lp-track { fill: none; stroke: #0a0a0e; stroke-width: 7; } .lp-ring .lp-arc { fill: none; stroke: var(--c); stroke-width: 7; stroke-linecap: round; filter: drop-shadow(0 0 4px var(--c)); stroke-dashoffset: 251; }
+.lp-ring .lp-hold { fill: none; stroke: #fff; stroke-width: 2; opacity: .85; stroke-dashoffset: 251; }
+.lp-ring .lp-cap { fill: radial-gradient(#444, #222); fill: #2a2c37; stroke: #4b4e60; stroke-width: 2; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .7)); }
+.lp-ring:active .lp-cap { fill: #1c1d25; transform: translateY(1px); }
+.lp-ring .lp-glyph { font-size: 20px; fill: var(--c); } .lp-ring .lp-word { font: 800 8px ui-monospace, monospace; fill: #cfcce6; letter-spacing: .12em; }
+.rs-rec { --c: var(--led-red); } .rs-over { --c: var(--led-amber); } .rs-play { --c: var(--led-green); } .rs-stop { --c: #2d7a52; } .rs-wait { --c: var(--led-green); } .rs-empty { --c: #3a3d4d; }
+.rs-empty .lp-arc { stroke-opacity: .5; } .rs-stop .lp-arc { stroke-opacity: .6; }
+.rs-wait .lp-arc, .rs-wait .lp-glyph { animation: lp-blink 1s steps(2, jump-none) infinite; }
+@keyframes lp-blink { 0% { opacity: 1; } 50% { opacity: .15; } }
+.lp-ring.mini { width: 31px; flex: none; } .lp-ring.mini .lp-arc, .lp-ring.mini .lp-track { stroke-width: 9; } .lp-ring.mini .lp-glyph { font-size: 26px; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .rs-wait .lp-arc, .rs-wait .lp-glyph { animation: none; } .rs-wait .lp-track { stroke: var(--led-green); stroke-dasharray: 6 6; } }
+
+/* compact: a mini row of five ring buttons */
+.lp-compact { flex-direction: column; align-items: stretch; gap: 4px; height: auto; padding: 5px 6px; border-radius: 12px; } .lp-crow { display: flex; align-items: center; gap: 4px; }
+.lp-lcd.sm { flex: none; padding: 3px 8px; font-size: 11px; }
+
+/* the drawn controller (collapsible) */
+.lp-picwrap { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 15; padding: 8px; border-radius: 12px; background: #15161d; border: 2px solid var(--edge); box-shadow: 0 10px 24px rgba(0, 0, 0, .6); } .lp-pic { max-width: 520px; margin: 0 auto; } .lp-pic-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; } .lp-pic small { opacity: .7; }
+.lp-pic .dj-pic { display: block; width: 100%; height: auto; }
+
+/* inside the Boss LOOPS screen the pedal fills the whole screen area (no page scroll) */
+.bx-screen:has(> .lp:not(.lp-compact)) { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.bx-screen > .lp:not(.lp-compact) { flex: 1; height: auto; }

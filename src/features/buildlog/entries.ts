@@ -343,4 +343,11 @@ export const entries: Entry[] = [
     title: '🏢 Boss mode, 🔁 Loop station, split keyboards and fancier synth panels',
     body: 'Dad mode is now BOSS MODE: a grown-up studio with no games or fireworks. It has a mixer for every sound engine, a loop station, a MIDI monitor, and saved "scenes" that remember a whole setup. The loop station records what you PLAY (notes and knob moves), not the sound itself, so you can change the instrument after you record. The piano can split: bass on the left hand, pads on the right. The historical synths got real faceplates: wood sides, glowing knobs, a spinning organ speaker and a mini oscilloscope. Sheet music gets new tricks too: Für Elise now reads in 3/8, the left hand earns bonus points in every game, and minor keys finally use their big "V" chord (E major in A minor). That\'s what makes them sound dramatic.',
   },
+  {
+    id: 48,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🔁 The loop station becomes a loop PEDAL',
+    body: 'Loop pedals are how one musician sounds like a whole band: record a bit, it repeats, then stack more on top. Ours now works like the real thing. There are five tracks with big glowing buttons: tap to RECORD (red), tap to PLAY (green), tap again to OVERDUB (orange), double-tap to STOP, hold for 2 seconds to UNDO. Tracks lock to the first one\'s length (LOOP SYNC), there\'s a rhythm guide to play along with, and tracks can play backwards, half-speed, double-speed or just once. We also fixed 13 bugs. The sneakiest: the very first note after the count-in was getting eaten because it came a split-second early.',
+  },
 ]

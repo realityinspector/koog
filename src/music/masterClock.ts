@@ -51,7 +51,7 @@ export function setBpm(b: number) {
 }
 
 /** align to the DJ's beat phase + tempo while a deck plays */
-function followDj(t: number) {
+function followDj(t: number, full = false) {
   const s = getBeat()
   if (!s.playing || !(s.bpm > 0)) { if (useMaster.getState().following) useMaster.setState({ following: false }); return }
   if (!useMaster.getState().following) useMaster.setState({ following: true })
@@ -59,13 +59,15 @@ function followDj(t: number) {
   const cur = beatPos(t)
   const diff = ((((djPos - cur) % 16) + 24) % 16) - 8 // nearest shift on the 16-beat ring
   if (Math.abs(s.bpm - A.bpm) > 0.05) { reanchor(s.bpm); useMaster.setState({ bpm: Math.round(s.bpm * 10) / 10 }); pushToBeats() }
-  if (Math.abs(diff) * msPerBeat() > 8) { A.b0 = cur + diff; A.t0 = t }
+  // while running only the fractional beat is corrected (never a whole-beat jump that would scramble a playing loop)
+  const shift = full ? diff : diff - Math.round(diff)
+  if (Math.abs(shift) * msPerBeat() > 8) { A.b0 = cur + shift; A.t0 = t; A.nextBeat = Math.max(A.nextBeat, Math.ceil(A.b0)) }
 }
 
 function emit(set: Set<BeatFn>, b: ClockBeat) { for (const f of [...set]) { try { f(b) } catch (e) { console.error('[master clock]', e) } } }
-function tick() {
+function tick(full = false) {
   const t = now()
-  followDj(t)
+  followDj(t, full)
   const end = t + LOOK_MS
   if (A.nextBeat < Math.floor(beatPos(t)) - 1) A.nextBeat = Math.ceil(beatPos(t))
   while (timeOfBeat(A.nextBeat) <= end) {
@@ -84,8 +86,8 @@ export function startMaster() {
   if (A.running) return
   A.running = true; A.t0 = now(); A.b0 = 0; A.nextBeat = 0
   useMaster.setState({ running: true })
-  tick() // join the DJ grid straight away
-  if (!timer) timer = window.setInterval(tick, 20)
+  tick(true) // join the DJ grid straight away (a whole-beat shift is fine before anything plays)
+  if (!timer) timer = window.setInterval(() => tick(), 20)
 }
 export function stopMaster() {
   if (!A.running) return
@@ -93,6 +95,11 @@ export function stopMaster() {
   A.running = false; A.b0 = b
   if (timer) { clearInterval(timer); timer = 0 }
   useMaster.setState({ running: false, following: false })
+}
+/** put beat 0 at this very moment (a free-running master only: with the DJ playing the grid belongs to the DJ) */
+export function resetPhase() {
+  if (!A.running || useMaster.getState().following) return
+  A.t0 = now(); A.b0 = 0; A.nextBeat = 0
 }
 /** tap tempo: average of the last few gaps; a pause over 2 s starts a fresh count */
 export function tapTempo(at = now()) {
@@ -115,7 +122,7 @@ export function setLink(on: boolean) { useMaster.setState({ link: on }); if (on)
 
 hot.offBeats?.()
 const offBeats = beatsSubscribe(() => pushToBeats())
-if (A.running && !timer) timer = window.setInterval(tick, 20)
+if (A.running && !timer) timer = window.setInterval(() => tick(), 20)
 
 if (import.meta.hot) {
   import.meta.hot.data.store = useMaster

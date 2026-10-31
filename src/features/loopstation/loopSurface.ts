@@ -1,15 +1,14 @@
 // The Loop page of the DJ controller: 🎧 DJ <-> 🎛️ Synth <-> 🔁 Loop. Device role 'loop' routes the Mixtrack here (devices.ts onLoopMessage).
-// With no hardware, the on-screen drawn controller (loopInput) does the same job. LEDs follow the layers (blink <= 2 Hz, respects ledOff).
+// With no hardware, the on-screen drawn controller (loopInput) does the same job. LEDs follow the track rings (blink <= 2 Hz, respects ledOff).
 //
-//   pads A1-A4 = layers 1-4, B1-B4 = layers 5-8   tap: record -> play -> overdub -> play (a stopped layer restarts)
-//   PAD MODE (A or B)  cycles what the pads do: REC (the cycle) -> MUTE -> SOLO
-//   hold a pad + CUE (or CUE then pad) = clear that layer          PLAY = start / stop everything
-//   CUE A = undo (selected layer)      CUE B = redo        SYNC = tap tempo
-//   VOL A = selected layer volume      VOL B = loop master volume       TEMPO A fader = bpm
-//   CROSSFADER = blend layers 1-4 against 5-8 (centre: both full)
-//   JOG A = select layer               JOG B = fine bpm
-//   deck A knobs HI/MID/LOW = selected layer TRANSPOSE / GATE (note length) / NUDGE (timing)
-//   deck B knobs HI/MID/LOW = loop BARS (1/2/4/8) / COUNT-IN (0/1/2 bars) / QUANTISE (off, 1/8, 1/16)
+//   pads A1-A4, B1 = tracks 1-5 (PAD MODE flips to the second bank: A1-A3 = tracks 6-8). Same gestures as the screen buttons:
+//       tap = REC -> PLAY/DUB -> DUB/PLAY     double-tap = STOP     hold 2 s = UNDO (again: REDO)     hold while stopped = CLEAR
+//   pads B2 / B3 / B4 = REVERSE / SPEED (1x, 1/2, 2x) / ONE-SHOT of the selected track
+//   PLAY = ALL START / STOP        CUE (either deck) = UNDO, hold = REDO        SYNC = tap tempo
+//   VOL A = selected track level   VOL B = loop main volume   TEMPO A fader = bpm   CROSSFADER = blend tracks 1-4 / 5-8
+//   JOG A = select track           JOG B = fine bpm
+//   deck A knobs HI / MID / LOW = selected track TRANSPOSE (-12 / 0 / +12) / FILTER sweep / STUTTER (off, 1/8, 1/16)
+//   deck B knobs HI / MID / LOW = loop BARS (1/2/4/8) / COUNT-IN (0/1/2 bars) / QUANTISE (off, 1/8, 1/16)
 // Faders and knobs use soft takeover (the real control must reach the value first); the drawn picture shows a dotted marker.
 import { useEffect } from 'react'
 import { create } from 'zustand'
@@ -18,26 +17,39 @@ import { decode, ledBytes } from '../dj/map'
 import { resyncLeds } from '../dj/engine'
 import { setScreenMode } from '../controller/surface'
 import { beatPos, getBpm, setBpm, tapTempo, useMaster } from '../../music/masterClock'
-import { LAYERS, LEN_CHOICES, clearLayer, padAction, togglePlay, redo, select, setLayerParam, setLayerVol, setLenBars, setOpt, undo, useLoop, getSel } from './loopEngine'
+import { LEN_CHOICES, buttonDown, buttonUp, getSel, redo, select, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, togglePlay, undo, useLoop } from './loopEngine'
 
 export type Page = 'dj' | 'synth' | 'loop'
-interface PageState { screenOn: boolean; roleOn: boolean; on: boolean; lit: Record<string, boolean>; values: Record<string, number>; ghost: Record<string, number>; touched: Record<string, number>; last: string }
+interface PageState { screenOn: boolean; roleOn: boolean; on: boolean; bank: 0 | 1; lit: Record<string, boolean>; values: Record<string, number>; ghost: Record<string, number>; touched: Record<string, number>; last: string }
 type Hot = { store?: ReturnType<typeof make>; led?: Record<string, boolean>; off?: () => void; timer?: number }
 const hot = (import.meta.hot?.data ?? {}) as Hot
-function make() { return create<PageState>()(() => ({ screenOn: false, roleOn: false, on: false, lit: {}, values: {}, ghost: {}, touched: {}, last: '' })) }
+function make() { return create<PageState>()(() => ({ screenOn: false, roleOn: false, on: false, bank: 0, lit: {}, values: {}, ghost: {}, touched: {}, last: '' })) }
 export const useLoopPage = hot.store ?? make()
 const ledState: Record<string, boolean> = hot.led ?? {}
 const get = () => useLoopPage.getState()
 
-const LED_IDS = [...Array.from({ length: LAYERS }, (_, i) => padId(i)), 'play.A', 'play.B', 'cue.A', 'cue.B', 'sync.A', 'sync.B', 'padmode.A', 'padmode.B']
-function padId(i: number) { return `pad${(i % 4) + 1}.${i < 4 ? 'A' : 'B'}` }
-export const padLayer = (id: string): number => { const m = /^pad([1-4])\.([AB])$/.exec(id); return m ? Number(m[1]) - 1 + (m[2] === 'B' ? 4 : 0) : -1 }
+/** pad order: A1 A2 A3 A4 B1 B2 B3 B4 = 0..7 */
+const PADS = ['pad1.A', 'pad2.A', 'pad3.A', 'pad4.A', 'pad1.B', 'pad2.B', 'pad3.B', 'pad4.B']
+const LED_IDS = [...PADS, 'play.A', 'play.B', 'cue.A', 'cue.B', 'sync.A', 'sync.B', 'padmode.A', 'padmode.B']
+/** the track a pad plays in this bank, or -1 (the specials and unused pads) */
+export const padTrack = (id: string, bank = get().bank): number => {
+  const k = PADS.indexOf(id)
+  if (k < 0) return -1
+  if (bank === 0) return k < 5 ? k : -1
+  return k < 3 ? 5 + k : -1
+}
+const trackPad = (t: number, bank = get().bank) => (bank === 0 ? (t < 5 ? PADS[t] : null) : t >= 5 ? PADS[t - 5] : null)
 
-export const LOOP_LABELS: Record<string, string> = {
-  'pad1.A': '1', 'pad2.A': '2', 'pad3.A': '3', 'pad4.A': '4', 'pad1.B': '5', 'pad2.B': '6', 'pad3.B': '7', 'pad4.B': '8',
-  'play.A': 'ALL', 'play.B': 'ALL', 'cue.A': 'UNDO', 'cue.B': 'REDO', 'sync.A': 'TAP', 'sync.B': 'TAP',
-  'vol.A': 'LAYER', 'vol.B': 'MAIN', 'tempo.A': 'BPM', xfade: '1-4 / 5-8', 'jog.A': 'SEL', 'jog.B': 'BPM',
-  'hi.A': 'TRANS', 'mid.A': 'GATE', 'low.A': 'NUDGE', 'hi.B': 'BARS', 'mid.B': 'COUNT', 'low.B': 'QUANT',
+export function loopLabels(): Record<string, string> {
+  const b = get().bank
+  const L: Record<string, string> = {
+    'play.A': 'ALL', 'play.B': 'ALL', 'cue.A': 'UNDO', 'cue.B': 'UNDO', 'sync.A': 'TAP', 'sync.B': 'TAP', 'padmode.A': 'BANK ' + (b + 1), 'padmode.B': 'BANK ' + (b + 1),
+    'vol.A': 'TRACK', 'vol.B': 'MAIN', 'tempo.A': 'BPM', xfade: '1-4 / 5-8', 'jog.A': 'SEL', 'jog.B': 'BPM',
+    'hi.A': 'TRANS', 'mid.A': 'FILT', 'low.A': 'ROLL', 'hi.B': 'BARS', 'mid.B': 'COUNT', 'low.B': 'QUANT',
+    'pad2.B': 'REV', 'pad3.B': 'SPD', 'pad4.B': '1SHOT',
+  }
+  for (const id of PADS) { const t = padTrack(id, b); if (t >= 0) L[id] = String(t + 1) }
+  return L
 }
 
 // ---------- soft takeover ----------
@@ -47,15 +59,15 @@ function absolute(id: string, v: number, cur: number, apply: (v: number) => void
   const st = (pick[id] ??= { engaged: false })
   if (!st.engaged && (Math.abs(v - cur) <= 0.05 || (st.last !== undefined && (st.last - cur) * (v - cur) <= 0))) st.engaged = true
   st.last = v
-  useLoopPage.setState((s) => ({ ghost: { ...s.ghost, [id]: v }, touched: { ...s.touched } }))
   if (st.engaged) { useLoopPage.setState((s) => { const g = { ...s.ghost }; delete g[id]; return { ghost: g } }); apply(v) }
+  else useLoopPage.setState((s) => ({ ghost: { ...s.ghost, [id]: v } }))
 }
 
 // ---------- input ----------
-const held = new Set<number>()
-const cueDown = { A: false, B: false }, cueUsed = { A: false, B: false }
 const jogAcc = { A: 0, B: 0 }
-const FN: ('rec' | 'mute' | 'solo')[] = ['rec', 'mute', 'solo']
+const cueHold: Record<string, { t: number; fired: boolean }> = {} // eslint-disable-line
+const CUE_HOLD_MS = 700
+const STEP = [0, 0.5, 0.25] as const
 /** One control moved (hardware or the picture). Buttons/pads: 1 down, 0 up. Sliders 0..1. Jogs: signed ticks. id like "pad1.A", "xfade". */
 export function loopInput(id: string, value: number) {
   const now = performance.now()
@@ -66,29 +78,28 @@ export function loopInput(id: string, value: number) {
   const sel = getSel(), layer = L.layers[sel]
   switch (base) {
     case 'pad1': case 'pad2': case 'pad3': case 'pad4': {
-      const i = padLayer(id)
-      if (value > 0) {
-        held.add(i); select(i)
-        if (cueDown.A || cueDown.B) { clearLayer(i); cueUsed.A = cueUsed.B = true; note(`Layer ${i + 1} cleared`) }
-        else padAction(i)
-      } else held.delete(i)
+      const t = padTrack(id)
+      if (t >= 0) { if (value > 0) buttonDown(t); else buttonUp(t); break }
+      if (value <= 0) break
+      if (id === 'pad2.B') { setLayerOpt(sel, 'reverse', !layer.reverse); note(`Track ${sel + 1} reverse ${!layer.reverse ? 'on' : 'off'}`) }
+      else if (id === 'pad3.B') { const sp = layer.speed === 1 ? 0.5 : layer.speed === 0.5 ? 2 : 1; setLayerOpt(sel, 'speed', sp); note(`Track ${sel + 1} speed ${sp === 1 ? '1x' : sp === 0.5 ? 'half' : 'double'}`) }
+      else if (id === 'pad4.B') { setLayerOpt(sel, 'oneShot', !layer.oneShot); note(`Track ${sel + 1} one-shot ${!layer.oneShot ? 'on' : 'off'}`) }
       break
     }
-    case 'cue':
+    case 'cue': { // tap = undo, hold = redo
+      const k = 'cue.' + deck
       if (value > 0) {
-        cueDown[deck] = true; cueUsed[deck] = false
-        if (held.size) { for (const i of held) { clearLayer(i); note(`Layer ${i + 1} cleared`) } cueUsed[deck] = true }
-      } else {
-        cueDown[deck] = false
-        if (!cueUsed[deck]) { if (deck === 'A') { undo(); note(`Undo layer ${sel + 1}`) } else { redo(); note(`Redo layer ${sel + 1}`) } }
-      }
+        const h: { t: number; fired: boolean } = (cueHold[k] = { t: now, fired: false })
+        window.setTimeout(() => { if (cueHold[k] === h && !h.fired) { h.fired = true; redo(); note(`Redo track ${getSel() + 1}`) } }, CUE_HOLD_MS)
+      } else { const h = cueHold[k]; delete cueHold[k]; if (h && !h.fired) { undo(); note(`Undo track ${sel + 1}`) } }
       break
+    }
     case 'play': if (value > 0) togglePlay(); break
     case 'sync': if (value > 0) { tapTempo(); note(`Tap tempo ${Math.round(getBpm())} bpm`) } break
-    case 'padmode': if (value > 0) { const f = FN[(FN.indexOf(L.fn) + 1) % FN.length]; setOpt('fn', f); note(`Pads: ${f.toUpperCase()}`) } break
+    case 'padmode': if (value > 0) { const b = get().bank === 0 ? 1 : 0; useLoopPage.setState({ bank: b }); note(b === 0 ? 'Pads: tracks 1-5' : 'Pads: tracks 6-8') } break
     case 'jog': {
       jogAcc[deck] += value
-      if (deck === 'A') { if (Math.abs(jogAcc.A) >= 3) { select(Math.max(0, Math.min(LAYERS - 1, sel + Math.sign(jogAcc.A)))); jogAcc.A = 0 } }
+      if (deck === 'A') { if (Math.abs(jogAcc.A) >= 3) { select(Math.max(0, Math.min(7, sel + Math.sign(jogAcc.A)))); jogAcc.A = 0 } }
       else { setBpm(getBpm() + value * 0.5); jogAcc.B = 0 }
       break
     }
@@ -100,12 +111,12 @@ export function loopInput(id: string, value: number) {
     case 'xfade': absolute(id, value, L.xf, (v) => setOpt('xf', v)); break
     case 'hi': case 'mid': case 'low': {
       if (deck === 'A') {
-        if (base === 'hi') absolute(id, value, (layer.transpose + 12) / 24, (v) => setLayerParam(sel, 'transpose', v * 24 - 12))
-        else if (base === 'mid') absolute(id, value, (layer.gate - 0.25) / 1.5, (v) => setLayerParam(sel, 'gate', 0.25 + v * 1.5))
-        else absolute(id, value, layer.nudge + 0.5, (v) => setLayerParam(sel, 'nudge', Math.round((v - 0.5) * 32) / 32))
+        if (base === 'hi') absolute(id, value, (layer.transpose + 12) / 24, (v) => setLayerParam(sel, 'transpose', v < 0.33 ? -12 : v > 0.66 ? 12 : 0))
+        else if (base === 'mid') absolute(id, value, layer.fxFilter, (v) => setLayerOpt(sel, 'fxFilter', v < 0.04 ? 0 : v))
+        else absolute(id, value, layer.fxStutter / 2, (v) => setLayerOpt(sel, 'fxStutter', Math.round(v * 2) as 0 | 1 | 2))
       } else if (base === 'hi') absolute(id, value, Math.max(0, LEN_CHOICES.indexOf(L.lenBars)) / 3, (v) => setLenBars(LEN_CHOICES[Math.round(v * 3)]))
       else if (base === 'mid') absolute(id, value, L.countIn / 2, (v) => setOpt('countIn', Math.round(v * 2)))
-      else absolute(id, value, [0, 0.5, 0.25].indexOf(L.quant) / 2, (v) => setOpt('quant', [0, 0.5, 0.25][Math.round(v * 2)]))
+      else absolute(id, value, STEP.indexOf(L.quant as 0) / 2, (v) => setOpt('quant', STEP[Math.round(v * 2)]))
       break
     }
   }
@@ -114,23 +125,27 @@ export function loopInput(id: string, value: number) {
 function note(s: string) { useLoopPage.setState({ last: s }) }
 
 // ---------- view model + LEDs ----------
-const blink = (now: number, periodMs: number) => Math.floor(now / (periodMs / 2)) % 2 === 0
+const blink = (now: number, periodMs: number, duty = 0.5) => (now % periodMs) / periodMs < duty
 export function ledMap(now = performance.now()): Record<string, boolean> {
   const L = useLoop.getState(), out: Record<string, boolean> = {}
   const solo = L.layers.some((l) => l.solo)
+  for (const id of PADS) out[id] = false
   L.layers.forEach((l, i) => {
+    const id = trackPad(i); if (!id) return
     let on = false
-    if (l.state === 'rec') on = blink(now, 500)
-    else if (l.state === 'over') on = blink(now, 1000)
-    else if (l.state === 'play') on = l.mute || (solo && !l.solo) ? blink(now, 2000) : true
-    else if (l.state === 'stop') on = blink(now, 2000)
-    out[padId(i)] = on
+    if (l.pend) on = blink(now, 500, 0.25) // waiting for the bar line: quick short flicker
+    else if (l.state === 'rec') on = blink(now, 500) // 2 Hz
+    else if (l.state === 'over') on = blink(now, 1000) // 1 Hz
+    else if (l.state === 'play') on = l.mute || (solo && !l.solo) ? blink(now, 2000, 0.25) : true
+    else if (l.state === 'stop') on = blink(now, 2000, 0.25)
+    out[id] = on
   })
   const sel = L.layers[L.sel]
+  if (sel) { out['pad2.B'] = sel.reverse; out['pad3.B'] = sel.speed !== 1; out['pad4.B'] = sel.oneShot }
   out['play.A'] = out['play.B'] = L.running
   out['cue.A'] = !!sel && (sel.takes.length > 0 || sel.state === 'rec' || sel.state === 'over')
   out['cue.B'] = !!sel && sel.redo.length > 0
-  out['padmode.A'] = out['padmode.B'] = L.fn !== 'rec'
+  out['padmode.A'] = out['padmode.B'] = get().bank === 1
   const flash = L.running && ((beatPos() % 4) + 4) % 4 < 0.3
   out['sync.A'] = out['sync.B'] = flash
   return out
@@ -140,8 +155,8 @@ function values(): Record<string, number> {
   const lit = ledMap()
   for (const id of LED_IDS) v[id] = lit[id] ? 1 : 0
   v['vol.A'] = sel.vol; v['vol.B'] = L.master; v['tempo.A'] = (getBpm() - 60) / 120; v.xfade = L.xf
-  v['hi.A'] = (sel.transpose + 12) / 24; v['mid.A'] = (sel.gate - 0.25) / 1.5; v['low.A'] = sel.nudge + 0.5
-  v['hi.B'] = Math.max(0, LEN_CHOICES.indexOf(L.lenBars)) / 3; v['mid.B'] = L.countIn / 2; v['low.B'] = [0, 0.5, 0.25].indexOf(L.quant) / 2
+  v['hi.A'] = (sel.transpose + 12) / 24; v['mid.A'] = sel.fxFilter; v['low.A'] = sel.fxStutter / 2
+  v['hi.B'] = Math.max(0, LEN_CHOICES.indexOf(L.lenBars)) / 3; v['mid.B'] = L.countIn / 2; v['low.B'] = STEP.indexOf(L.quant as 0) / 2
   return v
 }
 let viewTimer = 0
