@@ -3,6 +3,9 @@ import './dj.css'
 import './pulse'
 import { MODES, dispatch, ensure, getDeckPos, getVersion, getView, subscribe, type DeckView } from './engine'
 import { useDuo, cancelChallenge, startChallenge } from './duo'
+import { useCoop } from './coop'
+import { useCal } from './calibrate'
+import { DjPanels, BandMenu, CoopCard } from './Panels'
 import { onBeat } from './clock'
 import { BEAT } from './synth'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
@@ -92,6 +95,13 @@ function BeatDots() {
 }
 
 function Middle({ v }: { v: ReturnType<typeof getView> }) {
+  const [menu, setMenu] = useState(false)
+  const coop = useCoop((s) => s.active)
+  useEffect(() => {
+    const d = document.querySelector('.kg-display')
+    if (menu) d?.setAttribute('data-dj-menu', '1'); else d?.removeAttribute('data-dj-menu')
+    return () => d?.removeAttribute('data-dj-menu')
+  }, [menu])
   const djKey = useDuo((s) => s.djKey)
   const combo = useDuo((s) => s.combo)
   const bandPaused = useDuo((s) => s.bandPaused)
@@ -99,7 +109,8 @@ function Middle({ v }: { v: ReturnType<typeof getView> }) {
   const keyText = djKey ? `${PC_NAMES[djKey.tonic]} ${SCALE_LABEL[djKey.scale]}` : '—'
   const bpm = Math.round((v.lead ? v[v.lead].bpm : v.anyPlaying ? (v.A.playing ? v.A.bpm : v.B.bpm) : 0) || 0)
   let status = ''
-  if (ch.state === 'wait') status = '🎯 starts on the next bar…'
+  if (coop && !coop.done) status = `🤝 round ${coop.round}/3 · ${'★'.repeat(coop.stars)}${'☆'.repeat(3 - coop.stars)}`
+  else if (ch.state === 'wait') status = '🎯 starts on the next bar…'
   else if (ch.state === 'run') status = `🎯 bar ${Math.min(8, Math.floor((ch.beats - 1) / 4) + 1)}/8 · ${ch.hits}/32`
   else if (ch.state === 'done') status = `🎯 ${'★'.repeat(ch.stars)}${'☆'.repeat(3 - ch.stars)} ${ch.hits}/32 on the beat`
   else if (v.fx) status = v.fx === 'echo' ? '🌊 echo' : v.fx === 'sweep' ? '🌀 sweep' : '🚀 riser…'
@@ -107,7 +118,10 @@ function Middle({ v }: { v: ReturnType<typeof getView> }) {
   else if (bandPaused) status = '🤖 band waits for the DJ'
   return (
     <div className="dj-mid">
-      <div className="dj-key" title="The DJ's track sets the key for the piano while a deck plays">🎧 DJ key <b>{keyText}</b></div>
+      <div className="dj-key" title="The DJ's track sets the key for the piano while a deck plays">🎧 DJ key <b>{keyText}</b>
+        <button type="button" className="dj-go dj-band" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)} title="Team challenges, Soundcheck, and the controller helper">🤝</button>
+        {menu && <BandMenu onClose={() => setMenu(false)} />}
+      </div>
       <label className="dj-xf" title="Crossfader: A on the left, B on the right">
         <span>A</span>
         <input type="range" min={0} max={1000} value={Math.round(v.xf * 1000)} aria-label="Crossfader" onPointerDown={() => void ensure()}
@@ -146,6 +160,14 @@ export function DuoDeck() {
     if (open) d.setAttribute('data-duo-open', '1'); else d.removeAttribute('data-duo-open')
     return () => d.removeAttribute('data-duo-open')
   }, [open])
+  // a panel (teach / knob check / soundcheck) covers the display: hide the visualizer's own buttons under it
+  const panel = useCal((s) => s.panel)
+  useEffect(() => {
+    const d = root.current?.closest('.kg-display')
+    if (!d) return
+    if (panel !== 'none') d.setAttribute('data-dj-panel', '1'); else d.removeAttribute('data-dj-panel')
+    return () => d.removeAttribute('data-dj-panel')
+  }, [panel])
   // a controller press opens the strip once, so the DJ sees what the decks are doing
   useEffect(() => { if (v.anyPlaying && !open && !loadOpen()) setOpen(true) }, [v.anyPlaying, open])
 
@@ -179,6 +201,8 @@ export function DuoDeck() {
           <DeckPanel deck="B" v={v.B} spinRef={(el) => { spin.current.B = el }} />
         </div>
       )}
+      <CoopCard />
+      <DjPanels />
     </div>
   )
 }

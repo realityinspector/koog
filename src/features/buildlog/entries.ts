@@ -315,4 +315,11 @@ export const entries: Entry[] = [
     title: '🎧🎹 DUO mode: one DJs, one plays piano, together',
     body: 'Plug in a DJ controller AND the piano at the same time! Koog now listens to every MIDI device and gives each one a job (🎛️ Devices at the top). Tap 🎧 DUO and the DJ decks slide in at the bottom. The DJ is the band: whatever track is playing sets the KEY and the BEAT, so the piano player gets graded in the DJ\'s key, and the screen pulses on the DJ\'s beat. It works both ways: when the piano player nails 8 in-key notes, the DJ gets a filter sweep, a cadence throws an echo, and a BOOM launches a riser into the drop. The DJ\'s pads light up piano keys that fit the song. Try the 🎯 8-bar Duo Challenge. Also new: 🎹 Sound lets you swap the piano for an organ, a Moog, an electric piano, strings and more.',
   },
+  {
+    id: 44,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🎚️ Teach Koog your DJ board + 🤝 band challenges',
+    body: 'Every DJ controller speaks MIDI a little differently, so now Koog can LEARN yours: tap 🤝 in the DUO strip → Teach Koog. Press each button and wiggle each knob when it asks, and it remembers. It even blinks each button light to check that it works. 🔍 Knob check shows every control moving live, so you can spot a broken one fast. 🎤 Soundcheck is a two-kid warm-up: the DJ tests the gear while the piano player plays a scale and a chord, and when the checklist is full, the band goes LIVE. Plus three co-op challenges: Crossfade on the Cadence, Drop It, and Call and Response. You only earn stars together.',
+  },
 ]

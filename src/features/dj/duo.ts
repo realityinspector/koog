@@ -28,7 +28,7 @@ const BARS = 8, CH_BEATS = BARS * 4
 const ON_BEAT_MS = 90
 
 type Held = { key: Key; auto: boolean }
-interface Shared { store: ReturnType<typeof makeStore>; held: Held | null; set: Key | null; bandWas: boolean; run: number; hitSet: Set<number>; lastTargets: number[] | null; timers: Set<ReturnType<typeof setTimeout>> }
+interface Shared { hold?: boolean; store: ReturnType<typeof makeStore>; held: Held | null; set: Key | null; bandWas: boolean; run: number; hitSet: Set<number>; lastTargets: number[] | null; timers: Set<ReturnType<typeof setTimeout>> }
 function makeStore() { return create<DuoState>()(() => ({ djKey: null, bandPaused: false, combo: 0, bestCombo: 0, challenge: IDLE })) }
 const hot = import.meta.hot?.data as { duo?: Shared } | undefined
 const D: Shared = hot?.duo ?? { store: makeStore(), held: null, set: null, bandWas: false, run: 0, hitSet: new Set(), lastTargets: null, timers: new Set() }
@@ -41,7 +41,10 @@ const later = (fn: () => void, ms: number) => { const h = setTimeout(() => { D.t
 // ---------- DJ sets the band ----------
 let pending: ReturnType<typeof setTimeout> | null = null
 let pendingKey: Key | null = null
+/** co-op: while true the decks do NOT change the song key (a crossfade mustn't flip the home note mid-phrase) */
+export const holdKey = (on: boolean) => { D.hold = on; if (!on) followKey() }
 function followKey() {
+  if (D.hold) return
   const v = getView()
   const lead = v.lead
   if (lead) {

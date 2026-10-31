@@ -14,6 +14,7 @@ import type { Key } from '../../music/theory'
 import { decode, ledBytes, type DeckId, type DjAction } from './map'
 import { BEAT, LEN, TRACKS, renderAll } from './synth'
 import { emitBeat, setClockSource } from './clock'
+import { emitAction, isDeaf } from './tap'
 
 export const MASTER_CAP = 0.12 // hard ceiling on the master gain, whatever the volume slider says
 export const MODES = ['CUES', 'LOOP', 'SAMPLER', 'STEMS'] as const
@@ -23,10 +24,10 @@ const LOOKAHEAD = 0.1 // seconds booked ahead
 const TICK_MS = 25
 const DECKS: DeckId[] = ['A', 'B']
 
-interface Intent { vol: number; tempo: number; hi: number; low: number }
+interface Intent { vol: number; tempo: number; hi: number; mid: number; low: number }
 export interface DeckView {
   playing: boolean; preview: boolean; mode: number; loopLen: number; lastCue: number; held: boolean[]; mask: number[]
-  vol: number; tempo: number; hi: number; low: number; synced: boolean; bpm: number; trackName: string; key: Key
+  vol: number; tempo: number; hi: number; mid: number; low: number; synced: boolean; bpm: number; trackName: string; key: Key
 }
 export interface DjView {
   ready: boolean; loading: boolean; needsTap: boolean; suspended: boolean
@@ -44,15 +45,17 @@ class Deck {
   pos0 = 0; t0 = 0; curRate = 1; override: number | null = null
   mode = 0; loopLen = 0; loopStart = 0; lastCue = -1; held = [false, false, false, false]
   private nt: ReturnType<typeof setTimeout> | null = null
-  readonly stemG: GainNode[]; readonly lo: BiquadFilterNode; readonly hi: BiquadFilterNode; readonly volG: GainNode; readonly xfG: GainNode
+  readonly stemG: GainNode[]; readonly lo: BiquadFilterNode; readonly mid?: BiquadFilterNode; readonly hi: BiquadFilterNode; readonly volG: GainNode; readonly xfG: GainNode
   constructor(private ctx: AudioContext, readonly name: DeckId, private bufs: AudioBuffer[], bus: AudioNode, private intent: Intent, private other: () => Deck) {
     const c = ctx
     this.stemG = bufs.map(() => c.createGain())
     this.lo = c.createBiquadFilter(); this.lo.type = 'lowshelf'; this.lo.frequency.value = 200
+    this.mid = c.createBiquadFilter(); this.mid.type = 'peaking'; this.mid.frequency.value = 1000; this.mid.Q.value = 0.7
     this.hi = c.createBiquadFilter(); this.hi.type = 'highshelf'; this.hi.frequency.value = 4000
+    this.intent.mid ??= 0.5
     this.volG = c.createGain(); this.xfG = c.createGain()
     this.stemG.forEach((g) => g.connect(this.lo))
-    this.lo.connect(this.hi); this.hi.connect(this.volG); this.volG.connect(this.xfG); this.xfG.connect(bus)
+    this.lo.connect(this.mid); this.mid.connect(this.hi); this.hi.connect(this.volG); this.volG.connect(this.xfG); this.xfG.connect(bus)
     this.applyVol(); this.applyEQ()
   }
   get rate() { return this.override ?? 1 + (0.5 - this.intent.tempo) * 0.16 }
@@ -107,6 +110,7 @@ class Deck {
     const db = (v: number) => (v < 0.5 ? (-36 * (0.5 - v)) / 0.5 : (9 * (v - 0.5)) / 0.5)
     this.lo.gain.setTargetAtTime(db(this.intent.low), this.ctx.currentTime, 0.02)
     this.hi.gain.setTargetAtTime(db(this.intent.hi), this.ctx.currentTime, 0.02)
+    this.mid?.gain.setTargetAtTime(db(this.intent.mid ?? 0.5), this.ctx.currentTime, 0.02)
   }
   setTempo() { this.override = null; this.applyRate() }
   sync() {
@@ -160,7 +164,7 @@ interface Shared {
 // ALL state is shared through import.meta.hot.data: an edit swaps the code but the decks keep playing, and importers still holding the old
 // functions keep working on the same state.
 const S: Shared = (import.meta.hot?.data as Hot | undefined)?.dj ?? {
-  intent: { A: { vol: 0.8, tempo: 0.5, hi: 0.5, low: 0.5 }, B: { vol: 0.8, tempo: 0.5, hi: 0.5, low: 0.5 } }, xf: 0.5, core: null, loading: null, disposed: false,
+  intent: { A: { vol: 0.8, tempo: 0.5, hi: 0.5, mid: 0.5, low: 0.5 }, B: { vol: 0.8, tempo: 0.5, hi: 0.5, mid: 0.5, low: 0.5 } }, xf: 0.5, core: null, loading: null, disposed: false,
   needsTap: false, fxNow: null, timer: null, lastBeatIdx: -1, beatCount: 0, queue: [], tempoMsb: { A: 64, B: 64 }, ledState: new Map(), padListeners: new Set(),
   beatTimers: new Set(), subs: new Set(), version: 0, view: null,
 }
@@ -179,7 +183,7 @@ function deckView(d: DeckId): DeckView {
   return {
     playing: !!k?.playing, preview: !!k?.preview, mode: k?.mode ?? 0, loopLen: k?.loopLen ?? 0, lastCue: k?.lastCue ?? -1,
     held: k ? [...k.held] : [false, false, false, false], mask: k ? [...k.mask] : [1, 1, 1, 1],
-    ...intent[d], synced: k?.override != null, bpm: k ? k.bpm : 120 * (1 + (0.5 - intent[d].tempo) * 0.16), trackName: TRACKS[d].name, key: TRACKS[d].key,
+    ...intent[d], mid: intent[d].mid ?? 0.5, synced: k?.override != null, bpm: k ? k.bpm : 120 * (1 + (0.5 - intent[d].tempo) * 0.16), trackName: TRACKS[d].name, key: TRACKS[d].key,
   }
 }
 const weight = (d: DeckId) => intent[d].vol ** 2 * Math.cos(((d === 'A' ? S.xf : 1 - S.xf) * Math.PI) / 2)
@@ -231,6 +235,8 @@ function syncLeds() {
     if (b) sendToDj(b)
   }
 }
+/** forget what the LEDs were told, then send them all again (after calibration changed which buttons have LEDs) */
+export function resyncLeds() { ledsDark(); ledState.clear(); syncLeds() }
 function ledsDark() {
   for (const [id, on] of ledState) { if (on) { const b = ledBytes(id, false); if (b) sendToDj(b) } }
   ledState.clear()
@@ -417,7 +423,9 @@ function apply(a: DjAction) {
       it.tempo = a.value; d.setTempo(); break
     }
     case 'hi': it.hi = a.value; d.applyEQ(); break
+    case 'mid': it.mid = a.value; d.applyEQ(); break
     case 'low': it.low = a.value; d.applyEQ(); break
+    case 'jogtouch': return // nothing to do yet: the calibration and the knob check watch it
     case 'jog': d.nudge(a.value); return // no UI refresh for every tick
   }
   ensureTick()
@@ -426,6 +434,7 @@ function apply(a: DjAction) {
 /** One entry for MIDI and the on-screen deck. Before the audio exists, presses are held for a few seconds. */
 export function dispatch(a: DjAction) {
   if (S.disposed) return
+  emitAction(a)
   if (!S.core) {
     if (a.id === 'jog') return
     queue.push({ a, at: performance.now() }); if (queue.length > 24) queue.shift()
@@ -466,7 +475,7 @@ export function dispose() {
 }
 
 // ---------- wiring ----------
-const offMsg = onDjMessage((data) => { const a = decode(data); if (a) dispatch(a) })
+const offMsg = onDjMessage((data) => { if (isDeaf()) return; const a = decode(data); if (a) dispatch(a) })
 const offSettings = useAudioSettings.subscribe(applyMaster)
 const offDevices = useDevices.subscribe(() => { ledState.clear(); syncLeds() }) // a controller (re)appeared: relight it
 // A tap or key press wakes a suspended context, and creates the audio if a controller press was waiting for one.
