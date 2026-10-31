@@ -15,7 +15,7 @@
 .bx-b:hover { color: #fff; border-color: rgba(255, 255, 255, .3); } .bx-b:active { transform: translateY(1px); box-shadow: none; }
 .bx-b.on { color: #0a1410; background: var(--lcd); border-color: var(--lcd); } .bx-panic { color: #ffb4b4; border-color: rgba(255, 107, 107, .5); }
 .bx-tag { font-size: 9px; letter-spacing: .14em; color: #ffd76c; border: 1px solid #ffd76c66; padding: 2px 6px; border-radius: 4px; }
-.bx-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(250px, 1.1fr) minmax(0, 1.25fr) minmax(0, 1.25fr); grid-template-rows: minmax(0, 1.4fr) minmax(0, 1fr); gap: 6px; }
+.bx-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(250px, 1.1fr) minmax(0, 1.25fr) minmax(0, 1.25fr); grid-template-rows: minmax(230px, 1.4fr) minmax(150px, 1fr); gap: 6px; overflow-y: auto; scrollbar-width: thin; } /* rows keep a floor (rack + Koog patch, scene slots 5-8); a short display scrolls the grid instead of clipping inside the panels */
 .bx-panel { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-radius: 8px; background: rgba(255, 255, 255, .035); border: 1px solid var(--bx-line); overflow: hidden; }
 .bx-ph { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 3px 8px; border-bottom: 1px solid var(--bx-line); background: rgba(0, 0, 0, .25); }
 .bx-ph h3 { margin: 0; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: #9a96c4; font-weight: 800; }

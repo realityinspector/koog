@@ -179,7 +179,7 @@
 .dj-bar:has(.dj-menu) { z-index: var(--z-pop, 26); } /* the 🤝 menu rises over the controller dock, never under it */
 .dj-menu { max-height: calc(var(--disp-h, 400px) - var(--sheet-h, 0px) - var(--duo-h, 0px) - 24px); overflow: auto; }
 /* compact: the challenge card is one slim row at the left, the caption moves beside it, so neither covers the visual buttons or the docks */
-.kg-display[data-compact] .dj-coop { width: min(340px, calc(100% - 24px)); padding: 5px 10px; gap: 2px; }
+.kg-display[data-compact] .dj-coop { width: min(296px, calc(100% - 24px)); padding: 5px 10px; gap: 2px; }
 .kg-display[data-compact] .dj-coop :is(.dj-coop-who, .dj-coop-beats) { display: none; }
 .kg-display[data-compact] .dj-coop-msg { font-size: 12px; }
-.kg-display[data-compact][data-coop-slot='below'] .coach { left: 372px; transform: none; max-width: calc(100% - 384px); animation: none; }
+.kg-display[data-compact][data-coop-slot='below'] .coach { left: 320px; transform: none; max-width: calc(100% - 332px); animation: none; z-index: 20; }
