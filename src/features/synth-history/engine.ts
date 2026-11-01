@@ -1,4 +1,5 @@
 // Moog-style subtractive synth engine. SAFETY: master hard cap 0.15, limiter, Q clamp, stuck-note guard.
+import { registerPanicTarget } from '../../music/panic'
 import { useAudioSettings, outputScale } from '../../music/audioSettings'
 import { DEFAULT_PARAMS, type LfoShape, type LfoTarget, type SynthEngine, type SynthParams, type Wave } from './params'
 
@@ -49,9 +50,6 @@ function sanitize(p: SynthParams): SynthParams {
 S.params = sanitize(S.params)
 S.subs ??= new Set()
 S.sustained ??= new Set(); S.tmap ??= new Map(); S.trans ??= 0; S.bendCents ??= 0; S.hold ??= false
-
-/** dev/test getter: current master gain value (0 until audio starts) */
-export const masterGainValue = () => S.master?.gain.value ?? null
 
 const applyLevel = () => {
   if (!S.ctx || !S.master) return
@@ -281,3 +279,4 @@ if (import.meta.hot) {
   import.meta.hot.dispose(() => { offSettings(); synth.panic() })
 }
 if (import.meta.hot) { import.meta.hot.accept() }
+registerPanicTarget('synth', () => { synth.panic(); setHold(false) })

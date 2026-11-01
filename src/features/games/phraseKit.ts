@@ -3,7 +3,7 @@
 // This file only adds what games need on top: the engine lookup, per-rung game rules, song phrases and kind coaching text.
 // If the engine file is not there yet the games still run: phrases are cut by a plain fallback and nothing is recorded.
 import { RUNGS, type Attempt, type Phrase, type PhraseEngineApi, type PhraseEvent, type PhraseMastery, type Rung } from '../../music/phrases'
-import { PC_NAMES, pc } from '../../music/theory'
+import { PC_NAMES, msPerBeat, pc } from '../../music/theory'
 import { playLocal } from '../../music/localNotes'
 import { clearScore } from '../../music/scoreStore'
 import { clearGuide } from '../../music/guide'
@@ -144,7 +144,7 @@ export function startAttempt(phrase: Phrase, rung: Rung | null, opts: AttemptOpt
 export function demo(phrase: Phrase, bpm: number): Promise<void> {
   const e = engine()
   if (e) { try { return e.demo(phrase, bpm).catch(() => {}) } catch { /* fall through */ } }
-  const beat = 60000 / bpm
+  const beat = msPerBeat(bpm)
   return new Promise((res) => {
     phrase.notes.forEach((n) => {
       window.setTimeout(() => playLocal(n.note, 84, true), n.beat * beat)

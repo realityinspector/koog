@@ -3,6 +3,7 @@
 // All art is built once per variant into offscreen canvases and stamped with drawImage.
 import type { Scene, SceneFactory, SceneKind, SceneReact } from './scenes'
 import type { NoteGrade } from '../../music/judge'
+import { pc } from '../../music/theory'
 
 const TAU = 6.283
 const GOLD = 12 // hue bucket index meaning "gold"
@@ -41,7 +42,7 @@ function star(g: CanvasRenderingContext2D, x: number, y: number, r: number) {
   }
   g.closePath()
 }
-const bucketOf = (hue: number) => (((Math.round(hue / 30) % 12) + 12) % 12)
+const bucketOf = (hue: number) => pc(Math.round(hue / 30))
 const hueOf = (b: number) => (b === GOLD ? 46 : b * 30)
 const paper = (b: number, l: number) => (b === GOLD ? `hsl(46,95%,${l - 4}%)` : `hsl(${hueOf(b)},75%,${l}%)`)
 

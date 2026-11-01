@@ -8,7 +8,7 @@
 // Only public-domain songs from SONGS are ever named; the Koog Originals and unchecked classics are not indexed
 // as songs (a kid's own learned phrases of them still count as "your phrase").
 import { SONGS, type Song } from '../features/songs/songs'
-import { PC_NAMES } from './theory'
+import { PC_NAMES, pc } from './theory'
 
 export interface AllusionSource {
   id: string
@@ -73,7 +73,7 @@ export function rhythmSim(times: number[], beats: number[]): number {
 }
 
 export const shortTitle = (t: string) => t.replace(/\s*\(.*\)\s*$/, '')
-const keyLabel = (tonic: number, scale: string) => PC_NAMES[((tonic % 12) + 12) % 12] + (scale === 'minor' ? ' minor' : '')
+const keyLabel = (tonic: number, scale: string) => PC_NAMES[pc(tonic)] + (scale === 'minor' ? ' minor' : '')
 
 /** Sources from SONGS: only the tunes people know. Koog Originals, the user's own songs and not-yet-verified classics are left out. */
 export function songSources(songs: Song[] = SONGS): AllusionSource[] {
@@ -137,7 +137,7 @@ export function findAllusion(played: Played[], index: AllusionIndex, minLen = 4)
             : (matched >= 5 && bits >= (bad ? 11.5 : matched === 5 ? 14.5 : matched === 6 ? 14 : 13) + (s > 0 ? 2 : 0)) || (matched === 4 && bits >= 8 && leap && rhythm >= 0.75 && uneven && s === 0)
           if (!ok) continue
           const score = matched + bits / 6 + rhythm * 1.5 + (learned ? 2 : 0) - bad
-          const shift = ((off % 12) + 12) % 12
+          const shift = pc(off)
           if (!learned) songsHit.add(src.id)
           if (!found || score > found.score) {
             found = {

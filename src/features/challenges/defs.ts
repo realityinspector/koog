@@ -264,7 +264,7 @@ const finishRounds = (what: string, total = 10) => (n: number): Finish => ({
   headline: n >= total * 0.9 ? 'Sharp.' : n >= total * 0.6 ? 'Solid.' : 'You found them all.', detail: `${n} on the first try. Everything counts as practice.`,
 })
 
-const NATURALS = [0, 2, 4, 5, 7, 9, 11]
+const NATURALS = SCALES.major
 const ALL12 = [...Array(12).keys()]
 function noteDetective(li: number, total = 10): Engine {
   const pool = li === 0 ? NATURALS : ALL12
@@ -276,7 +276,7 @@ function noteDetective(li: number, total = 10): Engine {
   }, finishRounds('notes', total))
 }
 
-const MAJ = [0, 2, 4, 5, 7, 9, 11]
+const MAJ = SCALES.major
 const maj = (i: number) => 12 * Math.floor(i / 7) + MAJ[((i % 7) + 7) % 7]
 function intervalJumper(li: number, total = 10): Engine {
   const kinds = [{ n: '3rd', s: 2 }, { n: '5th', s: 4 }, { n: 'octave', s: 7 }]

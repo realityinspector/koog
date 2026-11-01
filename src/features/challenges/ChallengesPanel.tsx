@@ -92,6 +92,7 @@ export function ChallengesPanel() {
             <button
               key={c.id}
               role="listitem"
+              aria-pressed={c.id === sel.id}
               className={'ch-tile' + (c.id === sel.id ? ' on' : '') + (bd ? ' got' : '') + (bd === 2 ? ' gold' : '')}
               onClick={() => setPick(c.id)}
               title={c.badge}
@@ -112,7 +113,7 @@ export function ChallengesPanel() {
         {sel.levels.length > 1 && (
           <div className="ch-levels">
             {sel.levels.map((l, i) => (
-              <button key={l} className={'ch-chip' + (i === lvl(sel.id) ? ' on' : '')} onClick={() => setLevels({ ...levels, [sel.id]: i })}>{l}</button>
+              <button key={l} aria-pressed={i === lvl(sel.id)} className={'ch-chip' + (i === lvl(sel.id) ? ' on' : '')} onClick={() => setLevels({ ...levels, [sel.id]: i })}>{l}</button>
             ))}
           </div>
         )}

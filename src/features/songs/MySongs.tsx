@@ -1,3 +1,4 @@
+import { fxBus, type FxBus } from '../../audio/fxContext'
 import { useEffect, useRef, useState } from 'react'
 import { onNote } from '../../music/notes'
 import type { Song } from './songs'
@@ -29,11 +30,11 @@ export function MySongs({ mine, setMine, onPick }: Props) {
   const lastAct = useRef(0)
   const held = useRef(0)
   const recording = useRef(false)
-  const ctx = useRef<AudioContext | null>(null)
+  const ctx = useRef<FxBus | null>(null)
   const timers = useRef<number[]>([])
   const bpmRef = useRef(bpm); bpmRef.current = bpm
 
-  const cleanupAudio = () => { try { ctx.current?.close() } catch { /* ignore */ } ctx.current = null }
+  const cleanupAudio = () => { try { ctx.current?.dispose() } catch { /* ignore */ } ctx.current = null }
   const clearTimers = () => { timers.current.forEach((t) => { clearTimeout(t); clearInterval(t) }); timers.current = [] }
 
   useEffect(() => onNote((e) => {
@@ -65,10 +66,10 @@ export function MySongs({ mine, setMine, onPick }: Props) {
   const record = () => {
     setErr(''); setTake(null)
     if (!countIn) { beginRec(); return }
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    const c = new Ctx(); ctx.current = c // created on click
+    const bus = fxBus(0.08); if (!bus) { beginRec(); return } // shared context + limiter; follows app volume and mute
+    const c = bus.ctx; ctx.current = bus
     const spb = 60 / bpm
-    const master = c.createGain(); master.gain.value = 0.08; master.connect(c.destination)
+    const master = bus.input
     for (let i = 0; i < 4; i++) {
       const o = c.createOscillator(), g = c.createGain()
       o.frequency.value = i === 0 ? 1000 : 800

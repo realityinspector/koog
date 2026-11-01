@@ -36,8 +36,8 @@ function Deck({ d }: { d: DeckId }) {
       <h4>Deck {d} <small>{v.trackName}</small></h4>
       <div className="bx-lcdrow"><span className="bx-lcdt">{v.bpm.toFixed(1)} bpm</span><span className="bx-lcdt">{v.key.tonic >= 0 ? ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][v.key.tonic] : ''}</span><span className="bx-lcdt">{MODES[v.mode]}</span></div>
       <div className="bx-seg">
-        <button className={v.playing ? 'on' : ''} onClick={() => press('play')}>{v.playing ? '■ PLAY' : '▶ PLAY'}</button>
-        <button onClick={() => press('cue')}>CUE</button><button className={v.synced ? 'on' : ''} onClick={() => press('sync')}>SYNC</button><button onClick={() => press('padmode')}>PADS</button>
+        <button className={v.playing ? 'on' : ''} aria-pressed={v.playing} onClick={() => press('play')}>{v.playing ? '■ PLAY' : '▶ PLAY'}</button>
+        <button onClick={() => press('cue')}>CUE</button><button className={v.synced ? 'on' : ''} aria-pressed={v.synced} onClick={() => press('sync')}>SYNC</button><button onClick={() => press('padmode')}>PADS</button>
       </div>
       {(['vol', 'tempo', 'hi', 'mid', 'low'] as const).map((k) => (
         <label className="bx-k" key={k}><span>{k.toUpperCase()}</span><input type="range" min={0} max={1000} value={Math.round(v[k] * 1000)} aria-label={`Deck ${d} ${k}`} onChange={(e) => slide(k, +e.target.value / 1000)} /></label>
@@ -52,12 +52,12 @@ export function DjScreen() {
   const surf = useSurface((s) => s.on)
   return (
     <div className="bx-screen">
-      <Panel title="DJ decks" right={<><SurfaceToggle /><button className={'bx-b' + (surf ? ' on' : '')} onClick={() => setScreenMode(!surf)} title="On-screen synth controller">ON-SCREEN CTRL</button></>}>
+      <Panel title="DJ decks" right={<><SurfaceToggle /><button className={'bx-b' + (surf ? ' on' : '')} aria-pressed={surf} onClick={() => setScreenMode(!surf)} title="On-screen synth controller">ON-SCREEN CTRL</button></>}>
         <div className="bx-decks">
           <Deck d="A" />
           <div className="bx-xf">
             <label className="bx-k"><span>X-FADE</span><input type="range" min={0} max={1000} value={Math.round(v.xf * 1000)} aria-label="Crossfader" onChange={(e) => { void ensure(); dispatch({ id: 'xfade', deck: null, value: +e.target.value / 1000 }) }} /></label>
-            <div className="bx-seg">{(['echo', 'sweep', 'riser'] as const).map((k) => <button key={k} className={v.fx === k ? 'on' : ''} onClick={() => { void ensure(); fx(k) }}>{k.toUpperCase()}</button>)}</div>
+            <div className="bx-seg">{(['echo', 'sweep', 'riser'] as const).map((k) => <button key={k} className={v.fx === k ? 'on' : ''} aria-pressed={v.fx === k} onClick={() => { void ensure(); fx(k) }}>{k.toUpperCase()}</button>)}</div>
             <p className="bx-dim">The tempo of the lead deck drives the master clock (STUDIO header).</p>
           </div>
           <Deck d="B" />

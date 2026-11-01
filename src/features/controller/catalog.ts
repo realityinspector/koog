@@ -10,6 +10,7 @@ import type { Ctl, EmuSpec } from '../synth-history/emu/types'
 import { emitSeqChange } from '../synth-history/emu/bus'
 import { controlEngine } from '../../music/zones'
 import type { Voice303 } from '../synth-history/emu/tb303'
+import { PC_NAMES } from '../../music/theory'
 
 // ---------- the physical (logical-surface) controls, as the calibrated DJ map names them ----------
 export const KNOBS = ['hi.A', 'low.A', 'hi.B', 'low.B', 'cuegain', 'mid.A', 'mid.B']
@@ -170,7 +171,7 @@ function emuParams(spec: EmuSpec): Param[] {
     const [lo, hi] = spec.fieldRange
     out.push({ id: 'pitch', label: 'Pitch (hand position)', short: 'PITCH', kind: 'cont', touch: undefined,
       get: () => field.x, set: (x) => { field.x = cl(x); pushField(eng(spec)) },
-      text: () => { const n = Math.round(lo + field.x * (hi - lo)); return ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][n % 12] + (Math.floor(n / 12) - 1) } })
+      text: () => { const n = Math.round(lo + field.x * (hi - lo)); return PC_NAMES[n % 12] + (Math.floor(n / 12) - 1) } })
     out.push({ id: 'vol', label: 'Volume (hand near the antenna)', short: 'VOLUME', kind: 'cont',
       get: () => field.y, set: (x) => { field.y = cl(x); pushField(eng(spec)) }, text: () => pct(field.y) })
   }

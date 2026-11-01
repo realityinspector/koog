@@ -28,7 +28,7 @@
 .dj-btn:focus-visible, .dj-pad:focus-visible, .dj-chip:focus-visible, .dj-go:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
 
 .dj-sls { gap: 6px; }
-.dj-sl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; font-size: 8px; font-weight: 800; letter-spacing: .12em; color: #a8a2d0; }
+.dj-sl { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: #a8a2d0; }
 .dj-sl input, .dj-xf input { width: 100%; height: 14px; margin: 0; accent-color: #7fe3ff; cursor: pointer; touch-action: none; }
 .dj-B .dj-sl input { accent-color: #ff8fc4; }
 
@@ -41,7 +41,7 @@
 .dj-jog-lb { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; font-weight: 900; color: rgba(255, 255, 255, .5); pointer-events: none; }
 
 .dj-mid { display: flex; flex-direction: column; gap: 4px; align-items: stretch; width: 168px; padding: 0 4px; }
-.dj-key { font-size: 10px; letter-spacing: .08em; color: #a8a2d0; text-align: center; white-space: nowrap; }
+.dj-key { font-size: 11px; letter-spacing: .08em; color: #a8a2d0; text-align: center; white-space: nowrap; }
 .dj-key b { color: #7fe3ff; font-size: 12px; letter-spacing: .04em; }
 .dj-xf { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 900; color: #a8a2d0; }
 .dj-xf input { accent-color: #ffd86c; height: 18px; }
@@ -49,10 +49,10 @@
 .dj-dots { display: inline-flex; gap: 4px; }
 .dj-dots i { width: 8px; height: 8px; border-radius: 50%; background: #2b2650; box-shadow: inset 0 1px 2px #000; }
 .dj-dots i.on { background: #ffd86c; box-shadow: 0 0 8px #ffd86c; }
-.dj-bpm { color: #c9c4ee; letter-spacing: .06em; font-size: 10px; }
-.dj-go { white-space: nowrap; height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); color: #fff; font-size: 10px; font-weight: 800; cursor: pointer; }
+.dj-bpm { color: #c9c4ee; letter-spacing: .06em; font-size: 11px; }
+.dj-go { white-space: nowrap; height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); color: #fff; font-size: 11px; font-weight: 800; cursor: pointer; }
 .dj-go:disabled { opacity: .4; cursor: default; }
-.dj-status { min-height: 13px; font-size: 10px; text-align: center; color: #ffd86c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dj-status { min-height: 13px; font-size: 11px; text-align: center; color: #ffd86c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* room for the strip: --duo-h and the visual controls live in the one stack system (layout/instrument.css, layout/stack.ts) */
 
@@ -62,7 +62,7 @@
 
 @media (max-width: 1100px) {
   .dj-jog { width: 48px; height: 48px; }
-  .dj-btn { min-width: 26px; padding: 0 5px; font-size: 10px; letter-spacing: .02em; }
+  .dj-btn { min-width: 26px; padding: 0 5px; font-size: 11px; letter-spacing: .02em; }
   .dj-mode { min-width: 36px; }
   .dj-pad { min-width: 25px; font-size: 12px; }
   .dj-mid { width: 150px; }
@@ -79,7 +79,7 @@
 .dj-menu button { text-align: left; padding: 7px 10px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .07); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
 .dj-menu button:hover, .dj-menu button:focus-visible { background: rgba(127, 227, 255, .25); outline: none; }
 .dj-menu small { opacity: .75; font-weight: 600; margin-left: 4px; }
-.dj-menu-h { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #a8a2d0; padding: 4px 4px 0; }
+.dj-menu-h { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #a8a2d0; padding: 4px 4px 0; }
 
 .dj-panel { pointer-events: auto; position: absolute; inset: 8px; z-index: var(--z-panel, 40); box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; padding: 10px 14px 12px; border-radius: 18px; color: #ece9ff; overflow: hidden;
   background: linear-gradient(180deg, rgba(28, 22, 68, .97), rgba(10, 8, 28, .98)); border: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 12px 40px rgba(0, 0, 0, .65); }
@@ -106,7 +106,7 @@
 
 .dj-pic { width: 100%; max-height: 100%; height: auto; min-height: 0; } .dj-pic.live { touch-action: none; user-select: none; }
 .pic-body { fill: #15122e; stroke: rgba(255, 255, 255, .22); stroke-width: 2; }
-.pic-lbl { font-size: 9px; font-weight: 800; fill: #a8a2d0; letter-spacing: .08em; pointer-events: none; } .pic-lbl.big { font-size: 22px; fill: rgba(255, 255, 255, .35); }
+.pic-lbl { font-size: 11px; font-weight: 800; fill: #a8a2d0; letter-spacing: .08em; pointer-events: none; } .pic-lbl.big { font-size: 22px; fill: rgba(255, 255, 255, .35); }
 .pic-shape { fill: #2e2958; stroke: rgba(255, 255, 255, .3); stroke-width: 1.5; } .pic-shape.on { fill: #2c8f62; stroke: #6cffa8; }
 .pic-hub { fill: #1b1738; } .pic-track { fill: #0b0920; stroke: rgba(255, 255, 255, .15); }
 .pic-mark { stroke: #ffd86c; stroke-width: 3; stroke-linecap: round; pointer-events: none; }
@@ -183,3 +183,6 @@
 .kg-display[data-compact] .dj-coop :is(.dj-coop-who, .dj-coop-beats) { display: none; }
 .kg-display[data-compact] .dj-coop-msg { font-size: 12px; }
 .kg-display[data-compact][data-coop-slot='below'] .coach { left: 320px; transform: none; max-width: calc(100% - 332px); animation: none; z-index: 20; }
+
+/* the DUO chip sits over the display: hide it while any screen is open */
+.kg-display[data-screen] .dj-chip { display: none; }

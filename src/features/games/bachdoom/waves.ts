@@ -7,7 +7,7 @@
 // demon joins, and the phrase starts over. A clean pass shatters the formation into golden notes.
 // All timing is on the performance.now() clock, the same one the judge stamps notes with (NoteGrade.t).
 // Mastery is recorded through src/music/phraseEngine.ts (a "shadow" attempt grades the same notes), so it counts in SONGS too.
-import { PC_NAMES, pc } from '../../../music/theory'
+import { PC_NAMES, msPerBeat, pc } from '../../../music/theory'
 import { phraseEngine } from '../../../music/phraseEngine'
 import { RUNGS, clearPhraseView, setPhraseView, usePhraseView } from '../../../music/phrases'
 import type { Phrase, Rung } from '../../../music/phrases'
@@ -80,7 +80,7 @@ export class WaveRun {
   constructor(private g: Game) {
     const r = resolvePhrase(g.spec)
     this.phrase = r.phrase; this.slow = r.slow
-    this.beatMs = 60000 / g.piece.bpm
+    this.beatMs = msPerBeat(g.piece.bpm)
     this.kinds = g.spec.demons.length ? g.spec.demons : ['imp']
   }
 

@@ -6,14 +6,15 @@
 // 2. They make sound, through ONE routing point (see "routing" below): the active emulator
 //    instrument if one is open, otherwise the Koog synth. With 💻 Computer sound on, notes from the
 //    MIDI keyboard (positive ids) are routed to the same target.
+import { registerPanicTarget } from './panic'
 import { useAppStore, type NoteEvent } from '../store/appStore'
 import { getSynth } from '../features/synth-history/engine'
 import { getActiveInstrument, onInstrumentChange, type PlayableInstrument } from './instrument'
 import { useAudioSettings } from './audioSettings'
 import { onNote } from './notes'
 import { activeIdx, consumeLearn, onZonesRelease, routeZones, unlockZones, zoneTarget, zonesActive, zonesAllOff, useZones } from './zones'
+import { PC_NAMES } from './theory'
 
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 interface Voice { t: Target; n: number }
 interface St { id: number; held: Set<number>; sounding: Map<string, Voice[]>; midiHeld: Set<number>; off?: () => void }
 const st: St = (import.meta.hot?.data.localNotes as St | undefined) ?? { id: 0, held: new Set(), sounding: new Map(), midiHeld: new Set() }
@@ -75,7 +76,7 @@ export const isLocalNote = (e: Pick<NoteEvent, 'id'>) => e.id < 0
 
 /** Play a note from the app. Call it from a pointer or key handler, which counts as a user gesture for audio. */
 export function playLocal(note: number, velocity: number, on: boolean) {
-  const ev: NoteEvent = { id: -(++st.id), note, velocity: on ? velocity : 0, on, name: NAMES[note % 12] + (Math.floor(note / 12) - 1) }
+  const ev: NoteEvent = { id: -(++st.id), note, velocity: on ? velocity : 0, on, name: PC_NAMES[note % 12] + (Math.floor(note / 12) - 1) }
   useAppStore.setState((s) => ({ recentNotes: [ev, ...s.recentNotes].slice(0, 12) }))
   if (on) st.held.add(note); else st.held.delete(note)
   if (on && consumeLearn(note)) return // "Learn split: press a key" swallows this press
@@ -132,3 +133,4 @@ if (import.meta.hot) {
   import.meta.hot.dispose(() => { st.off?.(); st.off = undefined })
   import.meta.hot.accept()
 }
+registerPanicTarget('localNotes', releaseAllNotes)

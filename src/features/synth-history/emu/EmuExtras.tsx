@@ -5,8 +5,8 @@ import type { Engine } from './core'
 import { onNote } from '../../../music/notes'
 import { onSeqChange } from './bus'
 import type { Params } from './types'
+import { PC_NAMES } from '../../../music/theory'
 
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 export function FieldPad({ engine, range }: { engine: Engine; range: [number, number] }) {
   const [pt, setPt] = useState<{ x: number; y: number } | null>(null)
@@ -32,7 +32,7 @@ export function FieldPad({ engine, range }: { engine: Engine; range: [number, nu
       onPointerUp={off} onPointerCancel={off} onPointerLeave={off}
     >
       {marks.map((n) => <span key={n} className="emu-fmark" style={{ left: ((n - lo) / (hi - lo)) * 100 + '%' }}>C{Math.floor(n / 12) - 1}</span>)}
-      <em>{pt ? `${NAMES[note! % 12]}${Math.floor(note! / 12) - 1}` : 'Slide here: left-right = pitch, up-down = loudness'}</em>
+      <em>{pt ? `${PC_NAMES[note! % 12]}${Math.floor(note! / 12) - 1}` : 'Slide here: left-right = pitch, up-down = loudness'}</em>
       {pt && <i className="emu-fdot" style={{ left: pt.x * 100 + '%', bottom: pt.y * 100 + '%' }} />}
     </div>
   )

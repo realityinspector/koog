@@ -1,6 +1,7 @@
 // The Loop Station's rhythm guide + count-in click: tiny synthesized voices (click, kick, snare, hat) on their own AudioContext,
 // scheduled on the 16th-note grid of the master clock with the Web Audio clock (so it is sample-accurate against itself).
-// Quiet by design: master gain 0.2 x app volume, plus a limiter. STABLE API: useGuide, setGuide, playClick, guidePeak, guideStats.
+// Quiet by design: master gain 0.2 x app volume, plus a limiter. STABLE API: useGuide, setGuide, playClick, guidePeak.
+import { registerPanicTarget } from '../../music/panic'
 import { create } from 'zustand'
 import { beatPos, isRunning, onTick, timeOfBeat } from '../../music/masterClock'
 import { outputScale } from '../../music/audioSettings'
@@ -21,7 +22,6 @@ function make() { return create<St>()(() => ({ on: false, pat: 'rock', vol: 0.8 
 export const useGuide = hot.store ?? make()
 const G: G = hot.g ?? { ctx: null, out: null, an: null, noise: null, next: 0, hits: [], count: 0 }
 export const setGuide = (p: Partial<St>) => useGuide.setState(p)
-export const guideStats = () => ({ count: G.count, hits: G.hits, ctx: G.ctx?.state ?? 'none' })
 
 function ensureCtx(): AudioContext | null {
   try {
@@ -92,3 +92,4 @@ if (import.meta.hot) {
   import.meta.hot.data.off = off
   import.meta.hot.accept()
 }
+registerPanicTarget('guide', () => setGuide({ on: false }))

@@ -364,4 +364,11 @@ export const entries: Entry[] = [
     title: '🧠 Phrase memory, 🎓 Mentor, 😀 Vibes and 🎭 Mimic',
     body: 'FOUR big ones. 🧠 Learn it (in SONGS) teaches a song two or three notes at a time, up a ladder: listen → follow the glowing keys → echo → from memory → in time → no sheet music → both hands. Little phrases join into bigger ones until you know the whole song. The games use the SAME ladder: BachDoom has Galaga-style demons that dive on the beat of the phrase (Episode 0: Boot Camp), Zombie Lanes has conga lines, Jiu-Jitsu partners call real song phrases, and the runway stops at phrase marks. 🎓 Mentor is a front-row owl who notices your moves ("that was a SEQUENCE!") and even spots when you sneak a famous tune into your jam. 😀 Vibes turns the mood of your music into a face: minor chords look sad, V→I looks triumphant. 🎭 Mimic answers you in a style, from Baroque to cool jazz to funk. Styles from after 1930 copy the FEEL, never the actual notes, because those songs are still copyrighted.',
   },
+  {
+    id: 51,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🧹 Clean-up round: one panic button, safer sound, kinder for keyboards',
+    body: 'After building fast, engineers stop and CLEAN UP. Seven reviewers (a kids\' game designer, a visual designer, an accessibility expert and more) went through Koog, and we fixed the quick wins first. Every sound now obeys volume and mute, and ONE panic button silences all 12 sound engines. Boss mode works with just a keyboard, hidden buttons don\'t trap your Tab key, there\'s a switch to stop the computer keys playing notes, and "Clear all" on the looper asks "Sure?" first. We also deleted a whole old synth nobody used, and merged 12 copies of the note-name list into one. Programmers call that "DRY": Don\'t Repeat Yourself.',
+  },
 ]

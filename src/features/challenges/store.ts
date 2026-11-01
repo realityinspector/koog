@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { useHarmonyStore } from '../../music/harmonyStore'
-import { outputScale } from '../../music/audioSettings'
+import { fxBus, fxPrime } from '../../audio/fxContext'
 import { onNote } from '../../music/notes'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { celebrate } from '../celebrate/celebrate'
@@ -25,17 +25,16 @@ interface S {
 const load = pload
 const save = psave
 
-let ac: AudioContext | null = null
 function beep(note: number, gain = 0.08) {
-  if (!ac) return
-  gain *= outputScale()
-  if (gain <= 0.0002) return
+  const bus = fxBus(0.1) // shared context + limiter; level = 0.1 x app volume (0 when muted)
+  if (!bus) return
   try {
-    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime
+    const ac = bus.ctx, o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime, peak = gain / 0.1
     o.type = 'sine'; o.frequency.value = 440 * Math.pow(2, (note - 69) / 12)
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(gain, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
-    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.55)
-  } catch { /* ignore */ }
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5)
+    o.connect(g).connect(bus.input); o.start(t); o.stop(t + 0.55)
+    o.onended = () => bus.dispose()
+  } catch { bus.dispose() }
 }
 
 function make() {
@@ -83,8 +82,7 @@ function make() {
       quit() { restoreKey(); set({ active: null, result: null, rev: get().rev + 1 }) },
       tick() { const a = get().active; if (!a) return; a.engine.tick(performance.now()); afterStep() },
       setSound(on) {
-        if (on && !ac) { try { ac = new AudioContext() } catch { /* ignore */ } }
-        if (on) void ac?.resume()
+        if (on) fxPrime()
         set({ sound: on })
       },
     }

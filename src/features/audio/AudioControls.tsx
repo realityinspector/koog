@@ -46,7 +46,7 @@ export function AudioControls() {
     <div className="kg-audio" ref={root}>
       <div className="kg-audio-vol">
         <button type="button" className={'kg-audio-btn' + (muted ? ' off' : '')} onClick={speaker}
-          aria-label={wide ? (muted ? 'Unmute' : 'Mute') : 'Volume'} aria-pressed={wide ? muted : undefined}
+          aria-label={wide ? 'Mute' : 'Volume'} aria-pressed={wide ? muted : undefined}
           aria-expanded={wide ? undefined : pop} title={wide ? (muted ? 'Unmute' : 'Mute') : 'Volume'}>
           {icon}
         </button>
@@ -55,7 +55,7 @@ export function AudioControls() {
           <div className="kg-audio-pop" role="group" aria-label="Volume">
             {slider}
             <button type="button" className="kg-audio-mute" aria-pressed={muted} onClick={() => { setMuted(!muted); if (muted) void unlockAudio() }}>
-              {muted ? '🔇 Unmute' : '🔊 Mute'}
+              <span aria-hidden>{muted ? '🔇' : '🔊'}</span> Mute
             </button>
           </div>
         )}

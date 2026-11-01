@@ -1,0 +1,33 @@
+/* Koog design tokens (Wave A4). Additive: features migrate to these later, nothing here overrides existing rules.
+   Surfaces + ink, three chrome accents, radii, 4-pt spacing, type scale (11px floor), elevations, control heights. */
+:root {
+  /* surfaces, darkest to lightest */
+  --k-bg: #0c0a1c;
+  --k-surface-0: #100d24;
+  --k-surface-1: #17132f;
+  --k-surface-2: #1f1a3d;
+  --k-surface-3: #2a2450;
+  --k-line: rgba(255, 255, 255, .14);
+  --k-line-strong: rgba(255, 255, 255, .28);
+  /* ink */
+  --k-ink: #f4f2ff;
+  --k-ink-2: #c9c4e6;
+  --k-ink-3: #9a95bf;
+  /* chrome accents: amber = action/selected, mint = LCD readouts, cyan = signal/guide, red = danger */
+  --k-accent: #ffb43c;
+  --k-lcd: #6cffa8;
+  --k-signal: #4fd8ff;
+  --k-danger: #ff5a6a;
+  /* radii */
+  --k-r-xs: 4px; --k-r-sm: 8px; --k-r-md: 12px; --k-r-lg: 18px; --k-r-pill: 999px;
+  /* spacing, 4-pt grid */
+  --k-s-1: 4px; --k-s-2: 8px; --k-s-3: 12px; --k-s-4: 16px; --k-s-5: 24px; --k-s-6: 32px;
+  /* type scale: nothing under 11px */
+  --k-fs-xs: 11px; --k-fs-sm: 12px; --k-fs-md: 14px; --k-fs-lg: 18px; --k-fs-xl: 24px; --k-fs-2xl: 32px;
+  /* elevations */
+  --k-e-1: 0 1px 2px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06);
+  --k-e-2: 0 4px 12px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .08);
+  --k-e-3: 0 12px 32px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .1);
+  /* control heights: compact / default / touch */
+  --ctl-h: 34px; --ctl-h-sm: 28px; --ctl-h-lg: 44px;
+}

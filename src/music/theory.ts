@@ -3,6 +3,11 @@
 
 export const PC_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
+export const PC_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
+/** Milliseconds per beat at a tempo. */
+export const msPerBeat = (bpm: number) => 60000 / bpm
+
 export type ScaleType = 'major' | 'minor' | 'majorPentatonic' | 'minorPentatonic' | 'blues' | 'chromatic'
 
 /** Semitone offsets from the tonic. */
@@ -40,13 +45,6 @@ export function inKey(note: number, key: Key): boolean {
 /** Scale degree (0-based) of a note in a key, or -1 if not in the key. */
 export function degree(note: number, key: Key): number {
   return SCALES[key.scale].indexOf(pc(note - key.tonic))
-}
-
-/** All MIDI notes of the key between lo and hi inclusive. */
-export function scaleNotes(key: Key, lo: number, hi: number): number[] {
-  const out: number[] = []
-  for (let n = lo; n <= hi; n++) if (inKey(n, key)) out.push(n)
-  return out
 }
 
 // Krumhansl-Kessler key profiles.

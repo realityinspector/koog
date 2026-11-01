@@ -1,7 +1,7 @@
 // Level data: the five maps (generated from a tiny room recipe), the rail path the camera glides along,
 // and the piece each level plays (split into one phrase per demon). Pure functions, no state.
 import { SONGS, type Song, type SongNote } from '../../songs/songs'
-import type { Key } from '../../../music/theory'
+import { msPerBeat, type Key } from '../../../music/theory'
 import { PRELUDE_C, PRELUDE_PHASES, preludeFigure } from '../../../music/scores'
 import { segment } from '../../../music/phraseEngine'
 import type { Phrase } from '../../../music/phrases'
@@ -317,7 +317,7 @@ function phrasePiece(spec: LevelSpec): Piece {
   const song = SONGS.find((x) => x.id === spec.songId)!
   const score: SongNote[] = [], scoreIdx: number[] = [], notes: number[] = [], gap: number[] = []
   let t = 0
-  const ms = 60000 / song.bpm
+  const ms = msPerBeat(song.bpm)
   phrase.notes.forEach((n, i) => {
     if (n.beat > t + 1e-6) score.push({ note: null, beats: (n.beat - t) * slow })
     gap.push(i ? (n.beat - phrase.notes[i - 1].beat) * slow * ms : 0)
@@ -331,21 +331,21 @@ export function buildPiece(spec: LevelSpec): Piece {
   if (spec.phrase) return phrasePiece(spec)
   if (spec.boss) {
     const notes = PRELUDE_C.flatMap(preludeFigure)
-    const sixteenth = (60000 / 72) * 0.25
+    const sixteenth = msPerBeat(72) * 0.25
     return { title: 'Prelude in C', origin: 'J.S. Bach, 1722', bpm: 72, notes, gap: notes.map((_, i) => (i ? sixteenth : 0)), chunks: PRELUDE_PHASES.map(([a, b]) => ({ s: a * 16, e: b * 16 })), bars: PRELUDE_C.length,
       score: notes.map((note) => ({ note, beats: 0.25 })), scoreIdx: notes.map((_, i) => i), key: { tonic: 0, scale: 'major' }, beatsPerBar: 4 }
   }
   const song = SONGS.find((s) => s.id === spec.songId)!
   const base = song.notes.slice(0, spec.take ?? song.notes.length)
   const notes: number[] = [], gap: number[] = [], breaks: number[] = [], score: SongNote[] = [], scoreIdx: number[] = []
-  const msPerBeat = 60000 / song.bpm
+  const beatMs = msPerBeat(song.bpm)
   let carry = 0 // beats since the previous sounding note started
   let prevBeats = 0
   for (let rep = 0; rep < (spec.reps ?? 1); rep++) {
     if (rep > 0) { carry += 2; score.push({ note: null, beats: 2 }); if (notes.length) breaks.push(notes.length) }
     for (const n of base) {
       if (n.note == null) { carry += n.beats; score.push({ note: null, beats: n.beats }); if (notes.length) breaks.push(notes.length); continue }
-      gap.push(notes.length === 0 ? 0 : (prevBeats + carry) * msPerBeat)
+      gap.push(notes.length === 0 ? 0 : (prevBeats + carry) * beatMs)
       scoreIdx.push(score.length); score.push({ note: n.note, beats: n.beats })
       notes.push(n.note)
       prevBeats = n.beats; carry = 0

@@ -1,6 +1,7 @@
 // A small bus between the emulator engines and anything that wants to watch or steer them from outside a panel
 // (Controller Mode: src/features/controller). It tracks the live engines, announces every set(), and lets a panel
 // glow the control the hardware just touched. State lives in import.meta.hot.data so editing never drops an engine.
+import { registerPanicTarget } from '../../../music/panic'
 import type { Engine } from './core'
 
 type SetFn = (e: Engine, key: string, val: number) => void
@@ -32,3 +33,4 @@ if (import.meta.hot) {
   import.meta.hot.data.bus = B
   import.meta.hot.accept()
 }
+registerPanicTarget('emulators', () => { for (const e of liveEngines()) e.allOff() })

@@ -39,12 +39,13 @@ export function EmulatorPanel({ id, preset = 0, onBack }: { id: string; preset?:
     // Controller Mode (a knob on the hardware) changes engine params from outside: keep the faceplate in step
     const offSet = onEmuSet((e, k, v) => { if (e === engine) setVals((s) => (s[k] === v ? s : { ...s, [k]: v })) })
     const w = window as unknown as { __emuPeak?: () => number; __emu?: Engine }
-    w.__emuPeak = () => engine.peak(); w.__emu = engine
+    const qaHooks = import.meta.env.DEV || location.search.includes('qa=1')
+    if (qaHooks) { w.__emuPeak = () => engine.peak(); w.__emu = engine }
     return () => {
       offSet()
       setActiveInstrument(null)
       engine.allOff(); engine.dispose()
-      delete w.__emuPeak; delete w.__emu
+      if (qaHooks) { delete w.__emuPeak; delete w.__emu }
     }
   }, [spec]) // eslint-disable-line react-hooks/exhaustive-deps
 

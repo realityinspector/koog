@@ -4,6 +4,7 @@ import { unlockAudio } from '../../music/localNotes'
 import { buildLayout } from '../keyboard/layout'
 import { ZONE_COLORS, ZONE_SOUNDS, activeIdx, learnSplit, setFocusedZone, setSplitPoint, setZone, setZoneMode, useZones, zoneRange, getFocusedZone, type ZoneMode } from '../../music/zones'
 import './split.css'
+import { PC_NAMES } from '../../music/theory'
 
 const MODES: [ZoneMode, string, string][] = [
   ['single', 'Single', 'One sound across the whole keyboard'],
@@ -16,7 +17,7 @@ const LAYER_NAMES = ['Sound A', 'Sound B', 'Sound C']
 const LO = 36, HI = 96
 const KEYS = buildLayout(LO, HI)
 const zoneName = (mode: ZoneMode, i: number) => (mode === 'layer' ? LAYER_NAMES[i] : NAMES[i])
-const noteName = (n: number) => ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][n % 12] + (Math.floor(n / 12) - 1)
+const noteName = (n: number) => PC_NAMES[n % 12] + (Math.floor(n / 12) - 1)
 const edge = (n: number) => { const k = KEYS.find((x) => x.note === Math.max(LO, Math.min(HI, n))); return k ? (k.black ? k.left + k.width / 2 : k.left) : 0 }
 
 /** Keyboard split and layering: a mini keyboard with coloured zones, and a sound / transpose / volume row per zone. Dad and Pro only. */

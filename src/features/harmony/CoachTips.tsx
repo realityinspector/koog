@@ -19,7 +19,7 @@ const TIPS: Record<TipId, [string, string]> = {
 }
 const LESSONS = 3 // full explanation this many times per kid, then just the short label
 // the memorize nudge is rare: free play only, every 3rd motif at most, 4 min apart, 6 times per kid
-const PHRASE_GAP = 4 * 60 * 1000, PHRASE_MAX = 6
+const PHRASE_TIP_COOLDOWN = 4 * 60 * 1000, PHRASE_MAX = 6
 const ALWAYS: TipId[] = ['boom', 'charged']
 
 /** Little coach captions on the display when the judge spots a musical moment. */
@@ -41,7 +41,7 @@ export function CoachTips() {
       if (id === 'motif') {
         const free = !useScore.getState().score && !usePhraseView.getState().phrase
         const seen = pload<number>('coach.phraseTips', 0)
-        if (free && ++motifs.current % 3 === 0 && performance.now() - lastPhrase.current > PHRASE_GAP && seen < PHRASE_MAX) {
+        if (free && ++motifs.current % 3 === 0 && performance.now() - lastPhrase.current > PHRASE_TIP_COOLDOWN && seen < PHRASE_MAX) {
           lastPhrase.current = performance.now(); psave('coach.phraseTips', seen + 1); id = 'phrase'
         }
       }

@@ -16,6 +16,7 @@
 // created with createEngine, unlocked when the track is armed, disposed when no track uses it) or 'follow'.
 // Volume: tracks only scale velocity (<= 1.0); every engine keeps its own cap x outputScale().
 // Replayed notes do NOT go through playLocal, so they do not feed the judge, the visuals or the on-screen keys (fine in Boss mode).
+import { registerPanicTarget } from '../../music/panic'
 import { create } from 'zustand'
 import { onNote } from '../../music/notes'
 import { getActiveInstrument } from '../../music/instrument'
@@ -765,3 +766,4 @@ if (import.meta.hot) {
   import.meta.hot.dispose(() => { for (const f of E.offs) f(); E.offs = []; try { allQuiet() } catch { /* ignore */ } for (const d of Object.values(E.down)) clearTimeout(d.timer); E.down = {} })
   import.meta.hot.accept()
 }
+registerPanicTarget('loops', stopAll)

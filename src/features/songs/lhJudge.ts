@@ -2,6 +2,10 @@
 // The melody is judged exactly as before. The left hand is a bonus layer with partial credit: each target
 // ("play a chord tone of this chord around now") is hit or missed, and a miss never hurts the melody score.
 import type { Arrangement } from '../../music/arrange'
+import { pc } from '../../music/theory'
+
+/** MIDI notes below this are the left hand (middle C is 60; the split sits an octave above) */
+export const LH_SPLIT = 72
 
 export interface LhTarget { start: number; end: number; pcs: number[]; idxs: number[]; hit: boolean; done: boolean }
 export interface LhState { targets: LhTarget[]; hits: number; total: number }
@@ -14,19 +18,17 @@ export function makeLh(arr: Arrangement | null): LhState {
 }
 /** a key went down at beat position p (wait mode: the beat of the melody note we are waiting for). True if it earned left-hand credit. */
 export function lhPress(st: LhState, midi: number, p: number): boolean {
-  if (midi >= 72) return false
-  const pc = ((midi % 12) + 12) % 12
+  if (midi >= LH_SPLIT) return false
   for (const t of st.targets) {
     if (t.hit || t.done) continue
-    if (p >= t.start - EARLY && p < t.end + LATE && t.pcs.includes(pc)) { t.hit = true; st.hits++; return true }
+    if (p >= t.start - EARLY && p < t.end + LATE && t.pcs.includes(pc(midi))) { t.hit = true; st.hits++; return true }
   }
   return false
 }
 /** a low chord tone of a chord that is sounding now, even if its credit is already taken (extra left-hand notes are never "wrong") */
 export function lhNear(st: LhState, midi: number, p: number): boolean {
-  if (midi >= 72) return false
-  const pc = ((midi % 12) + 12) % 12
-  return st.targets.some((t) => !t.done && p >= t.start - EARLY && p < t.end + LATE && t.pcs.includes(pc))
+  if (midi >= LH_SPLIT) return false
+  return st.targets.some((t) => !t.done && p >= t.start - EARLY && p < t.end + LATE && t.pcs.includes(pc(midi)))
 }
 /** call as the song moves on: targets we have passed without a hit are finished (a miss, no penalty) */
 export function lhAdvance(st: LhState, p: number, all = false) {

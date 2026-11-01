@@ -1,9 +1,9 @@
 import { useAppStore } from '../store/appStore'
 import { useDevices, roleFor, emitDj, emitSurface, emitLoop, setDjSender, type Device, type DeviceRole } from '../music/devices'
+import { PC_NAMES } from '../music/theory'
 
 const PREFERRED = 'USB MIDI'
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-export const noteName = (n: number) => `${NOTE_NAMES[n % 12]}${Math.floor(n / 12) - 1}`
+export const noteName = (n: number) => `${PC_NAMES[n % 12]}${Math.floor(n / 12) - 1}`
 
 // Everything long-lived is kept in hot.data so editing this file never reopens the port.
 interface Persisted {
@@ -64,8 +64,9 @@ function route(role: DeviceRole, d: Uint8Array, t: number, id: string) {
 }
 const liveRole = (id: string, name: string): DeviceRole => useDevices.getState().devices.find((x) => x.id === id)?.role ?? roleFor(name)
 
-/** Test hook: route bytes as if they came from an input with this port name (uses its saved/guessed role). */
+/** Test hook (DEV only, no-op in production): route bytes as if they came from an input with this port name. */
 export function __routeForTest(name: string, data: number[] | Uint8Array, id = 'test:' + name) {
+  if (!import.meta.env.DEV) return
   route(roleFor(name), data instanceof Uint8Array ? data : new Uint8Array(data), 0, id)
 }
 

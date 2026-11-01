@@ -46,13 +46,4 @@
 .ch-pb{color:var(--gold)}
 .ch-finish .ch-actions{justify-content:center;margin-top:6px}
 @media (prefers-reduced-motion:reduce){.ch-tile,.ch-bar i{transition:none}}
-/* mini keyboard */
-.chk{position:relative;height:clamp(52px,10vh,84px);flex:none;background:#0e0f12;border-radius:var(--r-sm);overflow:hidden}
-.chk-key{position:absolute;box-sizing:border-box}
-.chk-key.w{top:0;height:100%;background:#e9e9f0;border:1px solid #15161a;display:flex;align-items:flex-end;justify-content:center}
-.chk-key.w span{font-size:.55rem;color:#555}
-.chk-key.bk{top:0;height:58%;background:#1a1b20;z-index:2;border-radius:0 0 3px 3px}
-.chk-key.t.w{background:#c9b8ff}.chk-key.t.bk{background:#6a50d8}
-.chk-key.tm.w{background:#ff9cc6}.chk-key.tm.bk{background:#ff5da2}
-.chk-key.b.w{background:#8fd4ff}.chk-key.b.bk{background:#2a8cc4}
-.chk-key.h.w{background:#7cf0b0}.chk-key.h.bk{background:#1fb86a}
+/* the mini keyboard is gone: challenges light the main keybed through the shared guide (MiniKeyboard.tsx) */

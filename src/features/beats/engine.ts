@@ -1,7 +1,8 @@
 // Beat engine: Web Audio lookahead scheduler. No React in here.
 // Long-lived state lives in import.meta.hot.data so HMR can stop sound cleanly.
+import { registerPanicTarget } from '../../music/panic'
 import { useAudioSettings, outputScale } from '../../music/audioSettings'
-import { inKey, SCALES, PC_NAMES, type Key, type ScaleType } from '../../music/theory'
+import { inKey, msPerBeat, SCALES, PC_NAMES, type Key, type ScaleType } from '../../music/theory'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { GROOVES, type Groove } from './grooves'
@@ -340,7 +341,7 @@ export function startBacking(o: { bpm: number; grooveId: string; startAtMs: numb
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
     const groove = GROOVES.find((x) => x.id === o.grooveId) ?? GROOVES.find((x) => x.id === 'rock') ?? GROOVES[0]
     const b: Backing = { ctx, master, noise: buf, timer: null, groove, startAtMs: o.startAtMs,
-      stepMs: 60000 / o.bpm / 4, leadSteps: Math.round(o.leadBeats * 4), endAtMs: o.endAtMs, k: 0 }
+      stepMs: msPerBeat(o.bpm) / 4, leadSteps: Math.round(o.leadBeats * 4), endAtMs: o.endAtMs, k: 0 }
     B = b; saveB()
     backingTick(b)
   } catch { B = null; saveB() }
@@ -371,3 +372,4 @@ if (hot) {
   hot.dispose(() => { offSettings(); stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
   hot.accept()
 }
+registerPanicTarget('beats', () => { stop(); stopBacking() })

@@ -1,6 +1,14 @@
 import { create } from 'zustand'
 import { subscribeRaw, sendMidi, noteName } from '../../midi/connection'
-import * as synth from '../../audio/synth'
+import { getSynth } from '../synth-history/engine'
+
+/** rig volume is the Koog synth's own level (0..1; the engine keeps its hard master cap) */
+export const MAX_GAIN = 1
+export function latencyInfo() {
+  const c = getSynth().analyser()?.context as (AudioContext & { outputLatency?: number }) | undefined
+  if (!c) return null
+  return { state: c.state, sampleRate: c.sampleRate, base: c.baseLatency, output: c.outputLatency ?? null }
+}
 
 export interface LogEntry { n: number; t: number; dt: number; lag: number; hex: string; text: string }
 export interface Stats {
@@ -21,7 +29,7 @@ const emptyStats = (): Stats => ({ total: 0, channels: {}, velMin: null, velMax:
 const hex = (d: Uint8Array) => [...d].map((b) => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')
 
 const hot = import.meta.hot
-const init: Rig = { log: [], stats: emptyStats(), playback: false, muted: false, level: synth.DEFAULT_GAIN, sendEnabled: false, sendStatus: '' }
+const init: Rig = { log: [], stats: emptyStats(), playback: false, muted: false, level: getSynth().params.level, sendEnabled: false, sendStatus: '' }
 export const useRig = (hot?.data.rig as ReturnType<typeof make> | undefined) ?? make()
 function make() { return create<Rig>()(() => init) }
 const set = useRig.setState
@@ -70,9 +78,9 @@ function onRaw(d: Uint8Array, ts: number) {
   })
   if (useRig.getState().playback && st < 0xf0) {
     const type = st & 0xf0
-    if (type === 0x90 && d[2] > 0) synth.noteOn(d[1], d[2])
+    const synth = getSynth()
+    if (type === 0x90 && d[2] > 0) { if (!useRig.getState().muted) synth.noteOn(d[1], d[2]) }
     else if (type === 0x80 || type === 0x90) synth.noteOff(d[1])
-    else if (type === 0xb0 && d[1] === 64) synth.setSustain(d[2] >= 64)
     else if (type === 0xb0 && (d[1] === 123 || d[1] === 120)) synth.panic()
   }
 }
@@ -80,13 +88,13 @@ function onRaw(d: Uint8Array, ts: number) {
 export const resetMonitor = () => set({ log: [], stats: emptyStats() })
 
 export async function setPlayback(on: boolean) {
-  if (on) { await synth.enableAudio(); synth.setLevel(useRig.getState().level); synth.setMuted(useRig.getState().muted) }
-  else synth.disableAudio()
+  if (on) await getSynth().unlock()
+  else getSynth().panic()
   set({ playback: on })
 }
-export function setLevel(v: number) { const l = Math.min(synth.MAX_GAIN, v); synth.setLevel(l); set({ level: l }) }
-export function setMuted(m: boolean) { synth.setMuted(m); set({ muted: m }) }
-export const panicSynth = () => synth.panic()
+export function setLevel(v: number) { const l = Math.min(MAX_GAIN, Math.max(0, v)); getSynth().setParams({ level: l }); set({ level: l }) }
+export function setMuted(m: boolean) { if (m) getSynth().panic(); set({ muted: m }) }
+export const panicSynth = () => getSynth().panic()
 
 // ---- output (opt-in, whitelisted, rate limited) ----
 function safeSend(bytes: number[], force = false): boolean {

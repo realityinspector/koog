@@ -8,6 +8,7 @@
 //
 // Feeds: onDjMessage(raw MIDI) -> map.decode -> dispatch(). The on-screen UI calls dispatch() too. Tests: injectDj(bytes).
 // Publishes: the beat clock (./clock), LEDs (sendToDj), and a view snapshot for the UI (subscribe/getVersion/getView).
+import { registerPanicTarget } from '../../music/panic'
 import { outputScale, useAudioSettings } from '../../music/audioSettings'
 import { onDjMessage, sendToDj, useDevices } from '../../music/devices'
 import type { Key } from '../../music/theory'
@@ -450,7 +451,7 @@ export function dispatch(a: DjAction) {
   apply(a)
 }
 /** Raw MIDI bytes as if they came from onDjMessage (also the test hook). */
-export function injectDj(bytes: ArrayLike<number>) { const a = decode(bytes); if (a) dispatch(a); return a }
+export function injectDj(bytes: ArrayLike<number>) { if (!import.meta.env.DEV) return null; const a = decode(bytes); if (a) dispatch(a); return a }
 
 /** Silence everything now (stop both decks, clear FX). The audio graph stays. */
 export function panic() {
@@ -500,3 +501,4 @@ if (import.meta.hot) {
   })
   import.meta.hot.accept()
 }
+registerPanicTarget('dj', panic)

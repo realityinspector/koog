@@ -5,7 +5,7 @@ import type { Key } from './theory'
 import type { Song, SongNote } from '../features/songs/songs'
 
 const PCS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
-/** "E4:1 D4 C4:2 R:1" -> duration sticks until changed. # and b allowed. (copy of songs.ts seq, avoids a circular import) */
+/** "E4:1 D4 C4:2 R:1" -> duration sticks until changed. # and b allowed. (the one shared parser; songs.ts imports it) */
 export function seq(s: string, def = 1): SongNote[] {
   let d = def
   return s.trim().split(/\s+/).map((tok) => {

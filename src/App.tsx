@@ -14,6 +14,7 @@ import { SynthHistoryPanel } from './features/synth-history/SynthHistoryPanel'
 import { TestRigPanel } from './features/test-rig/TestRigPanel'
 import { Visualizer } from './features/visualizer/Visualizer'
 import { PianoStrip } from './features/keyboard/PianoStrip'
+import { ErrorBoundary } from './layout/ErrorBoundary'
 import { Instrument, type ModeDef } from './layout/Instrument'
 import { ProfileBar, ProfileManager, WhoIsPlaying } from './profile/ProfileBar'
 import { useChallengeStore } from './features/challenges/store'
@@ -55,17 +56,17 @@ export function App() {
       { id: 'scenes', icon: '🎬', label: 'SCENES', title: 'Scenes', node: <ScenesScreen key={'sc-' + player} /> },
     ]
     return (
-      <>
+      <ErrorBoundary>
         <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
         <WhoIsPlaying />
-      </>
+      </ErrorBoundary>
     )
   }
   return (
-    <>
+    <ErrorBoundary>
       <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /><MimicChip /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <Tour />
-    </>
+    </ErrorBoundary>
   )
 }

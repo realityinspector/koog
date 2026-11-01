@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '../../store/appStore'
-import { latencyInfo, MAX_GAIN } from '../../audio/synth'
-import { useRig, setPlayback, setLevel, setMuted, panicAll, resetMonitor, setSendEnabled, sendTestNote, outputPanic } from './rigStore'
+import { useRig, latencyInfo, MAX_GAIN, setPlayback, setLevel, setMuted, resetMonitor, setSendEnabled, sendTestNote, outputPanic } from './rigStore'
+import { panicAll } from '../../music/panic'
 import './rig.css'
 
 const keys = (o: Record<number, number>) => Object.keys(o).map(Number).sort((a, b) => a - b)
@@ -44,7 +44,7 @@ export function TestRigPanel() {
       <div className="row">
         <label><input type="checkbox" checked={playback} onChange={(e) => void setPlayback(e.target.checked)} /> Enable playback (off by default)</label>
         <button className={'mute' + (muted ? ' on' : '')} onClick={() => setMuted(!muted)}>{muted ? 'MUTED' : 'Mute'}</button>
-        <button className="panic" onClick={panicAll}>PANIC</button>
+        <button className="panic" onClick={() => { panicAll(); outputPanic() }}>PANIC</button>
       </div>
       <div className="row">
         <label>Volume <input type="range" min={0} max={MAX_GAIN} step={0.01} value={level} onChange={(e) => setLevel(+e.target.value)} /> {level.toFixed(2)} (cap {MAX_GAIN})</label>

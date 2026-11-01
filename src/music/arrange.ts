@@ -9,7 +9,7 @@
 //     block chords for hymns). Chords are voiced as close as possible to the last one (smooth voice leading).
 //  Where real harmony is known (Bach's Prelude in C), it is used instead of guessing.
 // Generated arrangements are original; only public-domain melodies go in.
-import type { Key } from './theory'
+import { PC_FLAT, PC_NAMES, SCALES, pc, type Key } from './theory'
 import type { SongNote } from '../features/songs/songs'
 import { candidateChords, scoreChord, type Chord, type MelodyNote } from '../features/smartband/harmonizer'
 import type { SheetLevel } from './sheetLevel'
@@ -46,25 +46,20 @@ export interface Arrangement {
   style: ArrStyle
 }
 
-const MAJOR = [0, 2, 4, 5, 7, 9, 11]
-const MINOR = [0, 2, 3, 5, 7, 8, 10]
-const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const FLAT_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 const FLAT_MAJOR = new Set([5, 10, 3, 8, 1, 6])
 const minorish = (k: Key) => k.scale === 'minor' || k.scale === 'minorPentatonic' || k.scale === 'blues'
 const usesFlats = (k: Key) => FLAT_MAJOR.has(minorish(k) ? (k.tonic + 3) % 12 : k.tonic)
-const mod12 = (n: number) => ((n % 12) + 12) % 12
 const EPS = 1e-6
 
 /** Guess a key from the notes (histogram vs major/minor scales, plus a nudge for the last note). */
-export function inferKey(notes: SongNote[]): Key {
+function inferKey(notes: SongNote[]): Key {
   const h = new Array(12).fill(0)
   let last = -1
-  for (const n of notes) if (n.note != null) { h[mod12(n.note)] += n.beats; last = mod12(n.note) }
+  for (const n of notes) if (n.note != null) { h[pc(n.note)] += n.beats; last = pc(n.note) }
   let best: Key = { tonic: 0, scale: 'major' }, bestS = -1
   for (let t = 0; t < 12; t++) {
     for (const sc of ['major', 'minor'] as const) {
-      const steps = sc === 'major' ? MAJOR : MINOR
+      const steps = sc === 'major' ? SCALES.major : SCALES.minor
       let s = 0
       for (const st of steps) s += h[(t + st) % 12]
       if (last === t) s += 0.8
@@ -100,7 +95,7 @@ function piecesIn(starts: number[], notes: SongNote[], a: number, b: number): Pi
     if (ov <= EPS) return
     const rel = s - a
     const strong = Math.abs(rel) < 0.01 ? 1.5 : Math.abs(rel - Math.round(rel)) < 0.01 ? 1.1 : 1
-    out.push({ pc: mod12(n.note), midi: n.note, w: ov * strong * (n.beats < 0.5 ? 0.7 : 1) })
+    out.push({ pc: pc(n.note), midi: n.note, w: ov * strong * (n.beats < 0.5 ? 0.7 : 1) })
   })
   return out
 }
@@ -129,7 +124,7 @@ const sameC = (a: Chord, b: Chord) => a.root === b.root && a.quality === b.quali
 
 /** all close-position voicings (one note per pitch class, spread <= 10 semitones) inside [lo, hi], sorted low to high */
 function voicings(pcs: number[], lo: number, hi: number): number[][] {
-  const opts = pcs.map((p) => { const o: number[] = []; for (let m = lo; m <= hi; m++) if (mod12(m) === p) o.push(m); return o })
+  const opts = pcs.map((p) => { const o: number[] = []; for (let m = lo; m <= hi; m++) if (pc(m) === p) o.push(m); return o })
   const out: number[][] = []
   for (const a of opts[0]) for (const b of opts[1]) for (const c of opts[2]) {
     const v = [a, b, c].sort((x, y) => x - y)
@@ -144,12 +139,12 @@ function voiceLead(pcs: number[], lo: number, hi: number, prev: number[] | null)
   const mid = (lo + hi) / 2
   let bv = all[0], bc = 1e9
   for (const v of all) {
-    const cost = prev ? v.reduce((a, n, i) => a + Math.abs(n - prev[i]), 0) : Math.abs(v[0] + 4 - mid) + (mod12(v[0]) === pcs[0] ? 0 : 6)
+    const cost = prev ? v.reduce((a, n, i) => a + Math.abs(n - prev[i]), 0) : Math.abs(v[0] + 4 - mid) + (pc(v[0]) === pcs[0] ? 0 : 6)
     if (cost < bc) { bc = cost; bv = v }
   }
   return bv
 }
-const inWindow = (pc: number, lo: number) => { let m = lo; while (mod12(m) !== pc) m++; return m }
+const inWindow = (p: number, lo: number) => { let m = lo; while (pc(m) !== p) m++; return m }
 
 const DURS = [4, 3, 2, 1.5, 1, 0.75, 0.5, 0.25]
 /** split a length into notatable pieces (4, 3, 2, 1.5, 1, ...) */
@@ -163,7 +158,7 @@ function pieces(beats: number): number[] {
   return out
 }
 
-function majorScalePcs(key: Key) { return (minorish(key) ? MINOR : MAJOR).map((s) => (key.tonic + s) % 12) }
+function majorScalePcs(key: Key) { return (minorish(key) ? SCALES.minor : SCALES.major).map((s) => (key.tonic + s) % 12) }
 
 /** the main entry point. level 'single' returns just the melody. */
 export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
@@ -181,7 +176,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
   const base: Arrangement = { level, title: input.title, generated: false, rh, lh: [], segs: [], marks: [], targets: [], bpb, unit, pickup, total: tot, key, style }
   if (level === 'single' || tot <= 0 || !notes.some((n) => n.note != null)) return { ...base, level: level === 'single' ? level : base.level }
 
-  const names = usesFlats(key) ? FLAT_NAMES : SHARP_NAMES
+  const names = usesFlats(key) ? PC_FLAT : PC_NAMES
   const mids = notes.filter((n) => n.note != null).map((n) => n.note as number).sort((a, b) => a - b)
   const q25 = mids[Math.floor(mids.length * 0.25)]
   const shift = q25 < 55 ? -12 : 0
@@ -191,11 +186,11 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
   const segs: ChordSeg[] = []
   if (input.harmony?.length) {
     for (const h of input.harmony) {
-      const root = mod12(h.bass)
+      const root = pc(h.bass)
       segs.push({ start: h.start, beats: h.beats, name: h.name, root, pcs: h.pcs, seventh: false, roman: '' })
     }
   } else {
-    const leading = notes.some((n) => n.note != null && mod12(n.note) === (key.tonic + 11) % 12)
+    const leading = notes.some((n) => n.note != null && pc(n.note) === (key.tonic + 11) % 12)
     const cands = candidates(key, leading, names)
     const dom = (key.tonic + 7) % 12
     // bars as [start, end]
@@ -227,7 +222,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
     const lastNote = [...notes].reverse().find((n) => n.note != null)
     const tonic = cands.find((c) => c.root === key.tonic)!
     const L = chosen.length - 1
-    if (L >= 0 && lastNote && tonic.pcs.includes(mod12(lastNote.note as number))) {
+    if (L >= 0 && lastNote && tonic.pcs.includes(pc(lastNote.note as number))) {
       chosen[L].c = tonic
       if (L >= 1 && chosen[L - 1].a >= pickup) {
         const v = cands.find((c) => c.root === dom && c.quality === 'maj') ?? cands.find((c) => c.root === dom)
@@ -239,7 +234,7 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
       const c = x.c
       const isDom = c.root === dom && c.quality === 'maj'
       const seventh = isDom && (x.p.some((q) => q.pc === (dom + 10) % 12) || i === L - 1)
-      const rel = mod12(c.root - key.tonic)
+      const rel = pc(c.root - key.tonic)
       const degree = ({ 0: 'I', 2: 'ii', 3: 'III', 4: 'iii', 5: 'IV', 7: 'V', 8: 'VI', 9: 'vi', 10: 'VII' } as Record<number, string>)[rel] ?? ''
       segs.push({ start: x.a, beats: x.b - x.a, name: nameOf(c.root, c.quality, seventh), root: c.root, pcs: seventh ? [c.root, c.pcs[1], c.pcs[2], (c.root + 10) % 12] : c.pcs, seventh, roman: degree })
     })
@@ -314,12 +309,12 @@ export function arrange(input: ArrInput, level: SheetLevel): Arrangement {
       if (n.note == null || n.beats < 1 - EPS) return
       const rel = starts[i] - pickup
       if (rel < -EPS || Math.abs(rel / bpb - Math.round(rel / bpb)) > 0.001) return
-      const deg = sc.indexOf(mod12(n.note))
+      const deg = sc.indexOf(pc(n.note))
       if (deg < 0) return
       const lowPc = sc[(deg + 5) % 7]
       let m = n.note - 3
-      while (mod12(m) !== lowPc && m > n.note - 6) m--
-      if (mod12(m) !== lowPc || n.note - m < 3 || n.note - m > 4 || m < 55) return
+      while (pc(m) !== lowPc && m > n.note - 6) m--
+      if (pc(m) !== lowPc || n.note - m < 3 || n.note - m > 4 || m < 55) return
       rh[i] = { note: n.note, midis: [m, n.note], cue: [m], beats: n.beats }
     })
   }

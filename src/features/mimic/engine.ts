@@ -3,11 +3,13 @@
 // SAFETY: hard master cap, limiter, every voice has a scheduled stop, max MAX_VOICES lead + MAX_BACK backing at once,
 // the player playing again cancels the answer (nothing ever stacks). Non-component: state lives in import.meta.hot.data.
 // NOTE: backing is bass + comping only (no drums) - the planned "Band" engine will merge this with beats/smartband.
+import { registerPanicTarget } from '../../music/panic'
 import { outputScale, useAudioSettings } from '../../music/audioSettings'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { say } from '../../coach/coachBus'
+import { pc } from '../../music/theory'
 import { NOTICE, STYLES, backingBar, detectTraits, filterExtras, makeAnswer, quoteFor, styleById, type Ev, type Patch, type PlayedNote, type TraitResult } from '../../music/styles'
 
 export { NOTICE }
@@ -273,7 +275,7 @@ export async function demo() {
   if (!(await ensureCtx())) return
   cancelAnswer(); S.ansCount++
   const k = key()
-  const base = 60 + ((k.tonic % 12) + 12) % 12
+  const base = 60 + pc(k.tonic)
   const call = [base, base + 2, base + 4, base + 2]
   const ans = makeAnswer(st, call.map((n) => ({ note: n })), { seed: S.seed++, key: k, bar: 0, index: S.ansCount })
   const t0 = S.ctx!.currentTime + 0.1
@@ -330,3 +332,4 @@ if (import.meta.hot) {
   })
   import.meta.hot.accept()
 }
+registerPanicTarget('mimic', panic)

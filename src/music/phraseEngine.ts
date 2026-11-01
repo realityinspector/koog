@@ -14,10 +14,10 @@ import { clearGuide, setGuide } from './guide'
 import { clearScore, setScore, setScorePos } from './scoreStore'
 import { getSheetLevel } from './sheetLevel'
 import { arrange, type ArrStyle } from './arrange'
-import { lhAdvance, lhNear, lhPress, makeLh } from '../features/songs/lhJudge'
+import { LH_SPLIT, lhAdvance, lhNear, lhPress, makeLh } from '../features/songs/lhJudge'
 import { getActiveInstrument } from './instrument'
 import { onProfileChange, pload, psave } from '../profile/profile'
-import { noteName, type Key } from './theory'
+import { msPerBeat, noteName, pc, type Key } from './theory'
 
 type Size = Phrase['size']
 const SAVE_KEY = 'phrases.v1'
@@ -87,7 +87,7 @@ function metaFor(songId: string, notes: SongNote[], beatsPerBar?: number): Meta 
   const last = snd[snd.length - 1]?.note ?? null
   const m: Meta = {
     notes, bpb: beatsPerBar ?? song?.beatsPerBar ?? 4, pickup: song?.pickup ?? 0, bpm: song?.bpm ?? 100,
-    tonic: song ? song.key.tonic : last != null ? ((last % 12) + 12) % 12 : null, key: song?.key, unit: song?.beatUnit, style: song?.style,
+    tonic: song ? song.key.tonic : last != null ? pc(last) : null, key: song?.key, unit: song?.beatUnit, style: song?.style,
   }
   E.metas.set(songId, m)
   return m
@@ -167,7 +167,7 @@ function size3(songId: string, notes: SongNote[], snd: Snd[], meta: Meta): Phras
     const e = lastIn[k]; const lastN = snd[e - 1]; const next = snd[e]
     let c = 0
     if (e === snd.length) return -3 // the song's end
-    if (((lastN.note % 12) + 12) % 12 === meta.tonic) c -= 3
+    if (pc(lastN.note) === meta.tonic) c -= 3
     if (lastN.beats >= 2 || (next && next.i - lastN.i > 1)) c -= 1
     return c
   }
@@ -328,7 +328,7 @@ function stopDemo() { E.demoStop?.(); E.demoStop = null }
 /** play the phrase for the kid to hear (current instrument), lighting the keys. Does NOT feed the judge or the games. */
 export function demo(phrase: Phrase, bpm?: number): Promise<void> {
   stopDemo()
-  const spb = 60000 / (bpm ?? bpmOf(phrase))
+  const spb = msPerBeat(bpm ?? bpmOf(phrase))
   let stopped = false
   const timers: ReturnType<typeof setTimeout>[] = []
   return new Promise<void>((resolve) => {
@@ -371,7 +371,7 @@ export function attempt(phrase: Phrase, rung: Rung, opts: AttemptOpts = {}): { c
   E.active?.cancel()
   stopDemo()
   const bpm = opts.bpm ?? bpmOf(phrase)
-  const beatMs = 60000 / bpm
+  const beatMs = msPerBeat(bpm)
   const win = opts.timingWindowMs ?? DEFAULT_WINDOW_MS
   const n = phrase.notes.length
   const m0 = mastery(phrase.id)
@@ -469,8 +469,8 @@ export function attempt(phrase: Phrase, rung: Rung, opts: AttemptOpts = {}): { c
     if (g.note !== exp.note) {
       if (lh) { // not the melody key: maybe a left-hand chord tone (never wrong)
         const p = t0 ? (g.t - t0) / beatMs : 0
-        if (g.note < 72 && lhPress(lh, g.note, p)) { lhHits++; return }
-        if (g.note < 72 && lhNear(lh, g.note, p)) return
+        if (g.note < LH_SPLIT && lhPress(lh, g.note, p)) { lhHits++; return }
+        if (g.note < LH_SPLIT && lhNear(lh, g.note, p)) return
       }
       const res: NoteResult = { expected: exp.note, played: g.note, timingMs: null, ok: false, why: 'wrong' }
       hadWrong = true

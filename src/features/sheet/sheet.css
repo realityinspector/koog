@@ -58,3 +58,5 @@
 .sh-g.mem-rev { opacity: 1; }
 .sh-mem { position: absolute; left: 14px; bottom: 6px; padding: 2px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; pointer-events: none; color: #fff6dc; background: rgba(120, 90, 200, .55); border: 1px solid rgba(255, 255, 255, .25); }
 @media (prefers-reduced-motion: reduce) { .sh-g { transition: none !important; } }
+/* the strip is crowded below 1400px: Sheet shows its icon only (label stays in the tooltip/aria) */
+@media (max-width: 1399px) { .sh-toggle-t { display: none; } .sh-toggle { padding: 4px 10px; } }

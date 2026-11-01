@@ -11,7 +11,7 @@ import { onNote } from '../../music/notes'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { setGuide, clearGuide } from '../../music/guide'
 import { getSynth } from '../synth-history/engine'
-import { SCALES, pc, PC_NAMES } from '../../music/theory'
+import { SCALES, msPerBeat, pc, PC_NAMES } from '../../music/theory'
 import { pload, psave, onProfileChange } from '../../profile/profile'
 import { holdKey } from './duo'
 import { dispatch, ensure, getView, onPad, subscribe, type PadEvent } from './engine'
@@ -54,7 +54,7 @@ const M: Mem = hot.M ?? { xf: [], timers: new Set(), roundTimer: null, restore: 
 const st = () => useCoop.getState()
 const patchActive = (p: Partial<Active>) => { const a = st().active; if (a) useCoop.setState({ active: { ...a, ...p } }) }
 const later = (fn: () => void, ms: number) => { const h = setTimeout(() => { M.timers.delete(h); fn() }, ms); M.timers.add(h); return h }
-const beatMs = () => { const b = getBeat(); return b.playing && b.bpm ? 60000 / b.bpm : 500 }
+const beatMs = () => { const b = getBeat(); return b.playing && b.bpm ? msPerBeat(b.bpm) : 500 }
 const homeName = () => PC_NAMES[useHarmonyStore.getState().key.tonic]
 
 function saveProgress(kind: CoopKind | null, stars: number, soundcheck: boolean) {
@@ -70,7 +70,7 @@ function saveProgress(kind: CoopKind | null, stars: number, soundcheck: boolean)
 export function downbeatOffsetMs(): number | null {
   const b = getBeat()
   if (!b.playing) return null
-  const ms = 60000 / b.bpm
+  const ms = msPerBeat(b.bpm)
   const nearest = b.phase < 0.5 ? b.beat : (b.beat + 1) % 4
   if (nearest !== 0) return null
   return b.phase < 0.5 ? b.phase * ms : (b.phase - 1) * ms
@@ -345,4 +345,3 @@ if (import.meta.hot) {
   import.meta.hot.accept()
 }
 /** for tests */
-export const __coopDebug = () => ({ evals, lastEval, lastNote: M.lastNote, xf: M.xf.map((x) => [Math.round(x.t), +x.v.toFixed(2)]), now: Math.round(performance.now()) })

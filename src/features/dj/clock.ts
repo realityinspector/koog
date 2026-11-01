@@ -4,6 +4,7 @@
 //   beatOffsetMs() -> signed ms from the nearest beat (negative = early). null when nothing plays.
 // The engine feeds it: setClockSource(fn) gives the live position, emitBeat() fires from its lookahead scheduler.
 // Listeners and the source live in import.meta.hot.data, so they survive edits to this file.
+import { msPerBeat } from '../../music/theory'
 export interface BeatInfo { n: number; beat: number; bar: number; bpm: number; time: number }
 export interface BeatNow { playing: boolean; bpm: number; phase: number; beat: number; bar: number; deck: 'A' | 'B' | null }
 export type BeatSource = () => { bpm: number; beatPos: number; deck: 'A' | 'B' } | null
@@ -29,7 +30,7 @@ export function getBeat(): BeatNow {
 export function beatOffsetMs(subdivide = 1): number | null {
   const b = getBeat()
   if (!b.playing) return null
-  const ms = 60000 / b.bpm / subdivide
+  const ms = msPerBeat(b.bpm) / subdivide
   const ph = (b.phase * subdivide) % 1
   return ph < 0.5 ? ph * ms : (ph - 1) * ms
 }

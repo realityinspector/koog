@@ -6,16 +6,13 @@ import { getSynth } from '../synth-history/engine'
 import { liveEngines, setTrim as setEmuTrim } from '../synth-history/emu/bus'
 import { getTrim as djTrim, setTrim as setDjTrim, getView, peak as djPeak } from '../dj/engine'
 import { MAX_GAIN, getState as beatsState, setGain as setBeatsGain } from '../beats/engine'
+import { getLoopLevel, setLoopLevel, loopPeak } from '../loopstation/loopEngine'
 import { getState as bandState, setVolume as setBandVolume } from '../smartband/engine'
 
 export interface Chan { id: string; label: string; icon: string; get(): number; set(v: number): void; peak?(): number; note?: string }
 const clamp01 = (v: number) => Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0))
 const wavePeak = (an: AnalyserNode | null | undefined, buf: Float32Array<ArrayBuffer>) => { if (!an) return 0; an.getFloatTimeDomainData(buf); let m = 0; for (let i = 0; i < buf.length; i++) m = Math.max(m, Math.abs(buf[i])); return m }
 const sbuf = new Float32Array(1024)
-
-// the loop station is built by another module: use whatever level setter it exports, if any
-const loopMods = import.meta.glob('../loopstation/*.ts', { eager: true }) as Record<string, Record<string, unknown>>
-const loopFn = (names: string[]) => { for (const m of Object.values(loopMods)) for (const n of names) if (typeof m[n] === 'function') return m[n] as (...a: unknown[]) => unknown; return null }
 
 export const CHANNELS: Chan[] = [
   { id: 'keys', label: 'KEYS', icon: '🎹', note: 'Koog synth level and every emulator',
@@ -26,11 +23,10 @@ export const CHANNELS: Chan[] = [
   { id: 'beats', label: 'DRUMS', icon: '🥁', note: 'beat machine', get: () => beatsState().gain / MAX_GAIN, set: (v) => setBeatsGain(clamp01(v) * MAX_GAIN) },
   { id: 'band', label: 'BAND', icon: '🤖', note: 'Smart Band', get: () => bandState().volume, set: (v) => setBandVolume(clamp01(v)) },
   { id: 'loops', label: 'LOOPS', icon: '🔁', note: 'loop station',
-    get: () => { const g = loopFn(['getLoopLevel', 'getLevel', 'getVolume']); return g ? Number(g()) || 0 : 1 },
-    set: (v) => { const s = loopFn(['setLoopLevel', 'setLevel', 'setVolume']); s?.(clamp01(v)) },
-    peak: () => { const p = loopFn(['loopPeak', 'peak']); return p ? Number(p()) || 0 : 0 } },
+    get: getLoopLevel,
+    set: (v) => setLoopLevel(clamp01(v)),
+    peak: loopPeak },
 ]
-export const hasLoopLevel = () => !!loopFn(['setLoopLevel', 'setLevel', 'setVolume'])
 
 interface MixState { fader: Record<string, number>; muted: Record<string, boolean>; solo: string | null; orig: Record<string, number> | null }
 const hot = import.meta.hot?.data as { mix?: ReturnType<typeof make> } | undefined

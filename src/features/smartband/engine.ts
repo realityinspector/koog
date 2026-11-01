@@ -1,6 +1,7 @@
 // Smart Band engine: its own tiny Web Audio synth + lookahead scheduler. No React in here.
 // Safety: hard master cap, limiter, short ramps, max 6 voices, every voice has a scheduled stop.
 // Long-lived state lives in import.meta.hot.data so HMR can silence it cleanly.
+import { registerPanicTarget } from '../../music/panic'
 import { useAudioSettings, outputScale } from '../../music/audioSettings'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
@@ -8,6 +9,7 @@ import {
   DEFAULT_BPM, estimateBpm, parseChordName, pickChord, sameChord, weighMelody,
   type Chord,
 } from './harmonizer'
+import { msPerBeat } from '../../music/theory'
 
 export type BandStyle = 'chill' | 'pop' | 'groove'
 export const STYLES: { id: BandStyle; label: string; hint: string }[] = [
@@ -136,7 +138,7 @@ function decideChord(): Chord {
   const h = useHarmonyStore.getState()
   const held = h.chord ? parseChordName(h.chord) : null
   if (held) return held // she is playing a chord: follow it exactly
-  const beat = 60000 / S.bpm, now = performance.now()
+  const beat = msPerBeat(S.bpm), now = performance.now()
   let recent = S.notes.filter((n) => now - n.at <= 4 * beat) // fall back to a wider window if she is slow
   const near = recent.filter((n) => now - n.at <= 2 * beat)
   if (near.length >= 1) recent = near
@@ -274,3 +276,4 @@ if (hot) {
 }
 
 if (import.meta.hot) { import.meta.hot.accept() }
+registerPanicTarget('smartband', panic)

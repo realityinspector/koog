@@ -18,6 +18,18 @@ const MAP = new Map<string, number>()
 LOWER.forEach((c, i) => MAP.set(c, LOWER_BASE + i))
 UPPER.forEach((c, i) => MAP.set(c, UPPER_BASE + i))
 
+const ON_KEY = 'koog.typing.on'
+function loadOn(): boolean { try { return localStorage.getItem(ON_KEY) !== '0' } catch { return true } }
+/** "Keys play notes" switch (default ON, persisted). Hooks live in features/audio/TypingSwitch. */
+const onHot = import.meta.hot?.data as { typingOn?: ReturnType<typeof makeOn> } | undefined
+function makeOn() { return create<{ on: boolean }>()(() => ({ on: loadOn() })) }
+export const useTypingOn = onHot?.typingOn ?? makeOn()
+export function setTypingOn(on: boolean) {
+  useTypingOn.setState({ on })
+  try { localStorage.setItem(ON_KEY, on ? '1' : '0') } catch { /* ignore */ }
+  if (!on) releaseAll()
+}
+
 const hot = import.meta.hot?.data as { typing?: { store: ReturnType<typeof makeStore>; held: Map<string, number>; off?: () => void } } | undefined
 function makeStore() { return create<{ shift: number }>()(() => ({ shift: 0 })) }
 const st = hot?.typing ?? { store: makeStore(), held: new Map<string, number>(), off: undefined as (() => void) | undefined }
@@ -34,7 +46,7 @@ export function typingCaps(note: number, shift: number): string[] {
 
 const blocked = (e: KeyboardEvent) => {
   const t = e.target as HTMLElement | null
-  return !!t?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]') || e.ctrlKey || e.metaKey || e.altKey || e.isComposing
+  return !!t?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role=slider], [role=spinbutton], [role=tab], [role=menuitem], [role=listbox], [role=option]') || e.ctrlKey || e.metaKey || e.altKey || e.isComposing
 }
 function releaseAll() {
   for (const n of [...st.held.values()]) playLocal(n, 0, false)
@@ -42,7 +54,7 @@ function releaseAll() {
 }
 
 function onDown(e: KeyboardEvent) {
-  if (blocked(e)) return
+  if (blocked(e) || !useTypingOn.getState().on) return
   if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
     if (document.querySelector('.tour-card')) return // the tour uses the arrows to page
     e.preventDefault()
@@ -79,6 +91,7 @@ st.off = () => {
 
 if (import.meta.hot) {
   import.meta.hot.data.typing = st
+  import.meta.hot.data.typingOn = useTypingOn
   import.meta.hot.dispose(() => { releaseAll(); st.off?.(); st.off = undefined })
   import.meta.hot.accept()
 }

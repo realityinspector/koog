@@ -9,6 +9,7 @@
 // (2 zones -> 0.7 each, 3 -> 0.58), on top of each engine's own 0.15 master cap and limiter.
 // STABLE API: useZones, routeZones, zonesActive, setZoneMode, setSplitPoint, setZone, learnSplit, getFocusedZone,
 // setFocusedZone, onFocusedZoneChange, onZonesChange, onZonesRelease, controlEngine, unlockZones, zoneRange.
+import { registerPanicTarget } from './panic'
 import { create } from 'zustand'
 import { getSynth } from '../features/synth-history/engine'
 import { createEngine, type Engine } from '../features/synth-history/emu/core'
@@ -201,3 +202,4 @@ if (import.meta.hot) {
   import.meta.hot.data.off = offProfile
   import.meta.hot.accept()
 }
+registerPanicTarget('zones', zonesAllOff)

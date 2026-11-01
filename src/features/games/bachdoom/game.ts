@@ -1,6 +1,6 @@
 // BachDoom's rules, with no drawing. One Game object lives for as long as the component is mounted.
 // Input is ONLY the judge's events (see music/judge.ts); every note that matters comes through onJudge().
-import { PC_NAMES, noteName, pc } from '../../../music/theory'
+import { PC_NAMES, pc } from '../../../music/theory'
 import { PRELUDE_C } from '../../../music/scores'
 import { clearGuide, setGuide } from '../../../music/guide'
 import { clearScore, setScore, setScorePos } from '../../../music/scoreStore'
@@ -788,7 +788,4 @@ export class Game {
   }
 
   dispose() { this.wave?.dispose(); clearScore('bachdoom'); clearGuide(); this.listeners.clear() }
-
-  // dev helpers (used by tests through window.__bachdoom)
-  noteLabel(n: number) { return noteName(n) }
 }

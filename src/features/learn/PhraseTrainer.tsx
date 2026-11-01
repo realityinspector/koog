@@ -7,7 +7,7 @@ import {
 import { clearScore } from '../../music/scoreStore'
 import { setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
 import { celebrate } from '../celebrate/celebrate'
-import { noteName } from '../../music/theory'
+import { SCALES, noteName } from '../../music/theory'
 import './learn.css'
 
 const RUNG_INFO: Record<Rung, { icon: string; label: string; ask: string }> = {
@@ -19,7 +19,7 @@ const RUNG_INFO: Record<Rung, { icon: string; label: string; ask: string }> = {
   blind: { icon: '🙈', label: 'No sheet', ask: 'Sheet music is hidden. Just your ears and hands.' },
   hands: { icon: '🙌', label: 'Both hands', ask: 'Add the left hand: a low chord note.' },
 }
-const stepOf = (m: number) => { const w = [0, 2, 4, 5, 7, 9, 11]; const o = Math.floor(m / 12); const pcv = m % 12; let i = 0; for (let k = 0; k < 7; k++) if (w[k] <= pcv) i = k; return o * 7 + i }
+const stepOf = (m: number) => { const w = SCALES.major; const o = Math.floor(m / 12); const pcv = m % 12; let i = 0; for (let k = 0; k < 7; k++) if (w[k] <= pcv) i = k; return o * 7 + i }
 type NState = 'idle' | 'ok' | 'bad'
 
 export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => void }) {

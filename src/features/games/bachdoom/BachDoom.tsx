@@ -82,7 +82,7 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
       jump: (n: number, diff?: Diff) => game.start(n - 1, diff ?? game.diff),
       perf: () => { const o = { fps: Math.round(perf.fps * 10) / 10, avgMs: Math.round(perf.avg * 100) / 100, worstMs: Math.round(perf.worst * 100) / 100, iw: view.iw, ih: view.ih, W, H }; perf.worst = 0; return o },
     }
-    ;(window as unknown as { __bachdoom?: unknown }).__bachdoom = hook
+    if (import.meta.env.DEV) (window as unknown as { __bachdoom?: unknown }).__bachdoom = hook
 
     return () => {
       cancelAnimationFrame(raf)

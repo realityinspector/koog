@@ -2,7 +2,7 @@
 // per canvas and feeds it note events. Editing this file hot-swaps the engine.
 
 import { useHarmonyStore } from '../../music/harmonyStore'
-import { inKey, pc, type Key } from '../../music/theory'
+import { inKey, pc, PC_NAMES, type Key } from '../../music/theory'
 import { DEFAULT_PARAMS, type SynthParams } from '../synth-history/params'
 import { createGhosts } from './ghosts'
 import { createSparkles } from './sparkle'
@@ -54,7 +54,6 @@ export interface Engine {
   destroy(): void
 }
 
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // Hue walks the circle of fifths, so notes that sound good together get related colours.
 const hueFor = (note: number) => (((note % 12) * 7) % 12) * 30
 
@@ -946,7 +945,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     } else if (scenes[mode]) {
       const sc = scenes[mode]!
       held.set(note, { x, y: h - 60, hue, velocity: v, kind })
-      sc.noteOn(note, x, v, kind, hue, NAMES[note % 12], g)
+      sc.noteOn(note, x, v, kind, hue, PC_NAMES[note % 12], g)
       const t = performance.now()
       const hv = [...held.values()]
       if (hv.length >= 3 && t - lastSceneChord > 600 && hv.every((q) => q.kind !== 'spicy')) { lastSceneChord = t; sc.chord?.(hv.map((q) => q.x)) }
@@ -954,7 +953,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5, ...tag })
     }
-    if (mode !== 'mail' && mode !== 'zombie' && mode !== 'vibes') labels.push({ text: NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue, nt: note })
+    if (mode !== 'mail' && mode !== 'zombie' && mode !== 'vibes') labels.push({ text: PC_NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue, nt: note })
     if (labels.length > 24) labels.shift()
     if (sparkleOn && mode !== 'ghost' && !scenes[mode]?.ownBackdrop) sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
     emojiFor(note, v, kind)
@@ -987,7 +986,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     } else if (mode === 'ghost') {
       if (fizz && now - lastFizzSfx > 120) { lastFizzSfx = now; ghosts.spook() }
     } else if (scenes[mode]) {
-      scenes[mode]!.noteOn(note, x, v, g.kind, hue, NAMES[note % 12], g)
+      scenes[mode]!.noteOn(note, x, v, g.kind, hue, PC_NAMES[note % 12], g)
     }
   }
 

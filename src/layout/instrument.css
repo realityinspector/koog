@@ -152,3 +152,27 @@
 /* a running game brings its own Back/Menu buttons: drop the screen header so the game gets the height */
 .kg-screen:has(.gm-stage) .kg-screen-head { display: none; }
 @media (prefers-reduced-motion: reduce) { .kg-overlay { transition: none; } .kg-screen { animation: none; } }
+/* a11y wrappers must not change layout: the viz layer is layout-transparent, the h1 is visually hidden */
+.kg-viz-layer { display: contents; }
+.kg-sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* the app shell is now a <main> landmark: undo the old global `main { max-width: 640px … }` from index.css */
+main.kg-app { max-width: none; margin: 0; }
+
+/* ---- a11y (Wave A3) ---- */
+.kg-screen-head h2:focus { outline: none; }
+.kg-screen-head h2:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+.kg-screen:focus { outline: none; }
+/* narrow / 200% zoom: the strip wraps and the chassis scrolls, so no control is off-screen */
+@media (max-width: 700px) {
+  .kg-strip { flex-wrap: wrap; }
+  .kg-strip-mid { flex-wrap: wrap; flex: 1 1 100%; order: 3; }
+  .kg-strip-controls { flex-wrap: wrap; margin-left: 0; }
+  .kg-panel { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+  .kg-app { overflow-x: hidden; }
+  html, body { overflow-y: auto; }
+}
+.pf-hold { white-space: nowrap; }
+@media (max-width: 1399px) { .kg-tw-long { display: none; } }
+/* strip never lets controls paint over each other: the middle group shrinks instead of overflowing */
+.kg-strip-mid { min-width: 0; }
+.kg-strip-controls { flex-shrink: 1; min-width: 0; }

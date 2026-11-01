@@ -138,6 +138,23 @@ function Lcd() {
   )
 }
 
+/** Destructive action: first tap arms ("Sure? tap again"), second tap within 3 s does it. */
+function ConfirmChip({ label, onConfirm, disabled, title }: { label: string; onConfirm: () => void; disabled?: boolean; title?: string }) {
+  const [armed, setArmed] = useState(false)
+  const t = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(t.current), [])
+  useEffect(() => { if (disabled) setArmed(false) }, [disabled])
+  return (
+    <button type="button" className={'lp-chip' + (armed ? ' on' : '')} disabled={disabled} title={title} data-armed={armed || undefined}
+      onClick={() => {
+        window.clearTimeout(t.current)
+        if (armed) { setArmed(false); onConfirm(); return }
+        setArmed(true)
+        t.current = window.setTimeout(() => setArmed(false), 3000)
+      }}>{armed ? 'Sure? tap again' : label}</button>
+  )
+}
+
 function Seg({ on, onClick, children, title }: { on: boolean; onClick: () => void; children: React.ReactNode; title?: string }) {
   return <button type="button" className={'lp-chip big' + (on ? ' on' : '')} aria-pressed={on} title={title} onClick={onClick}>{children}</button>
 }
@@ -176,10 +193,10 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
             <Seg on={pic} onClick={() => setPic(!pic)} title="The drawn controller for the Loop page">controller</Seg>
             <span className="lp-grp"><select aria-label="Save slot" value={slot} onChange={(e) => setSlot(e.target.value)}>{['1', '2', '3', '4'].map((k) => <option key={k} value={k}>slot {k}{all[k] ? ' ●' : ''}</option>)}</select>
               <button type="button" className="lp-chip" onClick={() => { saveSession(slot); bump((n) => n + 1) }}>SAVE</button>
-              <button type="button" className="lp-chip" disabled={!all[slot]} onClick={() => loadSession(slot)}>LOAD</button></span>
+              <ConfirmChip label="LOAD" disabled={!all[slot]} title="Replaces the current session" onConfirm={() => loadSession(slot)} /></span>
             <button type="button" className="lp-chip" disabled={!s.layers.some((l) => l.takes.length)} onClick={() => downloadMidi(1)} title="Download as a Standard MIDI File">⬇ .MID</button>
             <button type="button" className="lp-chip" onClick={() => stopAll()}>■ stop</button>
-            <button type="button" className="lp-chip" onClick={() => clearAll()} title="Clear every track">CLEAR ALL</button>
+            <ConfirmChip label="CLEAR ALL" title="Clear every track" onConfirm={() => clearAll()} />
           </div>
         </details>
       </div>

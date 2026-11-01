@@ -2,13 +2,19 @@
 .kb-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 44px; }
 .kb-chord { font-size: 32px; font-weight: 800; background: var(--grad-rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0; transition: opacity .35s; }
 .kb-chord.on { opacity: 1; }
-.kb-toggle { font-size: 13px; color: var(--text-dim); cursor: pointer; white-space: nowrap; }
-.kb-toggle input { width: auto; margin-right: 4px; }
+.kb-opts { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); flex-wrap: wrap; flex: none; margin: 0 0 4px; }
+/* opaque pills in their own slim row above the keys (specificity beats the old .kg-keybed .kb-toggle in instrument.css) */
+.kb .kb-opts .kb-toggle { display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; min-height: 28px; padding: 0 12px; border-radius: 999px; background: #120e26; border: 1px solid rgba(255, 255, 255, .2); color: #e4e0fa; font-size: 12px; line-height: 1; cursor: pointer; white-space: nowrap; }
+.kb .kb-opts .kb-toggle:hover { background: #1f1a3d; }
+.kb .kb-opts .kb-toggle input { width: auto; margin: 0; padding: 0; }
+/* inside the keybed the options row takes its own strip and the keys fill the rest */
+.kg-keybed > .kb { display: flex; flex-direction: column; }
+.kg-keybed > .kb > .kb-strip { flex: 1 1 0; height: auto; min-height: 0; }
 .kb-strip { position: relative; height: 120px; user-select: none; touch-action: none; border-radius: var(--r-sm); }
 .kb-key { position: absolute; top: 0; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; transition: transform .08s, background .12s, box-shadow .12s; transform-origin: top; }
 .kb-key.white { height: 100%; background: #f4f2ff; border: 1px solid #8a84b0; border-radius: 0 0 6px 6px; color: #3a3560; z-index: 1; padding-bottom: 4px; }
 .kb-key.black { height: 62%; background: #1b1633; border: 1px solid #000; border-radius: 0 0 4px 4px; z-index: 2; }
-.kb-key.held { transform: translateY(2px); background: hsl(var(--h) 90% 62%); box-shadow: 0 0 18px hsl(var(--h) 95% 60% / .8); }
+.kb-key.held { transform: translateY(2px); background: linear-gradient(hsl(var(--h) 90% 72%), hsl(var(--h) 85% 52%)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 0 18px hsl(var(--h) 95% 60% / .5); }
 .kb-key.spicy { background: #ffb06c; box-shadow: 0 0 14px rgba(255, 150, 80, .6); }
 .kb-key.held.spicy { background: hsl(var(--h) 90% 62%); }
 .kb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); opacity: .85; margin-bottom: 2px; }
@@ -16,15 +22,14 @@
 .kb-home { font-size: 14px; line-height: 1; }
 .kb-label { font-size: 11px; font-weight: 700; pointer-events: none; }
 .kb-key > * { pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { .kb-key { box-shadow: none !important; } .kb-key.held { box-shadow: none !important; } }
+@media (prefers-reduced-motion: reduce) { .kb-key { box-shadow: none !important; } .kb-key.held, .kg-keybed .kb-key.held { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55) !important; } }
 
 /* keybed look: ivory keys with a soft felt shadow, ebony blacks with a sheen */
 .kg-keybed .kb-key.white { background: linear-gradient(180deg, #f7f4ff 0%, #ebe7fb 85%, #d9d3f2 100%); border-color: #5d5780; box-shadow: inset 0 -4px 6px rgba(80, 70, 130, .18); }
 .kg-keybed .kb-key.black { background: linear-gradient(180deg, #2a2447 0%, #0f0b22 70%, #1d1838 100%); box-shadow: 0 3px 5px rgba(0, 0, 0, .6), inset 1px 0 0 rgba(255, 255, 255, .08); }
-.kg-keybed .kb-key.held { background: hsl(var(--h) 90% 62%); }
-.kg-keybed .kb-key.held.white, .kg-keybed .kb-key.held.black { background: hsl(var(--h) 90% 62%); }
+.kg-keybed .kb-key.held, .kg-keybed .kb-key.held.white, .kg-keybed .kb-key.held.black { background: linear-gradient(hsl(var(--h) 90% 72%), hsl(var(--h) 85% 52%)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 0 18px hsl(var(--h) 95% 60% / .5); }
 .kg-keybed .kb-key.spicy { background: #ffb06c; }
-.kg-keybed .kb-key.held.spicy { background: hsl(var(--h) 90% 62%); }
+.kg-keybed .kb-key.held.spicy { background: linear-gradient(hsl(var(--h) 90% 72%), hsl(var(--h) 85% 52%)); }
 
 /* guide: a game or song lights the key to play next (gentle pulse, never a flash) */
 .kb-key.white.guide { background: linear-gradient(180deg, #fff 0%, var(--gd, #b8f0ff) 100%); box-shadow: inset 0 -10px 18px var(--gd2, rgba(60,190,255,.55)), 0 0 14px var(--gd2, rgba(60,190,255,.7)); }
@@ -37,13 +42,13 @@
 
 /* computer-key hints (⌨️ Show computer keys) */
 .kb-toggles { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; justify-content: flex-end; }
-.kb-cap { position: absolute; top: 66%; left: 0; right: 0; text-align: center; font-size: 9px; font-weight: 700; letter-spacing: .02em; opacity: .5; pointer-events: none; color: #3a3560; }
+.kb-cap { position: absolute; top: 66%; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0; opacity: .5; pointer-events: none; color: #3a3560; }
 .kb-key.black .kb-cap { top: auto; bottom: 5px; color: #d9d3f2; opacity: .6; }
 .kb-key.held .kb-cap { opacity: .85; color: #1b1633; }
 
 /* keyboard zones (split / layer): a coloured band under the keys with a small label, and a tick on each key */
 .kb-zones { position: relative; margin-top: 4px; }
-.kb-zone { position: absolute; height: 12px; line-height: 12px; font-size: 9px; font-weight: 800; color: #1b1633; text-align: center; border-radius: 3px; opacity: .8; overflow: hidden; box-sizing: border-box; pointer-events: none; }
+.kb-zone { position: absolute; height: 14px; line-height: 14px; font-size: 11px; font-weight: 800; color: #1b1633; text-align: center; border-radius: 3px; opacity: .8; overflow: hidden; box-sizing: border-box; pointer-events: none; }
 .kb-key.zoned::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--zc); opacity: .75; border-radius: 0 0 5px 5px; pointer-events: none; }
 
 /* memory peek: a faint dot on the next key after 2 s of hesitation (never a flash) */

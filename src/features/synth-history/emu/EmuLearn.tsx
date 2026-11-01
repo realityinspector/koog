@@ -5,9 +5,9 @@ import { SONGS, type Song } from '../../songs/songs'
 import { clearScore, setScore, setScorePos } from '../../../music/scoreStore'
 import { clearGuide, setGuide } from '../../../music/guide'
 import { onJudge } from '../../../music/judge'
+import { PC_NAMES } from '../../../music/theory'
 
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const nn = (n: number) => NAMES[n % 12] + (Math.floor(n / 12) - 1)
+const nn = (n: number) => PC_NAMES[n % 12] + (Math.floor(n / 12) - 1)
 
 export function EmuLearn({ ids, why, open }: { ids: string[]; why: string; open: boolean }) {
   const songs = useMemo(() => ids.map((id) => SONGS.find((s) => s.id === id)).filter((s): s is Song => !!s), [ids])

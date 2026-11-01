@@ -1,7 +1,7 @@
 // Public-domain melodies as data. Pure module, no state.
 import type { Key } from '../../music/theory'
 import { PRELUDE_C, preludeFigure } from '../../music/scores'
-import { CLASSICAL } from '../../music/classical'
+import { CLASSICAL, seq } from '../../music/classical'
 import type { ArrStyle, HarmonyBar } from '../../music/arrange'
 
 // lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
@@ -25,20 +25,6 @@ export interface Song {
   harmony?: HarmonyBar[]
 }
 
-const PCS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
-// "E4:1 D4 C4:2 R:1" -> duration sticks until changed. # and b allowed.
-function seq(s: string, def = 1): SongNote[] {
-  let d = def
-  return s.trim().split(/\s+/).map((tok) => {
-    const [n, b] = tok.split(':')
-    if (b) d = parseFloat(b)
-    if (n === 'R') return { note: null, beats: d }
-    const m = /^([A-G])([#b]?)(\d)$/.exec(n)
-    if (!m) throw new Error('bad note ' + tok)
-    const midi = 12 * (parseInt(m[3]) + 1) + PCS[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0)
-    return { note: midi, beats: d }
-  })
-}
 const maj = (tonic: number): Key => ({ tonic, scale: 'major' })
 const min = (tonic: number): Key => ({ tonic, scale: 'minor' })
 

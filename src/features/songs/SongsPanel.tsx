@@ -1,7 +1,8 @@
+import { fxBus, type FxBus } from '../../audio/fxContext'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { onNote } from '../../music/notes'
 import { useHarmonyStore } from '../../music/harmonyStore'
-import { noteName, pc as pcOf, keyName } from '../../music/theory'
+import { msPerBeat, noteName, pc as pcOf, keyName } from '../../music/theory'
 import { SONGS, TIER_LABEL, hasLyrics, type Song, type Tier } from './songs'
 import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
@@ -143,7 +144,7 @@ export function SongsPanel() {
   arrRef.current = arr
   // switching the sheet level mid-song: judge the left hand against the arrangement now on the sheet (or not at all in Single)
   useEffect(() => { lhRef.current = makeLh(arr) }, [arr])
-  const audio = useRef<AudioContext | null>(null)
+  const audio = useRef<FxBus | null>(null)
   const [beatPref, setBeatPref] = useState(loadBeat)
   const beatOn = song ? (beatPref[song.tier] ?? song.tier === 'pop') : false
   const setBeat = (on: boolean) => {
@@ -161,7 +162,7 @@ export function SongsPanel() {
 
   const stopAudio = useCallback(() => {
     stopBacking()
-    try { audio.current?.close() } catch { /* ignore */ }
+    try { audio.current?.dispose() } catch { /* ignore */ }
     audio.current = null
   }, [])
 
@@ -218,7 +219,7 @@ export function SongsPanel() {
     if (opt.current.mode === 'flow' && beatOnRef.current) {
       // beat 0 of the song = startMs + LEAD beats at the effective tempo (same clock as the falling notes)
       const eff = opt.current.speed * song.bpm
-      const beatMs = 60000 / eff
+      const beatMs = msPerBeat(eff)
       const lastN = game.notes[game.notes.length - 1]
       startBacking({ bpm: eff, grooveId: GROOVE_FOR[song.id] ?? 'pop', startAtMs: game.startMs, leadBeats: LEAD,
         endAtMs: game.startMs + (LEAD + lastN.start + lastN.beats + 1) * beatMs })
@@ -228,10 +229,10 @@ export function SongsPanel() {
   const listen = useCallback(() => {
     if (!song) return
     stopAudio()
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    const ctx = new Ctx() // created after a click
-    audio.current = ctx
-    const master = ctx.createGain(); master.gain.value = 0.1; master.connect(ctx.destination)
+    const bus = fxBus(0.1); if (!bus) return // shared context + limiter; follows app volume and mute
+    const ctx = bus.ctx
+    audio.current = bus
+    const master = bus.input
     const spb = 60 / song.bpm
     const t0 = ctx.currentTime + 0.15 + spb
     let t = 0

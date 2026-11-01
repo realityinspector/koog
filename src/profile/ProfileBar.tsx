@@ -16,6 +16,13 @@ export function ProfileBar() {
     timer.current = window.setTimeout(() => { setHolding(false); setMode('dad') }, HOLD_MS)
   }
   const stopHold = () => { setHolding(false); window.clearTimeout(timer.current) }
+  // Keyboard: hold Enter or Space for the same 1.2 s.
+  const keyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    if (!e.repeat && !holding) startHold()
+  }
+  const keyUp = (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') stopHold() }
 
   return (
     <div className={`pf-bar pf-${mode}`}>
@@ -36,8 +43,19 @@ export function ProfileBar() {
             onPointerDown={startHold}
             onPointerUp={stopHold}
             onPointerLeave={stopHold}
-            title="Press and hold"
+            onKeyDown={keyDown}
+            onKeyUp={keyUp}
+            onBlur={stopHold}
+            aria-label="Switch to Boss mode — hold for a second"
+            title="Press and hold (or hold Enter / Space)"
           >
+            {/* visible progress ring while holding */}
+            <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden style={{ verticalAlign: '-3px', marginRight: 6 }}>
+              <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".3" strokeWidth="3" />
+              <circle cx="10" cy="10" r="8" fill="none" stroke="#ffb86c" strokeWidth="3" strokeLinecap="round" transform="rotate(-90 10 10)"
+                strokeDasharray="50.3" strokeDashoffset={holding ? 0 : 50.3}
+                style={{ transition: holding ? `stroke-dashoffset ${HOLD_MS}ms linear` : 'none' }} />
+            </svg>
             Dad mode (hold)
           </button>
         )}

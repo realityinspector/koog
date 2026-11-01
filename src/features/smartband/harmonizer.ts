@@ -6,14 +6,12 @@
 //     one of the chord's three notes. Add up how much each chord likes her recent notes.
 //  3. Pick the chord with the best score. But don't flip-flop: only switch away from the chord
 //     we're already playing when we're on a downbeat AND the new chord wins by a clear margin.
-import { PC_NAMES, type Key } from '../../music/theory'
+import { PC_NAMES, SCALES, pc, type Key } from '../../music/theory'
 
 export type Quality = 'maj' | 'min' | 'dim'
 export interface Chord { root: number; quality: Quality; name: string; pcs: number[]; primary: boolean }
 export interface MelodyNote { pc: number; w: number } // pitch class 0-11, weight (newer = bigger)
 
-const MAJOR = [0, 2, 4, 5, 7, 9, 11]
-const MINOR = [0, 2, 3, 5, 7, 8, 10]
 /** How much better (in "notes") a new chord must score before we leave the current one. */
 export const SWITCH_MARGIN = 0.9
 
@@ -32,7 +30,7 @@ export const sameChord = (a: Chord | null, b: Chord | null) => !!a && !!b && a.r
 /** The chords that belong to a key: stack scale notes in thirds. Primary ones get a small head start. */
 export function candidateChords(key: Key): Chord[] {
   const minor = isMinorish(key)
-  const sc = minor ? MINOR : MAJOR
+  const sc = minor ? SCALES.minor : SCALES.major
   // major: I IV V vi, then ii iii.  minor: i iv v VI, then VII.
   const degrees = minor ? [0, 3, 4, 5, 6] : [0, 3, 4, 5, 1, 2]
   const out = degrees.map((d, i) => {
@@ -90,7 +88,7 @@ export function pickChord(melody: MelodyNote[], key: Key, current: Chord | null,
 export function weighMelody(notes: { note: number; ageBeats: number }[]): MelodyNote[] {
   return notes
     .filter((n) => n.ageBeats <= 2)
-    .map((n) => ({ pc: ((n.note % 12) + 12) % 12, w: n.ageBeats <= 1 ? 1 : 0.6 }))
+    .map((n) => ({ pc: pc(n.note), w: n.ageBeats <= 1 ? 1 : 0.6 }))
 }
 
 export const MIN_BPM = 70

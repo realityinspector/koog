@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { setTypingOn, useTypingOn } from '../../music/typing'
 import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { useHarmonyStore, judge } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
@@ -10,7 +11,6 @@ import { usePeekNote } from './peek'
 import { ZONE_COLORS, activeIdx, zoneRange, useZones } from '../../music/zones'
 import './keyboard.css'
 
-const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // Clicked keys go through the shared local-note path: shared ids + they make sound.
 const push = (ev: { note: number; velocity: number; on: boolean }) => playLocal(ev.note, ev.velocity, ev.on)
 
@@ -75,6 +75,7 @@ const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, z
 })
 
 export function PianoStrip() {
+  const keysOn = useTypingOn((st) => st.on)
   const [range, setRange] = useState<[number, number]>(loadRange)
   const [names, setNames] = useState(loadNames)
   const [typing, setTyping] = useState(loadTyping)
@@ -167,14 +168,17 @@ export function PianoStrip() {
     <section className="kb">
       <div className="kb-top">
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
-        <div className="kb-toggles">
-          <label className="kb-toggle">
-            <input type="checkbox" checked={typing} onChange={toggleTyping} /> ⌨️ Show computer keys
-          </label>
-          <label className="kb-toggle">
-            <input type="checkbox" checked={names} onChange={toggleNames} /> Show note names
-          </label>
-        </div>
+      </div>
+      <div className="kb-opts">
+        <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing.">
+          <input type="checkbox" checked={keysOn} onChange={() => setTypingOn(!keysOn)} /> 🎹 Keys play notes
+        </label>
+        <label className="kb-toggle">
+          <input type="checkbox" checked={typing} onChange={toggleTyping} /> ⌨️ Show computer keys
+        </label>
+        <label className="kb-toggle">
+          <input type="checkbox" checked={names} onChange={toggleNames} /> Show note names
+        </label>
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (

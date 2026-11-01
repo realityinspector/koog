@@ -2,10 +2,10 @@
 import { create } from 'zustand'
 import { subscribeRaw } from '../../midi/connection'
 import { onDjMessage, onSurfaceMessage } from '../../music/devices'
+import { PC_NAMES } from '../../music/theory'
 
 export interface MonMsg { n: number; src: 'piano' | 'dj' | 'surface'; hex: string; text: string; ch: number; kind: string }
-const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const noteName = (n: number) => NN[n % 12] + (Math.floor(n / 12) - 1)
+const noteName = (n: number) => PC_NAMES[n % 12] + (Math.floor(n / 12) - 1)
 export function describe(d: ArrayLike<number>): { text: string; ch: number; kind: string } {
   const s = d[0] ?? 0, k = s & 0xf0, ch = (s & 0x0f) + 1
   if (s >= 0xf0) return { text: s === 0xf8 ? 'clock' : s === 0xfe ? 'active sense' : s === 0xf0 ? `sysex (${d.length} B)` : 'system 0x' + s.toString(16), ch: 0, kind: 'sys' }

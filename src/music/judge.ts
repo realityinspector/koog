@@ -245,6 +245,7 @@ const off = onNote((e) => {
 
 /** For tests and the dev rig: feed a fake note through the judge without touching the keyboard state. */
 export function judgeFake(note: number, velocity = 100, on = true) {
+  if (!import.meta.env.DEV) return
   if (on) noteOn(-1e9 - Math.floor(Math.random() * 1e6), note, velocity, performance.now())
   else emit({ type: 'off', note })
 }

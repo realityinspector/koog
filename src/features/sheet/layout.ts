@@ -1,6 +1,6 @@
 // Pure notation layout: notes in, drawable shapes out. All units are "staff spaces" (1 = gap between two staff lines).
 // No React here; SheetOverlay renders the shapes once per score and just translates a group to scroll.
-import type { Key } from '../../music/theory'
+import { SCALES, pc, type Key } from '../../music/theory'
 
 export type Shape =
   | { k: 'e'; x: number; y: number; open: boolean; rx?: number; o?: number }
@@ -28,7 +28,7 @@ const TREB_BOT = 6.5, BASS_BOT = 12.5
 const TREB_MID_D = 34, BASS_MID_D = 22 // middle-line diatonic steps
 const yT = (d: number) => TREB_BOT - (d - 30) * 0.5
 const yB = (d: number) => BASS_BOT - (d - 18) * 0.5
-const NAT = [0, 2, 4, 5, 7, 9, 11]
+const NAT = SCALES.major
 const LET = 'CDEFGAB'
 const SHARP_ORDER = [3, 0, 4, 1, 5, 2, 6]
 const FLAT_ORDER = [6, 2, 5, 1, 4, 0, 3]
@@ -48,7 +48,7 @@ function keyAccs(f: number): number[] {
 }
 interface Sp { letter: number; acc: number; d: number }
 function spell(midi: number, f: number, ka: number[], leadPc: number): Sp {
-  const p = ((midi % 12) + 12) % 12
+  const p = pc(midi)
   let letter = -1, acc = 0
   for (let l = 0; l < 7; l++) if ((NAT[l] + ka[l] + 12) % 12 === p) { letter = l; acc = ka[l]; break }
   if (letter < 0) { for (let l = 0; l < 7; l++) if (NAT[l] === p) { letter = l; acc = 0; break } }
