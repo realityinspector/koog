@@ -13,6 +13,7 @@ interface Persisted {
   listeners?: Set<RawListener>
   djIds?: string[]
   timers?: Set<number>
+  heldBy?: Map<string, Set<number>>
   unsub?: () => void
 }
 export type RawListener = (data: Uint8Array, timeStamp: number) => void
@@ -28,21 +29,35 @@ export function subscribeRaw(fn: RawListener) {
   return () => void set.delete(fn)
 }
 
-function pianoMessage(d: Uint8Array, timeStamp: number) {
+/** Notes each piano-role input is holding, so a role change or unplug mid-note can release them (no stuck notes). */
+const heldBy = (keep.heldBy ??= new Map())
+function flushHeld(id: string) {
+  const h = heldBy.get(id)
+  if (!h) return
+  heldBy.delete(id)
+  for (const n of [...h]) pianoMessage(new Uint8Array([0x80, n, 0]), 0, id)
+}
+
+function pianoMessage(d: Uint8Array, timeStamp: number, id?: string) {
   if (keep.listeners) for (const fn of [...keep.listeners]) { try { fn(d, timeStamp) } catch { /* isolate listeners */ } }
   if (d.length < 3) return
   const status = d[0] & 0xf0
   if (status !== 0x90 && status !== 0x80) return
   const on = status === 0x90 && d[2] > 0
-  const id = (keep.noteId = (keep.noteId ?? 0) + 1)
-  const ev = { id, note: d[1], name: noteName(d[1]), velocity: d[2], on }
+  if (id) {
+    const h = heldBy.get(id) ?? new Set<number>()
+    if (on) { h.add(d[1]); heldBy.set(id, h) } else { h.delete(d[1]); if (!h.size) heldBy.delete(id) }
+  }
+  const nid = (keep.noteId = (keep.noteId ?? 0) + 1)
+  const ev = { id: nid, note: d[1], name: noteName(d[1]), velocity: d[2], on }
   useAppStore.setState((s) => ({ recentNotes: [ev, ...s.recentNotes].slice(0, 12) }))
 }
 
 /** One routing point: piano makes notes, dj goes to the DJ listeners (never notes), off is ignored. */
 function route(role: DeviceRole, d: Uint8Array, t: number, id: string) {
   if (!d) return
-  if (role === 'piano') pianoMessage(d, t)
+  if (role !== 'piano') flushHeld(id)
+  if (role === 'piano') pianoMessage(d, t, id)
   else if (role === 'dj') emitDj(d, t, id)
   else if (role === 'surface') emitSurface(d, t, id)
   else if (role === 'loop') emitLoop(d, t, id)
@@ -86,6 +101,7 @@ function applyDevices(access: MIDIAccess) {
   const pianos = devs.filter((d) => d.connected && d.role === 'piano')
   const djs = devs.filter((d) => d.connected && (d.role === 'dj' || d.role === 'surface' || d.role === 'loop')) // a synth control surface is still a DJ-style controller: LEDs and output
   const outs = [...access.outputs.values()].filter((p) => p.state === 'connected')
+  for (const id of [...heldBy.keys()]) { if (!pianos.some((d) => d.id === id)) flushHeld(id) } // role changed away from piano, or unplugged, mid-note
   const cur = useAppStore.getState()
   const pn = pianos.find((d) => d.name === PREFERRED) ?? pianos[0]
   output = (pn && outs.find((o) => o.name === pn.name)) || outs.find((o) => !djs.some((d) => d.name === o.name)) || null

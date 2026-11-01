@@ -119,12 +119,12 @@ export function adsr(p: AudioParam, t: number, peak: number, a: number, d: numbe
   p.setTargetAtTime(Math.max(floor, peak * s), t + Math.max(0.003, a), Math.max(0.01, d) / 3)
   return (rt: number, r: number) => { p.cancelScheduledValues(rt); p.setValueAtTime(p.value, rt); p.setTargetAtTime(floor, rt, Math.max(0.01, r) / 4) }
 }
-let noiseBuf: AudioBuffer | null = null
-let noiseCtx: AudioContext | null = null
+const noiseBufs = new WeakMap<AudioContext, AudioBuffer>() // one per context: two engines open at once (split/layers) must not rebuild a 2 s buffer on every note
 export function noise(ctx: AudioContext) {
-  if (noiseBuf && noiseCtx === ctx) return noiseBuf
-  noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
-  const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
-  noiseCtx = ctx
-  return noiseBuf
+  let b = noiseBufs.get(ctx)
+  if (b) return b
+  b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
+  const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+  noiseBufs.set(ctx, b)
+  return b
 }

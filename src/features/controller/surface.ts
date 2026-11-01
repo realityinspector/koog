@@ -244,7 +244,7 @@ function init() {
   hot.off?.()
   const offs = [
     onSurfaceMessage((data) => { const a = decode(data); if (!a || a.fine || a.id === 'jogtouch') return; surfaceInput(a.deck ? `${a.id}.${a.deck}` : a.id, a.value) }),
-    onRoleChange((_n, role) => { if (role === 'surface') setRoleOn(true); else if (isController(role) || role === 'off' || role === 'piano') setRoleOn(false) }),
+    onRoleChange((_n, role) => { if (role === 'surface') setRoleOn(true); else if (isController(role) || role === 'off' || role === 'piano') setRoleOn(useDevices.getState().devices.some((d) => d.connected && d.role === 'surface')) }), // another controller may still be a synth surface
     useDevices.subscribe((st) => { if (st.devices.some((d) => d.connected && d.role === 'surface')) { if (!get().roleOn) setRoleOn(true) } }),
     onInstrumentChange(retopo),
     onZonesChange(retopo), // split/layer: the focused zone's instrument is what the knobs drive

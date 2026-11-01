@@ -22,6 +22,12 @@ export function lhPress(st: LhState, midi: number, p: number): boolean {
   }
   return false
 }
+/** a low chord tone of a chord that is sounding now, even if its credit is already taken (extra left-hand notes are never "wrong") */
+export function lhNear(st: LhState, midi: number, p: number): boolean {
+  if (midi >= 72) return false
+  const pc = ((midi % 12) + 12) % 12
+  return st.targets.some((t) => !t.done && p >= t.start - EARLY && p < t.end + LATE && t.pcs.includes(pc))
+}
 /** call as the song moves on: targets we have passed without a hit are finished (a miss, no penalty) */
 export function lhAdvance(st: LhState, p: number, all = false) {
   for (const t of st.targets) if (!t.done && (all || p >= t.end + LATE)) t.done = true

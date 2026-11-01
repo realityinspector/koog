@@ -7,12 +7,16 @@ import { panic as djPanic } from '../dj/engine'
 import { panic as bandPanic } from '../smartband/engine'
 import { stop as beatsStop } from '../beats/engine'
 import { sendMidi } from '../../midi/connection'
+import { releaseAllNotes } from '../../music/localNotes'
+import { stopAll as loopStopAll } from '../loopstation/loopEngine'
+import { setGuide } from '../loopstation/guide'
 
 export function panicAll() {
   const run = (f: () => void) => { try { f() } catch { /* keep going */ } }
   run(() => getSynth().panic()); run(() => setHold(false))
   run(() => getActiveInstrument()?.allOff?.())
   run(() => liveEngines().forEach((e) => e.allOff()))
+  run(releaseAllNotes); run(loopStopAll); run(() => setGuide({ on: false })) // held keys routed to any target, and every loop track (timers + sounding notes)
   run(zonesAllOff); run(djPanic); run(bandPanic); run(beatsStop)
   run(() => { for (let ch = 0; ch < 16; ch++) sendMidi([0xb0 | ch, 123, 0]) })
 }

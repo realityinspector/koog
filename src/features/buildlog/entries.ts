@@ -350,4 +350,11 @@ export const entries: Entry[] = [
     title: '🔁 The loop station becomes a loop PEDAL',
     body: 'Loop pedals are how one musician sounds like a whole band: record a bit, it repeats, then stack more on top. Ours now works like the real thing. There are five tracks with big glowing buttons: tap to RECORD (red), tap to PLAY (green), tap again to OVERDUB (orange), double-tap to STOP, hold for 2 seconds to UNDO. Tracks lock to the first one\'s length (LOOP SYNC), there\'s a rhythm guide to play along with, and tracks can play backwards, half-speed, double-speed or just once. We also fixed 13 bugs. The sneakiest: the very first note after the count-in was getting eaten because it came a split-second early.',
   },
+  {
+    id: 49,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🔍 Bug hunt: four testers, 16 fixes',
+    body: 'After a big building spree, four AI testers each took one part of Koog and played it like a real kid (or dad) would: slamming the keys, switching modes mid-song, unplugging things. They found 16 bugs. A few: a note that kept ringing if you unplugged the keyboard mid-note, loops that kept playing after leaving Boss mode, a song that kept running secretly after you left the SONGS screen, and a left-hand chord note being counted as a mistake. Software teams call this "QA" (quality assurance), and it\'s why you test the WHOLE thing together, not just each piece.',
+  },
 ]

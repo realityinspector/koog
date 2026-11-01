@@ -161,8 +161,9 @@ const META: Record<string, Partial<Song>> = {
   elise: { ...WALTZ, pickup: 1, beatUnit: 8 }, // 3/8: one beat = an eighth note, so the sixteenths read right
   turkish: { beatsPerBar: 2, style: 'oompah' }, // 2/4 march
   jesu: WALTZ, // 9/8 felt as three beats of triplets
-  saints: { style: 'oompah' }, susanna: { style: 'oompah' }, oldmac: { style: 'oompah' }, jingle: { style: 'oompah' },
-  cucaracha: { style: 'oompah' }, yankee: { style: 'oompah' }, deckhalls: { style: 'oompah' }, wewish: { style: 'oompah' },
+  beethoven5: { pickup: 2 },
+  saints: { style: 'oompah' }, susanna: { style: 'oompah', pickup: 1 }, oldmac: { style: 'oompah' }, jingle: { style: 'oompah' },
+  cucaracha: { style: 'oompah' }, yankee: { style: 'oompah' }, deckhalls: { style: 'oompah' }, wewish: { style: 'oompah', pickup: 1 },
   prelude: { harmony: PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) },
 }
 

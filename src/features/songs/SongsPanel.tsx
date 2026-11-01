@@ -12,7 +12,8 @@ import { syncSongScore } from '../sheet/songSync'
 import { clearScore } from '../../music/scoreStore'
 import { arrange } from '../../music/arrange'
 import { SHEET_LEVELS, setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
-import { lhAdvance, lhHitIdxs, lhPress, makeLh, type LhState } from './lhJudge'
+import { lhAdvance, lhHitIdxs, lhNear, lhPress, makeLh, type LhState } from './lhJudge'
+import { useScreen } from '../../layout/screenStore'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -106,6 +107,9 @@ function layout(song: Song, W: number, CH: number, KH: number) {
 
 export function SongsPanel() {
   const [songId, setSongId] = useState<string | null>(null)
+  // The screen stays mounted (hidden) on PLAY: leaving SONGS ends the round, stops the beat, clears the sheet and gives the key back.
+  const screen = useScreen((s) => s.screen)
+  useEffect(() => { if (screen !== 'songs') setSongId(null) }, [screen])
   const [mode, setMode] = useState<Mode>('wait')
   const level = useSheetLevel((s) => s.level)
   const [speed, setSpeed] = useState(0.8)
@@ -128,10 +132,12 @@ export function SongsPanel() {
   const opt = useRef({ mode, speed, names })
   opt.current = { mode, speed, names }
   const arr = useMemo(() => (song && level !== 'single'
-    ? arrange({ notes: song.notes, key: song.key, beatsPerBar: song.beatsPerBar, pickup: song.pickup, title: song.title, style: song.style, harmony: song.harmony }, level) : null), [song, level])
+    ? arrange({ notes: song.notes, key: song.key, beatsPerBar: song.beatsPerBar, beatUnit: song.beatUnit, pickup: song.pickup, title: song.title, style: song.style, harmony: song.harmony }, level) : null), [song, level])
   const lhRef = useRef<LhState>(makeLh(null))
   const arrRef = useRef(arr)
   arrRef.current = arr
+  // switching the sheet level mid-song: judge the left hand against the arrangement now on the sheet (or not at all in Single)
+  useEffect(() => { lhRef.current = makeLh(arr) }, [arr])
   const audio = useRef<AudioContext | null>(null)
   const [beatPref, setBeatPref] = useState(loadBeat)
   const beatOn = song ? (beatPref[song.tier] ?? song.tier === 'pop') : false
@@ -263,6 +269,8 @@ export function SongsPanel() {
         } else if (lhPress(lhRef.current, e.note, n.start)) {
           game.score += 40
           setUi((u) => ({ ...u, score: game.score, msg: 'Left hand: nice chord note.' }))
+        } else if (lhNear(lhRef.current, e.note, n.start)) {
+          /* another chord tone of the same chord: fine, never counts against the melody */
         } else {
           game.wrong++; game.combo = 0
           const sameClass = pcOf(e.note) === pcOf(n.midi)
@@ -284,6 +292,8 @@ export function SongsPanel() {
         } else if (lhPress(lhRef.current, e.note, game.cursor)) {
           game.score += 40
           setUi((u) => ({ ...u, score: game.score, msg: 'Left hand: nice chord note.' }))
+        } else if (lhNear(lhRef.current, e.note, game.cursor)) {
+          /* extra chord tone: no message, no penalty */
         } else {
           setUi((u) => ({ ...u, msg: 'Extra note, keep the groove.' }))
         }
@@ -302,8 +312,8 @@ export function SongsPanel() {
     let lay = layout(song, 600, 230, 64), W = 600, dpr = 1
     const resize = () => {
       W = cv.clientWidth || 600; dpr = window.devicePixelRatio || 1
-      const H = Math.max(140, cv.clientHeight || 294)
-      const KH = Math.max(44, Math.min(96, Math.round(H * 0.24)))
+      const H = Math.max(104, cv.clientHeight || 294)
+      const KH = Math.max(38, Math.min(96, Math.round(H * 0.24)))
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr)
       lay = layout(song, W, H - KH, KH)
     }
@@ -378,7 +388,7 @@ export function SongsPanel() {
             </span>
             <span className="seg" role="group" aria-label="Sheet level">
               {SHEET_LEVELS.map((l) => (
-                <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{l.icon} {l.label}</button>
+                <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{l.icon}<span className="lv-t"> {l.label}</span></button>
               ))}
             </span>
             {mode === 'flow' && (

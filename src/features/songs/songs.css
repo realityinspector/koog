@@ -94,3 +94,13 @@
 @media (prefers-reduced-motion: reduce) { .sg .sy { transition: none; } .sg .ly-l.cur .sy.now { transform: none; } }
 /* Lyrics sit at the top of the lane (under the title/score row), so the hit zone above the keys stays clear. */
 .sg .ly { bottom: auto; top: 30px; background: rgba(13, 10, 32, .62); }
+
+/* tight toolbar: one row at 1280 even in Flow with the sheet on (a second row pushed the keys under the sheet) */
+.sg .play .bar { gap: 6px; }
+.sg .play .seg button { padding: 4px 10px; }
+.sg .play .bar input[type=range] { width: 90px; vertical-align: middle; }
+.sg .play .bar .btn-ghost { padding: 4px 10px; }
+.sg .stage { min-height: 104px; }
+.kg-screen-body:has(> .sg .play) { padding-top: 6px; padding-bottom: 8px; }
+.sg .play { gap: 6px; }
+@media (max-width: 1400px) { .sg .play .seg button:not(.on) .lv-t { display: none; } }

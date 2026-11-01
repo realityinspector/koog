@@ -65,6 +65,8 @@
 .bx-emus { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .bx-emu { font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 8px; color: #d8d4f0; background: rgba(255, 255, 255, .04); border: 1px solid var(--bx-line); } .bx-emu:hover { border-color: var(--lcd); } .bx-emu b { font-size: 13px; } .bx-emu small { color: var(--lcd); font-family: ui-monospace, monospace; } .bx-emu span { font-size: 11px; color: #8a86b4; max-height: 3.6em; overflow: hidden; }
 .bx-decks { display: grid; grid-template-columns: 1fr 200px 1fr; gap: 12px; } .bx-deck, .bx-xf { display: flex; flex-direction: column; gap: 6px; } .bx-lcdrow { display: flex; gap: 6px; } .bx-lcdt { font: 600 13px ui-monospace, monospace; color: var(--lcd); background: var(--lcd-bg); border: 1px solid #1d3a2c; border-radius: 4px; padding: 2px 8px; }
+/* deck sliders in two columns so a whole deck fits without scrolling at 1024x700 */
+.bx-deck { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; align-content: start; } .bx-deck > h4, .bx-deck > .bx-lcdrow, .bx-deck > .bx-seg { grid-column: 1 / -1; } .bx-deck h4 { margin: 0; }
 /* Boss chrome: keep the instrument calm */
 body.bx-on .kg-display { background: #0b0a14; }
 body.bx-stage .kg-rail, body.bx-stage .kg-strip-mid { display: none; }

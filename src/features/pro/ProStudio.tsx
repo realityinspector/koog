@@ -4,7 +4,10 @@ import { LoopStation } from '../loopstation/LoopStation'
 import { EmulatorPanel } from '../synth-history/EmulatorPanel'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
-import { useMaster, startMaster, stopMaster, tapTempo } from '../../music/masterClock'
+import { useMaster, startMaster, stopMaster, tapTempo, isRunning } from '../../music/masterClock'
+import { stopAll as stopLoops } from '../loopstation/loopEngine'
+import { setGuide } from '../loopstation/guide'
+import { useProfile } from '../../profile/profile'
 import { setSheetOn, useSheet } from '../../music/scoreStore'
 import { MixerPanel, MonitorPanel, Panel, RackPanel, RoutingPanel, ScenesPanel, SessionHeader, Lcd } from './ProParts'
 import { setDiag, setStage, startLoadProbe, useBoss } from './bossStore'
@@ -28,6 +31,10 @@ function useBossSession() {
       stopMonitor(); stopProbe(); mixerClose(); setStage(false); setDiag(false)
       setSheetOn(prevSheet)
       document.body.classList.remove('bx-on', 'bx-stage')
+      // really leaving Boss mode (not a hot-reload or a kid switch): nothing of the studio may keep sounding in kid mode
+      if (useProfile.getState().mode !== 'dad') {
+        try { stopLoops(); setGuide({ on: false }); if (isRunning()) stopMaster() } catch { /* keep going */ }
+      }
     }
   }, [])
 }

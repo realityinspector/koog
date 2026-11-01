@@ -12,7 +12,7 @@ export const hammond: EmuSpec = {
   blurb: 'Laurens Hammond made an organ without pipes: spinning metal wheels made tiny electric hums, and sliding drawbars mixed them together like a recipe. It gave churches, clubs and living rooms an organ sound in a box small enough to fit through a door.',
   songs: ['toccata', 'jesu', 'prelude', 'canon'], songWhy: 'Toccata in D minor is the classic organ blockbuster; Hammond put organ sound in small spaces.',
   ctls: [
-    ...BARS.map((k, i) => ({ key: k, label: FOOT[i], min: 0, max: 8, def: 0, step: 1, kind: 'slider' as const, group: i === 0 ? 'Drawbars' : undefined })),
+    ...BARS.map((k, i) => ({ key: k, label: FOOT[i], min: 0, max: 8, def: i === 2 ? 8 : 0, step: 1, kind: 'slider' as const, group: i === 0 ? 'Drawbars' : undefined })),
     { key: 'perc', label: 'Percussion', min: 0, max: 2, def: 0, step: 1, kind: 'pick', opts: ['Off', '2nd', '3rd'], group: 'Extras' },
     { key: 'click', label: 'Key click', min: 0, max: 1, def: 0.3, step: 0.01 },
     { key: 'rotary', label: 'Rotary speaker', min: 0, max: 2, def: 0, step: 1, kind: 'pick', opts: ['Off', 'Slow', 'Fast'] },

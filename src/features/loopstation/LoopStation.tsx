@@ -31,8 +31,18 @@ function useRings(root: React.RefObject<HTMLElement | null>) {
       el.querySelectorAll<SVGCircleElement>('[data-hold]').forEach((c) => { c.style.strokeDashoffset = String(CIRC * (1 - holdProgress(Number(c.dataset.hold)))) })
     }
     if (calm) h = window.setInterval(step, 250)
-    else { const loop = () => { step(); raf = requestAnimationFrame(loop) }; raf = requestAnimationFrame(loop) }
-    return () => { cancelAnimationFrame(raf); clearInterval(h) }
+    else {
+      // rAF only while something moves (loop running or a button held) and the panel is on screen; idle or hidden: a slow timer
+      const loop = () => {
+        const el = root.current; if (!el) return
+        const seen = el.getClientRects().length > 0
+        if (seen) step()
+        const busy = seen && (useLoop.getState().running || [0, 1, 2, 3, 4, 5, 6, 7].some((i) => holdProgress(i) > 0))
+        if (busy) raf = requestAnimationFrame(loop); else h = window.setTimeout(() => { raf = requestAnimationFrame(loop) }, 200)
+      }
+      raf = requestAnimationFrame(loop)
+    }
+    return () => { cancelAnimationFrame(raf); clearInterval(h); clearTimeout(h) }
   }, [root])
 }
 
@@ -103,6 +113,15 @@ function EditBar({ i, l }: { i: number; l: Layer }) {
   )
 }
 
+/** tempo box: typing never changes the clock half-way ("1" would clamp to 40 and eat the next digit); Enter / blur commits, arrows commit at once */
+function BpmField({ bpm, disabled }: { bpm: number; disabled: boolean }) {
+  const [txt, setTxt] = useState<string | null>(null)
+  const commit = () => { if (txt != null) { const v = parseFloat(txt); if (v > 0) setBpm(v); setTxt(null) } }
+  return <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={txt ?? String(Math.round(bpm * 10) / 10)} disabled={disabled} aria-label="Tempo in beats per minute"
+    onChange={(e) => { const nat = (e.nativeEvent as InputEvent).inputType; if (nat === undefined || nat === 'insertReplacementText') { const v = parseFloat(e.target.value); if (v > 0) setBpm(v); setTxt(null) } else setTxt(e.target.value) }}
+    onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
+}
+
 /** the LCD: track, mode, bar.beat, bpm, settings */
 function Lcd() {
   const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following)
@@ -133,7 +152,7 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
         <Lcd />
         <button type="button" className={'lp-all' + (s.running ? ' on' : '')} aria-pressed={s.running} onClick={() => { unlockGuide(); togglePlay() }} title="ALL START / STOP">{s.running ? '■ ALL STOP' : '▶ ALL START'}</button>
         <span className="lp-grp"><b>BPM</b>
-          <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={Math.round(bpm * 10) / 10} disabled={following} aria-label="Tempo in beats per minute" onChange={(e) => setBpm(Number(e.target.value))} />
+          <BpmField bpm={bpm} disabled={following} />
           <button type="button" className="lp-chip" onClick={() => tapTempo()} title="Tap tempo">TAP</button></span>
       </div>
       <div className="lp-set">

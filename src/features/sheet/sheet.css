@@ -41,3 +41,7 @@
 .sh-overlay .sh-pill { max-width: 22vw; opacity: .3; transition: opacity .2s; }
 .sh-overlay:hover .sh-pill, .sh-overlay:focus-within .sh-pill { opacity: 1; max-width: 40vw; }
 @media (prefers-reduced-motion: reduce) { .sh-pill { transition: none !important; } }
+
+/* level and name buttons sat on the chord symbols: faint until the strip is hovered or focused */
+.sh-overlay .sh-seg, .sh-overlay .sh-btn { opacity: .5; transition: opacity .2s; }
+.sh-overlay:hover .sh-seg, .sh-overlay:hover .sh-btn, .sh-overlay:focus-within .sh-seg, .sh-overlay:focus-within .sh-btn { opacity: 1; }

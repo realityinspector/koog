@@ -9,11 +9,11 @@
   background: linear-gradient(180deg, #2c2748, #1b1832); border: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 10px 28px rgba(0, 0, 0, .55); }
 .kg-dev-pop h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #b9b6d8; }
 .kg-dev-pop h4:not(:first-child) { margin-top: 14px; }
-.kg-dev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.kg-dev-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 8px; }
 .kg-dev-dot { width: 9px; height: 9px; border-radius: 50%; background: #6b6885; flex: none; }
 .kg-dev-dot.on { background: #6cffa8; box-shadow: 0 0 6px #6cffa8; }
-.kg-dev-name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kg-dev-roles { display: flex; gap: 3px; flex: none; }
+.kg-dev-name { flex: 1; min-width: 6em; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kg-dev-roles { display: flex; gap: 3px; flex: none; margin-left: 17px; }
 .kg-dev-pop button { font: inherit; font-size: 12px; color: #f4f2ff; cursor: pointer; padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); }
 .kg-dev-pop button:hover { border-color: var(--gold); }
 .kg-dev-pop button.on { background: var(--gold); color: #1b1832; border-color: var(--gold); font-weight: 700; }

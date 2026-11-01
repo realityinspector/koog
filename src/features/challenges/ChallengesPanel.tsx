@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CHALLENGES } from './defs'
+import { useScreen } from '../../layout/screenStore'
 import { useChallengeStore } from './store'
 import { MiniKeyboard } from './MiniKeyboard'
 import './challenges.css'
@@ -23,6 +24,11 @@ export function ChallengesPanel() {
     return () => clearInterval(id)
   }, [active])
   void tick
+  // The screen stays mounted (hidden) when the kid goes to PLAY, so stop a run on leaving:
+  // the key it forced (and auto-detect) go back, and it cannot finish unseen. Also on unmount (profile switch).
+  const screen = useScreen((s) => s.screen)
+  useEffect(() => { if (screen !== 'challenges') useChallengeStore.getState().quit() }, [screen])
+  useEffect(() => () => { useChallengeStore.getState().quit() }, [])
 
   const lvl = (id: string) => levels[id] ?? 0
   const earned = CHALLENGES.filter((c) => badges[c.id]).length
