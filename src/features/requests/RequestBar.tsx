@@ -61,6 +61,9 @@ export function RequestBar() {
   const [list, setList] = useState<Req[]>([])
   const [online, setOnline] = useState(true)
   const [sending, setSending] = useState(false)
+  // privacy between siblings: each player only sees (and gets pop-ups for) THEIR OWN ideas
+  const active = useProfile((s) => s.active)
+  const mine = list.filter((r) => (isGuest(active) ? !r.from : r.from === active))
 
   useEffect(() => {
     let alive = true
@@ -95,11 +98,11 @@ export function RequestBar() {
     }
   }
 
-  const recent = list.slice(-3).reverse()
+  const recent = mine.slice(-3).reverse()
 
   return (
     <div className="rq">
-      <RequestToasts list={list} />
+      <RequestToasts list={mine} />
       <form onSubmit={submit} className="rq-form">
         <span className="rq-icon">💡</span>
         <input
@@ -116,9 +119,8 @@ export function RequestBar() {
           {recent.map((r) => (
             <li key={r.id}>
               <span className={`rq-status ${r.status}`}>{LABEL[r.status] ?? r.status}</span>
-              {r.from && <span className="rq-from">{r.from}:</span>}
               <span className="rq-text">{r.text}</span>
-              {r.reply && <div className="rq-reply">Claude: {r.reply}</div>}
+              {r.reply && <div className="rq-reply">{r.status === 'done' ? 'You asked → we built it! ' : ''}{r.reply}</div>}
             </li>
           ))}
         </ul>
