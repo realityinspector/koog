@@ -6,6 +6,9 @@ import { arrange } from '../../music/arrange'
 import { SHEET_LEVELS, setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
 import type { Layout, Shape } from './layout'
 import { useFree } from './freeplay'
+import { usePhraseView } from '../../music/phrases'
+import { phraseMarks } from './phraseMarks'
+import type { Marks, Span } from './phraseMarks'
 import './sheet.css'
 
 const NAMES_KEY = 'koog.sheet.names'
@@ -32,7 +35,7 @@ const LINES = [2.5, 3.5, 4.5, 5.5, 6.5, 8.5, 9.5, 10.5, 11.5, 12.5]
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 const CLEF_FONT = "'Noto Music', 'Bravura', 'Apple Symbols', 'Segoe UI Symbol', 'Symbola', serif"
 
-function Sheet({ lay, pos, results, free, title }: { lay: Layout; pos: number; results: Record<number, 'hit' | 'miss'>; free: boolean; title: string }) {
+function Sheet({ lay, pos, results, free, title, marks, curSpan, memCls }: { lay: Layout; pos: number; results: Record<number, 'hit' | 'miss'>; free: boolean; title: string; marks: Marks | null; curSpan: Span | null; memCls: Record<number, string> | null }) {
   const wrap = useRef<HTMLDivElement>(null)
   const scroll = useRef<SVGGElement>(null)
   const hl = useRef<SVGRectElement>(null)
@@ -73,16 +76,40 @@ function Sheet({ lay, pos, results, free, title }: { lay: Layout; pos: number; r
   useEffect(() => {
     const root = scroll.current; if (!root) return
     root.querySelectorAll<SVGGElement>('g[data-i]').forEach((g) => {
-      const r = results[Number(g.dataset.i)]
-      g.setAttribute('class', 'sh-g' + (g.dataset.lh ? ' lh' : '') + (r ? ' ' + r : ''))
+      const i = Number(g.dataset.i)
+      const m = memCls?.[i]
+      const r = (m === 'rev' && !results[i] ? 'hit' : results[i])
+      g.setAttribute('class', 'sh-g' + (g.dataset.lh ? ' lh' : '') + (r ? ' ' + r : '') + (m && !g.dataset.lh ? ' mem-' + m : ''))
     })
-  }, [results, lay])
+  }, [results, lay, memCls])
   useEffect(() => {
     const x = xs[pos]
     if (!hl.current) return
     if (free || x === undefined) hl.current.setAttribute('opacity', '0')
     else { hl.current.setAttribute('opacity', '1'); hl.current.setAttribute('x', String(x - 1.5)) }
   }, [pos, lay, free, xs])
+
+  // phrase brackets (they scroll with the notes) and the soft band behind the current phrase
+  const phraseG = useMemo(() => {
+    if (!marks) return null
+    const x1 = (sp: Span) => (xs[sp.a] ?? 0) - 1.3, x2 = (sp: Span) => (xs[sp.b - 1] ?? 0) + 1.3
+    const ok = (sp: Span) => xs[sp.a] !== undefined && xs[sp.b - 1] !== undefined
+    return (
+      <g className="sh-phr" aria-hidden="true">
+        {curSpan && ok(curSpan) && <rect className="sh-band" x={x1(curSpan) - 0.3} y={1.1} width={x2(curSpan) - x1(curSpan) + 0.6} height={12.9} rx={1} />}
+        {marks.small.filter(ok).map((sp, n) => {
+          const on = !!curSpan && sp.a >= curSpan.a && sp.b <= curSpan.b
+          return (
+            <g key={'p' + n} className={'sh-br' + (on ? ' on' : '')}>
+              <path d={`M${x1(sp)} 1.8 V1.05 H${x2(sp)} V1.8`} fill="none" strokeWidth={0.16} strokeLinecap="round" strokeLinejoin="round" />
+              <text x={x1(sp) + 0.3} y={1.95} fontSize={1.15} fontWeight={800}>{n + 1}</text>
+            </g>
+          )
+        })}
+        {marks.chain && ok(marks.chain) && <path className="sh-chain" d={`M${x1(marks.chain) - 0.2} 0.8 V0.3 H${x2(marks.chain) + 0.2} V0.8`} fill="none" strokeWidth={0.22} strokeLinecap="round" strokeLinejoin="round" />}
+      </g>
+    )
+  }, [marks, curSpan, xs])
 
   const body = useMemo(() => (
     <>
@@ -101,7 +128,7 @@ function Sheet({ lay, pos, results, free, title }: { lay: Layout; pos: number; r
           <defs><clipPath id="sh-clip"><rect x={lay.headerW} y={0} width={Math.max(0, W - lay.headerW)} height={VH} /></clipPath></defs>
           <g clipPath="url(#sh-clip)">
             {/* the next-note highlight scrolls WITH the notes, so it lives inside the scroll group */}
-            <g ref={scroll}><rect ref={hl} x={0} y={1} width={3} height={13} rx={0.8} fill="#ffc83d" fillOpacity={0.4} opacity={0} />{body}</g>
+            <g ref={scroll}>{phraseG}<rect ref={hl} x={0} y={1} width={3} height={13} rx={0.8} fill="#ffc83d" fillOpacity={0.4} opacity={0} />{body}</g>
             {!free && <line x1={focus} y1={1} x2={focus} y2={14} stroke="#b8860b" strokeWidth={0.08} strokeDasharray="0.3 0.3" opacity={0.6} />}
           </g>
           <g className="sh-head">
@@ -140,12 +167,37 @@ export function SheetOverlay() {
     if (score) return layoutSheet(score.notes.map((n) => ({ note: n.note, beats: n.beats })), score.key, score.beatsPerBar, undefined, score.pickup, { unit: score.beatUnit, trebleOnly: true })
     return layoutSheet(groups.map((g) => ({ note: g.midis[0] ?? null, midis: g.midis, beats: g.beats })), undefined, 4)
   }, [score, groups, arr])
+  // Phrase practice: brackets, the current phrase band and the memory fade (all keyed on usePhraseView)
+  const view = usePhraseView()
+  const phrase = score && view.phrase && view.phrase.start < score.notes.length ? view.phrase : null
+  const fading = !!phrase && (view.rung === 'memory' || view.rung === 'timed' || view.rung === 'hands')
+  const hiding = !!phrase && (view.hideSheet || view.rung === 'blind')
+  const [faded, setFaded] = useState(false)
+  useEffect(() => {
+    setFaded(false)
+    if (!fading) return
+    const t = setTimeout(() => setFaded(true), 1400)
+    return () => clearTimeout(t)
+  }, [phrase, view.rung, fading])
+  const marks = useMemo(() => (score ? phraseMarks(phrase?.songId ?? score.title, score.notes, score.beatsPerBar ?? 4, phrase) : null), [score, phrase])
+  const cur = phrase ? { a: phrase.start, b: phrase.end } : null
+  const memCls = useMemo(() => {
+    if (!score || !phrase || !(hiding || (fading && faded))) return null
+    const snd: number[] = []
+    for (let i = phrase.start; i < phrase.end && i < score.notes.length; i++) if (score.notes[i].note != null) snd.push(i)
+    const nextI = view.index < snd.length ? snd[view.index] : phrase.end
+    const out: Record<number, string> = {}
+    for (let i = phrase.start; i < phrase.end && i < score.notes.length; i++) out[i] = i < nextI ? 'rev' : hiding ? 'gone' : 'fade'
+    return out
+  }, [score, phrase, hiding, fading, faded, view.index])
   // Only take space when there's something to read: a published piece, or free play on the PLAY screen.
   if (!on || (!score && screen !== 'play')) return null
   const free = !score
+  const blind = !!memCls && (view.hideSheet || view.rung === 'blind')
   return (
     <div className="sh-overlay" data-names={names ? '1' : undefined} data-level={arr ? level : 'single'} role="group" aria-label="Sheet music">
-      <Sheet lay={names ? lay : { ...lay, names: [] }} pos={pos} results={results} free={free} title={score?.title ?? 'free play'} />
+      <Sheet lay={names ? lay : { ...lay, names: [] }} pos={pos} results={results} free={free} title={score?.title ?? 'free play'} marks={marks} curSpan={cur} memCls={memCls} />
+      {blind && <div className="sh-mem" role="status">🧠 from memory!</div>}
       {free && groups.length === 0 && <div className="sh-empty">Play something and we will write it down.</div>}
       <div className="sh-bar">
         <span className="sh-pill">{free ? 'free play: we are writing down what you play' : arr?.title ?? score.title}</span>

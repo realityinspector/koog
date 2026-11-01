@@ -45,3 +45,16 @@
 /* level and name buttons sat on the chord symbols: faint until the strip is hovered or focused */
 .sh-overlay .sh-seg, .sh-overlay .sh-btn { opacity: .5; transition: opacity .2s; }
 .sh-overlay:hover .sh-seg, .sh-overlay:hover .sh-btn, .sh-overlay:focus-within .sh-seg, .sh-overlay:focus-within .sh-btn { opacity: 1; }
+
+/* phrase practice: brackets above the staff, the current phrase band, memory fade / blind */
+.sh-phr .sh-br path, .sh-phr .sh-br text { stroke: #ffd76c; fill: none; opacity: .6; }
+.sh-phr .sh-br text { fill: #ffd76c; stroke: none; opacity: .55; font-family: system-ui, sans-serif; }
+.sh-phr .sh-br.on path, .sh-phr .sh-br.on text { opacity: .95; }
+.sh-phr .sh-chain { stroke: #ffa94d; opacity: .85; }
+.sh-phr .sh-band { fill: #ffd76c; fill-opacity: .16; }
+.sh-g { transition: opacity .6s ease-out; }
+.sh-g.mem-fade { opacity: .16; }
+.sh-g.mem-gone { opacity: 0; }
+.sh-g.mem-rev { opacity: 1; }
+.sh-mem { position: absolute; left: 14px; bottom: 6px; padding: 2px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; pointer-events: none; color: #fff6dc; background: rgba(120, 90, 200, .55); border: 1px solid rgba(255, 255, 255, .25); }
+@media (prefers-reduced-motion: reduce) { .sh-g { transition: none !important; } }

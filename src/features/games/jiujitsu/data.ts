@@ -2,6 +2,7 @@
 // Pure data and helpers, no module-level state.
 import { SONGS, type Song } from '../../songs/songs'
 import { pload, psave } from '../../../profile/profile'
+import type { Rung } from '../../../music/phrases'
 
 export type Phase = 'menu' | 'bow' | 'call' | 'echo' | 'move' | 'sub' | 'lesson' | 'promo' | 'flow' | 'flowend'
 
@@ -89,4 +90,6 @@ export interface Snapshot {
   songs: { id: string; title: string }[]; songIx: number
   flowPos: number; flowTotal: number; chain: number; longest: number
   save: Save
+  /** phrase HUD: which exchange of 6, the belt's rung, and the song the call came from ('' = made up) */
+  ph?: { i: number; n: number; rung: Rung; from: string } | null
 }

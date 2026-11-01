@@ -14,6 +14,8 @@ import { arrange } from '../../music/arrange'
 import { SHEET_LEVELS, setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
 import { lhAdvance, lhHitIdxs, lhNear, lhPress, makeLh, type LhState } from './lhJudge'
 import { useScreen } from '../../layout/screenStore'
+import { PhraseTrainer } from '../learn/PhraseTrainer'
+import { songProgress, usePhraseTick } from '../../music/phraseEngine'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -109,7 +111,10 @@ export function SongsPanel() {
   const [songId, setSongId] = useState<string | null>(null)
   // The screen stays mounted (hidden) on PLAY: leaving SONGS ends the round, stops the beat, clears the sheet and gives the key back.
   const screen = useScreen((s) => s.screen)
-  useEffect(() => { if (screen !== 'songs') setSongId(null) }, [screen])
+  const [learn, setLearn] = useState(false)
+  usePhraseTick((t) => t.v)
+  useEffect(() => { if (screen !== 'songs') { setSongId(null); setLearn(false) } }, [screen])
+  useEffect(() => { if (!songId) setLearn(false) }, [songId])
   const [mode, setMode] = useState<Mode>('wait')
   const level = useSheetLevel((s) => s.level)
   const [speed, setSpeed] = useState(0.8)
@@ -303,7 +308,7 @@ export function SongsPanel() {
 
   // render loop
   useEffect(() => {
-    if (!song) return
+    if (!song || learn) return
     const cv = canvasRef.current
     if (!cv) return
     const ctx = cv.getContext('2d')!
@@ -356,7 +361,7 @@ export function SongsPanel() {
     }
     raf = requestAnimationFrame(frame)
     return () => { cancelAnimationFrame(raf); ro.disconnect(); clearScore('songs') }
-  }, [song, finish])
+  }, [song, finish, learn])
 
   const bestFor = (id: string) => {
     const b = bests[id + ':wait']; const f = bests[id + ':flow']
@@ -378,7 +383,9 @@ export function SongsPanel() {
 
   return (
     <section className="sg">
-      {song ? (
+      {song && learn ? (
+        <PhraseTrainer key={song.id} song={song} onClose={() => setLearn(false)} />
+      ) : song ? (
         <div className="play">
           <div className="bar">
             <button className="btn-ghost" onClick={() => setSongId(null)}>← All songs</button>
@@ -386,6 +393,7 @@ export function SongsPanel() {
               <button className={mode === 'wait' ? 'on' : ''} onClick={() => setMode('wait')}>Wait</button>
               <button className={mode === 'flow' ? 'on' : ''} onClick={() => setMode('flow')}>Flow</button>
             </span>
+            <button className="btn-ghost" onClick={() => { reset(); setLearn(true) }} title="Learn it a few notes at a time">🧠 Learn it</button>
             <span className="seg" role="group" aria-label="Sheet level">
               {SHEET_LEVELS.map((l) => (
                 <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{l.icon}<span className="lv-t"> {l.label}</span></button>
@@ -465,6 +473,7 @@ export function SongsPanel() {
                     <b>{s.title}</b>
                     <span className="hk">{s.hook}</span>
                     {bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : <span className="pb none">★ —</span>}
+                    {(() => { const pr = songProgress(s.id, s.notes, s.beatsPerBar); return pr.known > 0 ? <span className="lr" title={`${pr.known} of ${pr.total} phrases learned`}>🧠 {pr.pct}%</span> : null })()}
                   </button>
                 ))}
               </div>

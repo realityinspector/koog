@@ -104,3 +104,5 @@
 .kg-screen-body:has(> .sg .play) { padding-top: 6px; padding-bottom: 8px; }
 .sg .play { gap: 6px; }
 @media (max-width: 1400px) { .sg .play .seg button:not(.on) .lv-t { display: none; } }
+
+.sg .card-s .lr { position: absolute; right: 8px; bottom: 8px; background: rgba(61, 220, 132, .85); color: #04210f; font-weight: 800; font-size: 12px; line-height: 1; border-radius: var(--r-pill); padding: 3px 8px; }

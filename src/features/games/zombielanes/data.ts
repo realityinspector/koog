@@ -3,6 +3,7 @@ import { PC_NAMES, pc } from '../../../music/theory'
 import { SONGS, type Song, type SongNote } from '../../songs/songs'
 import type { Key } from '../../../music/theory'
 import { pload, psave } from '../../../profile/profile'
+import type { Rung } from '../../../music/phrases'
 
 export type Mode = 'easy' | 'normal'
 export type Phase = 'menu' | 'card' | 'play' | 'over'
@@ -96,6 +97,8 @@ export interface Save {
   mode: Mode
   /** which piece the Zombie King plays (a BOSS_PIECE_IDS id) */
   boss: string
+  /** most conga lines knocked down cleanly in one run */
+  conga: number
 }
 const num = (v: unknown, d: number, lo: number, hi: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d)
 export function loadSave(): Save {
@@ -105,6 +108,7 @@ export function loadSave(): Save {
     wave: { easy: Math.round(num(r.wave?.easy, 1, 1, 5)), normal: Math.round(num(r.wave?.normal, 1, 1, 5)) },
     mode: r.mode === 'normal' ? 'normal' : 'easy',
     boss: typeof r.boss === 'string' && BOSS_PIECE_IDS.includes(r.boss) ? r.boss : 'ode',
+    conga: Math.round(num(r.conga, 0, 0, 99)),
   }
 }
 export function writeSave(s: Save) { psave('zombielanes', s) }
@@ -127,5 +131,11 @@ export interface Snapshot {
   save: Save
   bonusBrain: boolean
   bossSong: string
+  /** a conga-line run (phrase memorization) is on */
+  conga?: boolean
+  /** which phrase of the run, how many, and the scaffold rung (for the HUD chip) */
+  ph?: { i: number; n: number; rung: Rung; zombies: number } | null
+  /** kind coaching for the last note/phrase */
+  coach?: { text: string; kind: 'good' | 'oops' | 'info' } | null
 }
 export const MAX_LIVES = 3

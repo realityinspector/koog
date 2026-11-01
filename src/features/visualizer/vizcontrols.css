@@ -20,7 +20,7 @@
   background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); border-radius: 10px; text-align: left; backdrop-filter: none; }
 .viz .viz-bar .vb-pop button.vb-theme.on, .viz .viz-bar .vb-pop button.vb-tog.on { border-color: #fff; background: rgba(124, 92, 255, .55); }
 .vb-sw { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,.5); }
-.vb-toggles { display: flex; gap: 6px; margin-top: 8px; }
+.vb-toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .viz .viz-bar .vb-pop button.vb-tog { flex: 1; justify-content: center; }
 .viz-hint { transition: opacity .6s ease; font-size: 12px; }
 .viz-hint.gone { opacity: 0; }

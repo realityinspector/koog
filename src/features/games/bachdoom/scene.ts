@@ -68,19 +68,25 @@ export class SceneList {
       const set = sp.demons[d.kind]
       const b = this.next(); if (!b) break
       b.x = this.tmp.x; b.y = this.tmp.y
-      let h = HEIGHT[d.kind] * Math.min(1.25, wh)
+      let h = HEIGHT[d.kind] * Math.min(1.25, wh) * (d.sc ?? 1)
       const fly = d.kind === 'squeak'
-      b.z = fly ? 0.22 + Math.sin(d.t * 3) * 0.06 : Math.abs(Math.sin(d.t * 5)) * 0.025
+      b.z = d.wv ? (d.fz ?? 0) : fly ? 0.22 + Math.sin(d.t * 3) * 0.06 : Math.abs(Math.sin(d.t * 5)) * 0.025
       const walking = !demo && g.diff !== 'story' && d.dist > 2.55
       if (d.state === 1) {
         const k = Math.max(0, d.dieT / 0.85)
         b.img = set.hurt; b.tint = 0.85 * (1 - k); b.tr = 255; b.tg = 220; b.tb = 110
         h *= 0.35 + 0.65 * k; b.z += (1 - k) * 0.5; b.glow = true
-      } else if (d.lungeT > 0 || (!demo && d.dist <= 2.55 && g.diff !== 'story')) b.img = set.attack
+      } else if (d.lungeT > 0 || d.biting || (!demo && !d.wv && d.dist <= 2.55 && g.diff !== 'story')) b.img = set.attack
       else if (d.hurtT > 0) b.img = set.hurt
-      else b.img = set.walk[Math.floor(d.t * (walking ? 4 : 2)) & 1]
+      else b.img = set.walk[Math.floor(d.t * (walking || d.wv ? 4 : 2)) & 1]
       // squash on every hit (not a flash): shorter and wider, then springs back
       if (d.sq > 0 && !g.reduced) { const k = Math.sin((1 - d.sq / 0.12) * Math.PI); h *= 1 - 0.17 * k; b.ws = 1 + 0.2 * k }
+      // phrase waves: the demon whose note is playing in the teach demo glows and puffs up (a local pulse, never a screen flash)
+      if (d.wv && d.state === 0 && d.pulse && d.pulse > 0) {
+        const k = Math.sin(Math.min(1, d.pulse / 0.42) * Math.PI)
+        b.tint = 0.55 * k; b.tr = 255; b.tg = 226; b.tb = 120; b.glow = true
+        if (!g.reduced) { h *= 1 + 0.2 * k; b.ws = 1 + 0.12 * k }
+      }
       b.h = h
       if (d.hurtT > 0 && d.state === 0) { b.tint = 0.35; b.tr = 255; b.tg = 255; b.tb = 255 }
     }

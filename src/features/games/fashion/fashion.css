@@ -67,3 +67,6 @@
 .fr-portrait { box-shadow: 0 0 0 2px #ffd76c, 0 0 12px color-mix(in srgb, var(--jc) 70%, transparent); }
 .fr-final { border: 1px solid rgba(255,216,120,.35); background: linear-gradient(90deg, rgba(48,24,100,.9), rgba(20,8,50,.9)); }
 .fr-wardrobe .fr-row { border-color: rgba(255,255,255,.12); }
+
+/* phrase walk: long kind tips wrap instead of running off the left edge */
+.fr-toast.run { white-space: normal; max-width: 40%; width: max-content; text-align: center; line-height: 1.2; border-radius: 18px; }

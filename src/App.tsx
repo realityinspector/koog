@@ -6,6 +6,7 @@ import { BuildLog } from './features/buildlog/BuildLog'
 import { ChallengesPanel } from './features/challenges/ChallengesPanel'
 import { SmartReadout } from './features/harmony/SmartReadout'
 import { CoachTips } from './features/harmony/CoachTips'
+import { Mentor } from './features/mentor/Mentor'
 import { PreflightPanel } from './features/preflight/PreflightPanel'
 import { RequestBar } from './features/requests/RequestBar'
 import { SongsPanel } from './features/songs/SongsPanel'
@@ -25,6 +26,7 @@ import { DuoDeck } from './features/dj/DjDeck'
 import { ControllerOverlay } from './features/controller/ControllerOverlay'
 import { ProStudio } from './features/pro/ProStudio'
 import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
+import { MimicChip } from './features/mimic/MimicChip'
 import './music/judge'
 
 export function App() {
@@ -54,14 +56,14 @@ export function App() {
     ]
     return (
       <>
-        <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<DuoDeck />} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
+        <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
         <WhoIsPlaying />
       </>
     )
   }
   return (
     <>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /><MimicChip /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <Tour />
     </>

@@ -357,4 +357,11 @@ export const entries: Entry[] = [
     title: '🔍 Bug hunt: four testers, 16 fixes',
     body: 'After a big building spree, four AI testers each took one part of Koog and played it like a real kid (or dad) would: slamming the keys, switching modes mid-song, unplugging things. They found 16 bugs. A few: a note that kept ringing if you unplugged the keyboard mid-note, loops that kept playing after leaving Boss mode, a song that kept running secretly after you left the SONGS screen, and a left-hand chord note being counted as a mistake. Software teams call this "QA" (quality assurance), and it\'s why you test the WHOLE thing together, not just each piece.',
   },
+  {
+    id: 50,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🧠 Phrase memory, 🎓 Mentor, 😀 Vibes and 🎭 Mimic',
+    body: 'FOUR big ones. 🧠 Learn it (in SONGS) teaches a song two or three notes at a time, up a ladder: listen → follow the glowing keys → echo → from memory → in time → no sheet music → both hands. Little phrases join into bigger ones until you know the whole song. The games use the SAME ladder: BachDoom has Galaga-style demons that dive on the beat of the phrase (Episode 0: Boot Camp), Zombie Lanes has conga lines, Jiu-Jitsu partners call real song phrases, and the runway stops at phrase marks. 🎓 Mentor is a front-row owl who notices your moves ("that was a SEQUENCE!") and even spots when you sneak a famous tune into your jam. 😀 Vibes turns the mood of your music into a face: minor chords look sad, V→I looks triumphant. 🎭 Mimic answers you in a style, from Baroque to cool jazz to funk. Styles from after 1930 copy the FEEL, never the actual notes, because those songs are still copyrighted.',
+  },
 ]

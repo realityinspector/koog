@@ -1,0 +1,39 @@
+/* Phrase trainer: sits inside .sg (SONGS) and fills its height without page scroll. */
+.pt { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; color: var(--text); }
+.pt-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pt-title { font-size: 16px; } .pt-title span { color: var(--text-dim); font-weight: 600; margin-left: 4px; }
+.pt-prog { margin-left: auto; font-size: 13px; color: var(--gold); font-weight: 800; }
+.pt-chain { padding: 8px 14px; border-radius: var(--r-md); background: linear-gradient(135deg, rgba(255, 215, 108, .25), rgba(124, 92, 255, .25)); border: 1px solid var(--gold); font-weight: 800; text-align: center; }
+.pt-card { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px; padding: 10px 14px; border-radius: var(--r-lg, 16px); background: var(--surface-2); border: 2px solid var(--border); transition: border-color .25s; }
+.pt-card.good { border-color: #3ddc84; } .pt-card.kind { border-color: #ffb454; }
+.pt-what { font-size: 13px; color: var(--text-dim); font-weight: 700; }
+.pt-notes { position: relative; display: flex; gap: clamp(14px, 4vw, 44px); align-items: stretch; justify-content: center; height: 96px; width: 100%; }
+.pt-n { position: relative; width: 56px; }
+.pt-n .head { position: absolute; left: 0; top: calc(var(--y) * (100% - 38px)); width: 56px; height: 38px; display: grid; place-items: center; border-radius: 50%; font-size: 17px; font-weight: 900; background: rgba(255, 255, 255, .1); border: 3px solid var(--border); transition: background .2s, border-color .2s; }
+.pt-n.ok .head { background: #2fbf6f; border-color: #8cf0b6; color: #04210f; }
+.pt-n.bad .head { background: #ffb454; border-color: #ffd9a0; color: #2a1800; }
+.pt-n.hid .head { opacity: .55; border-style: dashed; }
+.pt-msg { min-height: 24px; font-size: 18px; font-weight: 800; text-align: center; }
+.pt-msg.good { color: #6af0a4; } .pt-msg.kind { color: #ffc978; }
+.pt-pass { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
+.pt-pass i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); } .pt-pass i.on { background: #3ddc84; border-color: #3ddc84; }
+.pt-ladder { display: flex; gap: 4px; }
+.pt-ladder .rg { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); font-size: 16px; opacity: .6; }
+.pt-ladder .rg em { font-style: normal; font-size: 11px; font-weight: 700; }
+.pt-ladder .rg.done { opacity: 1; background: rgba(61, 220, 132, .18); border-color: #3ddc84; }
+.pt-ladder .rg.cur { opacity: 1; border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.pt-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.pt-map { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.pt-maprow { display: flex; flex-wrap: nowrap; gap: 5px; align-items: center; max-width: 100%; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+.pt-tile { flex: none; }
+.pt-sep { flex: none; width: 2px; height: 22px; background: var(--border); margin: 0 4px; }
+.pt-tile { min-width: 34px; height: 30px; padding: 0 6px; border-radius: 8px; border: 2px solid transparent; color: #fff; font-weight: 800; font-size: 13px; background: #3a3d52; }
+.pt-tile.r0 { background: #3a3d52; } .pt-tile.r1 { background: #4a5a8a; } .pt-tile.r2 { background: #3f78b8; }
+.pt-tile.r3 { background: #2f9e8f; } .pt-tile.r4 { background: #3dae5c; } .pt-tile.r5 { background: #8ab43a; color: #1b2a05; } .pt-tile.r6 { background: #e0b13a; color: #2a1d00; }
+.pt-tile.star { box-shadow: 0 0 0 2px var(--gold) inset; }
+.pt-tile.lock { opacity: .45; }
+.pt-tile.on { border-color: #fff; }
+.pt-card { min-height: 0; gap: 2px; padding: 6px 14px; justify-content: space-around; } .pt-notes { flex: 1 1 auto; height: auto; min-height: 56px; margin: 4px 0; } .pt-msg { font-size: 16px; min-height: 20px; }
+.pt-ladder .rg { padding: 2px; font-size: 14px; } .pt-ladder .rg em { font-size: 10px; }
+.pt { gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .pt-card, .pt-n .head { transition: none; } }

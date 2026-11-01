@@ -58,7 +58,13 @@ export class Painter {
   draw(g: Game, view: View, ctx: CanvasRenderingContext2D, W: number, H: number, hudH: number, dt: number) {
     const viewH = H - hudH
     ctx.imageSmoothingEnabled = false
-    ctx.drawImage(view.canvas, 0, 0, view.iw, view.ih, 0, 0, W, viewH)
+    // a short shake after a broken phrase (a 1-6 px jitter; none under reduced motion). The view is drawn a little oversize so no edge shows.
+    let shx = 0, shy = 0, pad = 0
+    if (g.shakeT > 0 && !g.reduced && g.phase === 'play') {
+      const m = Math.max(2, Math.round(this.ps(H) * 1.6)), k = Math.min(1, g.shakeT / 0.3)
+      shx = Math.round(Math.sin(g.clock * 83) * m * k); shy = Math.round(Math.cos(g.clock * 61) * m * 0.6 * k); pad = m + 1
+    }
+    ctx.drawImage(view.canvas, 0, 0, view.iw, view.ih, shx - pad, shy - pad, W + pad * 2, viewH + pad * 2)
     this.kx = W / view.iw; this.ky = viewH / view.ih
     const ps = this.ps(H)
     if (g.phase !== this.lastPhase) { this.lastPhase = g.phase; this.screenT = 0 }
@@ -73,6 +79,7 @@ export class Painter {
       const m = Math.max(1, Math.round(ps * 0.5)) * Math.min(1, g.kickT / 0.1), sg = g.st.hits & 1 ? 1 : -1
       ctx.translate(Math.round(m * sg), Math.round(m * 0.6))
     }
+    if (shx || shy) ctx.translate(shx, shy)
     this.overlays(ctx, g, view, W, viewH, ps)
     this.gunLayer(ctx, g, W, viewH, ps)
     ctx.restore()
@@ -95,9 +102,10 @@ export class Painter {
 
   private overlays(ctx: CanvasRenderingContext2D, g: Game, view: View, W: number, viewH: number, ps: number) {
     const tgt = g.target
+    if (g.wave) this.waveLayer(ctx, g, view, W, viewH, ps)
     // pips (one per note left) above each demon, and a bobbing marker over the one you are playing
     for (const d of g.demons) {
-      if (d.state !== 0 || d.room !== g.roomIdx || g.mode !== 'fight') continue
+      if (d.wv || d.state !== 0 || d.room !== g.roomIdx || g.mode !== 'fight') continue
       const pos = { x: 0, y: 0 }
       g.demonPos(d, pos)
       const hgt = (d.kind === 'squeak' ? 0.8 : d.kind === 'imp' ? 1.22 : 1.12) * Math.min(1.25, (g.map.spec.wallH ?? 1))
@@ -152,6 +160,65 @@ export class Painter {
     // orb pops
     for (const o of g.orbs) {
       if (o.pop > 0) { /* the orb simply vanishes; a few notes fall from the burst() particles */ }
+    }
+  }
+
+
+  // ---------------------------------------------------------------- phrase waves
+  private wq = { x: 0, y: 0 }
+  /** note plates over the formation, and the gold strike rings that close in on the beat */
+  private waveLayer(ctx: CanvasRenderingContext2D, g: Game, view: View, W: number, viewH: number, ps: number) {
+    const w = g.wave!
+    if (g.mode !== 'fight' || w.state === 'idle') return
+    const now = performance.now(), r = g.room
+    const cur = w.cur
+    const sc = ps
+    // note plates (names while the notes are shown, order numbers when they are hidden)
+    for (const f of w.fds) {
+      const d = f.d
+      if (d.state !== 0 || f.res === 1) continue
+      g.demonPos(d, this.wq)
+      if (!this.toScreen(view, this.wq.x, this.wq.y, (d.fz ?? 0) - 0.04)) continue
+      const txt = w.showLabels ? w.label(f) : String(f.i + 1)
+      const isCur = cur === f
+      const tw = textWidth(txt, sc), bw = tw + sc * 4, bh = sc * 7 + sc * 3
+      const x = Math.round(this.pt.x - bw / 2), y = Math.round(this.pt.y + ps)
+      ctx.fillStyle = isCur ? '#3a2410' : 'rgba(14,6,18,.82)'; ctx.fillRect(x - 1, y - 1, bw + 2, bh + 2)
+      ctx.fillStyle = isCur ? GOLD : f.extra ? '#c98ae8' : '#6b4a22'; ctx.fillRect(x, y, bw, bh)
+      ctx.fillStyle = isCur ? '#2a1406' : '#1a0c12'; ctx.fillRect(x + 1, y + 1, bw - 2, bh - 2)
+      drawText(ctx, txt, x + bw / 2, y + sc * 1.5, sc, isCur ? GOLD : w.showLabels ? CREAM : '#b9b0d6', { align: 'center' })
+      if (isCur) {
+        const bob = g.reduced ? 0 : Math.round(Math.sin(g.clock * 6) * ps), cx = Math.round(this.pt.x), cy = Math.round(y + bh + ps * 6 - bob)
+        // a gold arrow under the plate, pointing up at the demon to play next
+        ctx.fillStyle = '#3a2410'
+        for (let q = 0; q < 4; q++) ctx.fillRect(cx - q * ps - ps, cy - q * ps - ps, q * 2 * ps + ps * 3, ps * 2)
+        ctx.fillStyle = GOLD
+        for (let q = 0; q < 4; q++) ctx.fillRect(cx - q * ps, cy - q * ps, q * 2 * ps + ps, ps)
+      }
+    }
+    // strike rings: the demon reaches the ring exactly on its beat; the outer ring closes in, and the ring lights up inside the timing window
+    if (w.state === 'dive' || w.state === 'regroup') {
+      let n = 0
+      for (const f of w.fds) {
+        if (f.res !== 0 || w.state !== 'dive') continue
+        if (n >= 3) break
+        const tau = w.ringT(f, now)
+        if (tau < -1.1 || tau * w.L > w.W + 260) continue
+        n++
+        const sx = r.sx + r.hx * 3.1 + r.rx * f.slot.lat * 0.3, sy = r.sy + r.hy * 3.1 + r.ry * f.slot.lat * 0.3
+        if (!this.toScreen(view, sx, sy, w.ringZ(f))) continue
+        const inWin = Math.abs(now - f.due) <= w.W
+        const base = ps * (n === 1 ? 9 : 7)
+        const outer = base * (1 + 2.6 * Math.max(0, Math.min(1, -tau)))
+        const cx = Math.round(this.pt.x), cy = Math.round(this.pt.y)
+        ctx.lineWidth = Math.max(2, Math.round(ps * (inWin ? 1.8 : 1.1)))
+        if (inWin) { ctx.globalAlpha = 0.22; ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(cx, cy, base, 0, Math.PI * 2); ctx.fill() }
+        ctx.globalAlpha = n === 1 ? 1 : 0.65
+        ctx.strokeStyle = '#2a1406'; ctx.beginPath(); ctx.arc(cx, cy, base + 1, 0, Math.PI * 2); ctx.stroke()
+        ctx.strokeStyle = inWin ? '#fffbe0' : GOLD; ctx.beginPath(); ctx.arc(cx, cy, base, 0, Math.PI * 2); ctx.stroke()
+        if (tau < 0) { ctx.globalAlpha *= 0.8; ctx.strokeStyle = '#ffe9a0'; ctx.beginPath(); ctx.arc(cx, cy, outer, 0, Math.PI * 2); ctx.stroke() }
+        ctx.globalAlpha = 1
+      }
     }
   }
 
@@ -254,7 +321,7 @@ export class Painter {
     // the little glow frames show at most 3 times a second, however fast you play; in between the gun just kicks
     if ((g.recoilT > 0.1 || g.killT > 0.25) && g.clock - this.lastGlow >= 0.34) { this.lastGlow = g.clock; this.glowDur = g.killT > 0.25 ? 0.3 : 0.14; this.glowUntil = g.clock + this.glowDur }
     const glow = g.clock < this.glowUntil
-    const src = g.jamT > 0 ? this.gun.jam : glow ? (this.glowUntil - g.clock > this.glowDur * 0.45 ? this.gun.f0 : this.gun.f1) : this.gun.idle
+    const src = g.jamT > 0 || g.jamVisT > 0 ? this.gun.jam : glow ? (this.glowUntil - g.clock > this.glowDur * 0.45 ? this.gun.f0 : this.gun.f1) : this.gun.idle
     const sc = Math.max(2, (viewH * 0.44) / src.height)
     const w = Math.round(src.width * sc), h = Math.round(src.height * sc)
     const bob = g.reduced ? 0 : Math.sin(g.bobT * 1.0) * ps * (g.mode === 'glide' ? 1.5 : 0.3)
@@ -372,7 +439,7 @@ export class Painter {
       drawText(ctx, name, cx, Math.round(cy - (7 * sc) / 2), sc, '#2a1406', { align: 'center' })
       if (exact) drawText(ctx, String(Math.floor(n / 12) - 1), cx, py + ph - 9, 1, i === 0 ? CREAM : '#b59a6a', { align: 'center' })
     }
-    if (!this.nextBuf.length) drawText(ctx, 'DONE!', nx + nw / 2, py + ph * 0.5, sn, GOLD, { align: 'center' })
+    if (!this.nextBuf.length) drawText(ctx, g.wave ? (g.wave.state === 'win' ? 'PERFECT!' : 'NO HINTS!') : 'DONE!', nx + nw / 2, py + ph * 0.5, g.wave ? sl + 1 : sn, GOLD, { align: 'center' })
 
     // Bach's face
     const fcv = this.face[g.face]
@@ -408,8 +475,12 @@ export class Painter {
     const spec = g.spec
     drawText(ctx, spec.id, ix + 6, py + 5, sl, GOLD)
     const total = g.piece.notes.length
-    drawText(ctx, 'NOTE ' + Math.min(total, g.ptr) + '/' + total, ix + 6, py + 5 + lh, sl, CREAM)
-    if (g.isBoss) drawText(ctx, 'BAR ' + Math.min(g.piece.bars, g.bar + 1) + '/' + g.piece.bars, ix + 6, py + 5 + lh + 7 * sl + 4, sl, CREAM)
+    if (g.wave) {
+      const w = g.wave
+      drawText(ctx, 'WAVE ' + Math.min(w.total, w.wi + 1) + '/' + w.total, ix + 6, py + 5 + lh, sl, CREAM)
+      drawText(ctx, w.rungCfg.name + '  ' + Math.round(w.W) + 'MS', ix + 6, py + 5 + lh + 7 * sl + 4, sl, '#8fd4ff')
+    } else drawText(ctx, 'NOTE ' + Math.min(total, g.ptr) + '/' + total, ix + 6, py + 5 + lh, sl, CREAM)
+    if (g.wave) { /* shown above */ } else if (g.isBoss) drawText(ctx, 'BAR ' + Math.min(g.piece.bars, g.bar + 1) + '/' + g.piece.bars, ix + 6, py + 5 + lh + 7 * sl + 4, sl, CREAM)
     else drawText(ctx, 'KILLS ' + g.st.kills + '/' + g.st.demons, ix + 6, py + 5 + lh + 7 * sl + 4, sl, CREAM)
     if (g.streak >= 3) drawText(ctx, 'STREAK ' + g.streak, ix + iw - 6, py + 5, sl, '#7cf0a0', { align: 'right' })
     drawText(ctx, g.diff === 'story' ? 'STORY' : g.diff === 'normal' ? 'NORMAL' : 'ULTRA', ix + iw - 6, py + ph - 7 * sl - 4, sl, '#b59a6a', { align: 'right' })
@@ -438,7 +509,7 @@ export class Painter {
       ctx.globalAlpha = a
       const y = Math.round(viewH * (g.isBoss ? 0.2 : 0.07))
       const spec = g.spec
-      const lines = [spec.id + ': ' + spec.name.toUpperCase(), '♪ ' + g.piece.title + '  -  ' + g.piece.origin, g.diff === 'ultra' ? 'PLAY IN TIME FOR PERFECTS!' : g.isBoss ? 'FOLLOW THE CHORDS. KEEP THE ORBS BACK!' : 'PLAY THE GLOWING KEYS TO HARMONIZE THE DEMONS!']
+      const lines = [spec.id + ': ' + spec.name.toUpperCase(), '♪ ' + g.piece.title + '  -  ' + g.piece.origin, g.wave ? 'WATCH THE PHRASE, THEN HIT EACH DEMON ON ITS BEAT!' : g.diff === 'ultra' ? 'PLAY IN TIME FOR PERFECTS!' : g.isBoss ? 'FOLLOW THE CHORDS. KEEP THE ORBS BACK!' : 'PLAY THE GLOWING KEYS TO HARMONIZE THE DEMONS!']
       const sc = [ps + 1, ps, Math.max(1, ps - 1)]
       const wmax = Math.max(...lines.map((l, i) => textWidth(l, sc[i]))) + ps * 8
       ctx.fillStyle = 'rgba(14,6,18,.72)'
@@ -446,6 +517,17 @@ export class Painter {
       let yy = y
       lines.forEach((l, i) => { drawText(ctx, l, W / 2, yy, sc[i], i === 0 ? GOLD : i === 1 ? CREAM : '#b9b0d6', { align: 'center', shadow: DARK }); yy += (7 + 4) * sc[i] })
       ctx.globalAlpha = 1
+    }
+    // phrase waves: which wave, which rung, and what is expected
+    if (g.wave && g.phase === 'play' && g.introT <= 0 && g.wave.state !== 'idle') {
+      const w = g.wave, s1 = Math.max(1, ps - 1)
+      const l1 = 'WAVE ' + (w.wi + 1) + '/' + w.total + ': ' + w.rungCfg.name + (w.breaks ? '   BREAKS ' + w.breaks : '') + (w.chain > 1 ? '   CHAIN x' + w.chain : '')
+      const l2 = w.state === 'teach' ? 'WATCH AND LISTEN' : w.rungCfg.blurb
+      const hs = Math.max(1, Math.min(s1, 2)), bw = Math.max(textWidth(l1, hs), textWidth(l2, hs)) + hs * 8, bh = hs * 24
+      const bx = Math.round(W * 0.012), by = Math.round(viewH - bh - hs * 3)
+      ctx.fillStyle = 'rgba(14,6,18,.72)'; ctx.fillRect(bx, by, bw, bh)
+      drawText(ctx, l1, bx + hs * 4, by + hs * 4, hs, GOLD, { shadow: DARK })
+      drawText(ctx, l2, bx + hs * 4, by + hs * 4 + 10 * hs, hs, w.state === 'teach' ? '#8fd4ff' : CREAM, { shadow: DARK })
     }
     // boss health bar
     if (g.boss && g.phase === 'play' || (g.boss && g.phase === 'win')) {

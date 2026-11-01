@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useJudge } from '../../../music/judge'
+import { PhraseHud } from '../PhraseHud'
 import { Game } from './engine'
 import { BELTS, RUNGS, LAST_RUNG, loadSave, type Snapshot } from './data'
 import './jiujitsu.css'
@@ -35,7 +36,7 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
       <canvas className="bj-canvas" ref={canvasRef} aria-label="Jiu-jitsu mat: you and your training partner" />
       {playing && (
         <div className="bj-hud">
-          <div className="bj-left"><BeltBar belt={snap.belt} stripes={snap.stripes} /><span className="bj-beltname">{snap.practice ? 'Practice' : beltName + ' belt'}</span></div>
+          <div className="bj-left"><BeltBar belt={snap.belt} stripes={snap.stripes} /><span className="bj-beltname">{snap.practice ? 'Practice' : beltName + ' belt'}</span>{snap.ph && !flow && <PhraseHud i={snap.ph.i} n={snap.ph.n} rung={snap.ph.rung} note={snap.ph.from ? 'From ' + snap.ph.from : undefined} />}</div>
           <div className="bj-score" role="status" aria-label={`You ${snap.points} points, partner ${snap.partner} points`}>
             <div><small>YOU</small><b>{snap.points}</b></div>
             <i>POINTS</i>
@@ -62,6 +63,7 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
                 <button className="bj-btn small" onClick={() => g()?.hear()}>🔁 Hear it again</button>
               </>
             )}
+            {!flow && snap.ph?.from && (snap.phase === 'echo' || snap.phase === 'call') && <span className="bj-from">♫ {snap.ph.from}</span>}
             {flow && <span className="bj-chain">Flow x{snap.chain} <small>best {snap.longest}</small> <small>{snap.flowPos}/{snap.flowTotal}</small></span>}
             {snap.tip && <span className="bj-tip">{snap.tip}</span>}
           </div>

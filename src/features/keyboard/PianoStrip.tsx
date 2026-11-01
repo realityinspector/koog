@@ -6,6 +6,7 @@ import { playLocal } from '../../music/localNotes'
 import { typingCaps, useTyping } from '../../music/typing'
 import { buildLayout, noteHue, snapRange, type KeyShape } from './layout'
 import { useGuide, type GuideTone } from '../../music/guide'
+import { usePeekNote } from './peek'
 import { ZONE_COLORS, activeIdx, zoneRange, useZones } from '../../music/zones'
 import './keyboard.css'
 
@@ -40,18 +41,20 @@ interface KeyProps {
   guide?: GuideTone | null
   /** colour of the keyboard zone this key belongs to (split/layer), or null */
   zc?: string | null
+  /** memory peek: a faint dot on the next key after a pause */
+  peek?: boolean
   down: (n: number, e: React.PointerEvent) => void
   up: (n: number) => void
 }
 
-const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, zc, down, up }: KeyProps) {
+const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, zc, peek, down, up }: KeyProps) {
   const style = {
     left: k.left + '%',
     width: k.width + '%',
     ...(held ? { '--h': noteHue(k.note) } : {}),
     ...(zc ? { '--zc': zc } : {}),
   } as React.CSSProperties
-  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '') + (guide ? ' guide guide-' + guide : '') + (zc ? ' zoned' : '')
+  const cls = 'kb-key ' + (k.black ? 'black' : 'white') + (held ? ' held' : '') + (flash ? ' spicy' : '') + (guide ? ' guide guide-' + guide : '') + (zc ? ' zoned' : '') + (peek ? ' peek' : '')
   const label = k.black ? null : k.label && (showName || k.label.length > 1) ? k.label : null
   return (
     <div
@@ -64,6 +67,7 @@ const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, z
       onPointerCancel={() => up(k.note)}
     >
       {status === 'tonic' ? <span className="kb-home">🏠</span> : status === 'in' ? <span className="kb-dot" /> : null}
+      {peek && <span className="kb-peek" aria-label="hint: play this key next" />}
       {label && <span className="kb-label">{label}</span>}
       {caps && <span className="kb-cap">{caps}</span>}
     </div>
@@ -93,6 +97,7 @@ export function PianoStrip() {
   const layout = useMemo(() => buildLayout(range[0], range[1]), [range])
   const guideTargets = useGuide((g) => g.targets)
   const guideTone = useGuide((g) => g.tone)
+  const peekNote = usePeekNote()
   const guideSet = useMemo(() => new Set(guideTargets), [guideTargets])
   const zMode = useZones((z) => z.mode)
   const zSplit = useZones((z) => z.split)
@@ -173,7 +178,7 @@ export function PianoStrip() {
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (
-          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} zc={zoneBands.length ? ZONE_COLORS[zoneBands.find((b) => k.note >= b.lo && k.note <= b.hi)?.i ?? 0] : null} down={down} up={up} />
+          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} peek={peekNote === k.note} zc={zoneBands.length ? ZONE_COLORS[zoneBands.find((b) => k.note >= b.lo && k.note <= b.hi)?.i ?? 0] : null} down={down} up={up} />
         ))}
       </div>
       {zoneBands.length > 0 && (

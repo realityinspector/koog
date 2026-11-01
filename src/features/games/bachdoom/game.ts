@@ -9,7 +9,8 @@ import { pload, psave } from '../../../profile/profile'
 import { GameLh } from '../../songs/gameLh'
 import type { JudgeEvent, NoteGrade } from '../../../music/judge'
 import type { DemonKind } from './types'
-import { LEVELS, buildMap, buildPiece, pathAt, roomCounts } from './levels'
+import { LEGACY_LEVELS, LEVELS, buildMap, buildPiece, isUnlocked, nextInMenu, pathAt, roomCounts } from './levels'
+import { WaveRun } from './waves'
 import type { LevelMap, Piece, Room } from './levels'
 
 export type Diff = 'story' | 'normal' | 'ultra'
@@ -37,6 +38,8 @@ export interface Demon {
   t: number; hurtT: number; hurtCool: number; lungeT: number; biteT: number; dieT: number
   /** combat feel: knockback (world dist offset, recovers), squash timer, visible hp, popped-pip timer/count, killing blow in flight */
   kb: number; sq: number; vhp: number; pipT: number; pipN: number; dying: boolean
+  /** phrase-wave demons only: flight height of the sprite's bottom, size scale, the note tag, pulse timer (teach beat), biting (finishing a missed dive) */
+  wv?: boolean; fz?: number; sc?: number; note?: number; pulse?: number; biting?: boolean
 }
 /** a note-bolt in flight. tk: 0 demon, 1 boss, 2 orb, 3 dud (a wrong note: falls short). ph: boss 1 = phase done, 2 = defeated */
 export interface Bolt { on: boolean; t: number; dur: number; tk: 0 | 1 | 2 | 3; d: Demon | null; oi: number; dmg: number; perfect: boolean; kill: boolean; ph: 0 | 1 | 2; ci: number }
@@ -47,6 +50,7 @@ export interface Pop { on: boolean; text: string; col: string; t: number; dur: n
 export interface Pickup { x: number; y: number; on: boolean; ph: number }
 export interface Boss { x: number; dist: number; hurtT: number; hurtCool: number; attackT: number; dieT: number; shownHp: number; kb: number; sq: number; wob: number }
 
+const HEIGHTS: Record<DemonKind, number> = { imp: 1.22, grumble: 1.12, squeak: 0.8 }
 const NEW_SAVE = (): SaveData => ({ unlocked: 1, best: {}, diff: 'normal' })
 
 export class Game {
@@ -75,9 +79,15 @@ export class Game {
   orbs: Orb[] = Array.from({ length: 6 }, () => ({ on: false, lat: 0, dist: 0, z: 0.5, t: 0, pop: 0, hitT: 0 }))
   lastBar = -1
   chordT = 0
+  /** phrase-wave level state (null in ordinary levels) */
+  wave: WaveRun | null = null
+  /** the sheet the level published (phrase-wave levels re-publish it to clear the green/red heads) */
+  score0: Parameters<typeof setScore>[0] | null = null
+  /** screen shake timer (never set under reduced motion) and the gun's brief visual jam after a wrong phrase note */
+  shakeT = 0; jamVisT = 0; private lastBeatPop = -9
   // player
   /** Easy/Full left-hand bonus judge (null while the Prelude, which has its own chords, is the piece) */
-  private lh: GameLh | null = null
+  lh: GameLh | null = null
   private lhPopAt = -9
   harmony = 100; armor = 0; streak = 0; jamT = 0; recoilT = 0
   face: FaceName = 'center'
@@ -145,11 +155,15 @@ export class Game {
     const harm = pc0.score.length && pc0.score.every((n) => n.beats === 0.25) ? PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) : undefined
     const sc0 = { owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar, pickup: pc0.pickup, beatUnit: pc0.beatUnit, style: pc0.style, harmony: harm }
     this.lh = harm ? null : new GameLh(sc0)
+    this.score0 = sc0
     setScore(sc0, pc0.scoreIdx[0] ?? 0)
     this.emit()
   }
   retry() { this.start(this.levelIdx, this.diff) }
-  next() { if (this.levelIdx + 1 < LEVELS.length) this.start(this.levelIdx + 1, this.diff); else this.toTitle() }
+  next() {
+    const n = nextInMenu(this.levelIdx)
+    if (n >= 0 && isUnlocked(n, this.save.unlocked)) this.start(n, this.diff); else this.toTitle()
+  }
 
   private load(idx: number) {
     this.levelIdx = idx
@@ -160,9 +174,13 @@ export class Game {
     this.boss = null
     this.bossHp = []
     this.pickups = []
+    this.wave?.dispose()
+    this.wave = null
     const nRooms = this.map.rooms.length
     this.placePickups()
-    if (spec.boss) {
+    if (spec.phrase) {
+      this.wave = new WaveRun(this)
+    } else if (spec.boss) {
       this.bossHp = this.piece.chunks.map((c) => c.e - c.s)
       this.boss = { x: 0, dist: 6.4, hurtT: 0, hurtCool: 0, attackT: 0, dieT: -1, shownHp: 1, kb: 0, sq: 0, wob: 0 }
     } else {
@@ -194,6 +212,8 @@ export class Game {
     this.faceHurtT = 0; this.faceGrinT = 0; this.vig = 0; this.lastHitAt = 0; this.wrongT = 0
     this.bfgT = -1; this.bfgDone = false; this.bfgPending = false; this.shot.t = 1; this.smokeT = 0
     this.endT = -1; this.hintT = 0; this.pend.length = 0
+    this.shakeT = 0; this.jamVisT = 0
+    this.wave?.reset()
     this.st = { hits: 0, wrongs: 0, perfects: 0, skipped: 0, bfgs: 0, kills: 0, demons: this.demons.length, bites: 0, time: 0 }
     for (const o of this.orbs) o.on = false
     for (const p of this.parts) p.on = false
@@ -217,8 +237,9 @@ export class Game {
   chunkOf(i: number) { const cs = this.piece.chunks; for (let k = 0; k < cs.length; k++) if (i < cs[k].e) return k; return cs.length - 1 }
   get expected(): number | null { return this.ptr < this.piece.notes.length ? this.piece.notes[this.ptr] : null }
   /** the next few notes for the HUD */
-  upcoming(n: number, out: number[]) { out.length = 0; for (let i = 0; i < n && this.ptr + i < this.piece.notes.length; i++) out.push(this.piece.notes[this.ptr + i]) }
+  upcoming(n: number, out: number[]) { if (this.wave) { this.wave.upcoming(n, out); return } out.length = 0; for (let i = 0; i < n && this.ptr + i < this.piece.notes.length; i++) out.push(this.piece.notes[this.ptr + i]) }
   get target(): Demon | null {
+    if (this.wave) return this.wave.target
     if (this.isBoss) return null
     const c = this.chunkOf(this.ptr)
     for (const d of this.demons) if (d.room === this.roomIdx && d.chunk === c && d.state === 0) return d
@@ -226,25 +247,28 @@ export class Game {
   }
   demonPos(d: Demon, out: { x: number; y: number }) { const r = this.map.rooms[d.room]; const k = d.dist + d.kb; out.x = r.sx + r.hx * k + r.rx * d.lat; out.y = r.sy + r.hy * k + r.ry * d.lat }
   /** world height of a demon's body centre (where bolts land) */
-  bodyZ(d: Demon) { return (d.kind === 'imp' ? 1.22 : d.kind === 'grumble' ? 1.12 : 0.8) * Math.min(1.25, this.map.spec.wallH ?? 1) * 0.5 + (d.kind === 'squeak' ? 0.22 : 0) }
+  bodyZ(d: Demon) {
+    if (d.wv) return (d.fz ?? 0) + HEIGHTS[d.kind] * Math.min(1.25, this.map.spec.wallH ?? 1) * (d.sc ?? 1) * 0.5
+    return (d.kind === 'imp' ? 1.22 : d.kind === 'grumble' ? 1.12 : 0.8) * Math.min(1.25, this.map.spec.wallH ?? 1) * 0.5 + (d.kind === 'squeak' ? 0.22 : 0) }
   bossPos(out: { x: number; y: number }) { const r = this.room, b = this.boss!; const k = b.dist + b.kb, w = b.wob > 0 ? Math.sin(b.wob * 55) * 0.07 * (b.wob / 0.25) : 0; out.x = r.sx + r.hx * k + r.rx * w; out.y = r.sy + r.hy * k + r.ry * w }
   orbPos(o: Orb, out: { x: number; y: number }) { const r = this.room; out.x = r.sx + r.hx * o.dist + r.rx * o.lat; out.y = r.sy + r.hy * o.dist + r.ry * o.lat }
   get bossPhase() { return this.isBoss ? this.chunkOf(this.ptr) : 0 }
   get bar() { return Math.min(this.piece.bars - 1, Math.floor(this.ptr / 16)) }
   get inDanger() {
+    if (this.wave) return this.wave.inDanger
     if (this.isBoss) { for (const o of this.orbs) if (o.on && o.dist < 4.2) return true; return false }
     const t = this.target
     return !!t && t.dist < 3.7 && this.diff !== 'story'
   }
 
-  private addPop(text: string, col: string, big = false, world?: { x: number; y: number; z: number }, fy = 0.4, fx = 0.5) {
+  addPop(text: string, col: string, big = false, world?: { x: number; y: number; z: number }, fy = 0.4, fx = 0.5) {
     let p = this.pops.find((q) => !q.on)
     if (!p) { p = this.pops[0]; for (const q of this.pops) if (q.t > p.t) p = q }
     p.on = true; p.text = text; p.col = col; p.t = 0; p.dur = big ? 1.6 : 1.1; p.big = big
     p.world = !!world
     if (world) { p.wx = world.x; p.wy = world.y; p.wz = world.z } else { p.fx = fx; p.fy = fy }
   }
-  private burst(x: number, y: number, z: number, n: number) {
+  burst(x: number, y: number, z: number, n: number) {
     if (this.reduced) n = Math.ceil(n / 2)
     for (let i = 0; i < n; i++) {
       const p = this.parts.find((q) => !q.on)
@@ -255,7 +279,7 @@ export class Game {
       p.life = p.max = 0.9 + this.rnd() * 0.5; p.frame = i & 1
     }
   }
-  private muzzle(n: number) {
+  muzzle(n: number) {
     if (this.reduced) n = 1
     for (let i = 0; i < n; i++) {
       const p = this.sparks.find((q) => !q.on)
@@ -266,7 +290,7 @@ export class Game {
     }
   }
   /** a spray of tiny gold/white sparks, flying out toward the player and sideways from the hit point */
-  private sparkBurst(x: number, y: number, z: number, n: number) {
+  sparkBurst(x: number, y: number, z: number, n: number) {
     if (this.reduced) n = Math.ceil(n / 2.5)
     let tx = this.camX - x, ty = this.camY - y
     const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l
@@ -275,14 +299,14 @@ export class Game {
       if (!p) return
       const a = this.rnd() * Math.PI * 2, sp = 1.3 + this.rnd() * 2.2, up = this.rnd()
       p.on = true; p.x = x + tx * 0.25; p.y = y + ty * 0.25; p.z = z + (this.rnd() - 0.5) * 0.2
-      p.vx = tx * sp * 0.9 + Math.cos(a) * sp * 0.7; p.vy = ty * sp * 0.9 + Math.sin(a) * sp * 0.7; p.vz = (up - 0.35) * 2.2
+      p.vx = tx * sp * (this.wave ? 0.2 : 0.9) + Math.cos(a) * sp * 0.7; p.vy = ty * sp * (this.wave ? 0.2 : 0.9) + Math.sin(a) * sp * 0.7; p.vz = (up - 0.35) * 2.2
       p.life = p.max = 0.35 + this.rnd() * 0.25
       // 0/1 = tiny gold note shard, 6 gold spark, 7 white spark
       p.frame = i % 4 === 0 ? i & 1 : 6 + (i & 1)
     }
   }
   /** coloured confetti that scatters and settles on the floor */
-  private confetti(x: number, y: number, z: number, n: number) {
+  confetti(x: number, y: number, z: number, n: number) {
     if (this.reduced) n = Math.ceil(n / 2.5)
     for (let i = 0; i < n; i++) {
       const p = this.parts.find((q) => !q.on)
@@ -294,7 +318,7 @@ export class Game {
       p.frame = 2 + (i & 3)
     }
   }
-  private fireBolt(tk: 0 | 1 | 2 | 3, d: Demon | null, oi: number, dmg: number, perfect: boolean, kill: boolean, ph: 0 | 1 | 2, ci: number) {
+  fireBolt(tk: 0 | 1 | 2 | 3, d: Demon | null, oi: number, dmg: number, perfect: boolean, kill: boolean, ph: 0 | 1 | 2, ci: number) {
     const b = this.bolts.find((q) => !q.on)
     if (!b) { if (tk !== 3) this.land({ on: false, t: 0, dur: 0, tk, d, oi, dmg, perfect, kill, ph, ci }); return }
     b.on = true; b.t = 0; b.dur = tk === 3 ? 0.5 : 0.1; b.tk = tk; b.d = d; b.oi = oi; b.dmg = dmg; b.perfect = perfect; b.kill = kill; b.ph = ph; b.ci = ci
@@ -323,15 +347,18 @@ export class Game {
     } else return
     const wx = t.x, wy = t.y
     this.shot.t = 0; this.shot.wx = wx; this.shot.wy = wy; this.shot.wz = z
-    this.sparkBurst(wx, wy, z, b.tk === 2 ? 8 : b.kill ? 16 : b.perfect ? 14 : 9)
+    this.sparkBurst(wx, wy, z, this.wave ? 7 : b.tk === 2 ? 8 : b.kill ? 16 : b.perfect ? 14 : 9)
     if (b.tk !== 2) {
       const lat = (this.rnd() - 0.5) * 0.5, ca = this.camAng
       const px = wx - Math.sin(ca) * lat, py = wy + Math.cos(ca) * lat
-      if (b.perfect) this.addPop('-2 PERFECT!', '#ffd76c', true, { x: px, y: py, z: z + 0.45 })
+      if (b.perfect && this.wave) {
+        // a long phrase would stack a pile of identical pops: show one every third of a second
+        if (this.clock - this.lastBeatPop > 0.35) { this.lastBeatPop = this.clock; this.addPop('ON THE BEAT!', '#ffd76c', false, { x: px, y: py, z: z - 0.1 }) }
+      } else if (b.perfect) this.addPop('-2 PERFECT!', '#ffd76c', true, { x: px, y: py, z: z + 0.45 })
       else if (!b.kill) this.addPop('-1', '#fff3d0', false, { x: px, y: py, z: z + 0.4 })
       if (b.perfect || b.kill || b.ph) { if (!this.reduced) this.kickT = 0.12 }
     }
-    if (b.tk === 0 && b.kill && b.d) this.harmonize(b.d)
+    if (b.tk === 0 && b.kill && b.d) this.harmonize(b.d, !!this.wave)
     if (b.tk === 1) {
       if (b.ph >= 1) this.phaseDone(b.ci)
       if (b.ph === 2 && this.boss && this.boss.dieT < 0) this.bossDefeated()
@@ -344,11 +371,23 @@ export class Game {
     this.harmony = Math.max(0, this.harmony - amount)
     this.faceHurtT = 0.7
     this.streak = 0
-    // red edge pulse: at most 3 per second
-    if (this.clock - this.lastVigAt >= 0.34) { this.lastVigAt = this.clock; this.vig = 1 }
+    this.edgePulse(this.wave ? 1.5 : 1)
     if (this.harmony <= 0) this.lose()
   }
+  /** a missed phrase demon finishes its dive and bites for double a normal bite */
+  waveBiteAmount() { return CFG[this.diff].bite * 2 }
+  waveBite() { this.hurtPlayer(this.waveBiteAmount()) }
+  /** red edge pulse: at most 3 per second, however many things go wrong at once */
+  edgePulse(strength = 1) { if (this.clock - this.lastVigAt >= 0.34) { this.lastVigAt = this.clock; this.vig = strength } }
+  /** a wrong/early/late phrase note: shake the view (never under reduced motion), jam the organ, grimace */
+  wrongFx(jam: boolean) {
+    if (!this.reduced) this.shakeT = Math.max(this.shakeT, 0.42)
+    if (jam) this.jamVisT = 0.6
+    this.faceHurtT = 0.9
+    this.smokeT = jam ? 0.5 : this.smokeT
+  }
   private lose() {
+    this.wave?.stop()
     this.phase = 'lose'
     clearGuide(); this.guideKey = ''
     this.emit()
@@ -377,6 +416,7 @@ export class Game {
   }
 
   private onNote(g: NoteGrade) {
+    if (this.wave && g.cluster == null) { this.wave.onNote(g); return }
     if (g.cluster != null || g.chordMember) return
     if (this.mode !== 'fight' || this.jamT > 0) return
     const exp = this.expected
@@ -457,9 +497,9 @@ export class Game {
   }
 
   /** tell the sheet-music overlay where the kid is (and how the last note went) */
-  private scoreSync(result?: NoteResult) { setScorePos(this.piece.scoreIdx[this.ptr] ?? this.piece.score.length, result) }
+  scoreSync(result?: NoteResult) { setScorePos(this.piece.scoreIdx[this.ptr] ?? this.piece.score.length, result) }
 
-  private harmonize(d: Demon, quiet = false) {
+  harmonize(d: Demon, quiet = false) {
     if (d.state !== 0) return
     d.state = 1; d.dieT = 0.85; d.dying = false
     this.st.kills++
@@ -540,6 +580,8 @@ export class Game {
     if (this.faceGrinT > 0) this.faceGrinT -= dt
     if (this.shot.t < 1) this.shot.t += dt / 0.18
     if (this.kickT > 0) this.kickT -= dt
+    if (this.shakeT > 0) this.shakeT -= dt
+    if (this.jamVisT > 0) this.jamVisT -= dt
     if (this.killT > 0) this.killT -= dt
     for (const b of this.bolts) if (b.on) { b.t += dt; if (b.t >= b.dur) { b.on = false; this.land(b) } }
     if (this.introT > 0) this.introT -= dt
@@ -551,6 +593,7 @@ export class Game {
     }
 
     if (this.phase === 'title' || this.phase === 'play') this.updateWorld(dt)
+    if (this.wave && this.phase === 'play' && this.mode === 'fight' && this.endT < 0) this.wave.update(dt)
     if (this.phase === 'play' && this.endT >= 0) {
       this.endT -= dt
       if (this.endT <= 0) { this.endT = -1; this.phase = this.isBoss ? 'win' : 'tally'; clearGuide(); this.guideKey = ''; this.emit() }
@@ -616,7 +659,7 @@ export class Game {
       if (d.state === 1) d.kb += dt * 2.6; else d.kb *= Math.exp(-dt * 11)
       if (d.lungeT > 0) d.lungeT -= dt
       if (d.state === 1) { d.dieT -= dt; if (d.dieT <= 0) d.state = 2; continue }
-      if (d.dying) continue
+      if (d.dying || d.wv) continue
       if (d.room !== this.roomIdx || this.mode !== 'fight' || demo) continue
       const cfg = CFG[this.diff]
       if (cfg.speed > 0) {
@@ -644,7 +687,7 @@ export class Game {
     }
 
     // ---- room cleared?
-    if (this.mode === 'fight' && !this.isBoss && this.endT < 0) {
+    if (this.mode === 'fight' && !this.isBoss && !this.wave && this.endT < 0) {
       if (demo) {
         this.holdT += dt
         if (this.holdT > 3.2) { this.holdT = 0; this.roomIdx++; this.mode = 'glide'; if (this.roomIdx >= map.rooms.length) { this.roomIdx = 0; this.s = 0; this.speed = 0; pathAt(map, 0, this.tmp); this.camX = this.tmp.x; this.camY = this.tmp.y; this.camAng = map.rooms[0].ang } }
@@ -666,6 +709,7 @@ export class Game {
   private onArrive() {
     if (this.phase === 'play' && this.bfgPending) { this.bfgPending = false; this.fireBfg() }
     if (this.isBoss) this.lastBar = -1
+    if (this.wave && this.phase === 'play') this.wave.begin()
     this.hintT = 0
   }
 
@@ -707,19 +751,20 @@ export class Game {
   bossHpFrac() { let hp = 0, max = 0; this.piece.chunks.forEach((c, i) => { max += c.e - c.s; hp += Math.max(0, this.bossHp[i] ?? 0) }); return max ? hp / max : 0 }
 
   // ------------------------------------------------------------ the end of a level
-  private finish() {
+  finish() {
+    this.wave?.stop()
     const st = this.st, total = this.piece.notes.length
     const acc = st.hits + st.wrongs > 0 ? st.hits / (st.hits + st.wrongs) : 1
-    const notesPct = Math.min(1, (st.hits + st.skipped) / Math.max(1, total))
-    const killsPct = this.isBoss ? 1 : st.demons ? st.kills / st.demons : 1
+    const notesPct = this.wave ? 1 : Math.min(1, (st.hits + st.skipped) / Math.max(1, total))
+    const killsPct = this.isBoss || this.wave ? 1 : st.demons ? st.kills / st.demons : 1
     const stars = 1 + (acc >= 0.75 ? 1 : 0) + (acc >= 0.92 ? 1 : 0)
     const id = this.spec.id, old = this.save.best[id]
     const better = !old || stars > old.stars || (stars === old.stars && acc > old.acc)
     if (better) this.save.best[id] = { stars, acc, time: st.time }
-    this.save.unlocked = Math.max(this.save.unlocked, Math.min(LEVELS.length, this.levelIdx + 2))
+    if (this.levelIdx < LEGACY_LEVELS) this.save.unlocked = Math.max(this.save.unlocked, Math.min(LEGACY_LEVELS, this.levelIdx + 2))
     psave('bachdoom', this.save)
     this.result = { stars, acc, notesPct, killsPct, time: st.time, newBest: better }
-    this.endT = this.isBoss ? 3.2 : 1.4
+    this.endT = this.isBoss ? 3.2 : this.wave ? 2.4 : 1.4
     if (!this.isBoss) this.addPop('LEVEL CLEAR!', '#ffd76c', true, undefined, 0.35)
     this.faceGrinT = 3
     clearGuide(); this.guideKey = ''
@@ -727,6 +772,7 @@ export class Game {
 
   // ------------------------------------------------------------ keybed guide
   private syncGuide() {
+    if (this.wave) { this.wave.syncGuide(); return }
     let key = '', targets: number[] = [], tone: 'next' | 'danger' | 'gold' = 'next'
     if (this.phase === 'play' && this.endT < 0 && this.mode === 'fight' && this.diff !== 'ultra' && this.expected != null) {
       if (this.isBoss && this.diff === 'story' && this.chordT > 0) {
@@ -741,7 +787,7 @@ export class Game {
     if (key) setGuide(targets, tone); else clearGuide()
   }
 
-  dispose() { clearScore('bachdoom'); clearGuide(); this.listeners.clear() }
+  dispose() { this.wave?.dispose(); clearScore('bachdoom'); clearGuide(); this.listeners.clear() }
 
   // dev helpers (used by tests through window.__bachdoom)
   noteLabel(n: number) { return noteName(n) }

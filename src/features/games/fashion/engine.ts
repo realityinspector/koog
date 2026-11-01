@@ -11,6 +11,8 @@ import {
   parseChord, piecesFor, runwayNotes, saveSave, starsOf, wheelCaption, WHEEL_LABEL, CAT_INFO,
   type Cat, type Era, type JudgeSay, type Look, type Pal, type Phase, type Piece, type RunNote, type RunStats, type Save, type SavedLook, type Scores,
 } from './data'
+import type { Phrase, Rung } from '../../../music/phrases'
+import { RULES, easier, masteryOf, songPhrases, startAttempt, recordRung, stopPhrase, demo as singPhrase, wrongNote, ord, pcName, type AttemptHandle } from '../phraseKit'
 import { NEUTRAL, buildFigure, drawFigure, drawHatAlone, goofyHat, makeAudience, type Figure, type Layer, type Pose } from './sprites'
 
 export interface Toast { id: number; text: string; kind: 'good' | 'oops' | 'boom' | 'info' }
@@ -21,6 +23,14 @@ export interface Snapshot {
   bpm: number; done: number; total: number; confidence: number; nextName: string; started: boolean
   toast: Toast | null; says: JudgeSay[] | null; scores: Scores | null; stars: number; saved: boolean
   save: Save; newUnlock: string | null; reduced: boolean; zoneHit: number
+  /** phrase walk HUD: which phrase of how many, the era's rung, and what to do now */
+  ph?: { i: number; n: number; rung: Rung; text: string } | null
+}
+/** Phrase walk: the runway is walked phrase by phrase. The model waits on a mark, the phrase is taught, then you play it. */
+interface PW {
+  list: Phrase[]; pi: number; rung: Rung; stage: 'teach' | 'play' | 'pose' | 'stumble'
+  t0: number; until: number; fails: number; clean: number; map: number[]; ei: number; tRef: number
+  att: AttemptHandle | null; bpm: number
 }
 
 const TAU = Math.PI * 2
@@ -78,6 +88,11 @@ export class Game {
   private lastChord: string | null = null
   private wheelPulse = -9
   private viewW = 0
+  private pwMode = false
+  private pw: PW | null = null
+  private gasps: { x: number; y: number; t0: number }[] = []
+  private gaspAt = -9
+  private stumbleAt = -9
 
   constructor(canvas: HTMLCanvasElement, root: HTMLElement, onSnap: (s: Snapshot) => void) {
     this.canvas = canvas; this.root = root; this.onSnap = onSnap
@@ -126,6 +141,7 @@ export class Game {
       bpm: (r?.piece ?? this.pieces[this.pieceIdx])?.song.bpm ?? 100, done: r ? r.hits : 0, total: r ? r.notes.filter((n) => n.note != null).length : 0, confidence: r ? r.confidence : 0,
       nextName: next != null ? noteName(next) : '', started: !!r?.started,
       toast: this.toast, says: this.says, scores: this.scores, stars: this.stars, saved: this.saved, save: this.save, newUnlock: this.newUnlock, reduced: this.rm, zoneHit: this.zoneHit,
+      ph: this.pw ? { i: this.pw.pi + 1, n: this.pw.list.length, rung: this.pw.rung, text: this.pwText() } : null,
     }
   }
   private emit() { if (!this.dead) this.onSnap(this.snap()) }
@@ -163,6 +179,13 @@ export class Game {
   setPal(p: Pal) { this.pal = p; this.figDirty = true; this.wheelPulse = this.clock; this.emit() }
   startRunway() {
     if (!this.pieces.length) return
+    this.pwMode = false
+    this.setPhase('runway')
+  }
+  /** the runway walked phrase by phrase: marks, teaching, and a scaffold rung that grows with the era */
+  startPhraseWalk() {
+    if (!this.pieces.length) return
+    this.pwMode = true
     this.setPhase('runway')
   }
   retryRunway() { this.setPhase('runway') }
@@ -215,14 +238,18 @@ export class Game {
     const sc = { owner: 'fashion', title: piece.title, notes: notes.map((n) => ({ note: n.note, beats: n.beats })), key: piece.song.key, bpm: piece.song.bpm, beatsPerBar: piece.song.beatsPerBar ?? 4, pickup: piece.song.pickup, beatUnit: piece.song.beatUnit, style: piece.song.style, harmony: piece.song.harmony }
     this.lh = new GameLh(sc)
     setScore(sc, idx)
+    this.pw = null
+    if (this.pwMode) this.initPw()
     this.updateGuide()
     this.hat.fly = false; this.ovation = 0
   }
   private leaveRunway() {
+    if (this.pw) { this.pw.att?.cancel(); stopPhrase(); this.pw = null }
     if (this.prevKey) { useHarmonyStore.getState().setKey(this.prevKey as never); this.prevKey = null }
     clearGuide(); clearScore('fashion')
   }
   private updateGuide() {
+    if (this.pw) { this.pwGuide(); return }
     const r = this.run
     if (!r || r.ended) { clearGuide(); return }
     const t: number[] = []
@@ -273,6 +300,7 @@ export class Game {
       this.emit()
       return
     }
+    if (this.pw && !this.pwJudge(g)) return
     r.started = true
     st.allNotes++
     if (g.kind !== 'spicy') st.inKey++
@@ -283,13 +311,15 @@ export class Game {
       const sec = r.notes[r.idx].beats * 60 / r.piece.song.bpm
       r.foot = r.foot ? 0 : 1; r.stepT0 = this.clock; r.stepDur = clamp(sec * 0.85, 0.24, 0.55); r.lastHit = this.clock
       r.confidence = clamp(r.confidence + (onBeat ? 0.14 : -0.05), 0, 1)
-      setScorePos(r.idx + 1, 'hit')
+      const own = !this.pw?.att?.live // during a recorded phrase the engine owns the sheet music
+      if (own) setScorePos(r.idx + 1, 'hit')
       r.idx++
-      while (r.idx < r.notes.length && r.notes[r.idx].note == null) { r.idx++; setScorePos(r.idx) }
+      while (r.idx < r.notes.length && r.notes[r.idx].note == null) { r.idx++; if (own) setScorePos(r.idx) }
       r.target = r.cum[Math.min(r.idx, r.notes.length)] / r.total
       if (r.idx >= r.notes.length) { st.homeFinish = pc(g.note) === useHarmonyStore.getState().key.tonic; this.finish() }
       else this.updateGuide()
       if (onBeat && r.confidence > 0.6 && r.hits % 4 === 0) this.floatText('Strut!', '#ffe36e')
+      if (this.pw) this.pwAfterHit()
       this.emit()
     } else {
       st.wrong++
@@ -339,6 +369,191 @@ export class Game {
     this.face = 'proud'; this.faceUntil = this.clock + secs
     for (let i = 0; i < flashes; i++) this.flashQ.push(this.clock + 0.15 + i * 0.4)
     this.floatText(text, '#ffe36e')
+  }
+
+
+  // ---------------- phrase walk (phrase memorization) ----------------
+  private pwText(): string {
+    const pw = this.pw
+    if (!pw) return ''
+    if (pw.stage === 'teach') return 'Listen and watch, then it is your turn'
+    if (pw.stage === 'pose') return 'Clean phrase! Strike a pose'
+    if (pw.stage === 'stumble') return 'Back to the mark. Listen again'
+    return RULES[pw.rung].blurb
+  }
+
+  /** cut the runway part of the piece into phrases (bigger ones in later eras) and start teaching the first */
+  private initPw() {
+    const r = this.run!, song = r.piece.song
+    const ei = Math.max(0, ERAS.findIndex((e) => e.id === this.era.id))
+    const rung: Rung = (['follow', 'echo', 'memory', 'timed', 'timed', 'timed'] as Rung[])[Math.min(5, ei)]
+    let list = songPhrases(song.id, ei >= 2 ? 2 : 1).filter((p) => p.end <= r.notes.length)
+    if (list.length < 2) list = songPhrases(song.id, 1).filter((p) => p.end <= r.notes.length)
+    list = list.slice(0, 6)
+    if (!list.length) { this.pwMode = false; return }
+    // the walk ends where the last phrase ends
+    const endIx = list[list.length - 1].end
+    r.notes = r.notes.slice(0, endIx)
+    r.cum = [0]; for (const n of r.notes) r.cum.push(r.cum[r.cum.length - 1] + n.beats)
+    r.total = r.cum[r.cum.length - 1] || 1
+    r.stats = newStats(r.notes.filter((n) => n.note != null).length)
+    this.pw = { list, pi: 0, rung, stage: 'teach', t0: 0, until: 0, fails: 0, clean: 0, map: [], ei: 0, tRef: 0, att: null, bpm: RULES[rung].bpm }
+    this.startTeach()
+  }
+
+  /** at a mark: the model waits, the phrase is shown and sung (a brand-new phrase is a recorded "listen") */
+  private startTeach() {
+    const pw = this.pw!, r = this.run!, ph = pw.list[pw.pi]
+    pw.att?.cancel(); pw.att = null
+    pw.stage = 'teach'; pw.ei = 0; pw.tRef = 0
+    pw.map = []; for (let i = ph.start; i < ph.end; i++) if (r.notes[i]?.note != null) pw.map.push(i)
+    r.idx = ph.start; r.target = r.cum[ph.start] / r.total
+    pw.bpm = RULES[pw.rung].bpm
+    pw.t0 = this.clock + 0.5
+    const dur = (ph.notes[ph.notes.length - 1].beat + ph.notes[ph.notes.length - 1].beats) * 60 / pw.bpm
+    pw.until = pw.t0 + dur + 0.8
+    const fresh = masteryOf(ph.id).rung === 'listen'
+    window.setTimeout(() => {
+      if (this.dead || this.pw !== pw || pw.stage !== 'teach') return
+      if (fresh) pw.att = startAttempt(ph, 'listen', { bpm: pw.bpm }); else void singPhrase(ph, pw.bpm)
+    }, 500)
+    this.say(pw.fails ? 'Let\'s hear it again. Take your time.' : `Mark ${pw.pi + 1}: learn this phrase`, 'info', 2.6)
+    setScore({ owner: 'fashion', title: r.piece.title, notes: r.notes.map((n) => ({ note: n.note, beats: n.beats })), key: r.piece.song.key, bpm: r.piece.song.bpm, beatsPerBar: r.piece.song.beatsPerBar ?? 4, pickup: r.piece.song.pickup, beatUnit: r.piece.song.beatUnit, style: r.piece.song.style, harmony: r.piece.song.harmony }, ph.start)
+    this.emit()
+  }
+
+  private pwTick() {
+    const pw = this.pw!, r = this.run!, ph = pw.list[pw.pi]
+    if (r.ended) return
+    if (pw.stage === 'teach' && this.clock >= pw.until) {
+      pw.stage = 'play'
+      // the engine records this attempt (shared mastery), at the kid's own rung for this phrase when that is lower
+      pw.att = startAttempt(ph, recordRung(ph, pw.rung), { bpm: pw.bpm, timingWindowMs: RULES[pw.rung].windowMs ?? undefined })
+      this.updateGuide(); this.emit()
+    } else if ((pw.stage === 'pose' || pw.stage === 'stumble') && this.clock >= pw.until) {
+      if (pw.stage === 'pose') pw.pi++
+      this.startTeach()
+    }
+  }
+
+  private pwGuide() {
+    const pw = this.pw!, r = this.run!
+    if (!pw || r.ended) { clearGuide(); return }
+    const ph = pw.list[pw.pi]
+    if (pw.stage === 'play' && RULES[pw.rung].guide === 'next' && pw.ei < ph.notes.length) setGuide([ph.notes[pw.ei].note], 'next')
+    else if (pw.stage === 'play') clearGuide()
+  }
+
+  /** judge one note in the phrase walk. true = a right note, carry on into the normal strut. false = handled here. */
+  private pwJudge(g: { note: number; t?: number }): boolean {
+    const pw = this.pw!, r = this.run!, ph = pw.list[pw.pi]
+    if (pw.stage !== 'play') return false
+    const n = ph.notes[pw.ei]
+    if (!n) return false
+    const rule = RULES[pw.rung]
+    const gt = g.t ?? performance.now()
+    if (g.note !== n.note) {
+      const w = wrongNote(pw.ei, n.note, g.note)
+      this.pwStumble(`${w.short}. ${w.long} Let's hear it again.`, 'wrong')
+      return false
+    }
+    if (pw.ei === 0) pw.tRef = gt
+    if (rule.windowMs != null && pw.ei > 0) {
+      const delta = gt - (pw.tRef + n.beat * 60000 / pw.bpm)
+      if (Math.abs(delta) > rule.windowMs) {
+        this.pwStumble(`The ${ord(pw.ei + 1)} step was a little ${delta < 0 ? 'early' : 'late'}. Try it again right on the beat.`, delta < 0 ? 'early' : 'late')
+        return false
+      }
+    }
+    pw.ei++
+    void r
+    return true
+  }
+
+  private pwAfterHit() {
+    const pw = this.pw!, r = this.run!, ph = pw.list[pw.pi]
+    if (pw.stage !== 'play' || pw.ei < ph.notes.length) { this.updateGuide(); return }
+    // a clean phrase: pose, camera sparkles, and the engine records the pass
+    pw.clean++; pw.fails = 0
+    pw.stage = 'pose'; pw.until = this.clock + 1.9
+    if (!r.ended) this.strikePose(1.6, 4, 'Clean phrase!')
+    this.sparkleAroundModel('#fff3a8', 10)
+    clearGuide()
+    const last = pw.pi + 1 >= pw.list.length
+    this.say(last ? 'Every phrase, one by one. Star walk!' : `Phrase ${pw.pi + 1} done! On to the next mark.`, 'good', 2.2)
+    pw.att = null
+  }
+
+  /** wrong or late: the model stumbles, the audience gasps. Kind tip, no shaming. Back to the mark to learn it again. */
+  private pwStumble(tip: string, _why: string) {
+    void _why
+    const pw = this.pw!, r = this.run!
+    if (pw.stage !== 'play') return
+    pw.stage = 'stumble'; pw.until = this.clock + 2.2
+    pw.fails++
+    r.stats.wrong++; r.stats.allNotes++
+    r.confidence = clamp(r.confidence - 0.2, 0, 1)
+    this.stumbleAt = this.clock; r.wobbleT0 = this.clock
+    this.face = 'oops'; this.faceUntil = this.clock + 1.2
+    this.gaspAt = this.clock
+    const pick: Person[] = []
+    for (const a of [...this.audience].sort(() => Math.random() - 0.5)) { if (pick.length < 3 && pick.every((q) => Math.abs(q.x - a.x) > 90 || Math.abs(q.y - a.y) > 40)) pick.push(a) }
+    for (const a of pick) this.gasps.push({ x: a.x, y: a.y - 30 * a.u, t0: this.clock })
+    clearGuide()
+    if (pw.fails >= 2 && pw.rung !== 'follow') { pw.rung = easier(pw.rung); this.say(`Let's practise it with a little more help (${pw.rung}).`, 'info', 3) }
+    else this.say(tip, 'oops', 3.4)
+    // back to the mark
+    const ph = pw.list[pw.pi]
+    r.idx = ph.start; r.target = r.cum[ph.start] / r.total
+    pw.att?.cancel(); pw.att = null
+    this.emit()
+  }
+
+  private markPos(p: number) {
+    const w = this.w, h = this.h
+    const e = p * p * (3 - 2 * p) * 0.5 + p * 0.5
+    return { x: w * 0.5, y: lerp(h * 0.56, h * 0.9, e), s: lerp(h * 0.32, h * 0.62, e) / FIG_H }
+  }
+  /** tape marks on the runway where each phrase starts; the next one glows */
+  private drawMarks(g: CanvasRenderingContext2D) {
+    const pw = this.pw!, r = this.run!
+    pw.list.forEach((ph, i) => {
+      if (i < pw.pi) return
+      const m = this.markPos(r.cum[ph.start] / r.total), cur = i === pw.pi
+      const rw = 62 * m.s * 1.3, rh = 11 * m.s * 1.3
+      g.save()
+      g.globalAlpha = cur ? 0.95 : 0.5
+      g.strokeStyle = cur ? '#ffe36e' : 'rgba(255,255,255,.7)'; g.lineWidth = cur ? 3 : 2
+      if (cur && !this.rm) { g.shadowColor = '#ffe36e'; g.shadowBlur = 8 + Math.sin(this.clock * 3) * 4 }
+      g.beginPath(); g.ellipse(m.x, m.y, rw, rh, 0, 0, TAU); g.stroke()
+      g.shadowBlur = 0; g.fillStyle = cur ? '#ffe36e' : '#fff'; g.font = `800 ${Math.max(10, Math.round(14 * m.s * 1.6))}px system-ui, sans-serif`; g.textAlign = 'center'
+      g.fillText(String(i + 1), m.x + rw + 12 * m.s * 1.3, m.y + 5)
+      g.restore()
+    })
+  }
+  /** the phrase, shown as note chips while it is taught; hidden on the harder rungs while you play */
+  private drawPhraseCard(g: CanvasRenderingContext2D) {
+    const pw = this.pw!, ph = pw.list[pw.pi]
+    const show = pw.stage === 'teach' || (pw.stage === 'play' && RULES[pw.rung].names && pw.rung !== 'echo')
+    if (!show) return
+    const n = ph.notes.length, cw = Math.max(34, Math.min(56, this.h * 0.08)), gap = 8
+    const tw = n * cw + (n - 1) * gap + 28, x0 = this.w / 2 - tw / 2, y0 = this.h * 0.2
+    g.save()
+    g.fillStyle = 'rgba(20,8,50,.82)'; g.strokeStyle = 'rgba(255,230,140,.7)'; g.lineWidth = 2
+    g.beginPath(); g.roundRect(x0, y0, tw, cw + 24, 14); g.fill(); g.stroke()
+    g.textAlign = 'center'; g.font = `700 ${Math.max(11, Math.round(cw * 0.26))}px system-ui, sans-serif`; g.fillStyle = '#ffe9a0'
+    g.fillText(pw.stage === 'teach' ? `Phrase ${pw.pi + 1}: listen` : `Phrase ${pw.pi + 1}: your turn`, this.w / 2, y0 + 15)
+    const bs = 60 / pw.bpm
+    ph.notes.forEach((nt, i) => {
+      const cx = x0 + 14 + i * (cw + gap) + cw / 2, cy = y0 + 20 + cw / 2
+      const sung = pw.stage === 'teach' && this.clock >= pw.t0 + nt.beat * bs && this.clock < pw.t0 + (nt.beat + nt.beats) * bs
+      const done = pw.stage === 'play' && i < pw.ei
+      g.fillStyle = sung ? '#ffe36e' : done ? '#6fd38a' : 'rgba(255,255,255,.14)'
+      g.beginPath(); g.arc(cx, cy, cw / 2 - 2, 0, TAU); g.fill()
+      g.fillStyle = sung || done ? '#2a1745' : '#fff'; g.font = `800 ${Math.round(cw * 0.4)}px system-ui, sans-serif`; g.textBaseline = 'middle'
+      g.fillText(pcName(nt.note), cx, cy + 1)
+    })
+    g.restore()
   }
 
   // ---------------- geometry ----------------
@@ -454,6 +669,8 @@ export class Game {
     }
     this.ovation += ((this.clock < this.ovationUntil ? 1 : 0) - this.ovation) * Math.min(1, dt * 6)
     const r = this.run
+    if (this.pw && this.phase === 'runway') this.pwTick()
+    if (this.gasps.length) this.gasps = this.gasps.filter((x) => this.clock - x.t0 < 1.3)
     if (r && this.phase === 'runway') {
       r.p += (r.target - r.p) * Math.min(1, dt * 5)
       r.confidence = Math.max(0, r.confidence - dt * 0.03)
@@ -516,6 +733,8 @@ export class Game {
       if (t < r.poseUntil) { p.tilt = -0.045 * k; p.arm = 0.35; p.sway = 0.03 * k; p.liftL = 0; p.liftR = 0; p.swingL = 0; p.swingR = 0 }
       const wu = (t - r.wobbleT0) / 0.6
       if (wu >= 0 && wu < 1) p.tilt += Math.sin(wu * TAU * 2) * 0.07 * (1 - wu) * k
+      const su = (t - this.stumbleAt) / 0.9
+      if (su >= 0 && su < 1) { p.tilt += Math.sin(su * TAU * 1.5) * 0.14 * (1 - su) * k; p.bob += Math.sin(su * Math.PI) * 4 * k; p.liftL = 0; p.liftR = 0 }
     } else {
       p.bob = Math.sin(t * 2) * 0.8 * k
       p.sway = Math.sin(t * 1.3) * 0.02 * k
@@ -536,6 +755,7 @@ export class Game {
     const runLike = this.phase === 'runway' || this.phase === 'results'
     this.drawBg(g, runLike ? 'run' : 'style', era)
     if (runLike) this.drawAudience(g)
+    if (this.pw && this.phase === 'runway') this.drawMarks(g)
     // model
     const f = this.fig
     if (f) {
@@ -565,6 +785,14 @@ export class Game {
       g.save(); g.translate(s.x, s.y); g.globalAlpha = 0.9 * k; g.fillStyle = s.col
       const r = s.r * (0.6 + 0.4 * k)
       g.beginPath(); for (let i = 0; i < 8; i++) { const ang = (i / 8) * TAU, rr = i % 2 ? r * 0.28 : r; g.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr) } g.closePath(); g.fill(); g.restore()
+    }
+    if (this.pw && this.phase === 'runway') this.drawPhraseCard(g)
+    for (const gp of this.gasps) {
+      const a = (this.clock - gp.t0) / 1.3
+      g.save(); g.globalAlpha = a < 0.7 ? 1 : 1 - (a - 0.7) / 0.3
+      g.font = `800 ${Math.max(12, Math.round(h * 0.036))}px system-ui, sans-serif`; g.textAlign = 'center'
+      g.lineWidth = 4; g.strokeStyle = 'rgba(20,8,40,.9)'; const yy = gp.y - 30 - (this.rm ? 0 : a * 10)
+      g.strokeText('Ooh!', gp.x, yy); g.fillStyle = '#ffe9a0'; g.fillText('Ooh!', gp.x, yy); g.restore()
     }
     for (const fl of this.floaters) {
       const a = (this.clock - fl.t0) / 1.4
@@ -723,7 +951,8 @@ export class Game {
     const stand = this.ovation > 0.5
     for (const p of this.audience) {
       const spr = this.audSprites[stand ? 1 : 0][p.v]
-      const bounce = stand && !this.rm ? Math.abs(Math.sin(this.clock * 5 + p.ph)) * 4 * p.u : 0
+      const gu = (this.clock - this.gaspAt) / 0.5
+      const bounce = (stand && !this.rm ? Math.abs(Math.sin(this.clock * 5 + p.ph)) * 4 * p.u : 0) + (gu >= 0 && gu < 1 && !this.rm ? Math.sin(gu * Math.PI) * 5 * p.u : 0)
       const k = p.u / (this.audSprites[0][0].width / 40 / (this.dpr * 0 + 1)) // sprite px per unit
       void k
       const sc = this.audSprites[0][0].width / 40

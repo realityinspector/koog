@@ -3,6 +3,8 @@
 import { SONGS, type Song, type SongNote } from '../../songs/songs'
 import type { Key } from '../../../music/theory'
 import { PRELUDE_C, PRELUDE_PHASES, preludeFigure } from '../../../music/scores'
+import { segment } from '../../../music/phraseEngine'
+import type { Phrase } from '../../../music/phrases'
 import { CEIL_KINDS, FLOOR_KINDS, WALL_KINDS } from './types'
 import type { CeilKind, DemonKind, FloorKind, WallKind } from './types'
 
@@ -12,8 +14,12 @@ export interface LevelSpec {
   id: string; name: string; songId: string; take?: number; reps?: number; boss?: boolean
   rooms: RoomSpec[]; fog: [number, number, number]; fogDist: number; wallH?: number; demons: DemonKind[]
   blurb: string; fact: string
-  /** which episode's tab the level lives under (1 or 2); defaults to 1 */
-  episode?: 1 | 2
+  /** which episode's tab the level lives under (0 = Boot Camp, 1 or 2); defaults to 1 */
+  episode?: 0 | 1 | 2
+  /** a PHRASE WAVES level (Galaga-style formation that dives in time with a short phrase) instead of a room-by-room fight */
+  phrase?: PhraseCfg
+  /** phrase levels in episode 1/2 sit in the menu just before this level id, and unlock together with it */
+  before?: string
   /** last level of the episode: shown as BOSS on the title screen, but played as a normal (big) demon fight */
   finale?: boolean
   /** colour of the sconce flames and the light they throw (default warm orange) */
@@ -21,8 +27,13 @@ export interface LevelSpec {
   /** soft colour wash over the whole level's light, added to every lit pixel (0..~40 each) */
   ambient?: [number, number, number]
 }
-export const EPISODES: { n: 1 | 2; name: string }[] = [{ n: 1, name: 'Episode 1: The Cathedral' }, { n: 2, name: 'Episode 2: Symphony of Shadows' }]
-export const episodeOf = (l: { episode?: 1 | 2 }): 1 | 2 => l.episode ?? 1
+/** which phrase a phrase-wave level teaches: segment(song, size)[index], optionally cut to its first `trim` notes.
+ *  slow stretches time (the Prelude's sixteenths are too fast to dive at). */
+export interface PhraseCfg { songId: string; size: 1 | 2 | 3; index: number; trim?: number; slow?: number; cap?: number }
+export const EPISODES: { n: 0 | 1 | 2; name: string }[] = [{ n: 0, name: 'Episode 0: Boot Camp' }, { n: 1, name: 'Episode 1: The Cathedral' }, { n: 2, name: 'Episode 2: Symphony of Shadows' }]
+export const episodeOf = (l: { episode?: 0 | 1 | 2 }): 0 | 1 | 2 => l.episode ?? 1
+/** the first 11 levels are the original ones; saved progress (`unlocked`) counts them in this order. New levels are appended after them. */
+export const LEGACY_LEVELS = 11
 
 const R = (w: number, d: number, turn: RoomSpec['turn'], wall: WallKind, floor: FloorKind, ceil: CeilKind, props: PropKind[], far?: WallKind): RoomSpec => ({ w, d, turn, wall, floor, ceil, props, far })
 
@@ -61,7 +72,54 @@ export const LEVELS: LevelSpec[] = [
   { id: 'E2M6', torch: [190,215,255], ambient: [8,14,34], episode: 2, finale: true, name: 'The Moonlit Cathedral', songId: 'moonlight', reps: 2, fog: [14, 18, 48], fogDist: 22, wallH: 2.0, demons: ['grumble', 'imp', 'squeak'],
     blurb: 'Final fight: Beethoven\'s Moonlight Sonata, slow and steady.', fact: 'Beethoven\'s Moonlight Sonata got its name after he died. A poet said it sounded like moonlight on a lake.',
     rooms: [R(11, 12, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes'), R(11, 12, 'R', 'marble', 'checker', 'vault', ['column', 'bust']), R(13, 14, 'L', 'glass', 'checker', 'vault', ['column', 'candles', 'bust'], 'pipes')] },
+  // ---- Episode 0: Boot Camp + phrase rehearsals before the bosses (appended so saved progress keeps its meaning) ----
+  { id: 'E0M1', torch: [255,200,110], ambient: [24,12,2], episode: 0, name: 'Two Notes', songId: 'ode', phrase: { songId: 'ode', size: 1, index: 2, trim: 2 }, wallH: 2, fog: [34, 22, 20], fogDist: 15, demons: ['squeak', 'imp'],
+    blurb: 'Boot Camp: two notes from Ode to Joy. Play each one the moment its demon swoops.', fact: 'A phrase is a tiny musical sentence. Even two notes are a phrase, if you play the right notes at the right time.',
+    rooms: [R(9, 11, 'S', 'wood', 'planks', 'beams', ['stand', 'column'])] },
+  { id: 'E0M2', torch: [255,200,110], ambient: [24,12,2], episode: 0, name: 'Three Notes', songId: 'ode', phrase: { songId: 'ode', size: 1, index: 3 }, wallH: 2, fog: [34, 22, 20], fogDist: 15, demons: ['imp', 'squeak'],
+    blurb: 'Boot Camp: a rising three-note phrase.', fact: 'Notes that go up one step at a time are called a scale run. C, D, E is the start of the C major scale.',
+    rooms: [R(9, 11, 'S', 'wood', 'planks', 'beams', ['bust', 'column'])] },
+  { id: 'E0M3', torch: [255,190,120], ambient: [20,6,16], episode: 0, name: 'Dance Steps', songId: 'minuet', phrase: { songId: 'minuet', size: 1, index: 0 }, wallH: 2, fog: [40, 22, 52], fogDist: 17, demons: ['grumble', 'squeak'],
+    blurb: 'Boot Camp: the first three notes of Minuet, with a dance rhythm.', fact: 'In a minuet the notes do not all last the same time. Long, short, short: that rhythm is the dance.',
+    rooms: [R(9, 11, 'S', 'marble', 'checker', 'gold', ['column', 'candles'])] },
+  { id: 'E0M4', torch: [255,200,110], ambient: [24,12,2], episode: 0, name: 'Six-Note Chain', songId: 'ode', phrase: { songId: 'ode', size: 2, index: 0 }, wallH: 2, fog: [34, 22, 20], fogDist: 15, demons: ['imp', 'grumble', 'squeak'],
+    blurb: 'Boot Camp: two phrases chained into six notes.', fact: 'Musicians learn long tunes by chaining short phrases together, like joining train cars.',
+    rooms: [R(9, 11, 'S', 'brick', 'flag', 'beams', ['stand', 'column'], 'wood')] },
+  { id: 'E0M5', torch: [255,190,120], ambient: [20,6,16], episode: 0, name: 'The Whole Line', songId: 'minuet', phrase: { songId: 'minuet', size: 3, index: 0, cap: 8 }, wallH: 2, fog: [40, 22, 52], fogDist: 17, demons: ['grumble', 'imp', 'squeak'],
+    blurb: 'Boot Camp graduation: a whole line of Minuet in G.', fact: 'A whole line of music is usually four bars long. You just learned one by building it up, one phrase at a time.',
+    rooms: [R(11, 12, 'S', 'velvet', 'carpet', 'gold', ['candles', 'bust', 'column'], 'marble')] },
+  { id: 'E1P', torch: [255,180,90], ambient: [8,4,22], episode: 1, before: 'E1M5', name: 'Prelude Rehearsal', songId: 'prelude', phrase: { songId: 'prelude', size: 2, index: 0, slow: 2 }, wallH: 2, fog: [26, 16, 50], fogDist: 20, demons: ['imp', 'squeak'],
+    blurb: 'Rehearse the first bar of the Prelude before the Cacophodemon, slowly.', fact: 'Bach\'s Prelude in C is one broken chord, played the same way in every bar. Learn one bar and you know most of it.',
+    rooms: [R(11, 12, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes')] },
+  { id: 'E2P', torch: [190,215,255], ambient: [8,14,34], episode: 2, before: 'E2M6', name: 'Moonlight Rehearsal', songId: 'moonlight', phrase: { songId: 'moonlight', size: 2, index: 0 }, wallH: 2, fog: [14, 18, 48], fogDist: 20, demons: ['grumble', 'squeak'],
+    blurb: 'Rehearse the rolling triplets of Moonlight Sonata before the final fight.', fact: 'The Moonlight Sonata rolls along in triplets: three notes to every beat, like waves on a lake.',
+    rooms: [R(11, 12, 'S', 'glass', 'checker', 'vault', ['column', 'candles'], 'pipes')] },
 ]
+
+/** menu order inside one episode: phrase levels slot in just before the level named in `before` */
+export function menuOrder(ep: 0 | 1 | 2): number[] {
+  const base = LEVELS.map((l, i) => (episodeOf(l) === ep && !l.before ? i : -1)).filter((i) => i >= 0)
+  for (let i = 0; i < LEVELS.length; i++) {
+    const b = LEVELS[i].before
+    if (episodeOf(LEVELS[i]) !== ep || !b) continue
+    const at = base.findIndex((x) => LEVELS[x].id === b)
+    if (at >= 0) base.splice(at, 0, i); else base.push(i)
+  }
+  return base
+}
+/** Boot Camp is open to everyone. A phrase rehearsal opens with the level it rehearses. The rest follow the saved `unlocked` count. */
+export function isUnlocked(i: number, unlocked: number): boolean {
+  const l = LEVELS[i]
+  if (!l) return false
+  if (episodeOf(l) === 0) return true
+  if (l.before) { const b = LEVELS.findIndex((x) => x.id === l.before); if (b >= 0) return isUnlocked(b, unlocked) }
+  return i < unlocked
+}
+/** the level after `i` in the menu (same episode), or -1 */
+export function nextInMenu(i: number): number {
+  const o = menuOrder(episodeOf(LEVELS[i])), at = o.indexOf(i)
+  return at >= 0 && at + 1 < o.length ? o[at + 1] : -1
+}
 
 export const FACTS_EXTRA = ["A cadence is how music says 'the end of a sentence'.", 'Arpeggio means "harp-style": the notes of a chord played one after another, like Bach\'s Prelude in C.']
 
@@ -237,7 +295,40 @@ export interface Piece {
   score: SongNote[]; scoreIdx: number[]; key: Key; beatsPerBar: number; pickup?: number; beatUnit?: 4 | 8; style?: Song['style']
 }
 
+/** the phrase a phrase-wave level teaches, cut by the phrase engine (so its id matches the one SONGS practises) */
+export function resolvePhrase(spec: LevelSpec): { phrase: Phrase; slow: number } {
+  const cfg = spec.phrase!
+  const song = SONGS.find((x) => x.id === cfg.songId)!
+  const all = segment(cfg.songId, song.notes, cfg.size, song.beatsPerBar)
+  let p = all[Math.min(cfg.index, all.length - 1)]
+  const keep = Math.min(p.notes.length, cfg.trim ?? 99, cfg.cap ?? 99)
+  if (keep < p.notes.length) {
+    // cut to the first `keep` sounding notes; the id follows the engine's `${song}:${start}-${end}` form
+    let seen = 0, end = p.start
+    for (let i = p.start; i < p.end; i++) if (song.notes[i].note != null && ++seen === keep) { end = i + 1; break }
+    p = { ...p, end, id: `${p.songId}:${p.start}-${end}`, notes: p.notes.slice(0, keep) }
+  }
+  return { phrase: p, slow: cfg.slow ?? 1 }
+}
+
+/** a phrase-wave level's "piece": just the phrase, as sheet music (beats stretched by `slow`) */
+function phrasePiece(spec: LevelSpec): Piece {
+  const { phrase, slow } = resolvePhrase(spec)
+  const song = SONGS.find((x) => x.id === spec.songId)!
+  const score: SongNote[] = [], scoreIdx: number[] = [], notes: number[] = [], gap: number[] = []
+  let t = 0
+  const ms = 60000 / song.bpm
+  phrase.notes.forEach((n, i) => {
+    if (n.beat > t + 1e-6) score.push({ note: null, beats: (n.beat - t) * slow })
+    gap.push(i ? (n.beat - phrase.notes[i - 1].beat) * slow * ms : 0)
+    scoreIdx.push(score.length); score.push({ note: n.note, beats: n.beats * slow }); notes.push(n.note)
+    t = n.beat + n.beats
+  })
+  return { title: song.title, origin: song.origin, bpm: song.bpm, notes, gap, chunks: [{ s: 0, e: notes.length }], bars: 0, score, scoreIdx, key: song.key, beatsPerBar: song.beatsPerBar ?? 4, beatUnit: song.beatUnit, style: song.style }
+}
+
 export function buildPiece(spec: LevelSpec): Piece {
+  if (spec.phrase) return phrasePiece(spec)
   if (spec.boss) {
     const notes = PRELUDE_C.flatMap(preludeFigure)
     const sixteenth = (60000 / 72) * 0.25

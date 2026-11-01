@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { THEMES, type Mode, type Theme } from './engine'
+import { useVibes } from '../../music/vibes'
 import './vizcontrols.css'
 
 export const VISUALS: { id: Mode; icon: string; label: string }[] = [
@@ -11,6 +12,7 @@ export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'mail', icon: '💌', label: 'Mail' },
   { id: 'confetti', icon: '🎉', label: 'Confetti' },
   { id: 'zombie', icon: '🧟', label: 'Zombies' },
+  { id: 'vibes', icon: '😀', label: 'Vibes' },
 ]
 
 const SWATCH: Record<Theme, string> = {
@@ -34,6 +36,7 @@ interface Props {
 export function VizControls(p: Props) {
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
+  const chip = useVibes((s) => s.chip)
 
   useEffect(() => {
     if (!open) return
@@ -68,6 +71,7 @@ export function VizControls(p: Props) {
             <div className="vb-toggles">
               <button className={'vb-tog' + (p.emoji ? ' on' : '')} aria-pressed={p.emoji} onClick={() => p.onEmoji(!p.emoji)}>Emoji 😜</button>
               <button className={'vb-tog' + (p.sparkle ? ' on' : '')} aria-pressed={p.sparkle} onClick={() => p.onSparkle(!p.sparkle)}>Sparkles ✨</button>
+              <button className={'vb-tog' + (chip ? ' on' : '')} aria-pressed={chip} onClick={() => useVibes.getState().setChip(!chip)}>Mood 😀</button>
             </div>
           </div>
         )}

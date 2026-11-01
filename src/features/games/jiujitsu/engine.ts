@@ -8,12 +8,16 @@ import { GameLh } from '../../songs/gameLh'
 import { noteName } from '../../../music/theory'
 import { getSynth } from '../../synth-history/engine'
 import {
-  BELTS, RUNGS, STEPS, LAST_RUNG, LESSONS, TECHNIQUES, level, makePhrase, flowSongs, loadSave, writeSave,
+  BELTS, RUNGS, STEPS, LAST_RUNG, LESSONS, TECHNIQUES, level, makePhrase, flowSongs, FLOW_IDS, loadSave, writeSave,
   type Phase, type Phrase, type Save, type Snapshot,
 } from './data'
 import { RUNG_POSE, VIA, POSES, FLY, ARMBAR_POSE, lerpPair, type Pair } from './poses'
 import { makeView, renderBackground, drawFig, drawShadow, toScreen, KID_LOOK, PARTNER_LOOKS, type View } from './draw'
 import type { SongNote } from '../../songs/songs'
+import { getSheetLevel } from '../../../music/sheetLevel'
+import type { Phrase as SongPhrase, Rung as PhRung } from '../../../music/phrases'
+import { RULES, levelOf, masteryOf, rungIx, songPhrases, startAttempt, recordRung, stopPhrase, wrongNote, ord, pcName, lhFor, scoreIdxs, phraseSongId, songById, type AttemptHandle } from '../phraseKit'
+import type { GameLh as GameLhT } from '../../songs/gameLh'
 
 interface Pop { text: string; x: number; y: number; age: number; max: number; color: string; size: number }
 interface Bit { x: number; y: number; vx: number; vy: number; life: number; max: number; hue: number; sz: number; rot: number }
@@ -70,6 +74,21 @@ export class Game {
   private q: { at: number; fn: () => void }[] = []
   private held = new Set<number>()
 
+  // phrase memorization: the partner's call can be a real song phrase; the belt sets the rung
+  private pp: SongPhrase | null = null
+  private att: AttemptHandle | null = null
+  private engineSheet = false
+  private plh: GameLhT | null = null
+  private plhIdx: number[] = []
+  private again = false
+  private muteCall = false
+  private assist = false
+  private tPrev = 0
+  private callFrom = ''
+  private lastPid = ''
+  /** dev only: force the chance that a call comes from a song */
+  private songProb: number | null = null
+
   // flow roll
   private songIx = 0
   private flowNotes: number[] = []
@@ -119,6 +138,7 @@ export class Game {
     this.mq?.removeEventListener('change', this.onMq)
     this.offJudge()
     this.stopSound()
+    if (this.att) { this.cancelAttempt(); stopPhrase() }
     clearGuide()
     clearScore('jiujitsu')
     if (import.meta.env.DEV) delete (window as unknown as { __bjj?: unknown }).__bjj
@@ -136,6 +156,16 @@ export class Game {
       get ioi() { return self.phrase.ioi },
       get beats() { return self.phrase.beats },
       get chain() { return self.chain },
+      setSongProb(p: number | null) { self.songProb = p },
+      get brung() { return self.brung },
+      get pp() { return self.pp },
+      get partner() { return self.partner },
+      get slips() { return self.slips },
+      get slipMax() { return self.slipMax },
+      get tip() { return self.tip },
+      get banner() { return self.banner },
+      get again() { return self.again },
+      get clock() { return self.clock },
       setSave(belt: number, stripes: number) { self.save.belt = belt; self.save.stripes = stripes; self.trainBelt = belt; self.emit() },
       cont: () => this.cont(),
       freeze: (on: boolean) => { this.frozen = on },
@@ -215,6 +245,8 @@ export class Game {
     clearGuide()
     clearScore('jiujitsu')
     this.pops = []; this.bits = []; this.call = -1
+    if (this.att) { this.cancelAttempt(); stopPhrase() }
+    this.pp = null; this.again = false; this.assist = false
     this.ei = 0; this.slips = 0; this.rhy = []; this.offBeat = 0; this.tapN = 0
   }
 
@@ -233,11 +265,20 @@ export class Game {
     this.emit()
   }
 
-  private get slipMax() { const L = this.level; return L < 8 ? 5 : L < 16 ? 4 : 3 }
-  private get training() { return this.level < 8 }
+  /** the belt maps to a scaffold rung: white = follow, blue = echo, purple = memory, brown = timed, black = blind (hands when the sheet level has a left hand) */
+  get brung(): PhRung {
+    const b = this.trainBelt
+    return b <= 0 ? 'follow' : b === 1 ? 'echo' : b === 2 ? 'memory' : b === 3 ? 'timed' : getSheetLevel() === 'single' ? 'blind' : 'hands'
+  }
+  /** wrong echoes the partner allows before he counters (the higher the belt, the fewer) */
+  private get slipMax() { return [4, 4, 3, 2, 2, 1, 1][rungIx(this.brung)] ?? 2 }
+  private get strictTime() { return RULES[this.brung].windowMs != null }
 
   private nextExchange() {
-    this.phrase = makePhrase(this.level)
+    this.cancelAttempt()
+    if (this.again && this.phrase.notes.length) { this.assist = true } // the partner counters, then gives you the same phrase again with a little help
+    else { this.assist = false; this.choosePhrase() }
+    this.again = false
     this.ei = 0; this.slips = 0; this.offBeat = 0; this.rhy = []
     const label = this.rung % 2 === 0 ? 'Partner attacks: listen!' : 'Your turn: watch the technique!'
     this.banner = label
@@ -246,7 +287,38 @@ export class Game {
     this.playCall()
   }
 
+  /** the partner's call: a phrase from a real song most of the time (more at higher belts), otherwise a made-up one */
+  private choosePhrase() {
+    const L = this.level, belt = this.trainBelt
+    this.pp = null; this.plh = null; this.callFrom = ''
+    const useSong = rnd() < (this.songProb ?? [0.5, 0.6, 0.75, 0.9, 1][belt])
+    if (useSong) {
+      const cap = L < 4 ? 3 : L < 8 ? 4 : L < 12 ? 5 : L < 16 ? 6 : 8
+      const pool = [...FLOW_IDS, 'twinkle', 'mary', 'buns', 'lune', 'yankee', 'jingle', 'saints', 'bday', 'minuet']
+      let best: SongPhrase | null = null, bs = 1e9
+      for (const sid of pool) for (const sz of (L < 8 ? [1] : L < 14 ? [1, 2] : [2, 3]) as SongPhrase['size'][]) for (const ph of songPhrases(sid, sz)) {
+        const ns = ph.notes.map((n) => n.note), n = ns.length
+        if (n < 2 || n > cap || ns.some((x) => x < 48 || x > 84) || ph.id === this.lastPid) continue
+        if (n > 2 && ns.every((x) => x === ns[0])) continue
+        const sc = Math.abs(n - cap) * 1.5 + Math.abs(rungIx(levelOf(ph)) - rungIx(this.brung)) * 1.2 + rnd() * 2
+        if (sc < bs) { bs = sc; best = ph }
+      }
+      if (best) {
+        const ioi = Math.round(60000 / RULES[this.brung].bpm)
+        this.pp = best; this.lastPid = best.id
+        this.phrase = { notes: best.notes.map((n) => n.note), beats: best.notes.map((n) => n.beats), ioi }
+        this.callFrom = songById(phraseSongId(best))?.title.replace(/ \(.*\)$/, '') ?? ''
+        this.plh = lhFor(phraseSongId(best), 'jiujitsu'); this.plhIdx = scoreIdxs(best)
+        return
+      }
+    }
+    this.phrase = makePhrase(L)
+  }
+
+  private cancelAttempt() { this.att?.cancel(); this.att = null; this.engineSheet = false }
+
   private publishScore() {
+    if (!RULES[this.brung].sheet) { clearScore('jiujitsu'); return }
     const p = this.phrase
     setScore({ owner: 'jiujitsu', title: `Partner's call: ${STEPS[this.rung].name}`, notes: p.notes.map((n, i) => ({ note: n, beats: p.beats[i] })), bpm: Math.round(60000 / p.ioi) })
   }
@@ -256,6 +328,15 @@ export class Game {
     const ep = ++this.epoch
     this.q = []
     this.stopSound()
+    this.cancelAttempt()
+    if (this.pp) this.publishScore()
+    // a brand-new song phrase is "heard" through the engine (its demo IS the partner's call), which records the listen
+    this.muteCall = false
+    if (this.pp && masteryOf(this.pp.id).rung === 'listen') {
+      const ph = this.pp
+      this.muteCall = true
+      this.later(0.5, () => { this.att = startAttempt(ph, 'listen', { bpm: 60000 / this.phrase.ioi }) })
+    }
     const p = this.phrase
     clearGuide()
     let t = 0.5
@@ -269,39 +350,68 @@ export class Game {
       if (ep !== this.epoch) return
       this.phase = 'echo'
       this.call = -1
-      this.banner = 'Now YOU echo it: same notes, steady beat!'
+      this.banner = this.strictTime ? 'Now YOU echo it: same notes, right on the beat!' : 'Now YOU echo it: same notes, steady beat!'
+      this.tPrev = 0
+      this.beginAttempt()
       this.echoGuide()
       this.emit()
     })
-    setScorePos(0)
+    if (!this.engineSheet) setScorePos(0)
     this.emit()
+  }
+
+  /** a song phrase is recorded by the shared phrase engine, so mastery counts in SONGS and the other games too */
+  private beginAttempt() {
+    if (!this.pp) return
+    const ph = this.pp
+    this.att = startAttempt(ph, recordRung(ph, this.brung), {
+      bpm: 60000 / this.phrase.ioi, timingWindowMs: RULES[this.brung].windowMs ?? undefined,
+      onEvent: (e) => { if (e.type === 'climb' && !this.dead) { this.tip = `Phrase climbed to ${e.to}! Nice memory.`; this.emit() } },
+    })
+    this.engineSheet = this.att.live
   }
 
   private echoGuide() {
     if (this.phase !== 'echo') return
-    if (this.training && this.ei < this.phrase.notes.length) setGuide([this.phrase.notes[this.ei]], 'gold')
+    const g = RULES[this.brung].guide
+    if (this.ei < this.phrase.notes.length && (g === 'next' || this.assist || (g === 'demo' && this.ei === 0))) setGuide([this.phrase.notes[this.ei]], 'gold')
     else clearGuide()
   }
 
   private echoNote(g: NoteGrade) {
     const exp = this.phrase.notes
     if (g.note === exp[this.ei]) {
+      if (this.strictTime && this.ei >= 1 && this.tPrev) {
+        // brown belt and up: the beat counts. A rushed or dragged note is a broken echo.
+        const want = this.phrase.beats[this.ei - 1] * this.phrase.ioi, err = g.t - this.tPrev - want
+        if (Math.abs(err) > Math.max(150, want * 0.32)) {
+          this.counter(`The ${ord(this.ei + 1)} note came a little ${err < 0 ? 'early' : 'late'}. Keep the beat steady, like a heartbeat.`)
+          return
+        }
+      }
+      this.tPrev = g.t
       if (this.ei >= 2 && g.rhythm != null) this.rhy.push(g.rhythm)
       this.pop(noteName(g.note), 'k', '#7dffb0', 0.55)
       this.ei++
-      setScorePos(this.ei, 'hit')
+      if (!this.engineSheet) setScorePos(this.ei, 'hit')
       if (this.ei >= exp.length) { clearGuide(); this.echoDone(); return }
       this.echoGuide()
       this.emit()
     } else {
+      // black belt with the left hand on: a low chord tone is left-hand play, never a wrong note
+      if (this.brung === 'hands' && g.note < exp[this.ei] && this.plh?.press(g.note, this.plhIdx[this.ei] ?? -1)) { this.pop('Harmony +', 'k', '#8fd4ff', 0.8); return }
       this.slips++
       this.rhy = []
-      this.ei = g.note === exp[0] ? 1 : 0
+      const w = wrongNote(this.ei, exp[this.ei], g.note)
+      const msg = w.long.startsWith('Right') ? `${w.long}` : `You missed the ${ord(this.ei + 1)} note: ${pcName(exp[this.ei])}, not ${pcName(g.note)}.`
       this.pop('Not quite', 'k', '#ffb0a0', 0.7)
-      this.publishScore()
-      if (this.ei) setScorePos(1, 'hit')
-      if (this.slips >= this.slipMax) { this.partnerReverses(); return }
-      this.tip = this.slips >= 2 ? 'Tap 🔁 to hear it again, then try once more.' : 'Almost! Listen to the order of the notes.'
+      if (this.slips >= this.slipMax) { this.counter(msg); return }
+      const ei0 = this.ei
+      this.ei = g.note === exp[0] ? 1 : 0
+      this.tPrev = this.ei ? g.t : 0
+      if (!this.engineSheet) { this.publishScore(); if (this.ei) setScorePos(1, 'hit') }
+      this.tip = msg + (this.slips >= 2 ? ' Tap 🔁 to hear it again, then start over.' : ' Start from the first note.')
+      void ei0
       this.echoGuide()
       this.emit()
     }
@@ -320,6 +430,7 @@ export class Game {
       this.emit()
       return
     }
+    this.att = null; this.engineSheet = false
     const step = STEPS[this.rung]
     const pts = onBeat ? step.pts : 0
     this.points += pts
@@ -335,18 +446,24 @@ export class Game {
     this.later(1.4, () => (this.rung >= LAST_RUNG ? this.startSub() : this.nextExchange()))
   }
 
-  private partnerReverses() {
+  /** a broken echo: the partner counters and takes the position, with a clear coaching line. Same phrase next, with help. */
+  private counter(msg: string) {
     this.phase = 'move'
     this.clearInput()
-    this.banner = 'Partner reversed the position. That is how we learn!'
-    this.tip = 'Breathe and reset. Listen closely.'
-    this.dropRung(2)
-    this.later(1.6, () => this.nextExchange())
+    this.banner = 'Your partner countered and took the position. That is how we learn!'
+    this.tip = msg + ' Breathe. Same phrase again, with a little help.'
+    this.again = true
+    this.wobble = 0.5
+    this.dropRung(2, true)
+    this.later(2.2, () => this.nextExchange())
     this.emit()
   }
 
-  private dropRung(partnerPts: number) {
-    if (this.rung <= 0) return
+  private dropRung(partnerPts: number, always = false) {
+    if (this.rung <= 0) {
+      if (always) { this.partner += partnerPts; this.pop(`Partner +${partnerPts}`, 'p', '#9ec5ff', 0.8) }
+      return
+    }
     const from = this.rung - 1
     this.partner += partnerPts
     this.pop(`Partner +${partnerPts}`, 'p', '#9ec5ff', 0.8)
@@ -354,7 +471,7 @@ export class Game {
     this.rung = from
   }
 
-  private clearInput() { this.epoch++; this.q = []; this.stopSound(); clearGuide() }
+  private clearInput() { this.epoch++; this.q = []; this.stopSound(); clearGuide(); this.cancelAttempt() }
 
   // forearm slams
   private cluster(boom: boolean) {
@@ -513,6 +630,7 @@ export class Game {
 
   // ---------------- sound ----------------
   private sound(n: number, on: boolean) {
+    if (this.muteCall && on) return
     const sy = getSynth()
     if (on) { if (sy.ready) { sy.noteOn(n, SOUND_VEL); this.held.add(n) } }
     else if (this.held.delete(n)) sy.noteOff(n)
@@ -672,6 +790,7 @@ export class Game {
       lesson: this.lesson, promoTo: this.promoTo, stripeEarned: this.stripeEarned, newBest: this.newBest, tapN: this.tapN,
       songs: songs.map((s) => ({ id: s.id, title: s.title })), songIx: songs.length ? this.songIx % songs.length : 0,
       flowPos: this.flowPos, flowTotal: this.flowNotes.length, chain: this.chain, longest: this.longest, save: this.save,
+      ph: this.phase === 'flow' ? null : { i: Math.min(6, this.rung + 1), n: 6, rung: this.brung, from: this.callFrom },
     })
   }
 }

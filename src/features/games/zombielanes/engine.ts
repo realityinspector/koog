@@ -7,6 +7,8 @@ import { setGuide, clearGuide } from '../../../music/guide'
 import { pc } from '../../../music/theory'
 import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
 import { GameLh } from '../../songs/gameLh'
+import { RUNGS, type Phrase, type Rung } from '../../../music/phrases'
+import { RULES, clampRung, easier, levelOf, masteryOf, rungIx, songPhrases, startAttempt, recordRung, stopPhrase, demo as singPhrase, wrongNote, ord, pcName, lhFor, scoreIdxs, phraseSongId, type AttemptHandle } from '../phraseKit'
 import { buildLayout, noteHue } from '../../keyboard/layout'
 import { Sprites, SKINS, EXTRAS, ZH, ZFEET, KH, KFEET, SIGN_Y, KSIGN_Y, CONFETTI_FRAMES } from './sprites'
 import { renderBackground, renderVignette, type Lane } from './background'
@@ -22,6 +24,20 @@ const BOOM_BOSS_SKIP = 8
 interface Zombie {
   id: number; kind: 'note' | 'chord'; note: number; label: string; chord: Chord | null
   p: number; skin: number; extra: number; age: number; walk: number; x: number
+  /** conga line only: place in the line (-1 = an extra zombie who joined), when it last "sang", was hit, and when it topples */
+  cg?: number; sang?: number; hitAt?: number; fall?: number; stun?: boolean
+}
+/** Conga lines (phrase memorization): a line of zombies, one per note, marches to the strike line on the phrase rhythm. */
+const P_LINE = 0.8, P_START = 0.5, P_BEAT = 0.1
+interface Conga {
+  plan: { phrase: Phrase; rung: Rung }[]
+  li: number; rung: Rung; speed: number; fails: number; extra: number; clean: number
+  stage: 'sing' | 'march' | 'fall' | 'fail'
+  t0: number; vt0: number; nextAt: number
+  /** clock time each zombie reaches the strike line, the beat offset of each, and score index of each note */
+  arr: number[]; beats: number[]; sidx: number[]
+  idx: number; sung: number; lastSung: number; demoAt: number; bpm: number
+  zs: Zombie[]; att: AttemptHandle | null; lh: GameLh | null; climb: Rung | null
 }
 interface Boss { scoreIdx: number[]; p: number; idx: number; max: number; melody: number[]; flinch: number; age: number }
 interface Particle { x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; kind: 0 | 1 | 2 | 3; ci: number; size: number; spin: number }
@@ -93,6 +109,11 @@ export class Game {
   private recent: { note: number; t: number }[] = []
   private pending: { g: NoteGrade; at: number }[] = []
   private guideKey = ''
+  /** conga-line run (phrase memorization) */
+  private congaRun = false
+  private cg: Conga | null = null
+  private coach: Snapshot['coach'] = null
+  private coachUntil = 0
 
   // effects
   private particles: Particle[] = []
@@ -147,6 +168,7 @@ export class Game {
     this.mq?.removeEventListener('change', this.onMq)
     this.offJudge()
     clearScore('zombielanes')
+    if (this.cg) { this.cg.att?.cancel(); stopPhrase() }
     clearGuide()
     if (import.meta.env.DEV && (window as unknown as { __zl?: Game }).__zl === this) delete (window as unknown as { __zl?: Game }).__zl
   }
@@ -158,6 +180,7 @@ export class Game {
   start(mode: Mode, wave: number) {
     this.mode = mode
     this.save.mode = mode
+    this.congaRun = false
     this.startWave = clamp(Math.round(wave), 1, LEVELS.length)
     this.wave = this.startWave
     this.score = 0; this.lives = MAX_LIVES; this.combo = 0; this.cleared = 0; this.won = false; this.newBest = false; this.bonusBrain = false
@@ -166,11 +189,25 @@ export class Game {
     this.cardAt = this.clock
     this.emit()
   }
-  retry() { this.start(this.mode, this.startWave) }
+  retry() { if (this.congaRun) this.startConga(this.mode); else this.start(this.mode, this.startWave) }
+
+  /** Conga lines: waves of phrase memorization (follow, echo, memory, timed). Separate from the 5 normal waves. */
+  startConga(mode: Mode) {
+    this.mode = mode
+    this.save.mode = mode
+    this.congaRun = true
+    this.startWave = 1; this.wave = 1
+    this.score = 0; this.lives = MAX_LIVES; this.combo = 0; this.cleared = 0; this.won = false; this.newBest = false; this.bonusBrain = false
+    this.resetField()
+    this.phase = 'card'
+    this.cardAt = this.clock
+    this.emit()
+  }
 
   toMenu() {
     this.recordBest()
     this.resetField()
+    this.congaRun = false
     this.save = loadSave()
     this.mode = this.save.mode
     this.phase = 'menu'
@@ -182,6 +219,7 @@ export class Game {
     this.resetField()
     const lv = this.lv
     this.phase = 'play'
+    if (this.congaRun) { this.beginConga(); return }
     this.spawnLeft = lv.count
     this.spawnTimer = 0.7
     if (lv.boss) {
@@ -200,6 +238,8 @@ export class Game {
 
   private resetField() {
     clearScore('zombielanes')
+    if (this.cg) { this.cg.att?.cancel(); stopPhrase() }
+    this.cg = null; this.coach = null
     this.zombies = []; this.boss = null; this.spawned = 0; this.spawnLeft = 0; this.bag = []; this.chordIx = 0
     this.ending = false; this.later = null; this.recent = []; this.pending = []
     this.particles = []; this.pops = []; this.beams = []; this.dying = []; this.rings = []; this.press.clear()
@@ -213,6 +253,9 @@ export class Game {
       phase: this.phase, mode: this.mode, wave: this.wave, score: this.score, lives: this.lives, combo: this.combo, left,
       jam: this.clock < this.jamUntil, bossHp: this.boss ? this.boss.max - this.boss.idx : 0, bossMax: this.boss ? this.boss.max : 0,
       stars: this.stars, won: this.won, newBest: this.newBest, cleared: this.cleared, save: this.save, bonusBrain: this.bonusBrain, bossSong: this.save.boss,
+      conga: this.congaRun,
+      ph: this.cg ? { i: this.cg.li + 1, n: this.cg.plan.length, rung: this.cg.rung, zombies: this.cg.zs.length } : null,
+      coach: this.coach,
     }
   }
   private emit() { if (!this.dead) this.onSnap(this.snap()) }
@@ -287,6 +330,7 @@ export class Game {
       // the first notes of a slam were graded as normal notes before the cluster was recognised: drop them
       this.pending.length = 0
       if (this.phase !== 'play' || this.ending) return
+      if (this.cg) return // a conga line is about notes in order: slams do nothing here
       if (e.boom) this.boom()
       else this.jam(e.notes)
     }
@@ -307,6 +351,7 @@ export class Game {
   private handleNote(g: NoteGrade) {
     this.press.set(g.note, this.clock)
     if (this.clock < this.jamUntil) { this.dud(g.note); return }
+    if (this.cg) { this.congaNote(g); return }
     this.recent = this.recent.filter((r) => g.t - r.t <= CHORD_WINDOW && r.note !== g.note)
     this.recent.push({ note: g.note, t: g.t })
 
@@ -358,7 +403,7 @@ export class Game {
 
   private zombieCenter(z: Zombie) {
     const lane = this.laneFor(z.note)
-    if (lane) z.x = lane.cx
+    if (lane && z.cg == null) z.x = lane.cx
     const s = (0.72 + 0.28 * z.p) * (z.kind === 'chord' ? 1.28 : 1)
     return { x: z.x, y: this.yAt(z.p) - (ZFEET - SIGN_Y) * this.zk * s, top: this.yAt(z.p) - ZFEET * this.zk * s }
   }
@@ -481,6 +526,7 @@ export class Game {
   }
 
   private recordBest() {
+    if (this.congaRun) { this.save.conga = Math.max(this.save.conga, this.cleared); this.save.mode = this.mode; writeSave(this.save); return }
     if (this.score > 0 && this.score > this.save.best[this.mode]) { this.save.best[this.mode] = this.score; this.newBest = true }
     this.save.mode = this.mode
     writeSave(this.save)
@@ -521,6 +567,267 @@ export class Game {
       this.after(0.9, () => this.gameOver(false))
     }
     this.emit()
+  }
+
+
+  // ---------------- conga lines (phrase memorization) ----------------
+  /** conga timing runs on the wall clock (like the Judge's timestamps), so a slow frame never shifts the beat */
+  private wall() { return performance.now() / 1000 }
+  private setCoach(text: string, kind: 'good' | 'oops' | 'info', secs = 4.5) {
+    this.coach = { text, kind }; this.coachUntil = this.clock + secs; this.emit()
+  }
+
+  /** Pick 6 phrases from real songs (2 notes growing to 5) and a scaffold rung for each. The kid's mastery sets where the ladder starts. */
+  private planConga(): Conga['plan'] {
+    const pool = ['twinkle', 'mary', 'buns', 'ode', 'lune', 'yankee', 'jingle', 'saints', 'bday', 'minuet', 'brahms', 'susanna']
+    for (let i = pool.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [pool[i], pool[j]] = [pool[j], pool[i]] }
+    const targets = [2, 2, 3, 3, 4, 5], sizes: Phrase['size'][] = [1, 1, 1, 1, 2, 2]
+    const cands: Phrase[][] = sizes.map((sz) => pool.flatMap((sid) => songPhrases(sid, sz)).filter((ph) => {
+      const ns = ph.notes.map((n) => n.note)
+      return ns.length >= 2 && ns.length <= 6 && !ns.some((x) => x < 48 || x > 84) && !(ns.length > 2 && ns.every((x) => x === ns[0]))
+    }))
+    // where the ladder starts: the kid's own level on phrases they have already practised (a new kid starts at follow)
+    const seen = [...new Set(cands.flat())].filter((p) => masteryOf(p.id).last > 0).map((p) => rungIx(clampRung(masteryOf(p.id).rung, 'follow', 'memory'))).sort((a, b) => a - b)
+    const r0 = seen.length ? seen[seen.length >> 1] : rungIx('follow')
+    const rungs = targets.map((_, k) => clampRung(RUNGS[r0 + (k >> 1)], 'follow', 'timed'))
+    const used = new Set<string>(), songsUsed = new Set<string>(), plan: Conga['plan'] = []
+    for (let k = 0; k < 6; k++) {
+      let best: Phrase | null = null, bs = 1e9
+      for (const ph of cands[k]) {
+        if (used.has(ph.id)) continue
+        // a length near the target, a phrase whose own rung matches this wave's (so the pass is recorded), a song not used yet
+        const sc = Math.abs(ph.notes.length - targets[k]) * 3 + Math.abs(rungIx(levelOf(ph)) - rungIx(rungs[k])) * 2 + (songsUsed.has(phraseSongId(ph)) ? 4 : 0) + rnd()
+        if (sc < bs) { bs = sc; best = ph }
+      }
+      if (best) { used.add(best.id); songsUsed.add(phraseSongId(best)); plan.push({ phrase: best, rung: rungs[k] }) }
+    }
+    return plan
+  }
+
+  private beginConga() {
+    const plan = this.planConga()
+    if (!plan.length) { this.gameOver(false); return }
+    this.cg = {
+      plan, li: 0, rung: plan[0].rung, speed: 1, fails: 0, extra: 0, clean: 0, stage: 'sing', t0: this.clock, vt0: 0, nextAt: 0,
+      arr: [], beats: [], sidx: [], idx: 0, sung: 0, lastSung: -9, demoAt: 0, bpm: 60, zs: [], att: null, lh: null, climb: null,
+    }
+    this.startLine()
+    this.emit()
+  }
+
+  /** Line up the zombies for the current phrase and let the lead zombie sing it. */
+  private startLine() {
+    const cg = this.cg!
+    const item = cg.plan[cg.li], ph = item.phrase
+    cg.att?.cancel(); cg.att = null
+    cg.rung = item.rung = cg.rung
+    const rule = RULES[cg.rung]
+    cg.bpm = rule.bpm
+    cg.stage = 'sing'; cg.t0 = this.wall(); cg.idx = 0; cg.sung = 0; cg.lastSung = -9
+    cg.beats = ph.notes.map((n) => n.beat)
+    cg.sidx = scoreIdxs(ph)
+    cg.lh = lhFor(phraseSongId(ph), 'zombielanes')
+    const last = ph.notes[ph.notes.length - 1]
+    cg.zs = ph.notes.map((n, i) => this.mkLineZombie(i, n.note, rule.names ? noteLabel(n.note) : '?'))
+    for (let e = 0; e < cg.extra; e++) {
+      cg.beats.push((last?.beat ?? 0) + (last?.beats ?? 1) * (e + 1))
+      cg.zs.push(this.mkLineZombie(-1, last?.note ?? 60, '+'))
+    }
+    this.placeLine()
+    // the lead zombie sings the phrase (the shared engine plays it through the current instrument)
+    cg.demoAt = this.wall() + 0.9
+    // a brand-new phrase is "sung" as a recorded listen (the engine plays it and marks it heard); a known one is just sung
+    const fresh = masteryOf(ph.id).rung === 'listen'
+    window.setTimeout(() => {
+      if (this.dead || this.cg !== cg || cg.stage !== 'sing') return
+      if (fresh) cg.att = startAttempt(ph, 'listen', { bpm: cg.bpm * cg.speed }); else void singPhrase(ph, cg.bpm * cg.speed)
+    }, 900)
+    this.setCoach(cg.fails ? 'Listen again, then try it once more.' : `Listen: the lead zombie sings phrase ${cg.li + 1}. ${RULES[cg.rung].blurb}`, 'info', 5)
+    this.emit()
+  }
+  private mkLineZombie(i: number, note: number, label: string): Zombie {
+    const z = this.mkZombie('note', note, label, null)
+    z.cg = i; z.p = 0.02
+    return z
+  }
+
+  /** zombie positions: lined up while singing, then on the phrase timeline (one beat = a fixed gap) */
+  private placeLine() {
+    const cg = this.cg!
+    const V = (P_BEAT * cg.bpm * cg.speed) / 60
+    const k = cg.stage === 'sing' ? 0 : clamp((this.wall() - cg.vt0) / 0.6, 0, 1), now = this.wall()
+    cg.zs.forEach((z, i) => {
+      if (z.fall != null || cg.stage === 'fail') return
+      const pSing = P_START - i * 0.08
+      let p = pSing
+      if (cg.stage !== 'sing') { const pT = P_LINE - (cg.arr[i] - now) * V; p = pSing + (pT - pSing) * k }
+      z.p = z.stun ? Math.min(p, P_LINE + 0.06) : p
+      z.x = this.w * (0.5 + ((i & 1) ? 1 : -1) * 0.075 + Math.sin(i * 0.9) * 0.05)
+    })
+  }
+
+  private updateConga(dt: number) {
+    const cg = this.cg!, ph = cg.plan[cg.li].phrase, rule = RULES[cg.rung]
+    const bs = 60 / (cg.bpm * cg.speed)
+    for (const z of cg.zs) { z.age += dt; z.walk += dt * (cg.stage === 'fail' ? 9 : 5.2) }
+    if (cg.stage === 'sing') {
+      while (cg.sung < ph.notes.length && this.wall() >= cg.demoAt + ph.notes[cg.sung].beat * bs) {
+        const n = ph.notes[cg.sung], z = cg.zs[cg.sung]
+        z.sang = this.clock; cg.lastSung = this.wall()
+        if (rule.guide !== 'none') { this.press.set(n.note, this.clock); this.pop(noteLabel(n.note), z.x, this.yAt(z.p) - this.zk * ZH * 0.8, '#ffe9a0', 22, 0.7) }
+        cg.sung++
+      }
+      const dur = ph.notes[ph.notes.length - 1].beat + ph.notes[ph.notes.length - 1].beats
+      if (this.wall() >= cg.demoAt + dur * bs + 0.7) this.marchOn()
+    } else if (cg.stage === 'march') {
+      const V = (P_BEAT * cg.bpm * cg.speed) / 60
+      void V
+      // a zombie got to the line and its note never came
+      const i = cg.idx
+      if (i < ph.notes.length && this.wall() > cg.arr[i] + rule.graceMs / 1000) this.congaFail(rule.windowMs != null ? 'late' : 'missing', undefined, i)
+    } else if (cg.stage === 'fail') {
+      for (const z of cg.zs) z.p = Math.min(1.02, z.p + dt * 0.4)
+      if (this.wall() >= cg.nextAt) this.retryLine()
+    } else if (cg.stage === 'fall') {
+      const keep: Zombie[] = []
+      for (const z of cg.zs) {
+        if (z.fall != null && this.clock - z.fall > 0.55) { const c = this.zombieCenter(z); this.poof(c.x, c.y, false); continue }
+        keep.push(z)
+      }
+      cg.zs = keep
+      if (this.wall() >= cg.nextAt) this.nextLine()
+    }
+    if (cg.stage === 'sing' || cg.stage === 'march') this.placeLine()
+  }
+
+  private marchOn() {
+    const cg = this.cg!, ph = cg.plan[cg.li].phrase
+    const bs = 60 / (cg.bpm * cg.speed), V = (P_BEAT * cg.bpm * cg.speed) / 60
+    cg.stage = 'march'; cg.vt0 = this.wall()
+    const lead = (P_LINE - P_START) / V
+    cg.arr = cg.beats.map((b) => cg.vt0 + lead + b * bs)
+    cg.idx = 0
+    // the shared engine records this attempt (mastery is per kid, shared with SONGS); the game grades live for its own feedback
+    cg.att = startAttempt(ph, recordRung(ph, cg.rung), {
+      bpm: cg.bpm * cg.speed, startAt: performance.now() + lead * 1000, timingWindowMs: RULES[cg.rung].windowMs ?? undefined,
+      onEvent: (e) => { if (e.type === 'climb' && this.cg === cg) cg.climb = e.to },
+    })
+    this.setCoach(RULES[cg.rung].windowMs != null ? 'Play each note as its zombie reaches the line.' : 'Play the notes in order as the zombies come.', 'info', 4)
+    this.emit()
+  }
+
+  private congaGuide() {
+    const cg = this.cg!, rule = RULES[cg.rung], ph = cg.plan[cg.li].phrase
+    if (this.ending) { this.setGuideKey(''); return }
+    if (cg.stage === 'sing' && rule.guide !== 'none' && cg.sung > 0 && this.wall() - cg.lastSung < 0.55) {
+      const n = ph.notes[cg.sung - 1].note
+      this.setGuideKey('s' + cg.sung + n, [n], 'next')
+    } else if (cg.stage === 'march' && rule.guide === 'next' && cg.idx < ph.notes.length) {
+      const n = ph.notes[cg.idx].note
+      this.setGuideKey('m' + cg.idx + n, [n], this.wall() > cg.arr[cg.idx] ? 'danger' : 'next')
+    } else this.setGuideKey('')
+  }
+
+  private congaNote(g: NoteGrade) {
+    const cg = this.cg!
+    if (cg.stage !== 'march' || this.ending) return
+    const ph = cg.plan[cg.li].phrase, rule = RULES[cg.rung], i = cg.idx
+    const exp = ph.notes[i].note, z = cg.zs[i]
+    const dtMs = g.t - cg.arr[i] * 1000
+    if (!this.matches(exp, g.note)) {
+      // Easy/Full: a low chord tone is left-hand play, a bonus, never a wrong note
+      if (g.note < exp && cg.lh?.press(g.note, cg.sidx[i] ?? -1)) { this.score += 25; this.pop('Harmony +25', this.w / 2, this.h * 0.5, '#8fd4ff', 22, 0.9); this.emit(); return }
+      this.congaFail('wrong', g.note, i)
+      return
+    }
+    if (rule.windowMs != null && dtMs < -rule.windowMs) { this.congaFail('early', g.note, i); return }
+    if (rule.windowMs != null && dtMs > rule.windowMs) { this.congaFail('late', g.note, i); return }
+    // a clean note: the zombie is stunned (stars) and the whole line falls when the phrase is done
+    const onBeat = rule.windowMs != null && Math.abs(dtMs) <= rule.windowMs * 0.45
+    const pts = 100 + 10 * Math.min(this.combo, 10) + (onBeat ? 100 : 0)
+    const c = this.zombieCenter(z)
+    const lane = this.laneFor(g.note)
+    if (lane) this.addBeam(lane, c.y, false, c.x)
+    z.hitAt = this.clock; z.stun = true; z.label = noteLabel(exp)
+    cg.idx++
+    this.score += pts; this.combo++
+    this.pop('+' + pts, c.x, c.top + 6, onBeat ? '#ffe14a' : '#fff7b0', onBeat ? 30 : 26)
+    if (onBeat) this.pop('ON BEAT!', c.x, c.top - 22, '#7dffb0', 20, 1.0)
+    if (cg.idx >= ph.notes.length) this.lineClean()
+    this.emit()
+  }
+
+  /** broken phrase: kind, specific feedback; a brain; the line gets faster and a zombie joins */
+  private congaFail(kind: 'wrong' | 'early' | 'late' | 'missing', played: number | undefined, i: number) {
+    const cg = this.cg!, ph = cg.plan[cg.li].phrase
+    if (cg.stage !== 'march') return
+    cg.stage = 'fail'; cg.nextAt = this.wall() + 2.3
+    cg.att?.cancel(); cg.att = null // a broken line is never recorded as a pass
+    const exp = ph.notes[i].note
+    let msg = ''
+    if (kind === 'wrong') { const w = wrongNote(i, exp, played ?? exp); msg = `${w.short}! ${w.long}` }
+    else if (kind === 'early') msg = `A little early on the ${ord(i + 1)} note! Wait until its zombie reaches the line.`
+    else if (kind === 'late') msg = `A little late on the ${ord(i + 1)} note! Play it as its zombie reaches the line.`
+    else msg = `The zombie reached the line before the ${ord(i + 1)} note (${pcName(exp)}). A bit quicker next time!`
+    this.setCoach(msg + ' The line speeds up and another zombie joins.', 'oops', 6)
+    cg.fails++
+    cg.speed = Math.min(1.3, cg.speed * 1.1)
+    cg.extra = Math.min(3, cg.extra + 1)
+    this.combo = 0
+    const z = cg.zs[i]
+    this.pop(kind === 'wrong' ? 'Not that one!' : kind === 'early' ? 'Early!' : 'Late!', z.x, this.yAt(Math.min(z.p, P_LINE)) - this.zk * ZH * 0.9, '#ffb0a0', 26, 1.2)
+    if (this.cg === cg) {
+      const lane = played != null ? this.laneFor(played) : undefined
+      if (lane) this.addBeam(lane, this.h - (this.h - this.horizonY) * 0.4, true)
+        this.loseBrain(z.x)
+    }
+    this.emit()
+  }
+
+  private retryLine() {
+    const cg = this.cg!
+    if (this.ending) return
+    if (cg.fails >= 2 && rungIx(cg.rung) > rungIx('follow')) {
+      cg.rung = easier(cg.rung)
+      cg.plan[cg.li].rung = cg.rung
+      this.setCoach(`No problem! Let's go back to ${cg.rung} for this one.`, 'info', 5)
+    }
+    this.startLine()
+  }
+
+  /** whole phrase played in order and on time: the line topples like dominoes */
+  private lineClean() {
+    const cg = this.cg!, n = cg.zs.length
+    cg.stage = 'fall'
+    cg.clean++; this.cleared = cg.clean
+    const t0 = this.clock + 0.35
+    cg.zs.forEach((z, i) => { z.fall = t0 + i * 0.14; z.stun = false })
+    const bonus = 300 + 80 * cg.plan[cg.li].phrase.notes.length + (cg.fails === 0 ? 150 : 0)
+    this.score += bonus
+    this.pop('CLEAN PHRASE!', this.w / 2, this.h * 0.4, '#7dffb0', 40, 1.8)
+    this.pop('+' + bonus, this.w / 2, this.h * 0.52, '#fff7b0', 28, 1.5)
+    this.ring(this.w / 2, this.yAt(P_LINE))
+    this.setCoach((cg.fails === 0 ? 'Perfect! The whole line goes down like dominoes.' : 'You got it! The whole line goes down like dominoes.') + (cg.climb ? ` That phrase just climbed to ${cg.climb}!` : ''), 'good', 5)
+    cg.climb = null
+    if (cg.li % 2 === 1 && this.lives < MAX_LIVES) { this.lives++; this.pop('A brain grew back!', this.w / 2, this.h * 0.62, '#ff9aa8', 24, 1.6) }
+    cg.nextAt = this.wall() + 0.35 + n * 0.14 + 1.3
+    this.emit()
+  }
+
+  private nextLine() {
+    const cg = this.cg!
+    if (cg.li + 1 >= cg.plan.length) {
+      this.ending = true
+      this.score += 500
+      this.pop('CONGA CLEARED!', this.w / 2, this.h * 0.42, '#ffe14a', 40, 2.4)
+      this.setGuideKey('')
+      this.after(2.6, () => this.gameOver(true))
+      this.emit()
+      return
+    }
+    cg.li++; cg.fails = 0; cg.speed = 1; cg.extra = 0
+    cg.rung = cg.plan[cg.li].rung
+    this.startLine()
   }
 
   // ---------------- spawning ----------------
@@ -612,6 +919,8 @@ export class Game {
           b.p += dt / (lv.travel * slow)
           if (b.p >= 1 && this.shield) { this.shield = false; b.p = 0.7; this.pop('SHIELDED!', this.w / 2, this.h - 90, '#8fd4ff', 30, 1.1) } else if (b.p >= 1) { this.boss = null; this.lives = 1; this.loseBrain(this.w / 2) }
         }
+      } else if (this.cg) {
+        if (!this.ending) this.updateConga(dt)
       } else if (!this.ending) {
         this.spawnTimer -= dt
         if (this.spawnLeft > 0 && this.spawnTimer <= 0 && this.zombies.length < 7) {
@@ -624,8 +933,9 @@ export class Game {
         }
         if (!this.ending && this.spawnLeft <= 0 && this.zombies.length === 0 && this.spawned > 0) this.waveClear()
       }
-      this.updateGuide()
+      if (this.cg) this.congaGuide(); else this.updateGuide()
     } else this.setGuideKey('')
+    if (this.coach && this.clock > this.coachUntil) { this.coach = null; this.emit() }
 
     // effects
     this.pulse = Math.max(0, this.pulse - dt * 1.1)
@@ -760,12 +1070,15 @@ export class Game {
     ctx.globalCompositeOperation = 'source-over'
     if (this.shake > 0 && !this.rm) ctx.translate(Math.sin(this.clock * 90) * 3 * this.shake * 2.5, Math.cos(this.clock * 77) * 2 * this.shake * 2.5)
 
+    // conga strike line
+    if (this.cg && this.phase === 'play') this.drawStrikeLine()
     // zombies, far ones first
-    this.zombies.sort((a, b) => a.p - b.p)
+    const zs = this.cg ? this.cg.zs : this.zombies
+    zs.sort((a, b) => a.p - b.p)
     if (this.dying.length > 1) this.dying.sort((a, b) => a.z.p - b.z.p)
     let di = 0
     const dy = this.dying
-    for (const z of this.zombies) {
+    for (const z of zs) {
       while (di < dy.length && dy[di].z.p <= z.p) { this.drawZombie(sp, dy[di].z, dy[di].age - TRAVEL); di++ }
       this.drawZombie(sp, z)
     }
@@ -859,7 +1172,8 @@ export class Game {
   private drawZombie(sp: Sprites, z: Zombie, hit = -1) {
     const ctx = this.ctx, zk = this.zk
     const lane = this.laneMap.get(z.note)
-    if (lane) z.x = lane.cx
+    if (lane && z.cg == null) z.x = lane.cx
+    if (hit < 0 && z.hitAt != null && this.clock - z.hitAt < REEL) hit = this.clock - z.hitAt
     const crown = z.kind === 'chord'
     const s = (0.72 + 0.28 * z.p) * (crown ? 1.28 : 1)
     const w = 100 * zk * s, hh = ZH * zk * s
@@ -877,9 +1191,18 @@ export class Game {
     }
     ctx.translate(0, (1 - rise) * (1 - rise) * hh * 0.85 + bob)
     ctx.rotate(sway)
+    // conga line: a zombie "sings" (bounces and glows) when its note plays, and topples like a domino when the phrase is clean
+    const sg = z.sang != null ? Math.max(0, 1 - (this.clock - z.sang) / 0.45) : 0
+    if (sg > 0 && !this.rm) ctx.scale(1 + 0.12 * sg, 1 + 0.12 * sg)
+    let fade = 1
+    if (z.fall != null && this.clock >= z.fall) {
+      const u = clamp((this.clock - z.fall) / 0.5, 0, 1)
+      if (!this.rm) ctx.rotate(u * u * 1.45)
+      fade = 1 - clamp((this.clock - z.fall - 0.25) / 0.3, 0, 1)
+    }
     // fog: far zombies are paler, and they firm up as they march closer
-    ctx.globalAlpha = 0.55 + 0.45 * clamp(z.p * 2.2, 0, 1)
-    let flash = 0
+    ctx.globalAlpha = (0.55 + 0.45 * clamp(z.p * 2.2, 0, 1)) * fade
+    let flash = sg
     if (hit >= 0) {
       // struck: squash flat and get shoved back up the lane, then spring back before the poof
       const u = clamp(hit / REEL, 0, 1)
@@ -901,7 +1224,23 @@ export class Game {
       ctx.drawImage(body, -w / 2, -ZFEET * zk * s, w, hh)
       ctx.globalCompositeOperation = 'source-over'
     }
+    if (z.stun && z.fall == null) {
+      const st = sp.star(z.id % 6), sz = 22 * Math.max(0.7, s)
+      ctx.globalAlpha = 0.95
+      ctx.drawImage(st, -sz / 2 + (this.rm ? 0 : Math.sin(this.clock * 4 + z.id) * 10), -ZFEET * zk * s - sz * 0.45, sz, sz)
+    }
     ctx.globalAlpha = 1
+    ctx.restore()
+  }
+
+  private drawStrikeLine() {
+    const ctx = this.ctx, y = this.yAt(P_LINE)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,226,120,.6)'; ctx.lineWidth = 3; ctx.setLineDash([16, 10])
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.w, y); ctx.stroke()
+    ctx.setLineDash([])
+    ctx.font = '800 13px system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,236,160,.85)'
+    ctx.fillText('STRIKE LINE', 10, y - 7)
     ctx.restore()
   }
 

@@ -7,6 +7,7 @@ import { createEngine, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
 import { PatchDrawer } from './PatchDrawer'
 import { VizControls, VISUALS } from './VizControls'
+import { VibesOverlay, VibesChip } from '../vibes/VibesOverlay'
 import './visualizer.css'
 
 export function Visualizer() {
@@ -87,6 +88,7 @@ export function Visualizer() {
       <canvas ref={canvas} className="viz-canvas" />
       <VizControls mode={mode} onMode={setMode} theme={theme} onTheme={setTheme} emoji={emoji} onEmoji={setEmoji}
         sparkle={sparkle} onSparkle={setSparkle} patchOpen={patchOpen} onPatch={() => setPatchOpen((o) => !o)} onFullscreen={fullscreen} />
+      {mode === 'vibes' ? <VibesOverlay /> : <VibesChip />}
       {patchOpen && <PatchDrawer onClose={() => setPatchOpen(false)} />}
       <div className={'viz-hint' + (played ? ' gone' : '')} aria-hidden={played}>
         {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: Z S X D C V and Q 2 W 3 E R keys (← → change octave)'}

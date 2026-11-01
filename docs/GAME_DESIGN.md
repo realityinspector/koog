@@ -74,6 +74,22 @@ The difficulty names are parodies of the classic ones:
 - *Hurt Me Plenty:* demons advance, and you need the exact key.
 - *Ultra-Virtuoso:* timing windows, and on-time notes are critical hits.
 
+#### Phrase Waves (Episode 0: Boot Camp, plus one rehearsal before each boss)
+A Galaga-style level type (`src/features/games/bachdoom/waves.ts`). A short phrase is **taught** first: a formation of demons hovers at the top, one per note, and each pulses on its beat while `phraseEngine.demo` plays the phrase. Then the formation **dives**: every demon swoops at you and reaches its gold *strike ring* exactly when its note is due. Play the right note inside the timing window to shoot it. The sheet strip shows the phrase and highlights the current note (hidden on the blind rung).
+
+| Wave | Rung | Window | Help |
+|---|---|---|---|
+| 1 | follow | +-300 ms | the key stays lit, names on the demons |
+| 2 | echo | +-240 ms | the key only flashes at the start of each dive |
+| 3 | memory | +-200 ms | no key help, sheet music only |
+| 4 | timed | +-120 ms | strict |
+| bonus | blind | +-120 ms | no sheet music |
+| last | hands | +-120 ms | only when Easy/Full chords are on: the left-hand chord tone on beat one is also required |
+
+Windows scale with the difficulty (story x1.6, normal x1, ultra x0.8). Each kid starts at the rung `phraseEngine.mastery` says they have reached, so known rungs are skipped, and every clean pass is recorded through `phraseEngine.attempt` (so it counts in SONGS too).
+**A wrong, early, late or missing note** pops specific feedback at the demon ("TOO EARLY <- 80MS", "LATE ->", "WRONG: THAT WAS D, NEEDED E", "MISSED"), jams the organ, shakes the view (not under reduced motion), makes Bach grimace and pulses the red edge (max 3 per second). That demon finishes its dive and bites for **double** a normal bite. The phrase is **broken**: the formation swirls back, an extra demon joins (up to +3) and the phrase restarts. After 2 breaks the key is lit again, as a hint.
+**A clean pass** shows PHRASE PERFECT!, pays a chain bonus (+6 HARMONY per chained wave, x2 if every note was on the beat) and shatters the formation into golden notes.
+
 **Why the Prelude in C is the right final boss:** every bar is one chord, broken the same way (notes 1 2 3 4 5 3 4 5, twice). Once a kid sees the pattern, a famous, real, two-minute piece becomes learnable. Beating the boss means you can play the opening of the Well-Tempered Clavier.
 
 **Why not a current pop song as the final boss?** Copyright. Koog only ships music that is public domain in the US (published 1930 or earlier, or traditional), or original songs written for Koog. The Koog Originals, or a pre-1930 hit like *The Entertainer*, can be future boss levels.

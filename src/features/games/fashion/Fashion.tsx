@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useJudge } from '../../../music/judge'
+import { PhraseHud } from '../PhraseHud'
 import { Game, type Snapshot } from './engine'
 import { CATS, CAT_INFO, ERAS, MODELS, eraById, loadSave, type Look, type SavedLook } from './data'
 import { JUDGE_LOOKS, drawJudge, drawStill } from './sprites'
@@ -40,6 +41,7 @@ export function Fashion({ onExit }: { onExit: () => void }) {
           <div className="fr-title"><b>{era.icon} {era.name}</b> <span>{era.years}</span></div>
           <div className="fr-grp">
             <button className="fr-btn ghost" onClick={() => g()?.toLookbook()}>📖 Lookbook</button>
+            <button className="fr-btn" onClick={() => g()?.startPhraseWalk()} disabled={!s.pieces.length} title="Walk the runway phrase by phrase: learn each little tune at a mark">🧠 Phrase walk</button>
             <button className="fr-btn go" onClick={() => g()?.startRunway()} disabled={!s.pieces.length}>Runway ▶</button>
           </div>
         </div>
@@ -115,6 +117,7 @@ function RunHud({ s, onQuit }: { s: Snapshot; onQuit: () => void }) {
   return (
     <div className="fr-top run">
       <div className="fr-title"><b>{s.pieces[s.pieceIdx]?.title}</b> <span>{eraById(s.eraId).name}</span></div>
+      {s.ph && <PhraseHud i={s.ph.i} n={s.ph.n} rung={s.ph.rung} />}
       <div className="fr-prog" role="progressbar" aria-valuenow={s.done} aria-valuemax={s.total}><i style={{ width: pct + '%' }} /><span>{s.done}/{s.total}</span></div>
       <div className="fr-grp">
         <div className="fr-conf" title="Strut confidence"><span>💃</span><div><i style={{ width: s.confidence * 100 + '%' }} /></div></div>
@@ -123,7 +126,7 @@ function RunHud({ s, onQuit }: { s: Snapshot; onQuit: () => void }) {
       </div>
       <div className="fr-hint" style={{ ['--beat' as string]: 60 / s.bpm + 's' }}>
         <span className="pulse" aria-hidden />
-        {s.started ? `Next note: ${s.nextName || 'done!'}` : `Play the glowing key (${s.nextName}) to start the walk!`}
+        {s.ph ? s.ph.text : s.started ? `Next note: ${s.nextName || 'done!'}` : `Play the glowing key (${s.nextName}) to start the walk!`}
       </div>
     </div>
   )

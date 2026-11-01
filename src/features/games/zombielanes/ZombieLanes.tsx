@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useJudge } from '../../../music/judge'
+import { PhraseHud } from '../PhraseHud'
 import { Game } from './engine'
 import { LEVELS, MAX_LIVES, bossPieces, loadSave, type Mode, type Snapshot } from './data'
 import './zombielanes.css'
@@ -34,6 +35,9 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
     <div className="zl-root" ref={rootRef} data-phase={snap.phase}>
       <canvas className="zl-canvas" ref={canvasRef} aria-label="Zombie Lanes game field" />
       {playing && <Hud snap={snap} onQuit={() => g()?.toMenu()} />}
+      {snap.phase === 'play' && snap.coach && (
+        <div className={'zl-coach ' + snap.coach.kind} role="status">{snap.coach.text}</div>
+      )}
       {snap.phase === 'play' && snap.jam && (
         <div className="zl-jam" role="status">JAMMED! Charge ⚡ BOOM by playing in key</div>
       )}
@@ -63,12 +67,27 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
             {snap.save.best[snap.mode] > 0 && <div className="zl-best">🏆 Best score: {snap.save.best[snap.mode].toLocaleString()}</div>}
             <div className="zl-row">
               <button className="zl-btn go" onClick={() => g()?.start(snap.mode, wave)}>▶ Start</button>
+              <button className="zl-btn conga" onClick={() => g()?.startConga(snap.mode)} title="Memorize little tunes: a line of zombies carries each phrase">🪗 Conga lines</button>
               <button className="zl-btn ghost" onClick={onExit}>Back</button>
             </div>
           </div>
         </div>
       )}
-      {snap.phase === 'card' && (
+      {snap.phase === 'card' && snap.conga && (
+        <div className="zl-panel">
+          <div className="zl-card">
+            <h2 className="zl-wnum">🪗 Conga lines!</h2>
+            <p className="zl-wname">Memorize little tunes</p>
+            <p className="zl-lesson">A line of zombies marches in, one zombie for each note of a tune. The lead zombie sings it first. Then play it in order as each zombie reaches the strike line.</p>
+            <p className="zl-tip">First with lit keys, then from memory, then right on the beat. Miss a note and the line speeds up and gains a zombie. Play it cleanly and the whole line falls like dominoes!</p>
+            <div className="zl-row">
+              <button className="zl-btn go" onClick={() => g()?.beginWave()}>Go! ▶</button>
+              <span className="zl-hint">or play any key to start</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {snap.phase === 'card' && !snap.conga && (
         <div className="zl-panel">
           <div className="zl-card">
             <h2 className="zl-wnum">Wave {snap.wave}!</h2>
@@ -87,12 +106,13 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
       {snap.phase === 'over' && (
         <div className="zl-panel">
           <div className="zl-card">
-            <h2 className="zl-title">{snap.won ? '👑 King defeated!' : 'Game over'}</h2>
+            <h2 className="zl-title">{snap.conga ? (snap.won ? '🪗 Conga cleared!' : 'Nice try!') : snap.won ? '👑 King defeated!' : 'Game over'}</h2>
+            {snap.conga && <div className="zl-best">{snap.cleared} of 6 phrases played cleanly · best {snap.save.conga}</div>}
             <div className="zl-stars" aria-label={`${snap.stars} of 3 stars`}>
               {[0, 1, 2].map((i) => <span key={i} className={i < snap.stars ? 'on' : 'off'}>★</span>)}
             </div>
             <div className="zl-big">Score {snap.score.toLocaleString()}</div>
-            {snap.newBest ? <div className="zl-new">🎉 New best score!</div> : <div className="zl-best">🏆 Best: {snap.save.best[snap.mode].toLocaleString()}</div>}
+            {snap.conga ? null : snap.newBest ? <div className="zl-new">🎉 New best score!</div> : <div className="zl-best">🏆 Best: {snap.save.best[snap.mode].toLocaleString()}</div>}
             <div className="zl-row">
               <button className="zl-btn go" onClick={() => g()?.retry()}>↻ Retry</button>
               <button className="zl-btn" onClick={() => g()?.toMenu()}>Menu</button>
@@ -140,8 +160,9 @@ function Hud({ snap, onQuit }: { snap: Snapshot; onQuit: () => void }) {
   return (
     <div className="zl-hud">
       <div>
-        <span className="zl-wave">Wave {snap.wave}/{LEVELS.length}</span>
-        {!boss && snap.phase === 'play' && <span className="zl-left">{snap.left} left</span>}
+        {snap.conga ? <span className="zl-wave">🪗 Conga</span> : <span className="zl-wave">Wave {snap.wave}/{LEVELS.length}</span>}
+        {snap.conga && snap.ph && <PhraseHud i={snap.ph.i} n={snap.ph.n} rung={snap.ph.rung} />}
+        {!boss && !snap.conga && snap.phase === 'play' && <span className="zl-left">{snap.left} left</span>}
         {boss && <span className="zl-score small">{snap.score.toLocaleString()}</span>}
       </div>
       {boss ? (
