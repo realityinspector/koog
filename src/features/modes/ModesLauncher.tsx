@@ -11,7 +11,7 @@ interface CardDef { id: string; icon: string; name: string; blurb: string; on: b
 
 /**
  * ✨ Modes: the one place to switch the optional helpers on and off (top-right of the PLAY display).
- * Each helper keeps its own in-display UI while it is on (DUO strip, Mimic chip, Mentor owl, Band pill, mood face).
+ * Each helper keeps its own in-display UI while it is on (DUO strip, Mimic chip, Mentor robot, Band pill, mood face).
  */
 export function ModesLauncher() {
   const [open, setOpen] = useState(false)
@@ -37,7 +37,7 @@ export function ModesLauncher() {
     { id: 'duo', icon: '🎧', name: 'DJ + Piano', blurb: 'A friend DJs on two decks while you play. The DJ sets the beat and key.', on: duo,
       toggle: () => { useDuoOpen.getState().setOpen(!duo); void ensure() } },
     { id: 'mimic', icon: '🎭', name: 'Mimic', blurb: 'Play a little tune and Koog answers in a famous style.', on: mimicOn, toggle: () => void mimic.toggle() },
-    { id: 'mentor', icon: '🎓', name: 'Mentor', blurb: 'An owl audience that cheers your moves and gives tips.', on: mentor, toggle: () => useMentor.getState().setOn(!mentor) },
+    { id: 'mentor', icon: '🎓', name: 'Mentor', blurb: 'A synth robot in the front row that beeps for your moves and gives tips.', on: mentor, toggle: () => useMentor.getState().setOn(!mentor) },
     { id: 'vibes', icon: '😀', name: 'Vibes face', blurb: 'A little face that shows the mood of your music.', on: vibes, toggle: () => useVibes.getState().setChip(!vibes) },
     { id: 'band', icon: '🤖', name: 'Band', blurb: 'A backing band that listens and plays along with you.', on: bandOn, toggle: () => void band.toggle() },
   ]

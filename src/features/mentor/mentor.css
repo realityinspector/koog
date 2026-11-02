@@ -1,9 +1,17 @@
-/* Mentor mode: owl in the front row (bottom-left of the display), speech bubble, floating move labels, highlights reel. */
+/* Mentor mode: a retro synth robot in the front row (bottom-left of the display), speech bubble, floating move labels, highlights reel. */
 .mn { position: absolute; inset: 0; pointer-events: none; z-index: var(--z-caption, 7); }
 .mn-seat { position: absolute; left: 12px; bottom: calc(var(--stack-h, 0px) + 40px); pointer-events: auto; cursor: pointer; padding: 2px; border: 0; background: none; transform-origin: 50% 100%; }
 .mn-seat:focus-visible { outline: 2px solid #fff; border-radius: 12px; }
-.mn-owl { display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,.45)); overflow: visible; }
-.mn-body, .mn-head, .mn-wing, .mn-eyes, .mn-beak, .mn-pupil { transform-box: fill-box; transform-origin: 50% 50%; }
+.mn-bot { display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,.45)); overflow: visible; }
+/* the antenna and chest LED glow softly (slow, well under 3 flashes per second); the mouth wave scrolls while it listens */
+.mn-ant { animation: mn-glow 2.4s ease-in-out infinite; }
+.mn-led { animation: mn-glow 1.6s ease-in-out infinite; }
+@keyframes mn-glow { 50% { opacity: .45 } }
+.mn-bot .mn-eyes { filter: drop-shadow(0 0 2px #5fffd0); }
+.m-applaud .mn-beak, .m-gasp .mn-beak { stroke: #f5c96b; }
+.m-applaud .mn-ant { fill: #f5c96b; }
+.m-think .mn-ant { fill: #8b7bff; }
+.mn-body, .mn-head, .mn-wing, .mn-eyes, .mn-beak, .mn-pupil, .mn-ant { transform-box: fill-box; transform-origin: 50% 50%; }
 .mn-eyes { animation: mn-blink 5s infinite; }
 @keyframes mn-blink { 0%, 94%, 100% { transform: scaleY(1) } 97% { transform: scaleY(.1) } }
 .m-applaud .mn-wl { animation: mn-clap-l .32s ease-in-out 6; transform-origin: 90% 40%; }
@@ -49,9 +57,9 @@
 .mn-chip:hover { border-color: var(--gold, #ffd76c); }
 .mn-chip.on { box-shadow: inset 0 3px 6px rgba(0,0,0,.6); border-color: var(--gold, #ffd76c); background: linear-gradient(180deg, #3a3160, #231f40); }
 .mn-chip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-@media (max-height: 640px) { .mn-owl { width: 44px; height: 50px; } .mn-bubble { left: 66px; font-size: 14px; } }
+@media (max-height: 640px) { .mn-bot { width: 44px; height: 50px; } .mn-bubble { left: 66px; font-size: 14px; } }
 @media (prefers-reduced-motion: reduce) {
-  .mn-owl *, .mn-label, .mn-bubble, .mn-reel { animation: none !important; transition: none !important; }
+  .mn-bot *, .mn-label, .mn-bubble, .mn-reel { animation: none !important; transition: none !important; }
   .mn-label { opacity: 1; }
 }
 

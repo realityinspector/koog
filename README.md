@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/koog-banner.svg" alt="KOOG logo: sunset-chrome letters where both O's are synth knobs, above the words Smart synth for young musicians" width="760"></p>
+
 # Koog
 
 > **Inspired by Moog, coded with Loog, it's... Koog!**
@@ -41,7 +43,7 @@ It runs in Chrome or Edge on any computer. Plug in any USB-MIDI keyboard, or pla
 
 | | |
 |---|---|
-| ![Vibes mode: the student plays an A minor chord and a large crying face appears with the label SAD, alongside a sad-to-happy mood map.](docs/images/02-vibes.jpg) | ![Mentor mode: the student plays Ode to Joy in G during free play, and a friendly owl in the corner says "Was that Ode to Joy?! In G, sneaky."](docs/images/05-mentor.jpg) |
+| ![Vibes mode: the student plays an A minor chord and a large crying face appears with the label SAD, alongside a sad-to-happy mood map.](docs/images/02-vibes.jpg) | ![Mentor mode: the student plays Ode to Joy in G during free play, and a friendly retro synth robot in the corner says "Wait, Ode to Joy in G? I heard that."](docs/images/05-mentor.jpg) |
 | **Vibes:** chords become feelings. Minor chords look sad, major chords happy. Students hear *why* music sounds the way it does. | **Mentor:** an encouraging audience member that names what the student did (motif, sequence, cadence) and spots tunes they've learned, even played in a new key. It gives one kind tip at a time. |
 | ![Sheet music mode: a grand staff under the display shows Ode to Joy with chord symbols above; played notes turn green and a gold cursor marks the current note.](docs/images/04-sheet.jpg) | ![The Learn it screen for Ode to Joy: phrase 1 of 10 with note bubbles E, E, F, the instruction "Listen and watch the keys light up", and seven rungs from Listen to Both hands.](docs/images/03-learn.jpg) |
 | **Sheet music:** a play-along grand staff at three levels (single notes, easy chords, full). It also writes down what a student improvises. | **Learn it:** the phrase trainer. The next key glows on the keyboard; each rung removes one support. |
@@ -71,6 +73,14 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 - **Mood lab (10 min):** turn on Vibes. *"Make it sad. Now make it happy. What changed?"* (Major vs. minor, high vs. low, fast vs. slow.)
 - **Memorize a tune (15 min):** SONGS → *Ode to Joy* → 🧠 Learn it. Students climb from Listen to Memory on the first few phrases.
 - **Reward round:** a few minutes of BachDoom or Zombie Lanes. Only correct, in-time notes score.
+
+## Setting it up
+
+![Setup at home: one computer with Chrome or Edge, an optional USB-MIDI keyboard, and speakers or headphones. 1. Install Node, then run npm install and npm start. 2. Plug in the keyboard, or use the computer keys. 3. Open Koog in Chrome at localhost:5173. 4. Each kid picks a code word, so siblings keep their own stars.](docs/images/setup-home.svg)
+
+![Setup in a classroom or computer lab: build Koog once (npm run build) and put the dist folder on the school's HTTPS web server, or run npm start on each computer. Each station has a computer, an optional USB-MIDI keyboard and headphones. The teacher projects Koog to demo a move. Web MIDI needs HTTPS or localhost, and progress is saved per code word on each computer.](docs/images/setup-classroom.svg)
+
+**Hosting for a whole room:** `npm run build` makes a folder of plain static files (`dist/`). Any HTTPS web server can serve it, and stations just open the address in Chrome or Edge. Nothing runs on the server, and no student data is sent to it. (The 💡 Idea box needs the local request inbox, so it's only for home setups.)
 
 ## Practical details
 
@@ -110,12 +120,14 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | **🎼 Sheet levels** | Single notes, Easy chords (chord symbols and left-hand roots) or Full (an arranged left-hand part). SONGS grades the left hand too. |
 | **🏢 Boss mode** (Dad mode) | A lean studio for grown-ups, with the visualizer and the kid features off. The rail is STUDIO (master clock, mixer, instrument rack, routing, MIDI monitor, 8 scenes), DJ, LOOPS, SYNTHS and SCENES, plus a Stage performance view. Includes the keyboard split and layers and the 🔁 loop station: 8 layers of recorded notes and knob moves, controllable from the DJ controller, exportable as MIDI. |
 | **🧠 Phrase memory** | In SONGS, *Learn it* teaches a song in 2–3-note phrases up a ladder (listen → follow → echo → memory → timed → blind → hands), then chains phrases into lines and the whole song. Mastery is saved per kid and shared with the games: BachDoom phrase waves (Galaga-style dives on the phrase rhythm; Episode 0: Boot Camp), Zombie Lanes conga lines, Jiu-Jitsu calls and Runway phrase walks. Sheet music shows phrase brackets and fades notes in memory mode. |
-| **🎓 Mentor** | An optional front-row owl that names what you play (motif, sequence, inversion, cadence, I–V–vi–IV, modulation…), spots quotes of public-domain tunes and of your learned phrases, gives kind tips, and shows a highlights reel. |
+| **🎓 Mentor** | An optional front-row synth robot (chrome dome, LED eyes, a sine-wave mouth) that names what you play (motif, sequence, inversion, cadence, I–V–vi–IV, modulation…), spots quotes of public-domain tunes and of your learned phrases, gives kind tips, and shows a highlights reel. |
 | **😀 Vibes** | The mood of the music as a face: chords, progressions, contour, register, tempo and dynamics drive valence and arousal, plus a "Make it spooky" challenge. |
 | **🎭 Mimic** | Koog answers your phrase in a style (Baroque, Classical, Romantic, Impressionist, ragtime, blues, boogie, cool jazz, bebop, funk, minimalism, synth-pop, gospel, bossa nova) or restyles your playing. Public-domain composers can be quoted. Later idioms are style emulation only, with original phrases, and are not affiliated with any artist. |
 | **Kid / Dad mode** | Each kid signs in with a short code word. Dad mode (press and hold) adds a DEV screen with MIDI, pre-flight and test tools. |
 
 </details>
+
+**The logo** is an original design: sunset-chrome letters with both O's drawn as synth knobs (it is not Moog's lettering).
 
 **Why "Koog"?** Moog → Loog moves one letter back in the alphabet (M → L). Loog → Koog moves one more (L → K). It also sounds a bit like "code".
 

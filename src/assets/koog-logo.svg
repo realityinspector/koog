@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 150" role="img" aria-label="KOOG">
+  <title>KOOG</title>
+  <defs>
+    <!-- 70s sunset chrome: cream highlight, amber, coral, violet -->
+    <linearGradient id="kgSun" x1="0" y1="18" x2="0" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff4d8"/>
+      <stop offset=".38" stop-color="#ffc35a"/>
+      <stop offset=".7" stop-color="#ff6f61"/>
+      <stop offset="1" stop-color="#b44cff"/>
+    </linearGradient>
+    <linearGradient id="kgKnob" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3160"/>
+      <stop offset="1" stop-color="#16122b"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#kgSun)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <!-- K -->
+    <path d="M38 26V104"/>
+    <path d="M94 26L48 66L94 104"/>
+    <!-- O O as oscillator rings -->
+    <circle cx="166" cy="65" r="39"/>
+    <circle cx="276" cy="65" r="39"/>
+    <!-- G -->
+    <path d="M415 39A39 39 0 1 0 425 65H396"/>
+  </g>
+  <!-- knob caps inside the O's, pointers at "10 o'clock" and "2 o'clock" like a patch being dialled in -->
+  <g>
+    <circle cx="166" cy="65" r="17" fill="url(#kgKnob)" stroke="#fff4d8" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M166 65L155 53" stroke="#5fffd0" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="276" cy="65" r="17" fill="url(#kgKnob)" stroke="#fff4d8" stroke-opacity=".5" stroke-width="2"/>
+    <path d="M276 65L287 53" stroke="#5fffd0" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- tick marks around the rings, like a knob's scale -->
+  <g stroke="#fff4d8" stroke-opacity=".55" stroke-width="2" stroke-linecap="round">
+    <path d="M166 14v-6M137 22l-4-4M195 22l4-4M276 14v-6M247 22l-4-4M305 22l4-4"/>
+  </g>
+  <!-- retro speed stripes -->
+  <g stroke-width="5" stroke-linecap="round">
+    <path d="M28 128H436" stroke="#ffc35a"/>
+    <path d="M44 138H420" stroke="#ff6f61"/>
+    <path d="M60 148H404" stroke="#b44cff" stroke-opacity=".9"/>
+  </g>
+</svg>
