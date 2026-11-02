@@ -53,9 +53,9 @@ export function Mentor({ tech = false }: { tech?: boolean }) {
           {reel.note && <div className="mn-reel-n">{reel.note}</div>}
         </div>
       )}
-      {line && !reel && <div key={line.id} className={'mn-bubble mn-' + (line.tone ?? 'praise')} role="status">{line.text}</div>}
+      {line && !reel && <div key={'line-' + line.id} className={'mn-bubble mn-' + (line.tone ?? 'praise')} role="status">{line.text}</div>}
       <button className="mn-off" aria-label="Turn Mentor off" title="Mentor is on. Tap to turn off" onClick={() => useMentor.getState().setOn(false)}>✕</button>
-      <button key={moodN} className="mn-seat" onClick={() => (reel ? closeReel() : showReel(true))} title="Your Mentor is listening. Tap for the highlights" aria-label="Mentor: show highlights">
+      <button key={'seat-' + moodN} className="mn-seat" onClick={() => (reel ? closeReel() : showReel(true))} title="Your Mentor is listening. Tap for the highlights" aria-label="Mentor: show highlights">
         <Owl mood={mood} />
       </button>
     </div>
