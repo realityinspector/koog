@@ -6,6 +6,7 @@ import { onNote } from '../../music/notes'
 import { celebrate } from '../celebrate/celebrate'
 import { firstNoteDone, startMilestones } from '../celebrate/milestones'
 import './tour.css'
+import { Icon } from '../../ui/Icon'
 
 type R = { top: number; left: number; width: number; height: number }
 const PAD = 6
@@ -108,7 +109,7 @@ export function Tour() {
 
   if (guest) return null
   const btn = (
-    <button className="tour-replay" onClick={beginTour} hidden={open} title="Replay the tour" aria-label="Replay the tour"><b aria-hidden>?</b></button>
+    <button className="tour-replay" onClick={beginTour} hidden={open} title="Replay the tour" aria-label="Replay the tour"><Icon name="help" /></button>
   )
   const tap = phase === 'tap' && (
     <div className="tour-tap" role="status">

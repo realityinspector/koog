@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { checkCode, isGuest, psave, useProfile } from './profile'
 import './profile.css'
+import { Icon } from '../ui/Icon'
 
 const HOLD_MS = 1200
 
@@ -36,7 +37,7 @@ export function ProfileBar() {
   return (
     <div className={`pf-bar pf-${mode}`}>
       <span className="pf-who">
-        {isGuest(active) ? '👋 Guest' : <>🎹 <b>{active}</b></>}
+        {isGuest(active) ? <><Icon name="user" size={16} /> <b>Guest</b></> : <><Icon name="user" size={16} /> <b>{active}</b></>}
         {!isGuest(active) && <button className="pf-switch" onClick={signOut} title="Pick a different player">switch player</button>}
       </span>
       <span className="pf-mode">
@@ -65,7 +66,7 @@ export function ProfileBar() {
                 strokeDasharray="50.3" strokeDashoffset={holding ? 0 : 50.3}
                 style={{ transition: holding ? `stroke-dashoffset ${HOLD_MS}ms linear` : 'none' }} />
             </svg>
-            <span className="pf-lock" aria-hidden>🔒</span>
+            <span className="pf-lock" aria-hidden><Icon name="lock" size={14} /></span>
           </button>
         )}
       </span>

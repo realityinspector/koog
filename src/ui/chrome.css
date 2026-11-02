@@ -1,0 +1,178 @@
+/* Koog chrome skin (elegance pass): one quiet surface language for the instrument shell.
+   Scoped under .kg-app so it wins over older feature rules without !important.
+   Flat dark glass, hairline borders, one amber accent, mint only for live/on, line icons in currentColor. */
+.kg-app { --c-pill-bg: rgba(255, 255, 255, .045); --c-pill-bd: rgba(255, 255, 255, .11); --c-pill-hov: rgba(255, 255, 255, .085); --c-h: 34px; }
+.k-ic { display: block; flex: none; }
+
+/* ---------- chassis ---------- */
+.kg-app .kg-panel { background: radial-gradient(130% 90% at 50% 0%, #221d38 0%, #17142b 55%, #110f22 100%); }
+.kg-app .kg-chassis { box-shadow: 0 30px 80px rgba(4, 2, 20, .6), 0 0 0 1px rgba(0, 0, 0, .6); }
+
+/* ---------- top strip ---------- */
+.kg-app .kg-strip { gap: 10px; }
+.kg-app .kg-badge { background: none; border: 0; box-shadow: none; padding: 0 6px 0 2px; align-items: flex-start; }
+.kg-app .kg-sub { font-size: 9px; font-weight: 700; letter-spacing: .3em; color: var(--k-ink-3); margin-top: 3px; padding-left: 2px; }
+/* every strip control: same height, same ghost pill */
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold) {
+  height: var(--c-h); min-height: var(--c-h); box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px;
+  border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); box-shadow: none;
+  color: var(--k-ink-2); font-size: 13px; font-weight: 600; letter-spacing: 0; transition: background .15s, border-color .15s, color .15s; }
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold):hover { background: var(--c-pill-hov); border-color: var(--k-line-strong); color: var(--k-ink); }
+.kg-app .kg-strip :is(.kg-dev-chip.open, .sh-toggle.on, .kg-idea.on) { color: var(--k-ink); border-color: var(--k-accent); background: rgba(255, 180, 60, .08); box-shadow: none; }
+.kg-app .kg-strip :is(.kg-audio-btn, .tour-replay, .pf-hold) { width: var(--c-h); min-width: var(--c-h); padding: 0; justify-content: center; }
+.kg-app .kg-strip .pf-hold { opacity: 1; }
+.kg-app .kg-strip .pf-hold .pf-ring { inset: 2px; }
+.kg-app .kg-strip .pf-hold .pf-lock { display: grid; place-items: center; }
+.kg-app .kg-strip :is(.kg-dev-chip, .sh-toggle, .kg-idea) { padding: 0 13px 0 11px; }
+.kg-app .kg-strip .sh-toggle.on .k-ic { color: var(--k-accent); }
+/* player chip */
+.kg-app .kg-strip .pf-bar { margin: 0; gap: 8px; }
+.kg-app .kg-strip .pf-who { height: var(--c-h); box-sizing: border-box; padding: 0 4px 0 14px; gap: 10px; border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); }
+.kg-app .kg-strip .pf-who b { font-size: 14px; font-weight: 650; color: var(--k-ink); }
+.kg-app .kg-strip .pf-who > :first-child:not(b) { color: var(--k-ink-3); }
+.kg-app .kg-strip .pf-switch { height: 26px; padding: 0 11px; background: rgba(255, 255, 255, .06); border-color: transparent; color: var(--k-ink-3); font-size: 11.5px; }
+.kg-app .kg-strip .pf-switch:hover { color: var(--k-ink); background: rgba(255, 255, 255, .1); }
+/* sound group: speaker + slider + switch read as one cluster */
+.kg-app .kg-audio { gap: 6px; }
+.kg-app .kg-audio-vol { gap: 8px; }
+.kg-app .kg-vol { width: 76px; height: 4px; background: linear-gradient(90deg, var(--k-ink-2) var(--p, 70%), rgba(255, 255, 255, .14) var(--p, 70%)); }
+.kg-app .kg-vol::-webkit-slider-thumb { width: 14px; height: 14px; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
+.kg-app .kg-vol::-moz-range-thumb { width: 14px; height: 14px; background: #fff; border: 0; }
+.kg-app .kg-audio-sw { padding: 0 13px 0 8px; }
+.kg-app .kg-audio-label { font-weight: 600; letter-spacing: 0; }
+.kg-app .kg-audio-label b { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--k-ink-3); margin-left: 2px; }
+.kg-app .kg-audio-sw.on { border-color: rgba(108, 255, 168, .45); color: var(--k-ink); }
+.kg-app .kg-audio-sw.on .kg-audio-label b { color: var(--k-lcd); }
+.kg-app .kg-audio-track { width: 28px; height: 16px; background: rgba(255, 255, 255, .14); box-shadow: none; }
+.kg-app .kg-audio-knob { width: 12px; height: 12px; }
+.kg-app .kg-audio-sw.on .kg-audio-track { background: var(--k-lcd); }
+.kg-app .kg-audio-sw.on .kg-audio-knob { transform: translateX(12px); }
+.kg-app .kg-dev-txt { font-variant-numeric: tabular-nums; }
+/* popovers from the strip */
+.kg-app :is(.kg-dev-pop, .kg-audio-pop, .kg-idea-pop) { background: rgba(18, 15, 38, .97); border: 1px solid var(--k-line); border-radius: var(--k-r-lg); box-shadow: var(--k-e-3); backdrop-filter: blur(14px); }
+
+/* ---------- display ---------- */
+.kg-app .kg-bezel { padding: 6px; border-radius: 18px; background: #08070f; box-shadow: inset 0 2px 8px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .06); }
+.kg-app .kg-display { inset: 6px; border-radius: 13px; }
+.kg-app .kg-glass { background: linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 22%); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); }
+
+/* smart readouts: one row of matched glass cells, equal height */
+.kg-app .sr { top: 14px; left: 14px; gap: 6px; align-items: stretch; }
+.kg-app .sr-cell, .kg-app .sr-key { min-height: 62px; box-sizing: border-box; padding: 9px 14px 10px; border-radius: 12px; justify-content: space-between; gap: 6px;
+  background: rgba(10, 8, 26, .52); border: 1px solid rgba(255, 255, 255, .09); box-shadow: none; backdrop-filter: blur(12px) saturate(1.2); color: var(--k-ink); }
+.kg-app .sr-cell.sr-keywrap { min-height: 62px; padding: 0; background: none; border: 0; backdrop-filter: none; }
+.kg-app .sr-key { height: 100%; }
+.kg-app .sr-key:hover { border-color: var(--k-line-strong); }
+.kg-app .sr-key[aria-expanded="true"] { border-color: var(--k-accent); }
+.kg-app .sr-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; color: rgba(230, 226, 255, .55); text-transform: uppercase; }
+.kg-app .sr-auto { color: inherit; }
+.kg-app .sr-val { font: 600 19px/1.05 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--k-ink); text-shadow: none; letter-spacing: -.01em; }
+.kg-app .sr-chord { color: #ffe2a3; }
+.kg-app .sr-chord-big { font-size: 30px; }
+.kg-app .sr-streak { color: var(--k-lcd); }
+.kg-app .sr-best { font-size: 10.5px; letter-spacing: .12em; color: rgba(230, 226, 255, .5); }
+.kg-app .sr-meter { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .1); box-shadow: none; }
+.kg-app .sr-meter i { border-radius: 2px; }
+.kg-app .sr-power .sr-meter { height: 5px; margin-top: 0; }
+.kg-app .sr-meter.sr-meter-s { height: 3px; }
+.kg-app .sr-boom { font: 700 10px system-ui, sans-serif; letter-spacing: .12em; color: rgba(230, 226, 255, .5); }
+.kg-app .sr-help { width: 16px; height: 16px; font-size: 10px; color: rgba(230, 226, 255, .45); border: 1px solid rgba(255, 255, 255, .14); background: none; }
+.kg-app .sr-help:hover, .kg-app .sr-help.on { color: #1b1300; background: var(--k-accent); border-color: transparent; }
+.kg-app .sr-keywrap > .sr-help { top: 9px; right: 9px; }
+.kg-app .sr-tip { background: rgba(10, 8, 26, .82); border: 1px solid var(--k-line); border-radius: 12px; backdrop-filter: blur(12px); }
+.kg-app .sr-tip b { color: var(--k-accent); }
+.kg-app .sr-led.on { background: var(--k-lcd); box-shadow: 0 0 6px rgba(108, 255, 168, .8); }
+
+/* Modes launcher */
+.kg-app .md-btn { height: 38px; padding: 0 12px 0 12px; gap: 8px; background: rgba(10, 8, 26, .52); border: 1px solid rgba(255, 255, 255, .12); box-shadow: none; backdrop-filter: blur(12px); }
+.kg-app .md-btn b { font-size: 11.5px; font-weight: 700; letter-spacing: .16em; }
+.kg-app .md-btn.has { border-color: rgba(255, 255, 255, .12); }
+.kg-app .md-btn .k-ic { color: var(--k-accent); }
+.kg-app .md-btn:hover, .kg-app .md-btn.open { border-color: var(--k-accent); }
+.kg-app .md-pop { top: 46px; border-radius: 16px; background: rgba(16, 13, 34, .97); border-color: var(--k-line); padding: 14px; }
+.kg-app .md-card { background: rgba(255, 255, 255, .035); border-color: rgba(255, 255, 255, .08); border-radius: 12px; padding: 10px 12px; gap: 12px; }
+.kg-app .md-card:hover { background: rgba(255, 255, 255, .06); border-color: var(--k-line-strong); }
+.kg-app .md-card.on { border-color: rgba(108, 255, 168, .5); box-shadow: none; background: rgba(108, 255, 168, .05); }
+.kg-app .md-ic { font-size: 20px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: rgba(255, 255, 255, .05); }
+.kg-app .md-tx b { font-weight: 650; }
+.kg-app .md-tx em { color: var(--k-ink-3); font-size: 12px; line-height: 1.35; }
+.kg-app .md-sw { background: none; font-weight: 700; }
+
+/* visual controls (bottom-right): one quiet segmented cluster */
+.kg-app .viz .viz-bar { gap: 6px; }
+.kg-app .viz .viz-bar button.vb-chip { min-height: 34px; height: 34px; min-width: 34px; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+  color: var(--k-ink-2); background: rgba(10, 8, 26, .52); border: 1px solid rgba(255, 255, 255, .12); backdrop-filter: blur(12px); box-shadow: none; transition: background .15s, border-color .15s, color .15s; }
+.kg-app .viz .viz-bar button.vb-chip:not(.on):hover { background: rgba(10, 8, 26, .72); border-color: var(--k-line-strong); color: var(--k-ink); }
+.kg-app .viz .viz-bar button.vb-chip.on { background: rgba(255, 180, 60, .14); border-color: var(--k-accent); color: var(--k-ink); box-shadow: none; }
+.kg-app .viz .viz-bar button.vb-chip.vb-icon { padding: 0; justify-content: center; }
+.kg-app .viz .viz-bar .vb-lab { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--k-ink-3); margin: 0; }
+.kg-app .viz .viz-bar .vb-cur { color: var(--k-ink); }
+.kg-app .viz .viz-bar .vb-caret { opacity: .6; margin-left: -2px; }
+.kg-app .vb-pop { border-radius: 16px; background: rgba(16, 13, 34, .97); border-color: var(--k-line); }
+.kg-app .viz .viz-bar .vb-pop button.vb-theme.on, .kg-app .viz .viz-bar .vb-pop button.vb-tog.on { border-color: var(--k-accent); background: rgba(255, 180, 60, .12); }
+
+/* ---------- screens (shared head) ---------- */
+.kg-app .kg-screen { background: rgba(14, 11, 32, .84); backdrop-filter: blur(18px) saturate(1.15); }
+.kg-app .kg-screen-head { padding: 14px 20px 12px; border-bottom-color: rgba(255, 255, 255, .07); }
+.kg-app .kg-screen-head h2 { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .2em; color: var(--k-ink); }
+.kg-app .kg-screen-head h2 .k-ic { color: var(--k-accent); }
+.kg-app .kg-close { height: 32px; min-height: 32px; padding: 0 14px; font-size: 12.5px; font-weight: 600; color: var(--k-ink-2); background: none; border-color: var(--k-line); }
+.kg-app .kg-close:hover { color: var(--k-ink); background: rgba(255, 255, 255, .06); border-color: var(--k-line-strong); }
+
+/* ---------- mode rail: flat segmented tabs, amber underline for the active one ---------- */
+.kg-app .kg-rail { gap: 4px; padding: 5px; border-radius: 14px; background: rgba(0, 0, 0, .26); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .04); }
+.kg-app .kg-mode { gap: 9px; padding: 4px 10px; border-radius: 10px; color: var(--k-ink-3); background: transparent; border: 1px solid transparent; box-shadow: none; transform: none; transition: background .15s, color .15s, border-color .15s; }
+.kg-app .kg-mode:hover { color: var(--k-ink); background: rgba(255, 255, 255, .04); }
+.kg-app .kg-mode:active { transform: none; box-shadow: none; }
+.kg-app .kg-mode.on { color: var(--k-ink); background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .045)); border-color: rgba(255, 255, 255, .1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 2px 8px rgba(0, 0, 0, .35); transform: none; }
+.kg-app .kg-mode::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 18px; height: 2px; border-radius: 2px; background: var(--k-accent); transform: translateX(-50%) scaleX(0); transition: transform .2s ease; }
+.kg-app .kg-mode.on::after { transform: translateX(-50%) scaleX(1); }
+.kg-app .kg-mode.dev.on::after { background: #ffb86c; }
+.kg-app .kg-mode-ic { filter: none; opacity: .85; }
+.kg-app .kg-mode.on .kg-mode-ic { color: var(--k-accent); opacity: 1; }
+.kg-app .kg-mode-lb { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-shadow: none; }
+.kg-app .kg-led { display: none; }
+.kg-app .kg-mode-badge { top: 6px; right: 8px; min-width: 16px; height: 16px; font-size: 10px; font-weight: 800; background: var(--k-accent); color: #1b1300; }
+@media (max-width: 1200px) { .kg-app .kg-mode { padding-left: 8px; padding-right: 8px; gap: 7px; } }
+
+/* ---------- keybed ---------- */
+.kg-app .kg-keybed { border-radius: 12px; background: #09080f; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .05); }
+.kg-app .kb .kb-opts { gap: 4px; }
+.kg-app .kb .kb-opts .kb-toggle { min-height: 24px; padding: 0 10px; gap: 6px; background: none; border-color: transparent; color: var(--k-ink-3); font-size: 11.5px; }
+.kg-app .kb .kb-opts .kb-toggle:hover { color: var(--k-ink); background: rgba(255, 255, 255, .05); }
+.kg-app .kb .kb-opts .kb-toggle:has(input:checked) { color: var(--k-ink-2); }
+.kg-app .kb .kb-opts .kb-toggle input { accent-color: var(--k-accent); width: 13px; height: 13px; }
+.kg-app .kg-keybed .kb-key.white:not(.held):not(.guide):not(.spicy) { background: linear-gradient(180deg, #f3f1fa 0%, #ebe8f6 88%, #dcd8ea 100%); border-color: #6a6688; box-shadow: inset 0 -3px 4px rgba(60, 50, 110, .12); }
+.kg-app .kg-keybed .kb-key.black:not(.held):not(.guide):not(.spicy) { background: linear-gradient(180deg, #24203a 0%, #0e0c1c 80%, #1c1932 100%); }
+.kg-app .kb-dot { width: 5px; height: 5px; opacity: .55; background: #b39a6a; }
+/* home note (the key's tonic): a small amber ring instead of the house emoji */
+.kg-app .kb-home { display: block; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--k-accent); box-sizing: border-box; margin-bottom: 3px; font-size: 0; }
+.kg-app .kb-label { font-size: 10.5px; font-weight: 600; color: #6d6890; letter-spacing: .02em; }
+.kg-app .kb-nudge { background: rgba(10, 8, 26, .8); border: 1px solid var(--k-line); color: var(--k-ink-2); font-weight: 600; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) { .kg-app .kg-mode::after, .kg-app .kg-mode, .kg-app .kg-strip * { transition: none; } }
+.kg-app .md-pop { width: min(600px, calc(100vw - 40px)); }
+.kg-app .md-card { grid-template-columns: 36px 1fr auto; min-height: 64px; }
+
+/* Boss studio: the Mimic chip sits by the Mentor button at the bottom, clear of the studio's top bar */
+.kg-app .kg-display:has(.bx-ws) .mm-wrap { top: auto; bottom: calc(var(--stack-h, 0px) + 14px); right: 160px; }
+.kg-app .kg-display:has(.bx-ws) .mm-pop { top: auto; bottom: calc(100% + 8px); right: -100px; }
+
+/* Who's playing? card: calm title, amber primary */
+.pf-who-card { background: rgba(18, 15, 38, .97) !important; border: 1px solid var(--k-line) !important; }
+.pf-who-card h2 { background: none !important; color: var(--k-ink) !important; -webkit-text-fill-color: currentColor; font-weight: 700; }
+.pf-who-card .pf-new input { background: rgba(0, 0, 0, .35); border-color: var(--k-line); }
+.pf-who-card .pf-new input:focus { border-color: var(--k-accent); }
+.pf-who-card .pf-new button { background: var(--k-accent) !important; color: #1b1300; font-weight: 700; }
+.pf-who-card .pf-guest { background: none; border-color: var(--k-line); }
+
+/* Learn it (phrase trainer): flat card, quiet rungs, amber for the current rung and the main button */
+.kg-app .pt-card { background: rgba(255, 255, 255, .03); border-color: var(--k-line); border-radius: 14px; }
+.kg-app .pt-ladder { gap: 6px; }
+.kg-app .pt-ladder .rg { border-color: var(--k-line); background: rgba(255, 255, 255, .03); border-radius: 10px; opacity: .7; }
+.kg-app .pt-ladder .rg em { font-size: 11px; font-weight: 600; color: var(--k-ink-2); }
+.kg-app .pt-ladder .rg.cur { border-color: var(--k-accent); box-shadow: none; background: rgba(255, 180, 60, .08); }
+.kg-app .pt-ladder .rg.done { background: rgba(108, 255, 168, .08); border-color: rgba(108, 255, 168, .5); }
+.kg-app .pt-btns button { height: 34px; padding: 0 16px; border-radius: var(--k-r-pill); font-size: 13px; font-weight: 600; background: none; border: 1px solid var(--k-line); color: var(--k-ink); box-shadow: none; }
+.kg-app .pt-btns button:first-child { background: var(--k-accent); border-color: transparent; color: #1b1300; }
+.kg-app .pt-tile { border-radius: 8px; font-weight: 700; }

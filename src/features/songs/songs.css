@@ -121,3 +121,32 @@
 .sg .pick-t { font-size: var(--k-fs-sm); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--k-accent); }
 .sg .pick-why { font-size: var(--k-fs-md); color: var(--k-ink-2); }
 .sg .pick .card-s { width: 240px; }
+
+/* ---- Elegance pass: calm library ---- */
+.sg .browse { overflow-y: auto; padding-right: 4px; gap: 16px; scrollbar-width: thin; }
+.sg .tabs { gap: 8px; }
+.sg .tab, .sg .sing-chip { background: transparent; border: 1px solid var(--k-line); color: var(--k-ink-2); font-weight: 600; transition: border-color .15s ease, color .15s ease; }
+.sg .tab:hover, .sg .sing-chip:hover { border-color: var(--k-line-strong); color: var(--k-ink); }
+.sg .tab.on, .sg .sing-chip.on { background: transparent; border-color: var(--k-accent); color: var(--k-accent); }
+.sg .rl { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--k-ink-3); margin: 0 0 10px 2px; }
+.sg .car { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; overflow: visible; padding: 0; scroll-snap-type: none; }
+.sg .card-s, .sg .pick .card-s { width: auto; height: auto; min-height: 112px; padding: 12px 14px 10px 16px; gap: 4px; justify-content: flex-start; border-radius: var(--k-r-md); background: var(--k-surface-1); border: 1px solid var(--k-line); box-shadow: var(--k-e-1); overflow: hidden; transition: transform .18s ease, border-color .18s ease; }
+.sg .card-s::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cat, var(--k-line-strong)); }
+.sg .card-s.t-pop { --cat: #b27cff; background: var(--k-surface-1); border-color: var(--k-line); }
+.sg .card-s.t-bang { --cat: #ff9a3c; background: var(--k-surface-1); border-color: var(--k-line); }
+.sg .card-s.t-classical { --cat: #d9b866; background: var(--k-surface-1); border-color: var(--k-line); }
+.sg .card-s.t-easy, .sg .card-s.t-medium, .sg .card-s.t-flex { --cat: var(--k-signal); background: var(--k-surface-1); border-color: var(--k-line); }
+.sg .card-s:hover { transform: translateY(-1px); border-color: var(--k-line-strong); box-shadow: var(--k-e-1); }
+.sg .card-s b { font-size: 15px; font-weight: 650; color: var(--k-ink); padding-right: 22px; }
+.sg .card-s .hk { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; line-height: 1.45; color: var(--k-ink-2); opacity: 1; }
+.sg .card-s .mic { top: 11px; right: 12px; font-size: 13px; opacity: .55; }
+.sg .card-s .ds { color: var(--k-ink-3); text-shadow: none; font-size: 11px; }
+.sg .card-s .ds i { color: rgba(255,255,255,.16); }
+.sg .card-s .pb { background: transparent; padding: 0; color: var(--k-accent); font-size: 11px; font-weight: 600; }
+.sg .card-s .lr, .sg .card-s .lr.zero { background: transparent; padding: 0; margin-left: auto; color: var(--k-lcd); font-size: 11px; font-weight: 600; }
+.sg .pick { gap: 16px; flex-wrap: nowrap; padding: 0; border: 0; background: transparent; align-items: center; }
+.sg .pick-t { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--k-ink-3); white-space: nowrap; }
+.sg .pick .card-s { width: 300px; flex: none; min-height: 0; border-color: var(--k-accent); }
+.sg .pick-why { font-size: 13px; color: var(--k-ink-2); }
+@media (max-width: 1100px) { .sg .pick { flex-wrap: wrap; gap: 8px; } .sg .car { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .sg .card-s { transition: none; } }

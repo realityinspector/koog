@@ -372,10 +372,10 @@ export function SongsPanel() {
   const curBest = song ? bests[song.id + ':' + mode] : undefined
   const [tab, setTab] = useState<'pop' | 'bang' | 'warm' | 'classical'>('pop')
   const rows: { id: 'pop' | 'bang' | 'warm' | 'classical'; label: string; tabLabel: string; tiers: Tier[] }[] = [
-    { id: 'pop', label: TIER_LABEL.pop, tabLabel: '🎧 Originals', tiers: ['pop'] },
-    { id: 'bang', label: '🔥 ' + TIER_LABEL.bang, tabLabel: '🔥 Bangers', tiers: ['bang'] },
+    { id: 'pop', label: TIER_LABEL.pop, tabLabel: 'Originals', tiers: ['pop'] },
+    { id: 'bang', label: TIER_LABEL.bang, tabLabel: 'Bangers', tiers: ['bang'] },
     { id: 'warm', label: 'Warm-ups', tabLabel: 'Warm-ups', tiers: ['easy', 'medium', 'flex'] },
-    { id: 'classical', label: TIER_LABEL.classical, tabLabel: '🎻 Classical', tiers: ['classical'] },
+    { id: 'classical', label: TIER_LABEL.classical, tabLabel: 'Classical', tiers: ['classical'] },
   ]
   const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
   const listFor = (r: { tiers: Tier[] }) => SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))
@@ -405,7 +405,7 @@ export function SongsPanel() {
         <span className="cs-foot">
           <span className="ds" title={`Difficulty ${d} of 3`} aria-label={`Difficulty ${d} of 3`}>{'★'.repeat(d)}<i>{'★'.repeat(3 - d)}</i></span>
           {bestFor(s.id) ? <span className="pb">Best {bestFor(s.id)}</span> : null}
-          <span className={'lr' + (pr.known ? '' : ' zero')} title={`${pr.known} of ${pr.total} phrases memorized`}>🧠 {pr.pct}%</span>
+          {pr.known > 0 && <span className="lr" title={`${pr.known} of ${pr.total} phrases memorized`}>{pr.pct}% learned</span>}
         </span>
       </button>
     )
@@ -488,7 +488,7 @@ export function SongsPanel() {
         <div className="browse">
           {pick && (
             <div className="pick">
-              <span className="pick-t">✨ Pick for you</span>
+              <span className="pick-t">Pick for you</span>
               {cardFor(pick.s, 'pick-card')}
               <span className="pick-why">{pick.why}</span>
             </div>
@@ -497,7 +497,7 @@ export function SongsPanel() {
             {rows.map((r) => (
               <button key={r.id} className={'tab t-' + r.id + (effTab === r.id ? ' on' : '')} aria-pressed={effTab === r.id} onClick={() => setTab(r.id)}>{r.tabLabel}</button>
             ))}
-            <button className={'sing-chip' + (sing ? ' on' : '')} aria-pressed={sing} onClick={() => setSing(!sing)}>🎤 Sing-along</button>
+            <button className={'sing-chip' + (sing ? ' on' : '')} aria-pressed={sing} onClick={() => setSing(!sing)}>Sing-along</button>
             <span className="grow" />
             <MySongs mine={mine} setMine={setMine} onPick={setSongId} />
           </div>

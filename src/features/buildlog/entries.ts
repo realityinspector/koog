@@ -385,4 +385,11 @@ export const entries: Entry[] = [
     title: '✨ A calmer screen: one MODES button, first-note welcome, milestones',
     body: 'Reviewers said the PLAY screen had too many buttons, so we tidied it like a desk. DJ + Piano, Mimic, Mentor, Vibes and Band now live behind ONE ✨ MODES button, each with a plain ON/OFF. The 9 little picture buttons became one VISUAL menu with names. The readouts only show CHORD while you play one, and every "?" explains a word. New players get "Tap any key!" and a cheer for their very first note, and Koog now celebrates milestones like your first chord and a 10-note streak. Designers call this "progressive disclosure": show a little, reveal more when you need it. We also finished moving every sound (DJ, drums, band, looper) into the one shared sound engine, and wrote a guide so teachers can understand Koog quickly.',
   },
+  {
+    id: 54,
+    time: 'Evening',
+    stage: 'ship',
+    title: '🪶 Making it elegant: one icon style, quiet buttons, one accent color',
+    body: 'Designers say "elegant" when nothing is fighting for your eyes. So we went button by button. The colorful emoji on the rail and top bar became simple line icons, all drawn with the same pen thickness. Every button in the top bar is now the same height and shape. We picked ONE highlight color (amber, like a glowing synth light): whatever is selected or is the main thing to press is amber, and everything else stays calm. The readouts on the screen are matching glass tiles. On the keys, the little house that marks the home note became a small amber ring. Challenges no longer show the same challenge twice, songs sit in a neat grid instead of a row that ran off the screen, and games lost the "NEW" stickers (when everything is new, nothing is). Rule of thumb: if two things look different, they should BE different.',
+  },
 ]

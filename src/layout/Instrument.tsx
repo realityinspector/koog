@@ -5,8 +5,9 @@ import { useScreen } from './screenStore'
 import { useScore, useSheet } from '../music/scoreStore'
 import './instrument.css'
 import koogLogo from '../assets/koog-logo.svg'
+import { Icon } from '../ui/Icon'
 
-export type ModeDef = { id: string; icon: string; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
+export type ModeDef = { id: string; icon: ReactNode; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
 
 const KEY = 'koog.mode.screen'
 function loadMode(): string {
@@ -89,7 +90,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
             <span className="kg-badge" aria-label="Koog smart synthesizer"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">smart synth</span></span>
             <div className="kg-strip-mid">{strip}</div>
             {!lean && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
-              <span aria-hidden>💡</span> <span className="kg-idea-t">Idea?</span>
+              <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>
             </button>}
             {/* stays mounted when closed so a half-typed idea isn't lost */}
             {!lean && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}

@@ -16,6 +16,7 @@ import { Visualizer } from './features/visualizer/Visualizer'
 import { PianoStrip } from './features/keyboard/PianoStrip'
 import { ErrorBoundary } from './layout/ErrorBoundary'
 import { Instrument, type ModeDef } from './layout/Instrument'
+import { Icon } from './ui/Icon'
 import { ProfileBar, ProfileManager, WhoIsPlaying } from './profile/ProfileBar'
 import { useChallengeStore } from './features/challenges/store'
 import { useProfile } from './profile/profile'
@@ -31,6 +32,7 @@ import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
 import './music/judge'
+import './ui/chrome.css'
 
 export function App() {
   const mode = useProfile((s) => s.mode)
@@ -38,24 +40,24 @@ export function App() {
   const badgeCount = useChallengeStore((s) => Object.keys(s.badges).length)
   const dad = mode === 'dad'
   const modes: ModeDef[] = [
-    { id: 'play', icon: '🎹', label: 'PLAY', title: 'Play' },
-    { id: 'songs', icon: '🎵', label: 'SONGS', title: 'Songs', node: <SongsPanel key={'so-' + player} /> },
+    { id: 'play', icon: <Icon name="keys" />, label: 'PLAY', title: 'Play' },
+    { id: 'songs', icon: <Icon name="note" />, label: 'SONGS', title: 'Songs', node: <SongsPanel key={'so-' + player} /> },
     // key = player: switching kids remounts these so they load that kid's saved progress
-    { id: 'challenges', icon: '🏆', label: 'CHALLENGE', title: 'Challenges', badge: badgeCount > 0 ? badgeCount : undefined, node: <ChallengesPanel key={'ch-' + player} /> },
-    { id: 'games', icon: '🎮', label: 'GAMES', title: 'Games', node: <GamesPanel key={'gm-' + player} /> },
-    { id: 'beats', icon: '🥁', label: 'BEATS', title: 'Beats', node: <BeatsPanel /> },
-    { id: 'synth', icon: '🎛️', label: 'SYNTH', title: 'Synth History', node: <SynthHistoryPanel /> },
-    { id: 'log', icon: '🔧', label: 'LOG', title: 'Behind the scenes', node: <BuildLog /> },
+    { id: 'challenges', icon: <Icon name="trophy" />, label: 'CHALLENGE', title: 'Challenges', badge: badgeCount > 0 ? badgeCount : undefined, node: <ChallengesPanel key={'ch-' + player} /> },
+    { id: 'games', icon: <Icon name="game" />, label: 'GAMES', title: 'Games', node: <GamesPanel key={'gm-' + player} /> },
+    { id: 'beats', icon: <Icon name="drum" />, label: 'BEATS', title: 'Beats', node: <BeatsPanel /> },
+    { id: 'synth', icon: <Icon name="knobs" />, label: 'SYNTH', title: 'Synth History', node: <SynthHistoryPanel /> },
+    { id: 'log', icon: <Icon name="wrench" />, label: 'LOG', title: 'Behind the scenes', node: <BuildLog /> },
   ]
   // BOSS mode (= Dad mode): a lean studio. No visualizer, songs, games, challenges, build log, idea box, coach or tour.
   if (dad) {
     const diag = (<><ProfileManager /><MidiStatus /><PreflightPanel /><TestRigPanel /><NoteReadout /><Scratchpad /></>)
     const boss: ModeDef[] = [
-      { id: 'play', icon: '🎚️', label: 'STUDIO', title: 'Studio' },
-      { id: 'dj', icon: '🎧', label: 'DJ', title: 'DJ decks', node: <DjScreen /> },
-      { id: 'loops', icon: '🔁', label: 'LOOPS', title: 'Loop station', node: <LoopsScreen /> },
-      { id: 'synth', icon: '🎛️', label: 'SYNTHS', title: 'Emulator rack', node: <SynthsScreen /> },
-      { id: 'scenes', icon: '🎬', label: 'SCENES', title: 'Scenes', node: <ScenesScreen key={'sc-' + player} /> },
+      { id: 'play', icon: <Icon name="sliders" />, label: 'STUDIO', title: 'Studio' },
+      { id: 'dj', icon: <Icon name="phones" />, label: 'DJ', title: 'DJ decks', node: <DjScreen /> },
+      { id: 'loops', icon: <Icon name="loop" />, label: 'LOOPS', title: 'Loop station', node: <LoopsScreen /> },
+      { id: 'synth', icon: <Icon name="knobs" />, label: 'SYNTHS', title: 'Emulator rack', node: <SynthsScreen /> },
+      { id: 'scenes', icon: <Icon name="scenes" />, label: 'SCENES', title: 'Scenes', node: <ScenesScreen key={'sc-' + player} /> },
     ]
     return (
       <ErrorBoundary>

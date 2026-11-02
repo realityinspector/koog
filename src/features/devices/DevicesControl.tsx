@@ -6,6 +6,7 @@ import { unlockAudio } from '../../music/localNotes'
 import { setScreenMode, useSurface } from '../controller/surface'
 import { SplitControl } from '../split/SplitControl'
 import './devices.css'
+import { Icon } from '../../ui/Icon'
 
 const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['loop', '🔁 Loop'], ['off', 'Off']]
 
@@ -32,10 +33,9 @@ export function DevicesControl() {
   return (
     <div className="kg-dev" ref={root}>
       <button type="button" className={'kg-dev-chip' + (open ? ' open' : '')} aria-expanded={open} aria-haspopup="dialog"
-        title="MIDI devices and piano sound" onClick={() => setOpen((o) => !o)}>
-        <span aria-hidden="true">🎛️</span>
+        title={`MIDI devices and piano sound (now: ${cur.label})`} onClick={() => setOpen((o) => !o)}>
+        <Icon name="plug" />
         <span className="kg-dev-txt">{n} {n === 1 ? 'device' : 'devices'}</span>
-        <span className="kg-dev-snd" aria-hidden="true">{cur.icon}</span>
       </button>
       {open && (
         <div className="kg-dev-pop" role="dialog" aria-label="Devices and sound">

@@ -21,7 +21,7 @@ export function ChallengesPanel() {
   const sound = useChallengeStore((s) => s.sound)
   const { start, quit, setSound, tick } = useChallengeStore.getState()
   const [levels, setLevels] = useState<Record<string, number>>({})
-  const [pick, setPick] = useState<string>(CHALLENGES[0].id)
+  const [pick, setPick] = useState<string | null>(null)
 
   useEffect(() => {
     if (!active) return
@@ -86,10 +86,10 @@ export function ChallengesPanel() {
   }
 
   // ---------- picker ----------
-  const sel = CHALLENGES.find((c) => c.id === pick) ?? CHALLENGES[0]
-  const selBest = bests[`${sel.id}:${lvl(sel.id)}`]
   // "Next up": the easiest challenge with no badge yet (everything earned: the daily one)
   const next = [...CHALLENGES].sort((a, b) => a.difficulty - b.difficulty).find((c) => !badges[c.id] && c.id !== 'daily') ?? CHALLENGES.find((c) => c.id === 'daily') ?? CHALLENGES[0]
+  const sel = CHALLENGES.find((c) => c.id === pick) ?? next
+  const selBest = bests[`${sel.id}:${lvl(sel.id)}`]
   const tile = (c: (typeof CHALLENGES)[number]) => {
     const bd = badges[c.id]
     return (
@@ -109,23 +109,10 @@ export function ChallengesPanel() {
   }
   return (
     <section className="ch ch-pick">
-      <div className="ch-next">
-        <span className="ch-next-tag">Next up</span>
-        <span className="ch-next-em" aria-hidden>{next.emoji}</span>
-        <div className="ch-next-txt"><b>{next.title} <i>{stars(next.difficulty)}</i></b><span>{next.desc}</span></div>
-        <button className="btn" onClick={() => { setPick(next.id); start(next.id, lvl(next.id)) }}>▶ Start</button>
-      </div>
-      <div className="ch-tiers">
-        {TIERS.map((t) => (
-          <div key={t.id} className={'ch-tier ch-tier-' + t.id}>
-            <div className="ch-tier-h"><b>{t.label}</b><span>{t.hint}</span></div>
-            <div className="ch-grid" role="list">{CHALLENGES.filter(t.test).map(tile)}</div>
-          </div>
-        ))}
-      </div>
       <div className="ch-detail">
-        <span className="ch-detail-em">{sel.emoji}</span>
+        <span className="ch-detail-em" aria-hidden>{sel.emoji}</span>
         <div className="ch-detail-txt">
+          {sel.id === next.id && <em className="ch-next-tag">Next up</em>}
           <b>{sel.title} <i>{stars(sel.difficulty)}</i></b>
           <span>{sel.desc}</span>
         </div>
@@ -141,11 +128,19 @@ export function ChallengesPanel() {
           <button className="btn" onClick={() => start(sel.id, lvl(sel.id))}>▶ Start</button>
         </div>
       </div>
+      <div className="ch-tiers">
+        {TIERS.map((t) => (
+          <div key={t.id} className={'ch-tier ch-tier-' + t.id}>
+            <div className="ch-tier-h"><b>{t.label}</b><span>{t.hint}</span></div>
+            <div className="ch-grid" role="list">{CHALLENGES.filter(t.test).map(tile)}</div>
+          </div>
+        ))}
+      </div>
       <div className="ch-case" aria-label="Trophy case">
-        <span className="ch-case-t">🏆 Trophy case <b>{earned}/{CHALLENGES.length}</b></span>
+        <span className="ch-case-t">Trophy case <b>{earned}/{CHALLENGES.length}</b></span>
         <div className="ch-case-row">
           {CHALLENGES.map((c) => (
-            <span key={c.id} className={'ch-trophy' + (badges[c.id] ? ' got' : '') + (badges[c.id] === 2 ? ' gold' : '')} title={badges[c.id] ? c.badge : `Locked: ${c.title}`}>{badges[c.id] ? c.emoji : '🔒'}</span>
+            <span key={c.id} className={'ch-trophy' + (badges[c.id] ? ' got' : '') + (badges[c.id] === 2 ? ' gold' : '')} title={badges[c.id] ? c.badge : `Locked: ${c.title}`}>{badges[c.id] ? c.emoji : ''}</span>
           ))}
         </div>
       </div>

@@ -33,3 +33,21 @@
   .gm-card b { font-size: 18px; }
   .gm-blurb { font-size: 13px; }
 }
+
+/* ---- Elegance pass: calm game cards ---- */
+.gm-menu { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-content: center; max-width: 1100px; width: 100%; margin: 0 auto; min-height: 100%; }
+.gm-card, .gm-card.gm-zombies, .gm-card.gm-bachdoom, .gm-card.gm-jiujitsu, .gm-card.gm-fashion { gap: 8px; padding: 20px; min-height: 250px; border-radius: var(--k-r-md); border: 1px solid var(--k-line); background: var(--k-surface-1); box-shadow: var(--k-e-1); color: var(--k-ink); overflow: hidden; transition: transform .18s ease, border-color .18s ease; }
+.gm-card::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--cat, var(--k-line-strong)); }
+.gm-card.gm-zombies { --cat: #4cc38a; } .gm-card.gm-bachdoom { --cat: #e5534b; } .gm-card.gm-jiujitsu { --cat: #5b8def; } .gm-card.gm-fashion { --cat: #d96bb0; }
+.gm-card:hover { transform: translateY(-1px); filter: none; border-color: var(--k-line-strong); }
+.gm-card:focus-visible { outline: 2px solid var(--k-accent); }
+.gm-ic { display: grid; place-items: center; width: 44px; height: 44px; font-size: 28px; border-radius: var(--k-r-md); background: var(--k-surface-3); margin-bottom: 4px; }
+.gm-card b { font-size: 18px; font-weight: 700; letter-spacing: 0; color: var(--k-ink); }
+.gm-blurb { font-size: 14px; line-height: 1.45; color: var(--k-ink-2); }
+.gm-skill { margin-top: auto; padding-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--k-ink-3); }
+.gm-prog { background: transparent; padding: 0; margin: 0; font-size: 13px; font-weight: 600; color: var(--k-lcd); }
+.gm-chip { font-weight: 700; }
+.gm-daily { background: var(--k-accent); color: #1b1300; }
+.gm-note { font-size: 13px; color: var(--k-ink-3); text-align: center; }
+@media (max-height: 760px) { .gm-card, .gm-card.gm-zombies, .gm-card.gm-bachdoom, .gm-card.gm-jiujitsu, .gm-card.gm-fashion { min-height: 190px; padding: 14px 16px; } .gm-menu { gap: 12px; } .gm-ic { width: 36px; height: 36px; font-size: 22px; } .gm-card b { font-size: 16px; } .gm-blurb { font-size: 13px; } }
+@media (prefers-reduced-motion: reduce) { .gm-card { transition: none } }

@@ -66,7 +66,7 @@ const Key = memo(function Key({ k, held, flash, status, showName, caps, guide, z
       onPointerLeave={() => up(k.note)}
       onPointerCancel={() => up(k.note)}
     >
-      {status === 'tonic' ? <span className="kb-home">🏠</span> : status === 'in' ? <span className="kb-dot" /> : null}
+      {status === 'tonic' ? <span className="kb-home" title="Home note" /> : status === 'in' ? <span className="kb-dot" /> : null}
       {peek && <span className="kb-peek" aria-label="hint: play this key next" />}
       {label && <span className="kb-label">{label}</span>}
       {caps && <span className="kb-cap">{caps}</span>}
@@ -169,16 +169,16 @@ export function PianoStrip() {
 
   return (
     <section className="kb">
-      {!played && !midiConnected && <div className="kb-nudge" role="note">🎹 No keyboard? Click the keys or press Z S X D C V…</div>}
+      {!played && !midiConnected && <div className="kb-nudge" role="note">No keyboard? Click the keys or press Z S X D C V…</div>}
       <div className="kb-top">
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
       </div>
       <div className="kb-opts">
         <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing.">
-          <input type="checkbox" checked={keysOn} onChange={() => setTypingOn(!keysOn)} /> 🎹 Keys play notes
+          <input type="checkbox" checked={keysOn} onChange={() => setTypingOn(!keysOn)} /> Keys play notes
         </label>
         <label className="kb-toggle">
-          <input type="checkbox" checked={typing} onChange={toggleTyping} /> ⌨️ Show computer keys
+          <input type="checkbox" checked={typing} onChange={toggleTyping} /> Show computer keys
         </label>
         <label className="kb-toggle">
           <input type="checkbox" checked={names} onChange={toggleNames} /> Show note names

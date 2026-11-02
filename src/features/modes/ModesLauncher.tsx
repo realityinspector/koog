@@ -6,6 +6,7 @@ import * as mimic from '../mimic/engine'
 import { useMentor } from '../mentor/mentorStore'
 import { useVibes } from '../../music/vibes'
 import * as band from '../smartband/engine'
+import { Icon } from '../../ui/Icon'
 
 interface CardDef { id: string; icon: string; name: string; blurb: string; on: boolean; toggle: () => void }
 
@@ -47,7 +48,7 @@ export function ModesLauncher() {
     <div className="md-wrap" ref={box} data-modes-launcher onPointerDown={(e) => e.stopPropagation()}>
       <button data-tour="modes" className={'md-btn' + (open ? ' open' : '') + (count ? ' has' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
         title="Modes: DJ + Piano, Mimic, Mentor, Vibes and Band">
-        <span aria-hidden>✨</span><b>Modes</b>
+        <Icon name="spark" /><b>Modes</b>
         <span className="md-dots" aria-label={count + ' on'}>
           {cards.map((c) => <i key={c.id} className={c.on ? 'on' : ''} />)}
         </span>

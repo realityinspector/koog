@@ -59,17 +59,16 @@ export function GamesPanel() {
       {GAMES.map((g) => (
         <button key={g.id} className={'gm-card gm-' + g.id} onClick={() => setGame(g.id)}>
           <span className="gm-tags">
-            {g.id === daily && <span className="gm-chip gm-daily">⭐ Daily pick</span>}
-            {!prog[g.id].played && <span className="gm-chip gm-new">NEW</span>}
+            {g.id === daily && <span className="gm-chip gm-daily">Daily pick</span>}
           </span>
           <span className="gm-ic" aria-hidden>{g.icon}</span>
           <b>{g.title}</b>
           <span className="gm-blurb">{g.blurb}</span>
-          <span className="gm-skill">🎓 {g.skill}</span>
+          <span className="gm-skill">{g.skill}</span>
           {prog[g.id].played && prog[g.id].line && <span className="gm-prog">{prog[g.id].line}</span>}
         </button>
       ))}
-      <p className="gm-note">Tip: forearm slams fizzle… unless your ⚡ BOOM meter is full. Charge it by playing in key.</p>
+      <p className="gm-note">Tip: forearm slams fizzle, unless your BOOM meter is full. Charge it by playing in key.</p>
     </div>
   )
 }

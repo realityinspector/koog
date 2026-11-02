@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { THEMES, type Mode, type Theme } from './engine'
 import { useVibes } from '../../music/vibes'
 import './vizcontrols.css'
+import { Icon } from '../../ui/Icon'
 
 export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'fireworks', icon: '🎆', label: 'Fireworks' },
@@ -74,7 +75,7 @@ export function VizControls(p: Props) {
       <div className="vb-scene" ref={sceneBox}>
         <button className={'vb-chip vb-visual' + (sceneOpen ? ' open' : '')} aria-expanded={sceneOpen} aria-haspopup="dialog" title="Pick a picture for your music"
           onClick={() => { setSceneOpen((o) => !o); setOpen(false) }}>
-          <span aria-hidden>{cur.icon}</span><span className="vb-lab">VISUAL</span><span className="vb-cur">{cur.label}</span><span aria-hidden>▾</span>
+          <Icon name="burst" /><span className="vb-lab">Visual</span><span className="vb-cur">{cur.label}</span><Icon name="down" size={14} className="vb-caret" />
         </button>
         {sceneOpen && (
           <div className="vb-pop vb-scenes" role="dialog" aria-label="Pick a visual">
@@ -91,7 +92,7 @@ export function VizControls(p: Props) {
         {toast && <div className="vb-toast" key={toast.n} role="status">{toast.icon} {toast.label}</div>}
       </div>
       <div className="vb-style" ref={box}>
-        <button className={'vb-chip vb-icon' + (open ? ' on' : '')} title="Style" aria-label="Style" aria-expanded={open} onClick={() => { setOpen((o) => !o); setSceneOpen(false) }}>🎨</button>
+        <button className={'vb-chip vb-icon' + (open ? ' on' : '')} title="Style" aria-label="Style" aria-expanded={open} onClick={() => { setOpen((o) => !o); setSceneOpen(false) }}><Icon name="palette" /></button>
         {open && (
           <div className="vb-pop" role="dialog" aria-label="Style">
             <div className="vb-poph">Background</div>
@@ -110,8 +111,8 @@ export function VizControls(p: Props) {
           </div>
         )}
       </div>
-      <button className={'vb-chip vb-patch' + (p.patchOpen ? ' on' : '')} onClick={p.onPatch} aria-expanded={p.patchOpen}>🎛️ Patch</button>
-      <button className="vb-chip vb-icon" title="Fullscreen" aria-label="Fullscreen" onClick={p.onFullscreen}>⛶</button>
+      <button className={'vb-chip vb-patch' + (p.patchOpen ? ' on' : '')} onClick={p.onPatch} aria-expanded={p.patchOpen}><Icon name="knobs" /> Patch</button>
+      <button className="vb-chip vb-icon" title="Fullscreen" aria-label="Fullscreen" onClick={p.onFullscreen}><Icon name="expand" /></button>
     </div>
   )
 }

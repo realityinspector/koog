@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAudioSettings, setVolume, setMuted, setComputerSound } from '../../music/audioSettings'
 import { unlockAudio } from '../../music/localNotes'
 import './audio.css'
+import { Icon } from '../../ui/Icon'
 
 const WIDE = '(min-width: 1100px)'
 
@@ -30,7 +31,7 @@ export function AudioControls() {
   }, [pop])
 
   const level = muted ? 0 : volume
-  const icon = level === 0 ? '🔇' : '🔊'
+  const icon = <Icon name={level === 0 ? 'mute' : 'speaker'} />
   const pct = Math.round(volume * 100)
   const slider = (
     <input className="kg-vol" type="range" min={0} max={100} step={1} value={pct} aria-label="Volume"
@@ -64,7 +65,7 @@ export function AudioControls() {
         title="Play your keyboard through the speakers. ON: the notes you play come out of the computer (the Koog synth, or the emulator you have open). OFF: only your keyboard's own sound."
         onClick={() => { const next = !computer; if (next) void unlockAudio(); setComputerSound(next) }}>
         <span className="kg-audio-track" aria-hidden="true"><span className="kg-audio-knob" /></span>
-        <span className="kg-audio-label"><span aria-hidden>🔊</span> Computer sound <b>{computer ? 'ON' : 'OFF'}</b></span>
+        <span className="kg-audio-label">Computer sound <b>{computer ? 'ON' : 'OFF'}</b></span>
       </button>
     </div>
   )
