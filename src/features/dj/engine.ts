@@ -2,14 +2,14 @@
 // stem pads, master FX (echo / filter sweep / riser). Web Audio, no React in here.
 // Ported from mixtrack-academy/public/js/audio.js.
 //
-// SAFETY: master gain = MASTER_CAP (0.12) x outputScale() (the app volume / mute), live, then a limiter.
-// The AudioContext is only created on a user gesture (a click, a key press, or sticky activation from one earlier).
-// State lives in import.meta.hot.data (an edit never cuts the music or leaks a context); pagehide / dispose() silences and closes everything.
+// SAFETY: plays through the shared audio host's 'dj' channel (cap MASTER_CAP 0.12 x trim); the app volume / mute and the one limiter live in the host.
+// The shared AudioContext is only resumed on a user gesture (a click, a key press, or sticky activation from one earlier).
+// State lives in import.meta.hot.data (an edit never cuts the music); pagehide / dispose() silences and disconnects (the shared context stays open).
 //
 // Feeds: onDjMessage(raw MIDI) -> map.decode -> dispatch(). The on-screen UI calls dispatch() too. Tests: injectDj(bytes).
 // Publishes: the beat clock (./clock), LEDs (sendToDj), and a view snapshot for the UI (subscribe/getVersion/getView).
 import { registerPanicTarget } from '../../music/panic'
-import { outputScale, useAudioSettings } from '../../music/audioSettings'
+import { createChannel, getChannel, getCtx, unlockHost, type Channel } from '../../audio/host'
 import { onDjMessage, sendToDj, useDevices } from '../../music/devices'
 import type { Key } from '../../music/theory'
 import { decode, ledBytes, type DeckId, type DjAction } from './map'
@@ -18,6 +18,8 @@ import { emitBeat, setClockSource } from './clock'
 import { emitAction, isDeaf } from './tap'
 
 export const MASTER_CAP = 0.12 // hard ceiling on the master gain, whatever the volume slider says
+/** fixed makeup so a deck is as loud as it was before the DJ's own limiter moved into the host (tuned from measurements) */
+const MAKEUP = 1
 export const MODES = ['CUES', 'LOOP', 'SAMPLER', 'STEMS'] as const
 export const LOOP_BEATS = [0.5, 1, 2, 4]
 export type FxKind = 'echo' | 'sweep' | 'riser'
@@ -151,7 +153,7 @@ class Deck {
 
 // ---------- engine state ----------
 interface Core {
-  ctx: AudioContext; master: GainNode; limiter: DynamicsCompressorNode; an: AnalyserNode; bus: GainNode
+  ctx: AudioContext; master: GainNode; ch: Channel; bus: GainNode
   fxFilter: BiquadFilterNode; echoSend: GainNode; delay: DelayNode; noise: AudioBuffer
   decks: Record<DeckId, Deck>; samples: AudioBuffer[]
 }
@@ -173,12 +175,10 @@ if (import.meta.hot) (import.meta.hot.data as Hot).dj = S
 const { intent, queue, tempoMsb, ledState, padListeners, beatTimers, subs } = S
 
 const hasActivation = () => (typeof navigator !== 'undefined' && (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive) === true
-// Mixer trim 0..1 (Pro/Boss mixer): scales the master under the cap, never above it. Shared via hot.data so an edit keeps it.
-const TRIM: { v: number } = (import.meta.hot?.data as { djTrim?: { v: number } } | undefined)?.djTrim ?? { v: 1 }
-if (import.meta.hot) (import.meta.hot.data as { djTrim?: { v: number } }).djTrim = TRIM
-const masterLevel = () => MASTER_CAP * outputScale() * TRIM.v
-export const getTrim = () => TRIM.v
-export function setTrim(v: number) { TRIM.v = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 1)); applyMaster() }
+// Mixer trim 0..1 (Pro/Boss mixer) is the 'dj' channel's trim: it scales under the cap, never above it. The host keeps the channel (and its trim) across edits.
+const djChannel = () => createChannel('dj', { cap: MASTER_CAP, label: 'DJ' })
+export const getTrim = () => getChannel('dj')?.getTrim() ?? 1
+export function setTrim(v: number) { djChannel().setTrim(v) }
 
 // ---------- view / subscription ----------
 export const subscribe = (f: () => void) => { subs.add(f); return () => { subs.delete(f) } }
@@ -210,17 +210,10 @@ export function getView(): DjView {
 export const getDeckPos = (d: DeckId) => S.core?.decks[d].pos() ?? 0
 export const getDeckRate = (d: DeckId) => S.core?.decks[d].rate ?? 1
 export const getDeckPlaying = (d: DeckId) => !!S.core?.decks[d].playing
-/** 0..1 peak of the master output (after the limiter): proof the graph makes sound */
-export function peak(): number {
-  if (!S.core) return 0
-  const buf = new Float32Array(S.core.an.fftSize)
-  S.core.an.getFloatTimeDomainData(buf)
-  let m = 0
-  for (const x of buf) m = Math.max(m, Math.abs(x))
-  return m
-}
-/** the current master gain target (cap x app volume), for checks */
-export const masterGain = () => S.core?.master.gain.value ?? 0
+/** 0..1 peak of the DJ channel (after its cap x trim): proof the graph makes sound */
+export function peak(): number { return S.core ? S.core.ch.peak() : 0 }
+/** the current DJ gain target (cap x trim; the app volume is applied once in the host), for checks */
+export const masterGain = () => (S.core ? S.core.ch.cap * S.core.ch.getTrim() : 0)
 export const onPad = (fn: (e: PadEvent) => void) => { padListeners.add(fn); return () => { padListeners.delete(fn) } }
 /** audio-clock seconds until the next bar line of the lead deck (null if nothing plays) */
 export function secondsToBar(): number | null {
@@ -250,11 +243,9 @@ function ledsDark() {
 
 // ---------- audio graph ----------
 function buildCore(ctx: AudioContext, bufs: Awaited<ReturnType<typeof renderAll>>): Core {
-  const limiter = ctx.createDynamicsCompressor()
-  limiter.threshold.value = -10; limiter.knee.value = 6; limiter.ratio.value = 20; limiter.attack.value = 0.003; limiter.release.value = 0.12
-  const master = ctx.createGain(); master.gain.value = 0
-  const an = ctx.createAnalyser(); an.fftSize = 1024
-  master.connect(limiter); limiter.connect(an); limiter.connect(ctx.destination)
+  const ch = djChannel()
+  const master = ctx.createGain(); master.gain.value = MAKEUP // fixed makeup (the old per-engine limiter added gain); the cap x trim and volume are in the channel / host
+  master.connect(ch.input)
   const bus = ctx.createGain()
   const fxFilter = ctx.createBiquadFilter(); fxFilter.type = 'lowpass'; fxFilter.frequency.value = 20000; fxFilter.Q.value = 1.5
   bus.connect(fxFilter); fxFilter.connect(master)
@@ -273,9 +264,7 @@ function buildCore(ctx: AudioContext, bufs: Awaited<ReturnType<typeof renderAll>
   decks.A = new Deck(ctx, 'A', bufs.A, bus, intent.A, other('A'))
   decks.B = new Deck(ctx, 'B', bufs.B, bus, intent.B, other('B'))
   applyXf(decks)
-  master.gain.setValueAtTime(0, ctx.currentTime)
-  master.gain.linearRampToValueAtTime(masterLevel(), ctx.currentTime + 0.05)
-  return { ctx, master, limiter, an, bus, fxFilter, echoSend, delay, noise, decks, samples: bufs.samples }
+  return { ctx, master, ch, bus, fxFilter, echoSend, delay, noise, decks, samples: bufs.samples }
 }
 function applyXf(decks = S.core?.decks) {
   if (!decks) return
@@ -283,27 +272,19 @@ function applyXf(decks = S.core?.decks) {
   decks.A.xfG.gain.setTargetAtTime(Math.cos((S.xf * Math.PI) / 2), t, 0.01)
   decks.B.xfG.gain.setTargetAtTime(Math.cos(((1 - S.xf) * Math.PI) / 2), t, 0.01)
 }
-const applyMaster = () => {
-  if (!S.core) return
-  const t = S.core.ctx.currentTime
-  S.core.master.gain.cancelScheduledValues(t)
-  S.core.master.gain.setValueAtTime(S.core.master.gain.value, t)
-  S.core.master.gain.linearRampToValueAtTime(masterLevel(), t + 0.05)
-}
 
 /** Create the audio (call from a click or key press) and render the stems. Safe to call again. */
 export function ensure(): Promise<boolean> {
   if (S.disposed) return Promise.resolve(false)
-  if (S.core) { void S.core.ctx.resume().catch(() => {}); S.needsTap = false; return Promise.resolve(true) }
+  if (S.core) { void unlockHost(); S.needsTap = false; return Promise.resolve(true) }
   if (S.loading) return S.loading
   S.loading = (async () => {
     try {
-      const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-      const ctx = new Ctor()
-      void ctx.resume().catch(() => {})
+      const ctx = getCtx() // the shared context; the rendered stems (44.1 kHz) are resampled by Web Audio if it runs at another rate
+      void unlockHost()
       emit()
       const bufs = await renderAll()
-      if (S.disposed) { void ctx.close().catch(() => {}); return false }
+      if (S.disposed) return false
       S.core = buildCore(ctx, bufs)
       S.needsTap = false
       setClockSource(clockSource)
@@ -475,14 +456,14 @@ export function dispose() {
   if (c) {
     DECKS.forEach((d) => c.decks[d].dispose())
     try { c.master.gain.cancelScheduledValues(c.ctx.currentTime); c.master.gain.setValueAtTime(c.master.gain.value, c.ctx.currentTime); c.master.gain.linearRampToValueAtTime(0, c.ctx.currentTime + 0.03) } catch { /* ignore */ }
-    setTimeout(() => { try { c.master.disconnect() } catch { /* ignore */ } void c.ctx.close().catch(() => {}) }, 100)
+    // cut the DJ loose from the shared bus; the shared context stays open
+    setTimeout(() => { try { c.master.disconnect() } catch { /* ignore */ } try { c.bus.disconnect() } catch { /* ignore */ } c.ch.dispose() }, 100)
   }
   subs.forEach((f) => f())
 }
 
 // ---------- wiring ----------
 const offMsg = onDjMessage((data) => { if (isDeaf()) return; const a = decode(data); if (a) dispatch(a) })
-const offSettings = useAudioSettings.subscribe(applyMaster)
 const offDevices = useDevices.subscribe(() => { ledState.clear(); syncLeds() }) // a controller (re)appeared: relight it
 // A tap or key press wakes a suspended context, and creates the audio if a controller press was waiting for one.
 const onGesture = () => { if (S.core) { if (S.core.ctx.state === 'suspended') void S.core.ctx.resume().catch(() => {}) } else if (S.needsTap) void ensure() }
@@ -494,7 +475,7 @@ window.addEventListener('pagehide', onHide)
 if (import.meta.hot) {
   // The decks keep playing through an edit (state is in hot.data); only the listeners are swapped.
   import.meta.hot.dispose(() => {
-    offMsg(); offSettings(); offDevices()
+    offMsg(); offDevices()
     window.removeEventListener('pointerdown', onGesture, true)
     window.removeEventListener('keydown', onGesture, true)
     window.removeEventListener('pagehide', onHide)

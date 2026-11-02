@@ -6,6 +6,7 @@ import { getSynth } from '../synth-history/engine'
 import { liveEngines, setTrim as setEmuTrim } from '../synth-history/emu/bus'
 import { getTrim as djTrim, setTrim as setDjTrim, getView, peak as djPeak } from '../dj/engine'
 import { MAX_GAIN, getState as beatsState, setGain as setBeatsGain } from '../beats/engine'
+import { getChannel } from '../../audio/host'
 import { getLoopLevel, setLoopLevel, loopPeak } from '../loopstation/loopEngine'
 import { getState as bandState, setVolume as setBandVolume } from '../smartband/engine'
 
@@ -20,8 +21,8 @@ export const CHANNELS: Chan[] = [
     set: (v) => { getSynth().setParams({ level: clamp01(v) }); setEmuTrim(clamp01(v)) },
     peak: () => Math.max(wavePeak(getSynth().analyser(), sbuf), ...liveEngines().map((e) => e.peak())) },
   { id: 'dj', label: 'DJ', icon: '🎧', note: 'both decks (master trim)', get: djTrim, set: setDjTrim, peak: () => (getView().ready ? djPeak() : 0) },
-  { id: 'beats', label: 'DRUMS', icon: '🥁', note: 'beat machine', get: () => beatsState().gain / MAX_GAIN, set: (v) => setBeatsGain(clamp01(v) * MAX_GAIN) },
-  { id: 'band', label: 'BAND', icon: '🤖', note: 'Smart Band', get: () => bandState().volume, set: (v) => setBandVolume(clamp01(v)) },
+  { id: 'beats', label: 'DRUMS', icon: '🥁', note: 'beat machine', get: () => beatsState().gain / MAX_GAIN, set: (v) => setBeatsGain(clamp01(v) * MAX_GAIN), peak: () => getChannel('drums')?.peak() ?? 0 },
+  { id: 'band', label: 'BAND', icon: '🤖', note: 'Smart Band', get: () => bandState().volume, set: (v) => setBandVolume(clamp01(v)), peak: () => getChannel('band')?.peak() ?? 0 },
   { id: 'loops', label: 'LOOPS', icon: '🔁', note: 'loop station',
     get: getLoopLevel,
     set: (v) => setLoopLevel(clamp01(v)),

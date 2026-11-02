@@ -1,13 +1,19 @@
 // Beat engine: Web Audio lookahead scheduler. No React in here.
 // Long-lived state lives in import.meta.hot.data so HMR can stop sound cleanly.
 import { registerPanicTarget } from '../../music/panic'
-import { useAudioSettings, outputScale } from '../../music/audioSettings'
+import { createChannel, getCtx, getNoise, unlockHost } from '../../audio/host'
 import { inKey, msPerBeat, SCALES, PC_NAMES, type Key, type ScaleType } from '../../music/theory'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { GROOVES, type Groove } from './grooves'
 
 export const MAX_GAIN = 0.3
+// The 'drums' channel on the shared audio host. Its cap = MAX_GAIN x MAKEUP (the old private compressor added about that much level; the host's
+// shared limiter is harder, so peaks above ~0.3 are now squashed). Per-run master node gain = user gain / MAX_GAIN (0..1), so the fader
+// still means the same thing. Volume, mute and the limiter are applied once in the host.
+const MAKEUP = 3.3
+const drumsIn = () => createChannel('drums', { cap: MAX_GAIN * MAKEUP, label: 'Drums' }).input
+const level = (g: number, rel = 1) => Math.min(g, MAX_GAIN) / MAX_GAIN * rel
 export const DEFAULT_GAIN = 0.15
 const LOOKAHEAD = 0.12
 const TICK_MS = 25
@@ -213,20 +219,13 @@ function applyKey() {
 
 export function start() {
   if (S.playing) return
-  const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-  const ctx = new Ctor()
-  const comp = ctx.createDynamicsCompressor()
-  comp.threshold.value = -18; comp.knee.value = 10; comp.ratio.value = 12
-  comp.attack.value = 0.003; comp.release.value = 0.15
+  const ctx = getCtx()
   const master = ctx.createGain()
   master.gain.value = 0
-  master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), ctx.currentTime, 0.02)
-  master.connect(comp).connect(ctx.destination)
-  const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
-  const d = buf.getChannelData(0)
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
-  S.ctx = ctx; S.master = master; S.noise = buf
-  void ctx.resume()
+  master.gain.setTargetAtTime(level(S.gain), ctx.currentTime, 0.02)
+  master.connect(drumsIn())
+  S.ctx = ctx; S.master = master; S.noise = getNoise(ctx)
+  void unlockHost()
   S.step = 0; S.marks = []; S.recent = []; S.combo = 0; S.noteCount = 0
   S.next = ctx.currentTime + 0.08
   const h = useHarmonyStore.getState()
@@ -250,7 +249,7 @@ export function stop() {
       master.gain.cancelScheduledValues(ctx.currentTime)
       master.gain.setTargetAtTime(0, ctx.currentTime, 0.01)
     } catch { /* ignore */ }
-    setTimeout(() => { try { master.disconnect() } catch { /* ignore */ } void ctx.close().catch(() => {}) }, 120)
+    setTimeout(() => { try { master.disconnect() } catch { /* ignore */ } }, 120)
   }
   if (S.prevKey) {
     const h = useHarmonyStore.getState()
@@ -270,7 +269,7 @@ export function setGroove(id: string) {
 export function setBpmAdj(n: number) { S.bpmAdj = Math.max(-20, Math.min(20, n)); emit() }
 export function setGain(v: number) {
   S.gain = Math.max(0, Math.min(MAX_GAIN, v))
-  if (S.ctx && S.master) S.master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), S.ctx.currentTime, 0.03)
+  if (S.ctx && S.master) S.master.gain.setTargetAtTime(level(S.gain), S.ctx.currentTime, 0.03)
   emit()
 }
 export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on; if (S.playing) applyKey(); emit() }
@@ -278,8 +277,9 @@ export function setLayer(which: 'bass' | 'chords', on: boolean) { S[which] = on;
 export function setDrumsOnly(on: boolean) { S.bass = !on; S.chords = !on; if (S.playing) applyKey(); emit() }
 export function setPent(on: boolean) { S.pent = on; if (S.playing) applyKey(); S.recent = []; emit() }
 
-// ---- backing drums for Songs Flow mode (own AudioContext, reuses the drum voices above) ----
+// ---- backing drums for Songs Flow mode (shared host context, reuses the drum voices above) ----
 export const BACKING_GAIN_SCALE = 0.6
+const BACKING_REL = 0.73 // backing sat lower in the old compressor; trims it to the old measured level
 interface Backing {
   ctx: AudioContext; master: GainNode; noise: AudioBuffer; timer: ReturnType<typeof setTimeout> | null
   groove: Groove; startAtMs: number; stepMs: number; leadSteps: number; endAtMs: number; k: number
@@ -327,18 +327,12 @@ function backingTick(b: Backing) {
 export function startBacking(o: { bpm: number; grooveId: string; startAtMs: number; leadBeats: number; endAtMs: number; volume?: number }) {
   stopBacking()
   try {
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    const ctx = new Ctor()
-    void ctx.resume().catch(() => {})
-    const comp = ctx.createDynamicsCompressor()
-    comp.threshold.value = -18; comp.knee.value = 10; comp.ratio.value = 12
-    comp.attack.value = 0.003; comp.release.value = 0.15
+    const ctx = getCtx()
+    void unlockHost()
     const master = ctx.createGain()
-    master.gain.value = Math.min(o.volume ?? DEFAULT_GAIN * BACKING_GAIN_SCALE, MAX_GAIN * BACKING_GAIN_SCALE)
-    master.connect(comp).connect(ctx.destination)
-    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
-    const d = buf.getChannelData(0)
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    master.gain.value = level(Math.min(o.volume ?? DEFAULT_GAIN * BACKING_GAIN_SCALE, MAX_GAIN * BACKING_GAIN_SCALE), BACKING_REL)
+    master.connect(drumsIn())
+    const buf = getNoise(ctx)
     const groove = GROOVES.find((x) => x.id === o.grooveId) ?? GROOVES.find((x) => x.id === 'rock') ?? GROOVES[0]
     const b: Backing = { ctx, master, noise: buf, timer: null, groove, startAtMs: o.startAtMs,
       stepMs: msPerBeat(o.bpm) / 4, leadSteps: Math.round(o.leadBeats * 4), endAtMs: o.endAtMs, k: 0 }
@@ -356,7 +350,7 @@ export function stopBacking() {
     b.master.gain.cancelScheduledValues(b.ctx.currentTime)
     b.master.gain.setTargetAtTime(0, b.ctx.currentTime, 0.01)
   } catch { /* ignore */ }
-  setTimeout(() => { try { b.master.disconnect() } catch { /* ignore */ } void b.ctx.close().catch(() => {}) }, 120)
+  setTimeout(() => { try { b.master.disconnect() } catch { /* ignore */ } }, 120)
 }
 export const isBackingOn = () => B !== null
 
@@ -366,10 +360,7 @@ const onHide = () => stop()
 window.addEventListener('pagehide', onHide)
 if (hot) {
   hot.data.beatsOffHide = () => window.removeEventListener('pagehide', onHide)
-  const offSettings = useAudioSettings.subscribe(() => {
-    if (S.ctx && S.master) S.master.gain.setTargetAtTime(Math.min(S.gain, MAX_GAIN) * outputScale(), S.ctx.currentTime, 0.03)
-  })
-  hot.dispose(() => { offSettings(); stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
+  hot.dispose(() => { stop(); stopBacking(); window.removeEventListener('pagehide', onHide) })
   hot.accept()
 }
 registerPanicTarget('beats', () => { stop(); stopBacking() })

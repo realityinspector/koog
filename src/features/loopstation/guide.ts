@@ -1,10 +1,13 @@
-// The Loop Station's rhythm guide + count-in click: tiny synthesized voices (click, kick, snare, hat) on their own AudioContext,
+// The Loop Station's rhythm guide + count-in click: tiny synthesized voices (click, kick, snare, hat) on the shared audio host's 'guide' channel,
 // scheduled on the 16th-note grid of the master clock with the Web Audio clock (so it is sample-accurate against itself).
-// Quiet by design: master gain 0.2 x app volume, plus a limiter. STABLE API: useGuide, setGuide, playClick, guidePeak.
+// Quiet by design: channel cap 0.2 (the app volume and the one limiter are in the host). STABLE API: useGuide, setGuide, playClick, guidePeak.
 import { registerPanicTarget } from '../../music/panic'
 import { create } from 'zustand'
 import { beatPos, isRunning, onTick, timeOfBeat } from '../../music/masterClock'
-import { outputScale } from '../../music/audioSettings'
+import { createChannel, getChannel, getCtx, getNoise, unlockHost } from '../../audio/host'
+
+const GUIDE_CAP = 0.2
+const MAKEUP = 1.12 // fixed makeup: the old per-engine limiter was ~1.2 dB louder than the shared one (measured 0.108 vs 0.094)
 
 export type GuidePat = 'click' | 'rock' | 'funk'
 export const GUIDE_PATS: [GuidePat, string][] = [['click', 'Click'], ['rock', 'Rock'], ['funk', 'Funk']]
@@ -25,27 +28,22 @@ export const setGuide = (p: Partial<St>) => useGuide.setState(p)
 
 function ensureCtx(): AudioContext | null {
   try {
-    if (!G.ctx) {
-      const c = new window.AudioContext({ latencyHint: 'interactive' })
-      const out = c.createGain(), lim = c.createDynamicsCompressor(), an = c.createAnalyser()
-      lim.threshold.value = -16; lim.ratio.value = 12
-      out.gain.value = 0.2; out.connect(lim); lim.connect(c.destination); out.connect(an)
-      const nb = c.createBuffer(1, c.sampleRate, c.sampleRate), d = nb.getChannelData(0)
-      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
-      G.ctx = c; G.out = out; G.an = an; G.noise = nb
+    const ch = createChannel('guide', { cap: GUIDE_CAP, label: 'GUIDE' })
+    const c = getCtx()
+    if (G.ctx !== c || !G.out) {
+      const out = c.createGain()
+      out.connect(ch.input)
+      G.ctx = c; G.out = out; G.an = null; G.noise = getNoise(c)
     }
-    if (G.ctx.state !== 'running') void G.ctx.resume().catch(() => {})
-    G.out!.gain.value = 0.2 * outputScale() * useGuide.getState().vol
-    return G.ctx
+    if (c.state !== 'running') void unlockHost()
+    G.out!.gain.value = MAKEUP * useGuide.getState().vol
+    return c
   } catch { return null }
 }
 /** call from a click / key / pad press so the browser lets the guide make sound */
 export const unlockGuide = () => { ensureCtx() }
 export function guidePeak(): number {
-  if (!G.an) return 0
-  const b = new Float32Array(G.an.fftSize); G.an.getFloatTimeDomainData(b)
-  let m = 0; for (let i = 0; i < b.length; i++) m = Math.max(m, Math.abs(b[i]))
-  return m
+  return getChannel('guide')?.peak() ?? 0
 }
 
 function voice(ch: string, at: number) {

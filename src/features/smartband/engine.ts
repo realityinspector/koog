@@ -1,8 +1,8 @@
 // Smart Band engine: its own tiny Web Audio synth + lookahead scheduler. No React in here.
-// Safety: hard master cap, limiter, short ramps, max 6 voices, every voice has a scheduled stop.
+// Safety: hard channel cap, shared host limiter, short ramps, max 6 voices, every voice has a scheduled stop.
 // Long-lived state lives in import.meta.hot.data so HMR can silence it cleanly.
 import { registerPanicTarget } from '../../music/panic'
-import { useAudioSettings, outputScale } from '../../music/audioSettings'
+import { createChannel, getCtx, getNoise, unlockHost } from '../../audio/host'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import {
@@ -63,7 +63,11 @@ export const getVersion = () => S.version
 export const getState = () => S
 
 const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12)
-const masterLevel = () => Math.min(MASTER_CAP, Math.max(0, S.volume) * MASTER_CAP) * outputScale()
+// 'band' channel on the shared host: cap = MASTER_CAP x MAKEUP (the old private limiter added about that much level); volume/mute/limiter live in the host.
+const MAKEUP = 2.8
+const bandIn = () => createChannel('band', { cap: MASTER_CAP * MAKEUP, label: 'Smart Band' }).input
+// per-run master node gain (0..1 of the channel cap)
+const masterLevel = () => Math.min(1, Math.max(0, S.volume))
 
 // ---- voice budget: a note only plays if there's room (stuck-note guard: every voice also has a hard stop) ----
 function reserve(t: number, end: number, n = 1): boolean {
@@ -208,30 +212,24 @@ function tick() {
 export function start() {
   if (S.on) return
   try {
-    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-    const ctx = new Ctor()
-    const limiter = ctx.createDynamicsCompressor()
-    limiter.threshold.value = -18; limiter.knee.value = 6; limiter.ratio.value = 20
-    limiter.attack.value = 0.003; limiter.release.value = 0.1
+    const ctx = getCtx()
     const master = ctx.createGain()
     master.gain.value = 0
     master.gain.linearRampToValueAtTime(masterLevel(), ctx.currentTime + 0.05)
     const fade = ctx.createGain()
     fade.gain.value = 0
-    fade.connect(master).connect(limiter).connect(ctx.destination)
-    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
-    const d = buf.getChannelData(0)
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    fade.connect(master).connect(bandIn())
+    const buf = getNoise(ctx)
     Object.assign(S, { ctx, master, fade, noise: buf, voices: [], step: 0, chord: null, onsets: [], notes: [],
       lastPlayed: 0, idle: true, on: true, next: ctx.currentTime + 0.08 })
-    void ctx.resume().catch(() => {})
+    void unlockHost()
     S.offNote = onNote(onPlayed)
     tick()
     emit()
   } catch { panic() }
 }
 
-/** Silence everything now and release the audio device. Safe to call any time. */
+/** Silence everything now and fade out and disconnect (the shared context stays open). Safe to call any time. */
 export function panic() {
   const was = S.on
   S.on = false
@@ -245,7 +243,7 @@ export function panic() {
       master.gain.setValueAtTime(master.gain.value, ctx.currentTime)
       master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.03)
     } catch { /* ignore */ }
-    setTimeout(() => { try { master.disconnect() } catch { /* ignore */ } void ctx.close().catch(() => {}) }, 120)
+    setTimeout(() => { try { master.disconnect() } catch { /* ignore */ } }, 120)
   }
   if (was) emit()
 }
@@ -269,10 +267,7 @@ const onHide = () => panic()
 window.addEventListener('pagehide', onHide)
 if (hot) {
   hot.data.smartbandOffHide = () => window.removeEventListener('pagehide', onHide)
-  const offSettings = useAudioSettings.subscribe(() => {
-    if (S.ctx && S.master) S.master.gain.setTargetAtTime(masterLevel(), S.ctx.currentTime, 0.03)
-  })
-  hot.dispose(() => { offSettings(); panic(); window.removeEventListener('pagehide', onHide) })
+  hot.dispose(() => { panic(); window.removeEventListener('pagehide', onHide) })
 }
 
 if (import.meta.hot) { import.meta.hot.accept() }

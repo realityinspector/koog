@@ -4,7 +4,7 @@
 // the player playing again cancels the answer (nothing ever stacks). Non-component: state lives in import.meta.hot.data.
 // NOTE: backing is bass + comping only (no drums) - the planned "Band" engine will merge this with beats/smartband.
 import { registerPanicTarget } from '../../music/panic'
-import { outputScale, useAudioSettings } from '../../music/audioSettings'
+import { createChannel, getCtx, unlockHost } from '../../audio/host'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onNote } from '../../music/notes'
 import { onProfileChange, pload, psave } from '../../profile/profile'
@@ -14,6 +14,7 @@ import { NOTICE, STYLES, backingBar, detectTraits, filterExtras, makeAnswer, quo
 
 export { NOTICE }
 export const MASTER_CAP = 0.12
+const MAKEUP = 2 // the old private limiter's extra level (measured); the 'mimic' channel cap = MASTER_CAP x MAKEUP
 export const MAX_VOICES = 8
 export const MAX_BACK = 8
 const LOOKAHEAD = 0.15, TICK_MS = 25, CALL_GAP_MS = 1100, MAX_CALL = 12, TRIAL_MS = 16000
@@ -31,14 +32,14 @@ interface State {
   answer: Shown | null; answerTimer: ReturnType<typeof setTimeout> | null; ansCount: number; seed: number
   timer: ReturnType<typeof setTimeout> | null; bar: number; nextBar: number; barSec: number; clockStart: number
   trial: Trial; snapped: { from: number; to: number; at: number } | null
-  offNote: (() => void) | null; offProf: (() => void) | null; offVol: (() => void) | null
+  offNote: (() => void) | null; offProf: (() => void) | null
 }
 const hot = import.meta.hot
 const S: State = (hot?.data.mimic as State | undefined) ?? {
   version: 0, listeners: new Set(), on: false, styleId: 'cooljazz', filter: false, backing: false, volume: 0.7,
   ctx: null, master: null, analyser: null, voices: [], back: [], listening: false, callNotes: [], held: new Map(), callTimer: null,
   answer: null, answerTimer: null, ansCount: 0, seed: 1, timer: null, bar: 0, nextBar: 0, barSec: 2, clockStart: 0,
-  trial: { active: false, startMs: 0, notes: [], result: null, held: new Map() }, snapped: null, offNote: null, offProf: null, offVol: null,
+  trial: { active: false, startMs: 0, notes: [], result: null, held: new Map() }, snapped: null, offNote: null, offProf: null,
 }
 if (hot) hot.data.mimic = S
 
@@ -54,21 +55,20 @@ const nowMs = () => performance.now()
 // ---------------- audio ----------------
 async function ensureCtx(): Promise<boolean> {
   try {
-    if (!S.ctx) {
-      const c = new AudioContext()
+    if (!S.ctx || !S.master || S.ctx !== getCtx()) {
+      const c = getCtx()
       const master = c.createGain(); master.gain.value = 0
-      const lim = c.createDynamicsCompressor(); lim.threshold.value = -14; lim.knee.value = 8; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.15
       const an = c.createAnalyser(); an.fftSize = 512
-      master.connect(lim); lim.connect(an); an.connect(c.destination)
+      master.connect(createChannel('mimic', { cap: MASTER_CAP * MAKEUP, label: 'Mimic' }).input); master.connect(an)
       S.ctx = c; S.master = master; S.analyser = an
     }
-    if (S.ctx.state === 'suspended') await S.ctx.resume()
+    if (S.ctx.state === 'suspended') await unlockHost()
     applyMaster()
     return S.ctx.state === 'running'
   } catch { return false }
 }
 function applyMaster() {
-  if (S.ctx && S.master) S.master.gain.setTargetAtTime(MASTER_CAP * S.volume * outputScale(), S.ctx.currentTime, 0.02)
+  if (S.ctx && S.master) S.master.gain.setTargetAtTime(S.volume, S.ctx.currentTime, 0.02)
 }
 /** dev/test: peak level (0..1) of Mimic's output right now */
 export function mimicPeak(): number {
@@ -319,15 +319,14 @@ function load() {
   emit()
 }
 
-S.offNote?.(); S.offProf?.(); S.offVol?.()
+S.offNote?.(); S.offProf?.()
 S.offNote = onNote(onPlayerNote)
 S.offProf = onProfileChange(() => { panic(); S.on = false; load() })
-S.offVol = useAudioSettings.subscribe(applyMaster)
 load()
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
-    S.offNote?.(); S.offProf?.(); S.offVol?.(); S.offNote = S.offProf = S.offVol = null
+    S.offNote?.(); S.offProf?.(); S.offNote = S.offProf = null
     cancelAnswer(); silenceBack(); if (S.callTimer) clearTimeout(S.callTimer); if (S.timer) { clearTimeout(S.timer); S.timer = null }
   })
   import.meta.hot.accept()

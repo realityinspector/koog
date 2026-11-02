@@ -21,7 +21,8 @@ import { create } from 'zustand'
 import { onNote } from '../../music/notes'
 import { getActiveInstrument } from '../../music/instrument'
 import { getSynth } from '../synth-history/engine'
-import { createEngine, type Engine } from '../synth-history/emu/core'
+import { createEngine, EMU_CAP, type Engine } from '../synth-history/emu/core'
+import { createChannel, getChannel } from '../../audio/host'
 import { getEmu } from '../synth-history/emu'
 import { liveEngines, onEmuSet } from '../synth-history/emu/bus'
 import { SOUNDS } from '../devices/soundChoice'
@@ -127,8 +128,10 @@ export const setDebug = (on: boolean) => { E.debug.on = on; if (on) E.debug.log.
 export const debugLog = () => E.debug.log
 
 // ---------- mixer hooks (Boss mixer finds these by name) ----------
-export const getLoopLevel = () => S().master
-export const setLoopLevel = (v: number) => setOpt('master', clamp(v, 0, 1))
+// The loop level is the 'loops' channel's trim (every pooled emulator plays through that channel).
+const loopsChannel = () => createChannel('loops', { cap: EMU_CAP, label: 'LOOPS' })
+export const getLoopLevel = () => getChannel('loops')?.getTrim() ?? S().master
+export const setLoopLevel = (v: number) => { const x = clamp(v, 0, 1); setOpt('master', x); getChannel('loops')?.setTrim(x) }
 /** how loud the loop tracks are right now (private emulator engines + the guide) */
 export function loopPeak(): number {
   let m = guidePeak()
@@ -179,7 +182,8 @@ function poolEngine(inst: string, patch?: Record<string, number>): Engine | null
   const have = E.pool.get(inst); if (have) return have.eng
   const eid = emuIdOf(inst), spec = eid ? getEmu(eid) : undefined
   if (!spec) return null
-  const eng = createEngine(spec)
+  const lc = loopsChannel(); lc.setTrim(S().master)
+  const eng = createEngine(spec, { channel: lc })
   const ch = SOUNDS.find((s) => 'sound:' + s.id === inst)
   const p = spec.presets.find((x) => x.name === ch?.preset) ?? spec.presets[0]
   E.applying = true
@@ -570,7 +574,8 @@ const audible = (i: number) => { const l = E.layers[i]; return !l.mute && (!solo
 function gainOf(i: number, abs: number): number {
   const s = S(), L = E.layers[i], xf = i < 4 ? Math.min(1, 2 * (1 - s.xf)) : Math.min(1, 2 * s.xf)
   const fade = L.fade ? clamp(1 - (abs - L.fade.from) / Math.max(0.01, L.fade.to - L.fade.from), 0, 1) : 1
-  return L.vol * s.master * xf * fade
+  // pooled emulators follow the 'loops' channel trim; the Koog synth / followed sounds still scale by velocity
+  return L.vol * (E.pool.has(L.inst) ? 1 : s.master) * xf * fade
 }
 function later(fn: () => void, ms: number) {
   const h = window.setTimeout(() => { E.timers.delete(h); fn() }, Math.max(0, ms))
