@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 330" width="960" height="330" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>The phrase ladder: seven rungs that remove one support at a time, from listening to playing from memory with both hands</title>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1830"/><stop offset="1" stop-color="#1c2a3a"/></linearGradient>
+  </defs>
+  <rect width="960" height="330" rx="18" fill="url(#bg2)"/>
+  <text x="480" y="36" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">Learn it: each song is cut into 2–3-note phrases, and each phrase climbs a ladder</text>
+  <text x="480" y="60" text-anchor="middle" font-size="14" fill="#cfc8f0">Every rung takes away one support. A few clean passes climb a rung. Phrases then chain into lines, and lines into the whole song.</text>
+
+  <g font-size="13" text-anchor="middle">
+    <rect x="30"  y="240" width="118" height="60" rx="10" fill="#3a3466"/>
+    <text x="89" y="262" font-weight="700" fill="#fff" font-size="15">👂 Listen</text><text x="89" y="284" fill="#d9d3f7">hear it, keys light</text>
+
+    <rect x="160" y="210" width="118" height="90" rx="10" fill="#3d3f72"/>
+    <text x="219" y="236" font-weight="700" fill="#fff" font-size="15">☝️ Follow</text><text x="219" y="258" fill="#d9d3f7">play the lit keys</text>
+
+    <rect x="290" y="180" width="118" height="120" rx="10" fill="#3a4a7a"/>
+    <text x="349" y="206" font-weight="700" fill="#fff" font-size="15">🔁 Echo</text><text x="349" y="228" fill="#d9d3f7">hear it, then</text><text x="349" y="246" fill="#d9d3f7">play it back</text>
+
+    <rect x="420" y="150" width="118" height="150" rx="10" fill="#355580"/>
+    <text x="479" y="176" font-weight="700" fill="#fff" font-size="15">🧠 Memory</text><text x="479" y="198" fill="#d9d3f7">no lit keys;</text><text x="479" y="216" fill="#d9d3f7">peek costs the pass</text>
+
+    <rect x="550" y="120" width="118" height="180" rx="10" fill="#2f6184"/>
+    <text x="609" y="146" font-weight="700" fill="#fff" font-size="15">⏱️ In time</text><text x="609" y="168" fill="#d9d3f7">on the beat,</text><text x="609" y="186" fill="#d9d3f7">±120 ms</text>
+
+    <rect x="680" y="95" width="118" height="205" rx="10" fill="#2a6d84"/>
+    <text x="739" y="121" font-weight="700" fill="#fff" font-size="15">🙈 No sheet</text><text x="739" y="143" fill="#d9d3f7">the notes fade</text><text x="739" y="161" fill="#d9d3f7">from the staff</text>
+
+    <rect x="810" y="75" width="120" height="225" rx="10" fill="#c99a3c"/>
+    <text x="870" y="101" font-weight="700" fill="#1b1830" font-size="15">🙌 Both hands</text><text x="870" y="123" fill="#2b2238">add the left-</text><text x="870" y="141" fill="#2b2238">hand chord</text>
+  </g>
+  <text x="30" y="318" font-size="12" fill="#9f97c9">More support</text>
+  <text x="930" y="318" font-size="12" fill="#9f97c9" text-anchor="end">Independent performance</text>
+</svg>

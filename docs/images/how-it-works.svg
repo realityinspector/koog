@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>How Koog teaches: the student plays, Koog listens, names the musical idea, and rewards it instantly</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1830"/><stop offset="1" stop-color="#2a1c3f"/></linearGradient>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5c96b"/></marker>
+  </defs>
+  <rect width="960" height="300" rx="18" fill="url(#bg)"/>
+  <text x="480" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">Every note goes through the same loop, in under a tenth of a second</text>
+
+  <g>
+    <rect x="30" y="70" width="190" height="150" rx="14" fill="#2f2a4d" stroke="#8b7bff" stroke-width="2"/>
+    <text x="125" y="108" text-anchor="middle" font-size="34">🎹</text>
+    <text x="125" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">1. Student plays</text>
+    <text x="125" y="164" text-anchor="middle" font-size="13" fill="#cfc8f0">any USB-MIDI keyboard,</text>
+    <text x="125" y="182" text-anchor="middle" font-size="13" fill="#cfc8f0">on-screen keys, or the</text>
+    <text x="125" y="200" text-anchor="middle" font-size="13" fill="#cfc8f0">computer keyboard</text>
+  </g>
+  <g>
+    <rect x="265" y="70" width="190" height="150" rx="14" fill="#2f2a4d" stroke="#5fd3c6" stroke-width="2"/>
+    <text x="360" y="108" text-anchor="middle" font-size="34">👂</text>
+    <text x="360" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">2. Koog listens</text>
+    <text x="360" y="164" text-anchor="middle" font-size="13" fill="#cfc8f0">key · chord · rhythm</text>
+    <text x="360" y="182" text-anchor="middle" font-size="13" fill="#cfc8f0">melody shape · phrases</text>
+    <text x="360" y="200" text-anchor="middle" font-size="13" fill="#cfc8f0">mood (happy / sad)</text>
+  </g>
+  <g>
+    <rect x="500" y="70" width="190" height="150" rx="14" fill="#2f2a4d" stroke="#f5c96b" stroke-width="2"/>
+    <text x="595" y="108" text-anchor="middle" font-size="34">🏷️</text>
+    <text x="595" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">3. Names the idea</text>
+    <text x="595" y="164" text-anchor="middle" font-size="13" fill="#cfc8f0">"Cadence!" "Motif!"</text>
+    <text x="595" y="182" text-anchor="middle" font-size="13" fill="#cfc8f0">"Tension → release!"</text>
+    <text x="595" y="200" text-anchor="middle" font-size="13" fill="#cfc8f0">in plain kid language</text>
+  </g>
+  <g>
+    <rect x="735" y="70" width="195" height="150" rx="14" fill="#2f2a4d" stroke="#ff7aa8" stroke-width="2"/>
+    <text x="832" y="108" text-anchor="middle" font-size="34">🎆</text>
+    <text x="832" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">4. Rewards it</text>
+    <text x="832" y="164" text-anchor="middle" font-size="13" fill="#cfc8f0">bigger fireworks, game</text>
+    <text x="832" y="182" text-anchor="middle" font-size="13" fill="#cfc8f0">power-ups, stars, a</text>
+    <text x="832" y="200" text-anchor="middle" font-size="13" fill="#cfc8f0">mentor's kind comment</text>
+  </g>
+
+  <line x1="222" y1="145" x2="261" y2="145" stroke="#f5c96b" stroke-width="3" marker-end="url(#ar)"/>
+  <line x1="457" y1="145" x2="496" y2="145" stroke="#f5c96b" stroke-width="3" marker-end="url(#ar)"/>
+  <line x1="692" y1="145" x2="731" y2="145" stroke="#f5c96b" stroke-width="3" marker-end="url(#ar)"/>
+  <path d="M832,222 C832,268 125,268 125,224" fill="none" stroke="#f5c96b" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#ar)"/>
+  <text x="480" y="286" text-anchor="middle" font-size="14" fill="#f5c96b">…so the student plays more of what good music is made of</text>
+</svg>
