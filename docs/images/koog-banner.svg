@@ -29,12 +29,12 @@
     <!-- G -->
     <path d="M415 39A39 39 0 1 0 425 65H396"/>
   </g>
-  <!-- knob caps inside the O's, pointers at "10 o'clock" and "2 o'clock" like a patch being dialled in -->
+  <!-- knob caps inside the O's, both pointers at "10 o'clock", set the same way -->
   <g>
     <circle cx="166" cy="65" r="17" fill="url(#kgKnob)" stroke="#fff4d8" stroke-opacity=".5" stroke-width="2"/>
     <path d="M166 65L155 53" stroke="#5fffd0" stroke-width="4" stroke-linecap="round"/>
     <circle cx="276" cy="65" r="17" fill="url(#kgKnob)" stroke="#fff4d8" stroke-opacity=".5" stroke-width="2"/>
-    <path d="M276 65L287 53" stroke="#5fffd0" stroke-width="4" stroke-linecap="round"/>
+    <path d="M276 65L265 53" stroke="#5fffd0" stroke-width="4" stroke-linecap="round"/>
   </g>
   <!-- tick marks around the rings, like a knob's scale -->
   <g stroke="#fff4d8" stroke-opacity=".55" stroke-width="2" stroke-linecap="round">
