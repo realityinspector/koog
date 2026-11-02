@@ -34,7 +34,7 @@ export const Lcd = ({ label, children, wide }: { label: string; children: React.
   <div className={'bx-lcd' + (wide ? ' wide' : '')}><small>{label}</small><b>{children}</b></div>
 )
 
-/** Session header: tempo (master clock), key, chord, SYNTHESIZER state, load, panic, stage. */
+/** Session header: tempo (master clock), key, chord, computer-sound state, load, panic, stage. */
 export function SessionHeader({ onDiag }: { onDiag: () => void }) {
   const m = useMaster()
   const key = useHarmonyStore((s) => s.key)

@@ -4,7 +4,7 @@ import { PC_NAMES, SCALE_LABEL, type ScaleType } from '../../music/theory'
 
 const SCALE_OPTS: ScaleType[] = ['major', 'minor', 'majorPentatonic', 'minorPentatonic', 'blues']
 
-/** Key / scale picker, auto-detect and the Can't-miss modes. Opens from the KEY readout. */
+/** Key / scale picker, auto-detect and the Easy modes (every note sounds good). Opens from the KEY readout. */
 export function KeyPopover({ onClose }: { onClose: () => void }) {
   const { key, autoDetect, setKey, setAutoDetect } = useHarmonyStore()
   const ref = useRef<HTMLDivElement>(null)
@@ -37,7 +37,7 @@ export function KeyPopover({ onClose }: { onClose: () => void }) {
         title="Let the app listen and guess your key">
         <i className="kp-led" /> Auto-detect key
       </button>
-      <div className="kp-lbl">Can't-miss modes</div>
+      <div className="kp-lbl">Easy modes (every note sounds good)</div>
       <div className="kp-row">
         <button className={'kp-btn' + (isCant(0) ? ' on' : '')} aria-pressed={isCant(0)} onClick={() => cant(0)}>White keys only</button>
         <button className={'kp-btn' + (isCant(6) ? ' on' : '')} aria-pressed={isCant(6)} onClick={() => cant(6)}>Black keys only</button>

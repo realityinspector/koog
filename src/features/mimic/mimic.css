@@ -1,5 +1,5 @@
 /* 🎭 Mimic chip + style picker. Lives in the display overlay (z-order map: popover = --z-pop). Easy to move: only .mm-wrap is positioned. */
-.mm-wrap { position: absolute; top: 12px; right: 112px; z-index: var(--z-viz, 8); pointer-events: none; font-variant-numeric: tabular-nums; }
+.mm-wrap { position: absolute; top: 14px; right: 184px; z-index: var(--z-viz, 8); pointer-events: none; font-variant-numeric: tabular-nums; }
 .mm-wrap > * { pointer-events: auto; }
 .mm-chip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 12px; border-radius: 999px; color: #f4f2ff;
   background: rgba(10, 8, 30, .66); border: 1px solid rgba(255, 255, 255, .22); backdrop-filter: blur(8px); box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
@@ -9,7 +9,7 @@
 .mm-chip-t { display: flex; flex-direction: column; line-height: 1.05; } .mm-chip-t b { font-size: 11px; letter-spacing: .16em; } .mm-chip-t i { font-style: normal; font-size: 10px; color: #c9c4ee; }
 .mm-led { width: 8px; height: 8px; border-radius: 50%; background: #2a3a4a; } .mm-led.on { background: #ffb86c; box-shadow: 0 0 8px #ffb86c; } .mm-led.live { animation: mm-pulse 1s ease-in-out infinite; }
 @keyframes mm-pulse { 50% { opacity: .35; } }
-.mm-pop { position: absolute; top: 48px; right: -100px; z-index: var(--z-pop, 26); width: min(620px, calc(100vw - 40px)); max-height: calc(var(--disp-h, 480px) - 64px); overflow: auto; box-sizing: border-box;
+.mm-pop { position: absolute; top: 48px; right: -172px; z-index: var(--z-pop, 26); width: min(620px, calc(100vw - 40px)); max-height: calc(var(--disp-h, 480px) - 64px); overflow: auto; box-sizing: border-box;
   padding: 10px; border-radius: 14px; background: rgba(14, 12, 38, .97); border: 1px solid rgba(255, 255, 255, .18); box-shadow: 0 18px 50px rgba(0, 0, 0, .6); color: var(--text, #f4f2ff); scrollbar-width: thin; }
 .mm-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; } .mm-head > .mm-btn:last-child { margin-left: auto; }
 .mm-body { display: grid; grid-template-columns: minmax(0, 1fr) 262px; gap: 10px; }
@@ -37,7 +37,7 @@
 .mm-dot.you { fill: #6cd8ff; } .mm-rt { font: 700 7px ui-monospace, Menlo, monospace; fill: #9fc4e0; }
 .mm-vol { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #b9b3e0; } .mm-vol input { flex: 1; accent-color: #ffb86c; }
 .mm-notice { margin: 8px 0 0; font-size: 9.5px; color: #8f8ab5; text-align: center; }
-@media (max-width: 1100px) { .mm-wrap { right: 104px; } .mm-pop { right: -92px; } }
+@media (max-width: 1279px) { .mm-wrap { top: 108px; right: 14px; } .mm-pop { right: 0; } }
 @media (max-width: 760px) { .mm-body { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .mm-led.live { animation: none; } }
 @media (max-height: 760px) { .mm-blurb { -webkit-line-clamp: 2; } .mm-tile { min-height: 46px; } .mm-ribbon { height: 46px; } .mm-notice { margin-top: 4px; } }

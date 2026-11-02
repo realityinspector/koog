@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { checkCode, isGuest, useProfile } from './profile'
+import { useEffect, useRef, useState } from 'react'
+import { checkCode, isGuest, psave, useProfile } from './profile'
 import './profile.css'
 
 const HOLD_MS = 1200
@@ -9,6 +9,15 @@ export function ProfileBar() {
   const { active, mode, setMode, signOut } = useProfile()
   const [holding, setHolding] = useState(false)
   const timer = useRef<number | undefined>(undefined)
+
+  // remember when each player last played, so "Who's playing?" can show it
+  useEffect(() => {
+    if (isGuest(active)) return
+    const stamp = () => psave('lastPlayed', Date.now())
+    stamp()
+    const t = window.setInterval(stamp, 60000)
+    return () => { window.clearInterval(t); stamp() }
+  }, [active])
 
   // Dad mode needs a 1.2 s press-and-hold: a speed bump for little hands, not a lock.
   const startHold = () => {
@@ -28,7 +37,7 @@ export function ProfileBar() {
     <div className={`pf-bar pf-${mode}`}>
       <span className="pf-who">
         {isGuest(active) ? '👋 Guest' : <>🎹 <b>{active}</b></>}
-        {!isGuest(active) && <button className="pf-link" onClick={signOut}>switch player</button>}
+        {!isGuest(active) && <button className="pf-switch" onClick={signOut} title="Pick a different player">switch player</button>}
       </span>
       <span className="pf-mode">
         {mode === 'dad' ? (
@@ -47,16 +56,16 @@ export function ProfileBar() {
             onKeyUp={keyUp}
             onBlur={stopHold}
             aria-label="Switch to Boss mode — hold for a second"
-            title="Press and hold (or hold Enter / Space)"
+            title="Grown-ups: hold for Boss mode"
           >
             {/* visible progress ring while holding */}
-            <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden style={{ verticalAlign: '-3px', marginRight: 6 }}>
+            <svg className="pf-ring" width="26" height="26" viewBox="0 0 20 20" aria-hidden>
               <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".3" strokeWidth="3" />
               <circle cx="10" cy="10" r="8" fill="none" stroke="#ffb86c" strokeWidth="3" strokeLinecap="round" transform="rotate(-90 10 10)"
                 strokeDasharray="50.3" strokeDashoffset={holding ? 0 : 50.3}
                 style={{ transition: holding ? `stroke-dashoffset ${HOLD_MS}ms linear` : 'none' }} />
             </svg>
-            Dad mode (hold)
+            <span className="pf-lock" aria-hidden>🔒</span>
           </button>
         )}
       </span>
@@ -64,15 +73,40 @@ export function ProfileBar() {
   )
 }
 
-/** Shown while nobody is signed in. Kids tap their word, or make one. */
+const EMOJIS = ['🦊', '🐯', '🐙', '🦄', '🐸', '🚀', '🎸', '🦖', '🐼', '🌈', '🐬', '🦉']
+const COLORS = ['#7c5cff', '#ff5da2', '#35d4e8', '#ffb43c', '#3ddc84', '#ff6a3c']
+const hashOf = (s: string) => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h }
+const read = <T,>(code: string, name: string, d: T): T => {
+  try { const v = localStorage.getItem(`koog.p.${code}.${name}`); return v ? (JSON.parse(v) as T) : d } catch { return d }
+}
+function ago(t: number | null): string {
+  if (!t) return 'New here'
+  const m = Math.round((Date.now() - t) / 60000)
+  if (m < 2) return 'Just now'
+  if (m < 60) return `${m} min ago`
+  const h = Math.round(m / 60)
+  if (h < 24) return `${h} hr ago`
+  const d = Math.round(h / 24)
+  return d === 1 ? 'Yesterday' : `${d} days ago`
+}
+const tileInfo = (code: string) => ({
+  emoji: EMOJIS[hashOf(code) % EMOJIS.length],
+  color: COLORS[(hashOf(code) >> 3) % COLORS.length],
+  last: read<number | null>(code, 'lastPlayed', null),
+  badges: Object.keys(read<Record<string, number>>(code, 'challenges.badges', {})).length,
+})
+
+/** Shown while nobody is signed in. Kids tap their tile, or make a new one. */
 export function WhoIsPlaying() {
   const { active, profiles, hasLegacy, signIn, create } = useProfile()
   const [code, setCode] = useState('')
   const [claim, setClaim] = useState(true)
   const [err, setErr] = useState<string | null>(null)
   const [hidden, setHidden] = useState(false)
+  const [adding, setAdding] = useState(false)
   if (!isGuest(active) || hidden) return null
 
+  const showForm = adding || profiles.length === 0
   const typedExisting = profiles.includes(code.trim().toLowerCase())
   const submit = (e: { preventDefault(): void }) => {
     e.preventDefault()
@@ -82,33 +116,51 @@ export function WhoIsPlaying() {
   const live = code ? (typedExisting ? null : checkCode(code, profiles)) : null
 
   return (
-    <section className="pf-who-card">
+    <section className="pf-who-card" aria-label="Who's playing?">
       <h2>Who's playing?</h2>
-      {profiles.length > 0 && (
-        <div className="pf-chips">
-          {profiles.map((p) => <button key={p} onClick={() => signIn(p)}>{p}</button>)}
-        </div>
+      <div className="pf-tiles">
+        {profiles.map((p) => {
+          const t = tileInfo(p)
+          return (
+            <button key={p} className="pf-tile" style={{ ['--tc' as string]: t.color }} onClick={() => signIn(p)}>
+              <span className="pf-av" aria-hidden>{t.emoji}</span>
+              <b>{p}</b>
+              <small>{ago(t.last)}</small>
+              <small className="pf-bd">🏅 {t.badges} {t.badges === 1 ? 'badge' : 'badges'}</small>
+            </button>
+          )
+        })}
+        {!showForm && (
+          <button className="pf-tile pf-add" onClick={() => setAdding(true)}>
+            <span className="pf-av" aria-hidden>＋</span>
+            <b>New player</b>
+          </button>
+        )}
+      </div>
+      {showForm && (
+        <form onSubmit={submit} className="pf-new">
+          <input
+            autoFocus={adding}
+            value={code}
+            onChange={(e) => { setCode(e.target.value.replace(/\s/g, '')); setErr(null) }}
+            placeholder="Your name or nickname"
+            aria-label="Your name or nickname"
+            maxLength={12}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <button disabled={!code || !!live}>{typedExisting ? 'Sign in' : 'Start'}</button>
+        </form>
       )}
-      <form onSubmit={submit} className="pf-new">
-        <input
-          value={code}
-          onChange={(e) => { setCode(e.target.value.replace(/\s/g, '')); setErr(null) }}
-          placeholder={profiles.length ? 'or type a new code word' : 'Pick a code word: your name, a nickname, a letter'}
-          maxLength={12}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button disabled={!code || !!live}>{typedExisting ? 'Sign in' : 'Start'}</button>
-      </form>
       {(err || live) && <div className="pf-err">{err || live}</div>}
-      {hasLegacy && !typedExisting && (
+      {showForm && hasLegacy && !typedExisting && (
         <label className="pf-claim">
           <input type="checkbox" checked={claim} onChange={(e) => setClaim(e.target.checked)} />
           Bring the badges and high scores already saved on this computer
         </label>
       )}
-      <p className="pf-note">Your code word keeps your badges and scores separate from your brother's or sister's. It's not a password, so pick something easy.</p>
-      <button className="pf-link" onClick={() => setHidden(true)}>Just play as a guest</button>
+      <button className="pf-guest" onClick={() => setHidden(true)}>Just play</button>
+      <p className="pf-note">Your name keeps your badges and scores separate from your brother's or sister's. It's not a password, so pick something easy.</p>
     </section>
   )
 }

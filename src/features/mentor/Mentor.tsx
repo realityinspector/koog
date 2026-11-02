@@ -39,7 +39,8 @@ export function Mentor({ tech = false }: { tech?: boolean }) {
   const reel = useMentor((s) => s.reel)
   const line = useMentorLine()
   useEffect(() => { useMentor.setState({ tech }); return () => useMentor.setState({ tech: false }) }, [tech])
-  if (!on) return <div className={'mn' + (tech ? ' mn-tech' : '')}><MentorChip /></div>
+  // kid PLAY: the entry switch lives in the ✨ Modes launcher; the chip stays only for the Boss (tech) audience
+  if (!on) return tech ? <div className="mn mn-tech"><MentorChip /></div> : null
   return (
     <div className={'mn' + (tech ? ' mn-tech' : '')}>
       <div className="mn-labels" aria-live="off">

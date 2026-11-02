@@ -12,7 +12,7 @@ function applySaved() {
 }
 
 /** LCD-style Smart Band readout: click to switch on/off, ▾ for style and volume. */
-export function SmartBandChip() {
+export function SmartBandChip({ pill = false }: { pill?: boolean } = {}) {
   useSyncExternalStore(subscribe, getVersion)
   const S = getState()
   const [open, setOpen] = useState(false)
@@ -28,8 +28,10 @@ export function SmartBandChip() {
   const vol = Math.round(S.volume * 100)
   const status = S.on ? (S.idle ? 'listening…' : S.chord?.name ?? '—') : '—'
 
+  // pill: the entry switch lives in the ✨ Modes launcher; show a small status pill only while the band plays
+  if (pill && !S.on) return null
   return (
-    <div className="sr-cell sb">
+    <div className={'sr-cell sb' + (pill ? ' sb-pill' : '')}>
       <div className="sb-row">
         <button className="sb-main" onClick={toggle} aria-pressed={S.on} title="Smart Band: a backing band that listens and follows you">
           <span className="sr-lbl">🤖 BAND <i className={'sr-led sb-led' + (S.on ? ' on' : '') + (S.on && !S.idle ? ' live' : '')} aria-hidden /></span>

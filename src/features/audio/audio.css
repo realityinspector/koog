@@ -23,6 +23,7 @@
 @media (max-width: 1099px) { .kg-audio-label { font-size: 12px; } }
 @media (prefers-reduced-motion: reduce) { .kg-audio-track, .kg-audio-knob { transition: none; } }
 /* SYNTHESIZER ON/OFF label: all caps, fixed width so the strip doesn't jump when it flips */
-.kg-audio-label { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.kg-audio-label { font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
 .kg-audio-label b { display: inline-block; min-width: 3ch; color: #9fa0b8; }
 .kg-audio-sw.on .kg-audio-label b { color: #6cffa8; }
+.kg-audio-label b { text-transform: uppercase; }

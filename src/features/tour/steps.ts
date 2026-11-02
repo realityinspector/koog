@@ -1,16 +1,15 @@
 export interface TourStep {
-  /** CSS selector of the real element to highlight */
+  /** CSS selector of the real element to highlight (first visible match) */
   sel: string
-  /** optional: pick the first match whose text includes this */
-  text?: string
+  /** skip this step quietly when nothing visible matches */
+  optional?: boolean
   title: string
   body: string
 }
 
+/** The short tour that follows the "tap any key" first note. Three real places, nothing else. */
 export const TOUR_STEPS: TourStep[] = [
-  { sel: '.kg-display', title: 'The display', body: 'This is your screen. Every note you play paints it. In-key notes glow gold; notes outside the key go 🌶️ spicy.' },
-  { sel: '.sr', title: 'Smart readouts', body: 'Koog listens. MUSIC POWER shows how in-key, on-beat and stylish you are. Play well to charge ⚡ BOOM, then slam the keys for a giant finale. Slam too early and it fizzles 💨' },
-  { sel: '.viz-bar button', text: 'Patch', title: 'Patch', body: 'Build your own synth sound, and watch the visuals change shape with it. Try 🧩 Quests.' },
-  { sel: '.kg-rail', title: 'Modes', body: 'Songs with karaoke, 🎮 GAMES (Zombie Lanes and BachDoom!), challenges, beats, synth history, and the build log.' },
-  { sel: '.kg-idea', title: 'Ideas', body: 'Want a feature? Type it here. The AI builds it, sometimes while you watch.' },
+  { sel: '.viz-bar', optional: true, title: 'Pick a scene', body: 'These change what your playing looks like on the display. Fireworks, galaxies, zombies. Tap one and play.' },
+  { sel: '[data-tour="modes"]', optional: true, title: '✨ Modes', body: 'Your power-ups live here: DJ, band, looper and more. Open it any time to remix what you play.' },
+  { sel: '.kg-rail', title: 'The side rail', body: 'Songs with karaoke, 🎮 GAMES, challenges, beats, and the synth time machine. Tap PLAY to come back here.' },
 ]

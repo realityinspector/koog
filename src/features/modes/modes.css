@@ -1,0 +1,33 @@
+/* ✨ Modes launcher (top-right of the PLAY display). z: button = --z-viz, panel = --z-pop (see instrument.css map). */
+.md-wrap { position: absolute; top: 12px; right: 12px; z-index: var(--z-viz, 8); pointer-events: none; }
+.md-wrap > * { pointer-events: auto; }
+.md-btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: var(--k-s-2); height: var(--ctl-h-lg); padding: 0 var(--k-s-3) 0 14px;
+  border-radius: var(--k-r-pill); color: var(--k-ink); font-size: var(--k-fs-md); background: rgba(10, 8, 30, .66); border: 1px solid var(--k-line-strong); backdrop-filter: blur(8px); box-shadow: var(--k-e-2); }
+.md-btn b { font-size: var(--k-fs-sm); letter-spacing: .14em; text-transform: uppercase; }
+.md-btn:hover { border-color: var(--k-accent); }
+.md-btn:focus-visible, .md-card:focus-visible { outline: 2px solid var(--k-signal); outline-offset: 2px; }
+.md-btn.has, .md-btn.open { border-color: var(--k-accent); }
+.md-dots { display: inline-flex; gap: 3px; }
+.md-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--k-surface-3); }
+.md-dots i.on { background: var(--k-lcd); box-shadow: 0 0 6px var(--k-lcd); }
+.md-pop { position: absolute; top: calc(var(--ctl-h-lg) + 8px); right: 0; width: min(500px, calc(100vw - 40px)); max-height: calc(var(--disp-h, 480px) - 72px); overflow: auto; box-sizing: border-box;
+  padding: var(--k-s-3); border-radius: var(--k-r-lg); background: rgba(14, 12, 38, .97); border: 1px solid var(--k-line-strong); box-shadow: var(--k-e-3); color: var(--k-ink); scrollbar-width: thin; animation: md-in .18s ease-out; }
+.md-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--k-s-2); font-size: var(--k-fs-xs); font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--k-ink-2); }
+.md-head span { letter-spacing: .06em; color: var(--k-ink-3); }
+.md-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--k-s-2); }
+.md-wrap:has(.md-pop) { z-index: var(--z-pop, 26); }
+@media (max-width: 640px) { .md-grid { grid-template-columns: 1fr; } }
+.md-card { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 32px 1fr auto; align-content: center; align-items: center; gap: var(--k-s-3); min-height: 52px; padding: 6px var(--k-s-3);
+  border-radius: var(--k-r-md); background: var(--k-surface-2); border: 1px solid var(--k-line); }
+.md-card:hover { border-color: var(--k-line-strong); background: var(--k-surface-3); }
+.md-card.on { border-color: var(--k-lcd); box-shadow: inset 0 0 0 1px rgba(108, 255, 168, .25), 0 0 12px rgba(108, 255, 168, .18); }
+.md-ic { font-size: 24px; text-align: center; }
+.md-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.md-tx b { font-size: var(--k-fs-md); }
+.md-tx em { font-style: normal; font-size: var(--k-fs-xs); line-height: 1.3; color: var(--k-ink-2); }
+.md-sw { min-width: 38px; text-align: center; padding: 3px 8px; border-radius: var(--k-r-pill); font-size: var(--k-fs-xs); font-weight: 800; letter-spacing: .06em; color: var(--k-ink-3); background: rgba(0, 0, 0, .4); border: 1px solid var(--k-line); }
+.md-card.on .md-sw { color: #06281a; background: var(--k-lcd); border-color: transparent; }
+@keyframes md-in { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .md-pop { animation: none } }
+@media (max-height: 760px) { .md-card { min-height: 46px; padding-block: 4px; } .md-tx em { font-size: var(--k-fs-xs); } }
+.kg-display[data-screen] .md-wrap { display: none; }

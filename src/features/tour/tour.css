@@ -23,5 +23,15 @@
   .tour-spot, .tour-card { transition: none; }
   .tour-spot::after { animation: none; }
 }
-/* In the top strip: a small round button right of 💡 Idea */
-.kg-strip .tour-replay { position: static; flex: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+/* interactive first note: the keybed glows and a banner says what to do (no block, keys stay playable) */
+.tour-tap { position: fixed; z-index: 60; left: 50%; top: 34%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--k-s-3); padding: var(--k-s-3) var(--k-s-4); border-radius: var(--k-r-lg); background: var(--k-surface-2); border: 1px solid var(--k-accent); box-shadow: var(--k-e-3); color: var(--k-ink); max-width: calc(100vw - 32px); }
+.tour-tap b { font-size: var(--k-fs-xl); color: var(--k-accent); white-space: nowrap; }
+.tour-tap span { font-size: var(--k-fs-md); color: var(--k-ink-2); }
+.kg-keybed.tour-pulse { animation: tour-bed 1.4s ease-in-out infinite; }
+@keyframes tour-bed { 0%, 100% { box-shadow: inset 0 3px 8px rgba(0,0,0,.8), 0 0 0 0 rgba(255,180,60,0); } 50% { box-shadow: inset 0 3px 8px rgba(0,0,0,.8), 0 0 22px 4px rgba(255,180,60,.65); } }
+@media (prefers-reduced-motion: reduce) { .kg-keybed.tour-pulse { animation: none; box-shadow: inset 0 3px 8px rgba(0,0,0,.8), 0 0 0 3px var(--k-accent); } }
+@media (max-width: 800px) { .tour-tap span { display: none; } }
+/* In the top strip: a small round button right of 💡 Idea; neutral grey so it never looks like a warning */
+.kg-strip .tour-replay { background: var(--k-surface-2); color: var(--k-ink-2); border-color: var(--k-line); position: static; flex: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+
+.kg-strip .tour-replay b { font-size: 16px; font-weight: 800; }

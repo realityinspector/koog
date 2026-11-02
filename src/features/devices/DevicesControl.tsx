@@ -61,7 +61,7 @@ export function DevicesControl() {
                 onClick={() => { chooseSound(s.id); void unlockAudio() }}>{s.icon} {s.label}</button>
             ))}
           </div>
-          <p className="kg-dev-note">Turn SYNTHESIZER ON to hear it through the computer.</p>
+          <p className="kg-dev-note">Turn 🔊 Computer sound ON to hear it through the computer.</p>
           {mode !== 'kid' && <><h4>✂️ Split and layers</h4><SplitControl /></>}
         </div>
       )}

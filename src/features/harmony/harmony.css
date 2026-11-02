@@ -58,3 +58,23 @@
 @keyframes coach-in { from { opacity: 0; transform: translate(-50%, 6px) } to { opacity: 1; transform: translateX(-50%) } }
 @media (prefers-reduced-motion: reduce) { .coach { animation: none } }
 @media (max-height: 720px) { .coach { font-size: 13px; } }
+
+/* progressive readouts: tap-for-tooltip, compact power, big animated chord */
+.sr-keywrap { position: relative; }
+.sr-help-gap { display: inline-block; width: 18px; }
+.sr-help { all: unset; box-sizing: border-box; cursor: pointer; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 800 11px/1 system-ui, sans-serif; color: #9fc4e0;
+  border: 1px solid rgba(120, 220, 255, .35); background: rgba(0, 0, 0, .35); pointer-events: auto; }
+.sr-help:hover, .sr-help.on { color: #06161f; background: #4fd8ff; border-color: transparent; }
+.sr-help:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.sr-keywrap > .sr-help { position: absolute; top: 8px; right: 8px; }
+.sr-boom .sr-help { margin-left: 2px; }
+.sr-power { min-width: 150px; }
+.sr-power .sr-meter { width: 100%; height: 10px; margin-top: 4px; }
+.sr-tip { flex-basis: 100%; max-width: 420px; box-sizing: border-box; padding: 8px 12px; border-radius: 10px; pointer-events: auto; cursor: pointer; font-size: 13px; line-height: 1.4; color: #e8f7ff;
+  background: rgba(8, 18, 36, .94); border: 1px solid rgba(120, 220, 255, .45); box-shadow: 0 6px 22px rgba(0, 0, 0, .5); animation: sr-in .2s ease-out; }
+.sr-tip b { color: #4fd8ff; letter-spacing: .1em; margin-right: 4px; }
+.sr-chordcell { min-width: 120px; transition: opacity .5s; animation: sr-chord-in .35s cubic-bezier(.2, 1.4, .4, 1); }
+.sr-chordcell.fade { opacity: 0; }
+.sr-chord-big { font-size: 34px; line-height: 1.05; }
+@keyframes sr-chord-in { from { opacity: 0; transform: scale(.7) translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sr-chordcell, .sr-tip { animation: none; transition: none; } }

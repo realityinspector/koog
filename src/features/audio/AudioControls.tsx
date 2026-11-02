@@ -5,7 +5,7 @@ import './audio.css'
 
 const WIDE = '(min-width: 1100px)'
 
-/** Top-strip sound controls: mute, volume (inline when wide, popover otherwise), SYNTHESIZER ON/OFF switch. */
+/** Top-strip sound controls: mute, volume (inline when wide, popover otherwise), Computer sound ON/OFF switch. */
 export function AudioControls() {
   const volume = useAudioSettings((s) => s.volume)
   const muted = useAudioSettings((s) => s.muted)
@@ -61,10 +61,10 @@ export function AudioControls() {
         )}
       </div>
       <button type="button" role="switch" aria-checked={computer} className={'kg-audio-sw' + (computer ? ' on' : '')}
-        title="SYNTHESIZER ON: the MIDI keyboard also plays through the computer's speakers (the Koog synth, or the emulator you have open)"
+        title="Play your keyboard through the speakers. ON: the notes you play come out of the computer (the Koog synth, or the emulator you have open). OFF: only your keyboard's own sound."
         onClick={() => { const next = !computer; if (next) void unlockAudio(); setComputerSound(next) }}>
         <span className="kg-audio-track" aria-hidden="true"><span className="kg-audio-knob" /></span>
-        <span className="kg-audio-label">SYNTHESIZER <b>{computer ? 'ON' : 'OFF'}</b></span>
+        <span className="kg-audio-label"><span aria-hidden>🔊</span> Computer sound <b>{computer ? 'ON' : 'OFF'}</b></span>
       </button>
     </div>
   )

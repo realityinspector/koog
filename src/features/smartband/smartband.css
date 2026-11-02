@@ -16,3 +16,10 @@
 .sb-vol input { width: 100%; accent-color: #4fd8ff; }
 @keyframes sb-pulse { 0%, 100% { box-shadow: 0 0 4px #6cffa8; } 50% { box-shadow: 0 0 10px #6cffa8; } }
 @media (prefers-reduced-motion: reduce) { .sb-led.live { animation: none; } }
+
+/* in the Modes launcher world: a slim status pill under the launcher, only while the band is on */
+.sb.sb-pill { position: absolute; top: 60px; right: 64px; z-index: var(--z-viz, 8); min-width: 0; border-radius: var(--k-r-md); }
+.sb-pill .sb-main { min-width: 0; flex-direction: row; align-items: center; gap: 8px; padding: 5px 8px 5px 10px; }
+.sb-pill .sb-chord { font-size: 14px; min-width: 3ch; }
+.sb-pill .sr-best { display: none; }
+.sb-pill .sb-pop { left: auto; right: 0; }

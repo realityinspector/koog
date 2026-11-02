@@ -61,7 +61,8 @@ export function BeatsPanel() {
         {GROOVES.map((x) => (
           <button key={x.id} role="radio" aria-checked={x.id === g.id} title={x.blurb}
             className={'bt-chip' + (x.id === g.id ? ' bt-sel' : '')} onClick={() => setGroove(x.id)}>
-            {x.name}
+            <span className="bt-nm">{x.name}</span>
+            <span className="bt-vibe">{x.blurb}</span>
           </button>
         ))}
       </div>
@@ -87,7 +88,7 @@ export function BeatsPanel() {
           <label><input type="checkbox" checked={S.bass} onChange={(e) => setLayer('bass', e.target.checked)} /> Bass</label>
           <label><input type="checkbox" checked={S.chords} onChange={(e) => setLayer('chords', e.target.checked)} /> Chords</label>
           <label title="Just the drum kit. Drums have no key, so play in ANY key and Koog figures it out."><input type="checkbox" checked={!S.bass && !S.chords} onChange={(e) => setDrumsOnly(e.target.checked)} /> 🥁 Drums only (any key)</label>
-          <label title="Five notes only. Every one sounds good."><input type="checkbox" checked={S.pent} onChange={(e) => setPent(e.target.checked)} /> Can't-miss</label>
+          <label title="Only five notes, and every one of them sounds good."><input type="checkbox" checked={S.pent} onChange={(e) => setPent(e.target.checked)} /> Easy mode (every note sounds good)</label>
         </div>
       </div>
 

@@ -18,7 +18,7 @@ export function Timeline({ onPlay }: { onPlay: (id: string, preset: number) => v
         <div className="sh-quiz-top">
           <b>🧠 Which came first?</b>
           {done === QUIZ.length && <span className="sh-score">You got {score} of {QUIZ.length}. <button className="sh-reset" onClick={() => setAnswers({})}>Again</button></span>}
-          <button className="btn-ghost sh-small" onClick={() => setQuiz(false)}>← Timeline</button>
+          <button className="btn-ghost sh-small" onClick={() => setQuiz(false)}>← Time machine</button>
         </div>
         <div className="sh-qs">
           {QUIZ.map((q, i) => {

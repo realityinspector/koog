@@ -2,13 +2,13 @@
 .ch-actions{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
 .ch-toggle{font-size:.9rem;color:var(--text-dim)}
 /* picker */
-.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:8px}
 .ch-tile{min-height:60px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;column-gap:8px;align-items:center;text-align:left;padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;transition:background .15s,border-color .15s}
 .ch-tile:hover{background:var(--surface-3)}
 .ch-tile.on{border-color:var(--cyan);background:rgba(79,216,255,.16);box-shadow:0 0 0 1px var(--cyan)}
 .ch-tile-em{grid-row:1/3;font-size:1.7rem;line-height:1}
 .ch-tile-t{font-weight:700;font-size:.82rem;line-height:1.1;align-self:end}
-.ch-tile-s{font-size:.7rem;color:var(--gold);letter-spacing:1px;align-self:start}
+.ch-tile-s{font-size:.75rem;color:var(--gold);letter-spacing:1px;align-self:start}
 .ch-tile.got .ch-tile-s{color:var(--mint);letter-spacing:0;font-weight:700}
 .ch-tile.gold .ch-tile-s{color:var(--gold)}
 .ch-tile.got{border-color:rgba(108,255,168,.5)}
@@ -47,3 +47,48 @@
 .ch-finish .ch-actions{justify-content:center;margin-top:6px}
 @media (prefers-reduced-motion:reduce){.ch-tile,.ch-bar i{transition:none}}
 /* the mini keyboard is gone: challenges light the main keybed through the shared guide (MiniKeyboard.tsx) */
+
+/* Wave C2: Next up, tiers, trophy case */
+.ch-pick{gap:12px}
+.ch-next{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--k-r-lg);border:2px solid var(--k-accent);background:linear-gradient(120deg,rgba(255,180,60,.22),rgba(124,92,255,.22));animation:ch-glow 2.4s ease-in-out infinite}
+.ch-next-tag{font-size:var(--k-fs-xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#1b1230;background:var(--k-accent);border-radius:var(--k-r-pill);padding:3px 10px}
+.ch-next-em{font-size:2.2rem;line-height:1}
+.ch-next-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ch-next-txt b{font-size:1.1rem}
+.ch-next-txt i,.ch-detail-txt i{font-style:normal;color:var(--k-accent);letter-spacing:2px;font-size:.9rem;margin-left:6px}
+.ch-next-txt span{font-size:.9rem;color:var(--k-ink-2)}
+@keyframes ch-glow{0%,100%{box-shadow:0 0 6px rgba(255,180,60,.25)}50%{box-shadow:0 0 22px rgba(255,180,60,.6)}}
+.ch-tiers{display:flex;flex-direction:column;gap:10px}
+.ch-tier-h{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.ch-tier-h b{font-size:var(--k-fs-md);letter-spacing:.06em;text-transform:uppercase;color:var(--k-ink)}
+.ch-tier-h span{font-size:var(--k-fs-xs);color:var(--k-ink-3)}
+.ch-tier-boss .ch-tile{border-color:rgba(255,90,106,.45)}
+.ch-tile.next:not(.on){border-color:var(--k-accent)}
+.ch-tile-s{color:var(--k-accent)}
+.ch-detail{margin-top:auto}
+.ch-case{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 14px;border-radius:var(--k-r-md);background:rgba(0,0,0,.28);border:1px solid var(--k-line)}
+.ch-case-t{font-size:var(--k-fs-sm);font-weight:700;color:var(--k-ink-2)}
+.ch-case-t b{color:var(--k-accent)}
+.ch-case-row{display:flex;flex-wrap:wrap;gap:6px}
+.ch-trophy{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;font-size:15px;background:var(--k-surface-2);border:1px solid var(--k-line);opacity:.55}
+.ch-trophy.got{opacity:1;border-color:rgba(108,255,168,.6);background:rgba(108,255,168,.12)}
+.ch-trophy.gold{border-color:var(--k-accent);box-shadow:0 0 8px rgba(255,180,60,.6);background:rgba(255,180,60,.16)}
+@media (max-height:760px){.ch-tile{min-height:52px}.ch-pick{gap:8px}.ch-next{padding:8px 14px}}
+@media (prefers-reduced-motion:reduce){.ch-next{animation:none}}
+/* tiers: label on the left, tiles on the right (saves a row per tier) */
+.ch-tier{display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:start}
+.ch-tier-h{flex-direction:column;gap:0;margin:4px 0 0}
+.ch-tier-h span{display:none}
+.ch-tiers{gap:8px}
+@media (min-height:800px){.ch-tier-h span{display:block}}
+.ch-detail{padding:8px 12px}
+.ch-detail-em{font-size:1.8rem}
+@media (max-height:760px){
+  .ch-next-txt span{display:none}
+  .ch-next{padding:6px 12px}
+  .ch-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+  .ch-tile{min-height:46px;padding:4px 8px}
+  .ch-tile-em{font-size:1.4rem}
+  .ch-tile-t{font-size:.78rem}
+  .ch-detail-txt span{display:none}
+}

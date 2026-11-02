@@ -380,6 +380,36 @@ export function SongsPanel() {
   const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
   const listFor = (r: { tiers: Tier[] }) => SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))
   const effTab = sing && !listFor(rows.find((r) => r.id === tab)!).length ? (rows.find((r) => listFor(r).length)?.id ?? tab) : tab
+  // difficulty 1-3 stars: tier sets the base, long tunes nudge it up
+  const diffOf = (s: Song) => {
+    const n = s.notes.length
+    const base = s.tier === 'easy' ? 1 : s.tier === 'medium' || s.tier === 'pop' ? 2 : 3
+    return Math.max(1, Math.min(3, base + (n > 120 ? 1 : 0) - (n < 30 ? 1 : 0)))
+  }
+  // "Pick for you": the song you're partway through, else the easiest one you haven't started
+  const pick = useMemo(() => {
+    const rows = SONGS.filter((s) => s.tier !== 'classical').map((s) => ({ s, pr: songProgress(s.id, s.notes, s.beatsPerBar) }))
+    const going = rows.filter((r) => r.pr.known > 0 && r.pr.pct < 100).sort((a, b) => b.pr.pct - a.pr.pct)[0]
+    if (going) return { ...going, why: `Keep going: ${going.pr.pct}% memorized` }
+    const fresh = rows.filter((r) => r.pr.known === 0).sort((a, b) => diffOf(a.s) - diffOf(b.s))[0]
+    return fresh ? { ...fresh, why: 'A great one to start with' } : null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songId, learn])
+  const cardFor = (s: Song, extra = '') => {
+    const pr = songProgress(s.id, s.notes, s.beatsPerBar), d = diffOf(s)
+    return (
+      <button key={s.id + extra} className={'card-s t-' + s.tier + (extra ? ' ' + extra : '')} onClick={() => setSongId(s.id)}>
+        {hasLyrics(s) && <span className="mic" title="Sing-along" aria-label="Has lyrics">🎤</span>}
+        <b>{s.title}</b>
+        <span className="hk">{s.hook}</span>
+        <span className="cs-foot">
+          <span className="ds" title={`Difficulty ${d} of 3`} aria-label={`Difficulty ${d} of 3`}>{'★'.repeat(d)}<i>{'★'.repeat(3 - d)}</i></span>
+          {bestFor(s.id) ? <span className="pb">Best {bestFor(s.id)}</span> : null}
+          <span className={'lr' + (pr.known ? '' : ' zero')} title={`${pr.known} of ${pr.total} phrases memorized`}>🧠 {pr.pct}%</span>
+        </span>
+      </button>
+    )
+  }
   const total = song ? song.notes.filter((n) => n.note != null).length : 0
 
   return (
@@ -456,6 +486,13 @@ export function SongsPanel() {
         </div>
       ) : (
         <div className="browse">
+          {pick && (
+            <div className="pick">
+              <span className="pick-t">✨ Pick for you</span>
+              {cardFor(pick.s, 'pick-card')}
+              <span className="pick-why">{pick.why}</span>
+            </div>
+          )}
           <div className="tabs">
             {rows.map((r) => (
               <button key={r.id} className={'tab t-' + r.id + (effTab === r.id ? ' on' : '')} aria-pressed={effTab === r.id} onClick={() => setTab(r.id)}>{r.tabLabel}</button>
@@ -468,15 +505,7 @@ export function SongsPanel() {
             <div key={r.id} className={'row' + (effTab === r.id ? ' on' : '') + (listFor(r).length ? '' : ' empty')}>
               <div className="rl">{r.label}</div>
               <div className="car">
-                {listFor(r).map((s) => (
-                  <button key={s.id} className={'card-s t-' + s.tier} onClick={() => setSongId(s.id)}>
-                    {hasLyrics(s) && <span className="mic" title="Sing-along" aria-label="Has lyrics">🎤</span>}
-                    <b>{s.title}</b>
-                    <span className="hk">{s.hook}</span>
-                    {bestFor(s.id) ? <span className="pb">★ {bestFor(s.id)}</span> : <span className="pb none">★ —</span>}
-                    {(() => { const pr = songProgress(s.id, s.notes, s.beatsPerBar); return pr.known > 0 ? <span className="lr" title={`${pr.known} of ${pr.total} phrases learned`}>🧠 {pr.pct}%</span> : null })()}
-                  </button>
-                ))}
+                {listFor(r).map((s) => cardFor(s))}
               </div>
             </div>
           ))}

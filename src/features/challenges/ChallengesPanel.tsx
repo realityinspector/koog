@@ -5,7 +5,12 @@ import { useChallengeStore } from './store'
 import { MiniKeyboard } from './MiniKeyboard'
 import './challenges.css'
 
-const stars = (n: number) => '●'.repeat(n) + '○'.repeat(3 - n)
+const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n)
+const TIERS: { id: string; label: string; hint: string; test: (c: (typeof CHALLENGES)[number]) => boolean }[] = [
+  { id: 'warm', label: 'Warm-up', hint: 'Easy and fun', test: (c) => c.difficulty === 1 && c.id !== 'boss' },
+  { id: 'skills', label: 'Skills', hint: 'Build real chops', test: (c) => c.difficulty === 2 && c.id !== 'boss' },
+  { id: 'boss', label: 'Boss', hint: 'Bring your A-game', test: (c) => c.difficulty >= 3 || c.id === 'boss' },
+]
 
 export function ChallengesPanel() {
   const active = useChallengeStore((s) => s.active)
@@ -83,26 +88,40 @@ export function ChallengesPanel() {
   // ---------- picker ----------
   const sel = CHALLENGES.find((c) => c.id === pick) ?? CHALLENGES[0]
   const selBest = bests[`${sel.id}:${lvl(sel.id)}`]
+  // "Next up": the easiest challenge with no badge yet (everything earned: the daily one)
+  const next = [...CHALLENGES].sort((a, b) => a.difficulty - b.difficulty).find((c) => !badges[c.id] && c.id !== 'daily') ?? CHALLENGES.find((c) => c.id === 'daily') ?? CHALLENGES[0]
+  const tile = (c: (typeof CHALLENGES)[number]) => {
+    const bd = badges[c.id]
+    return (
+      <button
+        key={c.id}
+        role="listitem"
+        aria-pressed={c.id === sel.id}
+        className={'ch-tile' + (c.id === sel.id ? ' on' : '') + (bd ? ' got' : '') + (bd === 2 ? ' gold' : '') + (c.id === next.id ? ' next' : '')}
+        onClick={() => setPick(c.id)}
+        title={c.badge}
+      >
+        <span className="ch-tile-em">{c.emoji}</span>
+        <span className="ch-tile-t">{c.title}</span>
+        <span className="ch-tile-s">{bd ? (bd === 2 ? '★ gold' : '✓ badge') : stars(c.difficulty)}</span>
+      </button>
+    )
+  }
   return (
     <section className="ch ch-pick">
-      <div className="ch-grid" role="list">
-        {CHALLENGES.map((c) => {
-          const bd = badges[c.id]
-          return (
-            <button
-              key={c.id}
-              role="listitem"
-              aria-pressed={c.id === sel.id}
-              className={'ch-tile' + (c.id === sel.id ? ' on' : '') + (bd ? ' got' : '') + (bd === 2 ? ' gold' : '')}
-              onClick={() => setPick(c.id)}
-              title={c.badge}
-            >
-              <span className="ch-tile-em">{c.emoji}</span>
-              <span className="ch-tile-t">{c.title}</span>
-              <span className="ch-tile-s">{bd ? (bd === 2 ? '★ gold' : '✓ badge') : stars(c.difficulty)}</span>
-            </button>
-          )
-        })}
+      <div className="ch-next">
+        <span className="ch-next-tag">Next up</span>
+        <span className="ch-next-em" aria-hidden>{next.emoji}</span>
+        <div className="ch-next-txt"><b>{next.title} <i>{stars(next.difficulty)}</i></b><span>{next.desc}</span></div>
+        <button className="btn" onClick={() => { setPick(next.id); start(next.id, lvl(next.id)) }}>▶ Start</button>
+      </div>
+      <div className="ch-tiers">
+        {TIERS.map((t) => (
+          <div key={t.id} className={'ch-tier ch-tier-' + t.id}>
+            <div className="ch-tier-h"><b>{t.label}</b><span>{t.hint}</span></div>
+            <div className="ch-grid" role="list">{CHALLENGES.filter(t.test).map(tile)}</div>
+          </div>
+        ))}
       </div>
       <div className="ch-detail">
         <span className="ch-detail-em">{sel.emoji}</span>
@@ -122,7 +141,14 @@ export function ChallengesPanel() {
           <button className="btn" onClick={() => start(sel.id, lvl(sel.id))}>▶ Start</button>
         </div>
       </div>
-      <div className="ch-count">{earned}/{CHALLENGES.length} badges</div>
+      <div className="ch-case" aria-label="Trophy case">
+        <span className="ch-case-t">🏆 Trophy case <b>{earned}/{CHALLENGES.length}</b></span>
+        <div className="ch-case-row">
+          {CHALLENGES.map((c) => (
+            <span key={c.id} className={'ch-trophy' + (badges[c.id] ? ' got' : '') + (badges[c.id] === 2 ? ' gold' : '')} title={badges[c.id] ? c.badge : `Locked: ${c.title}`}>{badges[c.id] ? c.emoji : '🔒'}</span>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }

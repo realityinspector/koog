@@ -378,4 +378,11 @@ export const entries: Entry[] = [
     title: '🔧 Under the hood: one sound engine, one MIDI router, one listening brain',
     body: 'Invisible but big. Before, the Koog synth and every historical synth ran their own separate "audio engine", each with its own volume knob and safety limiter. Now they all plug into ONE shared engine, like instruments plugging into one mixing desk: one volume, one limiter, so layering three synths can never get dangerously loud. Every MIDI device (piano, DJ board, knob controller, looper) now goes through one "router" too. And the code that LISTENS to you (keys, chords, tempo, famous-tune spotting) moved into one place, with "golden tests" proving it gives exactly the same answers as before. Engineers call this a refactor: same behaviour, cleaner insides.',
   },
+  {
+    id: 53,
+    time: 'Morning',
+    stage: 'ship',
+    title: '✨ A calmer screen: one MODES button, first-note welcome, milestones',
+    body: 'Reviewers said the PLAY screen had too many buttons, so we tidied it like a desk. DJ + Piano, Mimic, Mentor, Vibes and Band now live behind ONE ✨ MODES button, each with a plain ON/OFF. The 9 little picture buttons became one VISUAL menu with names. The readouts only show CHORD while you play one, and every "?" explains a word. New players get "Tap any key!" and a cheer for their very first note, and Koog now celebrates milestones like your first chord and a 10-note streak. Designers call this "progressive disclosure": show a little, reveal more when you need it. We also finished moving every sound (DJ, drums, band, looper) into the one shared sound engine, and wrote a guide so teachers can understand Koog quickly.',
+  },
 ]

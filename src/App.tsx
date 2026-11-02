@@ -28,6 +28,8 @@ import { ControllerOverlay } from './features/controller/ControllerOverlay'
 import { ProStudio } from './features/pro/ProStudio'
 import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
 import { MimicChip } from './features/mimic/MimicChip'
+import { ModesLauncher } from './features/modes/ModesLauncher'
+import { SmartBandChip } from './features/smartband/SmartBandChip'
 import './music/judge'
 
 export function App() {
@@ -64,7 +66,7 @@ export function App() {
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><DuoDeck /><MimicChip /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <Tour />
     </ErrorBoundary>

@@ -90,9 +90,11 @@ export function Visualizer() {
         sparkle={sparkle} onSparkle={setSparkle} patchOpen={patchOpen} onPatch={() => setPatchOpen((o) => !o)} onFullscreen={fullscreen} />
       {mode === 'vibes' ? <VibesOverlay /> : <VibesChip />}
       {patchOpen && <PatchDrawer onClose={() => setPatchOpen(false)} />}
-      <div className={'viz-hint' + (played ? ' gone' : '')} aria-hidden={played}>
-        {connected ? 'Keyboard connected. Play anything! Try chords.' : 'No MIDI yet? Play on your computer: Z S X D C V and Q 2 W 3 E R keys (← → change octave)'}
-      </div>
+      {connected && (
+        <div className={'viz-hint' + (played ? ' gone' : '')} aria-hidden={played}>
+          Keyboard connected. Play anything! Try chords.
+        </div>
+      )}
     </div>
   )
 }

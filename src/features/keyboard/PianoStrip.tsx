@@ -80,6 +80,8 @@ export function PianoStrip() {
   const [names, setNames] = useState(loadNames)
   const [typing, setTyping] = useState(loadTyping)
   const shift = useTyping((s) => s.shift)
+  const midiConnected = useAppStore((s) => s.midiConnected)
+  const [played, setPlayed] = useState(false)
   const [held, setHeld] = useState<ReadonlySet<number>>(new Set())
   const [flash, setFlash] = useState<ReadonlySet<number>>(new Set())
   const key = useHarmonyStore((s) => s.key)
@@ -117,6 +119,7 @@ export function PianoStrip() {
   useEffect(() => {
     const off = onNote((e) => {
       if (e.on) {
+        setPlayed(true)
         setHeld((h) => (h.has(e.note) ? h : new Set(h).add(e.note)))
         setRange((r) => {
           if (e.note >= r[0] && e.note <= r[1]) return r
@@ -166,6 +169,7 @@ export function PianoStrip() {
 
   return (
     <section className="kb">
+      {!played && !midiConnected && <div className="kb-nudge" role="note">🎹 No keyboard? Click the keys or press Z S X D C V…</div>}
       <div className="kb-top">
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
       </div>

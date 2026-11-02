@@ -48,3 +48,24 @@
 .kg-strip .pf-dad { border: 0; padding: 0; }
 .kg-strip .pf-tag { color: #ffc98f; font-size: 11px; }
 @media (max-width: 700px) { .kg-strip .pf-link { display: none; } }
+
+/* Wave C2: lock button, switch pill, player tiles */
+.kg-strip .pf-switch { background: var(--k-surface-3); border: 1px solid var(--k-line); color: var(--k-ink-2); border-radius: var(--k-r-pill); padding: 2px 10px; font: inherit; font-size: var(--k-fs-xs); cursor: pointer; }
+.kg-strip .pf-switch:hover { color: var(--k-ink); border-color: var(--k-line-strong); }
+.kg-strip .pf-mode button.pf-hold { position: relative; width: 34px; height: 34px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; opacity: .8; }
+.pf-hold .pf-ring { position: absolute; inset: 3px; width: auto; height: auto; }
+.pf-hold .pf-lock { font-size: 14px; line-height: 1; position: relative; }
+.pf-hold:hover, .pf-hold:focus-visible { opacity: 1; }
+.pf-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.pf-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; min-height: 130px; justify-content: center; border-radius: var(--k-r-lg); border: 2px solid var(--tc, #7c5cff); background: linear-gradient(160deg, color-mix(in srgb, var(--tc, #7c5cff) 35%, #120d2a), #120d2a); color: var(--k-ink); font: inherit; cursor: pointer; transition: transform .12s, filter .12s; }
+.pf-tile:hover { transform: translateY(-2px); filter: brightness(1.15); }
+.pf-tile:focus-visible, .pf-guest:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pf-av { font-size: 38px; line-height: 1.1; }
+.pf-tile b { font-size: var(--k-fs-lg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.pf-tile small { font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.pf-tile .pf-bd { color: var(--k-accent); font-weight: 700; }
+.pf-tile.pf-add { --tc: #6cffa8; border-style: dashed; background: rgba(108, 255, 168, .08); }
+.pf-guest { width: 100%; margin-top: 10px; padding: 10px; border-radius: var(--k-r-pill); border: 1px solid var(--k-line-strong); background: var(--k-surface-2); color: var(--k-ink); font: inherit; font-size: var(--k-fs-md); font-weight: 700; cursor: pointer; }
+.pf-guest:hover { background: var(--k-surface-3); }
+.pf-note { font-size: var(--k-fs-xs); }
+@media (prefers-reduced-motion: reduce) { .pf-tile { transition: none; } .pf-tile:hover { transform: none; } }

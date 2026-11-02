@@ -36,6 +36,28 @@ interface Props {
 export function VizControls(p: Props) {
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
+  const sceneBox = useRef<HTMLDivElement>(null)
+  const [sceneOpen, setSceneOpen] = useState(false)
+  const [toast, setToast] = useState<{ n: number; icon: string; label: string } | null>(null)
+  const cur = VISUALS.find((v) => v.id === p.mode) ?? VISUALS[0]
+  const pick = (m: Mode) => {
+    const v = VISUALS.find((x) => x.id === m)!
+    p.onMode(m); setSceneOpen(false)
+    setToast({ n: Date.now(), icon: v.icon, label: v.label })
+  }
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 1500)
+    return () => window.clearTimeout(t)
+  }, [toast])
+  useEffect(() => {
+    if (!sceneOpen) return
+    const away = (e: PointerEvent) => { if (!sceneBox.current?.contains(e.target as Node)) setSceneOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setSceneOpen(false) }
+    document.addEventListener('pointerdown', away)
+    window.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('pointerdown', away); window.removeEventListener('keydown', esc) }
+  }, [sceneOpen])
   const chip = useVibes((s) => s.chip)
 
   useEffect(() => {
@@ -49,15 +71,27 @@ export function VizControls(p: Props) {
 
   return (
     <div className="viz-bar" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="vb-group" role="group" aria-label="Visual">
-        <span className="vb-lab" aria-hidden="true">VISUAL</span>
-        {VISUALS.map((v) => (
-          <button key={v.id} className={'vb-chip vb-seg' + (v.id === p.mode ? ' on' : '')} title={v.label} aria-label={v.label}
-            aria-pressed={v.id === p.mode} onClick={() => p.onMode(v.id)}>{v.icon}</button>
-        ))}
+      <div className="vb-scene" ref={sceneBox}>
+        <button className={'vb-chip vb-visual' + (sceneOpen ? ' open' : '')} aria-expanded={sceneOpen} aria-haspopup="dialog" title="Pick a picture for your music"
+          onClick={() => { setSceneOpen((o) => !o); setOpen(false) }}>
+          <span aria-hidden>{cur.icon}</span><span className="vb-lab">VISUAL</span><span className="vb-cur">{cur.label}</span><span aria-hidden>▾</span>
+        </button>
+        {sceneOpen && (
+          <div className="vb-pop vb-scenes" role="dialog" aria-label="Pick a visual">
+            <div className="vb-poph">Pick a visual</div>
+            <div className="vb-grid">
+              {VISUALS.map((v) => (
+                <button key={v.id} className={'vb-tile' + (v.id === p.mode ? ' on' : '')} aria-pressed={v.id === p.mode} onClick={() => pick(v.id)}>
+                  <span className="vb-ti" aria-hidden>{v.icon}</span><span>{v.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {toast && <div className="vb-toast" key={toast.n} role="status">{toast.icon} {toast.label}</div>}
       </div>
       <div className="vb-style" ref={box}>
-        <button className={'vb-chip vb-icon' + (open ? ' on' : '')} title="Style" aria-label="Style" aria-expanded={open} onClick={() => setOpen((o) => !o)}>🎨</button>
+        <button className={'vb-chip vb-icon' + (open ? ' on' : '')} title="Style" aria-label="Style" aria-expanded={open} onClick={() => { setOpen((o) => !o); setSceneOpen(false) }}>🎨</button>
         {open && (
           <div className="vb-pop" role="dialog" aria-label="Style">
             <div className="vb-poph">Background</div>

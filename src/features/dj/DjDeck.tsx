@@ -11,9 +11,8 @@ import { BEAT } from './synth'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
 import type { DeckId } from './map'
 import { SurfaceToggle } from '../controller/SurfaceToggle'
+import { loadDuoOpen, useDuoOpen } from './duoOpen'
 
-const OPEN_KEY = 'koog.dj.open'
-const loadOpen = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
 const PAD_LABELS = [['1', '2', '3', '4'], ['½', '1', '2', '4'], ['💥', '👏', '🎹', '⚡'], ['🥁', '🎸', '🎹', '🎤']]
 const PAD_TIPS = [['Jump to 1/4 of the song', 'Jump to 2/4', 'Jump to 3/4', 'Jump to 4/4'], ['Loop half a beat', 'Loop 1 beat', 'Loop 2 beats', 'Loop 4 beats'], ['Boom', 'Clap', 'Chord', 'Zap'], ['Drums on/off', 'Bass on/off', 'Synth on/off', 'Voice on/off']]
 const MODE_SHORT = ['CUES', 'LOOP', 'PADS', 'STEMS']
@@ -145,16 +144,17 @@ function Middle({ v }: { v: ReturnType<typeof getView> }) {
  * DUO: a slim two-deck strip docked at the bottom of the display, inside PLAY, so the piano visuals keep playing above it.
  * A chip at the top right opens and closes it. Everything works by mouse or touch; a Numark controller drives the same decks.
  */
-export function DuoDeck() {
+export function DuoDeck({ chip = true }: { chip?: boolean } = {}) {
   useSyncExternalStore(subscribe, getVersion)
   const v = getView()
-  const [open, setOpen] = useState(loadOpen)
+  const open = useDuoOpen((s) => s.open)
+  const setOpen = useDuoOpen.getState().setOpen
   const root = useRef<HTMLDivElement>(null)
   const spin = useRef<Record<DeckId, HTMLDivElement | null>>({ A: null, B: null })
   const combo = useDuo((s) => s.combo)
   void combo
 
-  const toggle = () => { setOpen((o) => { const n = !o; try { localStorage.setItem(OPEN_KEY, n ? '1' : '0') } catch { /* ignore */ } return n }); void ensure() }
+  const toggle = () => { setOpen(!open); void ensure() }
   // dock layout: tell the display to make room for the strip (dj.css moves the visual controls up)
   useEffect(() => {
     const d = root.current?.closest('.kg-display')
@@ -171,7 +171,7 @@ export function DuoDeck() {
     return () => d.removeAttribute('data-dj-panel')
   }, [panel])
   // a controller press opens the strip once, so the DJ sees what the decks are doing
-  useEffect(() => { if (v.anyPlaying && !open && !loadOpen()) setOpen(true) }, [v.anyPlaying, open])
+  useEffect(() => { if (v.anyPlaying && !open && !loadDuoOpen()) setOpen(true) }, [v.anyPlaying, open, setOpen])
 
   // spin the jog rings with the music (off for prefers-reduced-motion)
   useEffect(() => {
@@ -190,11 +190,11 @@ export function DuoDeck() {
 
   return (
     <div className="dj-root" ref={root}>
-      <button type="button" className={'dj-chip' + (open ? ' on' : '') + (v.anyPlaying ? ' live' : '')} aria-pressed={open} onClick={toggle}
+      {chip && <button type="button" className={'dj-chip' + (open ? ' on' : '') + (v.anyPlaying ? ' live' : '')} aria-pressed={open} onClick={toggle}
         title="DUO: a DJ deck for a second player. The DJ's track sets the key and the beat for the piano.">
         <span aria-hidden>🎧</span> <b>DUO</b>
         {v.anyPlaying && <i className="dj-chip-dot" aria-hidden />}
-      </button>
+      </button>}
       {open && (
         <div className="dj-bar" tabIndex={-1} role="group" aria-label="DJ decks">
           {(v.needsTap || v.suspended) && <button type="button" className="dj-wake" onClick={() => void ensure()}>👆 Tap to wake the decks</button>}

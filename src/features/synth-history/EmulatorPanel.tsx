@@ -53,7 +53,7 @@ export function EmulatorPanel({ id, preset = 0, onBack }: { id: string; preset?:
   return (
     <div className={'emu ' + spec.skin} onPointerDown={() => { void engine?.unlock() }}>
       <div className="emu-top">
-        <button className="btn-ghost emu-back" aria-label="Back to timeline" onClick={onBack}>◀ Timeline</button>
+        <button className="btn-ghost emu-back" aria-label="Back to the time machine" onClick={onBack}>◀ Time machine</button>
         <div className="emu-title" title={spec.name}><h3>{spec.name}</h3><span>{spec.year}</span></div>
         {engine && <Scope engine={engine} />}
         <div className="emu-presets" role="group" aria-label="Presets">

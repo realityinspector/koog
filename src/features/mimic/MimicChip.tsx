@@ -79,7 +79,7 @@ function Card({ st }: { st: StyleDef }) {
 }
 
 /** 🎭 Mimic: small chip (top-right of the display) opening the style picker. Easy to move into the Modes launcher later. */
-export function MimicChip() {
+export function MimicChip({ launcher = false }: { launcher?: boolean } = {}) {
   useSyncExternalStore(subscribe, getVersion)
   const S = getState()
   const [open, setOpen] = useState(false)
@@ -92,6 +92,8 @@ export function MimicChip() {
     return () => window.removeEventListener('keydown', k)
   }, [open])
   const status = !S.on ? 'off' : S.answer ? 'answering' : S.listening ? 'listening' : 'ready'
+  // with the Modes launcher the entry lives there; this chip is only the answering status (and style picker) while Mimic is on
+  if (launcher && !S.on) return null
   return (
     <div className="mm-wrap" data-mimic-chip>
       <button className={'mm-chip' + (S.on ? ' on' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
