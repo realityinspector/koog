@@ -14,6 +14,7 @@ import { useAudioSettings } from './audioSettings'
 import { onNote } from './notes'
 import { activeIdx, consumeLearn, onZonesRelease, routeZones, unlockZones, zoneTarget, zonesActive, zonesAllOff, useZones } from './zones'
 import { PC_NAMES } from './theory'
+import { unlockHost } from '../audio/host'
 
 interface Voice { t: Target; n: number }
 interface St { id: number; held: Set<number>; sounding: Map<string, Voice[]>; midiHeld: Set<number>; off?: () => void }
@@ -123,7 +124,7 @@ const onBlur = () => releaseAllNotes()
 window.addEventListener('blur', onBlur)
 const offSet = useAudioSettings.subscribe((s, prev) => { if (prev.computerSound && !s.computerSound && !getActiveInstrument() && useZones.getState().mode === 'single') releaseMidi() })
 // Any click or key wakes the current instrument's audio, so the first MIDI note after it already sounds.
-const wake = () => { void currentTarget().unlock().catch(() => {}); void unlockZones().catch(() => {}) }
+const wake = () => { void unlockHost().catch(() => {}); void currentTarget().unlock().catch(() => {}); void unlockZones().catch(() => {}) }
 window.addEventListener('pointerdown', wake, true)
 window.addEventListener('keydown', wake, true)
 st.off = () => { offNote(); offInst(); offZones(); window.removeEventListener('blur', onBlur); offSet(); window.removeEventListener('pointerdown', wake, true); window.removeEventListener('keydown', wake, true) }

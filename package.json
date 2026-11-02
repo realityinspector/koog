@@ -10,7 +10,8 @@
     "preflight": "node scripts/preflight/run.mjs",
     "requests": "node scripts/requests-server.mjs",
     "start": "./scripts/start.sh",
-    "stop": "./scripts/stop.sh"
+    "stop": "./scripts/stop.sh",
+    "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

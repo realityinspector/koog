@@ -2,10 +2,10 @@
 // The melody is judged exactly as before. The left hand is a bonus layer with partial credit: each target
 // ("play a chord tone of this chord around now") is hit or missed, and a miss never hurts the melody score.
 import type { Arrangement } from '../../music/arrange'
-import { pc } from '../../music/theory'
+import { LH_SPLIT, pc } from '../../music/listen/pitch'
 
-/** MIDI notes below this are the left hand (middle C is 60; the split sits an octave above) */
-export const LH_SPLIT = 72
+export { LH_SPLIT }
+
 
 export interface LhTarget { start: number; end: number; pcs: number[]; idxs: number[]; hit: boolean; done: boolean }
 export interface LhState { targets: LhTarget[]; hits: number; total: number }

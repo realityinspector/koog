@@ -371,4 +371,11 @@ export const entries: Entry[] = [
     title: '🧹 Clean-up round: one panic button, safer sound, kinder for keyboards',
     body: 'After building fast, engineers stop and CLEAN UP. Seven reviewers (a kids\' game designer, a visual designer, an accessibility expert and more) went through Koog, and we fixed the quick wins first. Every sound now obeys volume and mute, and ONE panic button silences all 12 sound engines. Boss mode works with just a keyboard, hidden buttons don\'t trap your Tab key, there\'s a switch to stop the computer keys playing notes, and "Clear all" on the looper asks "Sure?" first. We also deleted a whole old synth nobody used, and merged 12 copies of the note-name list into one. Programmers call that "DRY": Don\'t Repeat Yourself.',
   },
+  {
+    id: 52,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🔧 Under the hood: one sound engine, one MIDI router, one listening brain',
+    body: 'Invisible but big. Before, the Koog synth and every historical synth ran their own separate "audio engine", each with its own volume knob and safety limiter. Now they all plug into ONE shared engine, like instruments plugging into one mixing desk: one volume, one limiter, so layering three synths can never get dangerously loud. Every MIDI device (piano, DJ board, knob controller, looper) now goes through one "router" too. And the code that LISTENS to you (keys, chords, tempo, famous-tune spotting) moved into one place, with "golden tests" proving it gives exactly the same answers as before. Engineers call this a refactor: same behaviour, cleaner insides.',
+  },
 ]

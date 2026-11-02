@@ -1,5 +1,6 @@
 import { useAppStore } from '../store/appStore'
-import { useDevices, roleFor, emitDj, emitSurface, emitLoop, setDjSender, type Device, type DeviceRole } from '../music/devices'
+import { useDevices, roleFor, type Device, type DeviceRole } from '../music/devices'
+import { subscribe, emit, setPorts } from './router'
 import { PC_NAMES } from '../music/theory'
 
 const PREFERRED = 'USB MIDI'
@@ -10,7 +11,6 @@ interface Persisted {
   access?: MIDIAccess
   requested?: boolean
   noteId?: number
-  listeners?: Set<RawListener>
   djIds?: string[]
   timers?: Set<number>
   heldBy?: Map<string, Set<number>>
@@ -24,9 +24,7 @@ let output: MIDIOutput | null = null
 
 /** Subscribe to every raw incoming message of every PIANO-role input. Returns unsubscribe. */
 export function subscribeRaw(fn: RawListener) {
-  const set = (keep.listeners ??= new Set())
-  set.add(fn)
-  return () => void set.delete(fn)
+  return subscribe('piano', (d, t) => fn(d, t))
 }
 
 /** Notes each piano-role input is holding, so a role change or unplug mid-note can release them (no stuck notes). */
@@ -35,11 +33,11 @@ function flushHeld(id: string) {
   const h = heldBy.get(id)
   if (!h) return
   heldBy.delete(id)
-  for (const n of [...h]) pianoMessage(new Uint8Array([0x80, n, 0]), 0, id)
+  for (const n of [...h]) route('piano', new Uint8Array([0x80, n, 0]), 0, id)
 }
 
-function pianoMessage(d: Uint8Array, timeStamp: number, id?: string) {
-  if (keep.listeners) for (const fn of [...keep.listeners]) { try { fn(d, timeStamp) } catch { /* isolate listeners */ } }
+/** Piano-role side effects (held-note tracking + the recent-notes feed); raw listeners get the bytes via the router. */
+function pianoNotes(d: Uint8Array, id?: string) {
   if (d.length < 3) return
   const status = d[0] & 0xf0
   if (status !== 0x90 && status !== 0x80) return
@@ -53,14 +51,12 @@ function pianoMessage(d: Uint8Array, timeStamp: number, id?: string) {
   useAppStore.setState((s) => ({ recentNotes: [ev, ...s.recentNotes].slice(0, 12) }))
 }
 
-/** One routing point: piano makes notes, dj goes to the DJ listeners (never notes), off is ignored. */
+/** One routing point: flush held notes on a role change, track piano notes, then hand the bytes to the router (off is ignored there). */
 function route(role: DeviceRole, d: Uint8Array, t: number, id: string) {
   if (!d) return
   if (role !== 'piano') flushHeld(id)
-  if (role === 'piano') pianoMessage(d, t, id)
-  else if (role === 'dj') emitDj(d, t, id)
-  else if (role === 'surface') emitSurface(d, t, id)
-  else if (role === 'loop') emitLoop(d, t, id)
+  emit(role, d, t, id)
+  if (role === 'piano') pianoNotes(d, id)
 }
 const liveRole = (id: string, name: string): DeviceRole => useDevices.getState().devices.find((x) => x.id === id)?.role ?? roleFor(name)
 
@@ -109,8 +105,7 @@ function applyDevices(access: MIDIAccess) {
   if (cur.midiConnected !== !!pn || cur.midiInputName !== (pn?.name ?? null) || cur.midiOutputName !== (output?.name ?? null)) {
     useAppStore.setState({ midiConnected: !!pn, midiInputName: pn?.name ?? null, midiOutputName: output?.name ?? null })
   }
-  const djOut = djs.map((d) => outs.find((o) => o.name === d.name)).find(Boolean) ?? null
-  setDjSender(djOut ? (b) => { try { djOut.send(b) } catch { /* ignore */ } } : null)
+  setPorts(devs.map((d) => ({ name: d.name, role: d.role, connected: d.connected })), outs)
   // DJ newly connected (or newly assigned the DJ role): turn the idle light show off
   const now = new Set(djs.map((d) => d.id))
   const before = (keep.djIds ??= [])

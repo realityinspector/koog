@@ -1,0 +1,9459 @@
+{
+ "candidateChords": {
+  "0-major": [
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": false
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": false
+   }
+  ],
+  "0-minor": [
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": false
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   }
+  ],
+  "0-blues": [
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": false
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   }
+  ],
+  "0-majorPentatonic": [
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": false
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": false
+   }
+  ],
+  "1-major": [
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": false
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": false
+   }
+  ],
+  "1-minor": [
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": false
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   }
+  ],
+  "1-blues": [
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": false
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   }
+  ],
+  "1-majorPentatonic": [
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": false
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": false
+   }
+  ],
+  "2-major": [
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": false
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": false
+   }
+  ],
+  "2-minor": [
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": false
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   }
+  ],
+  "2-blues": [
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": false
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   }
+  ],
+  "2-majorPentatonic": [
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": false
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": false
+   }
+  ],
+  "3-major": [
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": false
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": false
+   }
+  ],
+  "3-minor": [
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": false
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   }
+  ],
+  "3-blues": [
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": false
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   }
+  ],
+  "3-majorPentatonic": [
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": false
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": false
+   }
+  ],
+  "4-major": [
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": false
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": false
+   }
+  ],
+  "4-minor": [
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": false
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   }
+  ],
+  "4-blues": [
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": false
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   }
+  ],
+  "4-majorPentatonic": [
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": false
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": false
+   }
+  ],
+  "5-major": [
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": false
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": false
+   }
+  ],
+  "5-minor": [
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": false
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   }
+  ],
+  "5-blues": [
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": false
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   }
+  ],
+  "5-majorPentatonic": [
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": false
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": false
+   }
+  ],
+  "6-major": [
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": false
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": false
+   }
+  ],
+  "6-minor": [
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": false
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   }
+  ],
+  "6-blues": [
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": false
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   }
+  ],
+  "6-majorPentatonic": [
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": false
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": false
+   }
+  ],
+  "7-major": [
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": false
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": false
+   }
+  ],
+  "7-minor": [
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": false
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   }
+  ],
+  "7-blues": [
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": false
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   }
+  ],
+  "7-majorPentatonic": [
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "maj",
+    "name": "C",
+    "pcs": [
+     0,
+     4,
+     7
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": false
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": false
+   }
+  ],
+  "8-major": [
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": false
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": false
+   }
+  ],
+  "8-minor": [
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": false
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   }
+  ],
+  "8-blues": [
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": false
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   }
+  ],
+  "8-majorPentatonic": [
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "maj",
+    "name": "C#",
+    "pcs": [
+     1,
+     5,
+     8
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": false
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": false
+   }
+  ],
+  "9-major": [
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": false
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": false
+   }
+  ],
+  "9-minor": [
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": false
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   }
+  ],
+  "9-blues": [
+   {
+    "root": 9,
+    "quality": "min",
+    "name": "Am",
+    "pcs": [
+     9,
+     0,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": false
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   }
+  ],
+  "9-majorPentatonic": [
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": true
+   },
+   {
+    "root": 2,
+    "quality": "maj",
+    "name": "D",
+    "pcs": [
+     2,
+     6,
+     9
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": false
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": false
+   }
+  ],
+  "10-major": [
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": false
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": false
+   }
+  ],
+  "10-minor": [
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": false
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   }
+  ],
+  "10-blues": [
+   {
+    "root": 10,
+    "quality": "min",
+    "name": "A#m",
+    "pcs": [
+     10,
+     1,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "min",
+    "name": "Fm",
+    "pcs": [
+     5,
+     8,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "maj",
+    "name": "G#",
+    "pcs": [
+     8,
+     0,
+     3
+    ],
+    "primary": false
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   }
+  ],
+  "10-majorPentatonic": [
+   {
+    "root": 10,
+    "quality": "maj",
+    "name": "A#",
+    "pcs": [
+     10,
+     2,
+     5
+    ],
+    "primary": true
+   },
+   {
+    "root": 3,
+    "quality": "maj",
+    "name": "D#",
+    "pcs": [
+     3,
+     7,
+     10
+    ],
+    "primary": true
+   },
+   {
+    "root": 5,
+    "quality": "maj",
+    "name": "F",
+    "pcs": [
+     5,
+     9,
+     0
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "min",
+    "name": "Gm",
+    "pcs": [
+     7,
+     10,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 0,
+    "quality": "min",
+    "name": "Cm",
+    "pcs": [
+     0,
+     3,
+     7
+    ],
+    "primary": false
+   },
+   {
+    "root": 2,
+    "quality": "min",
+    "name": "Dm",
+    "pcs": [
+     2,
+     5,
+     9
+    ],
+    "primary": false
+   }
+  ],
+  "11-major": [
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": false
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": false
+   }
+  ],
+  "11-minor": [
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": false
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   }
+  ],
+  "11-blues": [
+   {
+    "root": 11,
+    "quality": "min",
+    "name": "Bm",
+    "pcs": [
+     11,
+     2,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "min",
+    "name": "Em",
+    "pcs": [
+     4,
+     7,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "min",
+    "name": "F#m",
+    "pcs": [
+     6,
+     9,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 7,
+    "quality": "maj",
+    "name": "G",
+    "pcs": [
+     7,
+     11,
+     2
+    ],
+    "primary": true
+   },
+   {
+    "root": 9,
+    "quality": "maj",
+    "name": "A",
+    "pcs": [
+     9,
+     1,
+     4
+    ],
+    "primary": false
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   }
+  ],
+  "11-majorPentatonic": [
+   {
+    "root": 11,
+    "quality": "maj",
+    "name": "B",
+    "pcs": [
+     11,
+     3,
+     6
+    ],
+    "primary": true
+   },
+   {
+    "root": 4,
+    "quality": "maj",
+    "name": "E",
+    "pcs": [
+     4,
+     8,
+     11
+    ],
+    "primary": true
+   },
+   {
+    "root": 6,
+    "quality": "maj",
+    "name": "F#",
+    "pcs": [
+     6,
+     10,
+     1
+    ],
+    "primary": true
+   },
+   {
+    "root": 8,
+    "quality": "min",
+    "name": "G#m",
+    "pcs": [
+     8,
+     11,
+     3
+    ],
+    "primary": true
+   },
+   {
+    "root": 1,
+    "quality": "min",
+    "name": "C#m",
+    "pcs": [
+     1,
+     4,
+     8
+    ],
+    "primary": false
+   },
+   {
+    "root": 3,
+    "quality": "min",
+    "name": "D#m",
+    "pcs": [
+     3,
+     6,
+     10
+    ],
+    "primary": false
+   }
+  ]
+ },
+ "fixtures": {
+  "fast-eighths": {
+   "key": {
+    "key": {
+     "tonic": 7,
+     "scale": "major"
+    },
+    "confidence": 0.784844
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 7,
+     "scale": "major"
+    },
+    "confidence": 0.784844
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "minor-melody": {
+   "key": {
+    "key": {
+     "tonic": 9,
+     "scale": "minor"
+    },
+    "confidence": 0.776675
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 9,
+     "scale": "minor"
+    },
+    "confidence": 0.763557
+   },
+   "pickChord": [
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    90,
+    86,
+    84,
+    82,
+    81,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "id": "korobeiniki",
+     "length": 7,
+     "shift": 0,
+     "keyName": null,
+     "start": 6,
+     "mismatches": 1,
+     "rhythm": 0.253133,
+     "bits": 16.8,
+     "score": 9.179699
+    },
+    {
+     "id": "korobeiniki",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 7,
+     "mismatches": 0,
+     "rhythm": 0,
+     "bits": 19.2,
+     "score": 11.2
+    },
+    {
+     "id": "korobeiniki",
+     "length": 7,
+     "shift": 0,
+     "keyName": null,
+     "start": 8,
+     "mismatches": 1,
+     "rhythm": 0,
+     "bits": 16,
+     "score": 8.666667
+    },
+    {
+     "id": "turkish",
+     "length": 7,
+     "shift": 3,
+     "keyName": "C minor",
+     "start": 13,
+     "mismatches": 1,
+     "rhythm": 0.583333,
+     "bits": 15.6,
+     "score": 9.475
+    },
+    {
+     "id": "turkish",
+     "length": 7,
+     "shift": 3,
+     "keyName": "C minor",
+     "start": 14,
+     "mismatches": 1,
+     "rhythm": 0.583333,
+     "bits": 15.6,
+     "score": 9.475
+    }
+   ]
+  },
+  "ode-c": {
+   "key": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.579609
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 2,
+     "scale": "minor"
+    },
+    "confidence": 0.656989
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    104,
+    110,
+    114,
+    116,
+    117,
+    118,
+    119,
+    119,
+    119,
+    119,
+    119,
+    119
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0.999813
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "id": "ode",
+     "length": 7,
+     "shift": 0,
+     "keyName": null,
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 15.2,
+     "score": 11.033333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 1,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 2,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 3,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 4,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 5,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 6,
+     "mismatches": 0,
+     "rhythm": 0.878133,
+     "bits": 16.8,
+     "score": 12.117199
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 7,
+     "mismatches": 0,
+     "rhythm": 0.426065,
+     "bits": 16.8,
+     "score": 11.439098
+    }
+   ],
+   "detectChord": [
+    "C major",
+    "D minor",
+    "G7",
+    "A minor",
+    "C maj7",
+    "C minor",
+    "Cdim",
+    "Caug",
+    "Csus4",
+    "C7",
+    null
+   ],
+   "isClusterChords": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+   ],
+   "classifyChord": [
+    {
+     "root": 0,
+     "quality": "major",
+     "name": "C"
+    },
+    {
+     "root": 2,
+     "quality": "minor",
+     "name": "Dm"
+    },
+    {
+     "root": 7,
+     "quality": "dom7",
+     "name": "G7"
+    },
+    {
+     "root": 9,
+     "quality": "minor",
+     "name": "Am"
+    },
+    {
+     "root": 0,
+     "quality": "maj7",
+     "name": "Cmaj7"
+    },
+    {
+     "root": 0,
+     "quality": "minor",
+     "name": "Cm"
+    },
+    {
+     "root": 0,
+     "quality": "dim",
+     "name": "Cdim"
+    },
+    {
+     "root": 0,
+     "quality": "aug",
+     "name": "Caug"
+    },
+    {
+     "root": 0,
+     "quality": "sus",
+     "name": "Csus4"
+    },
+    {
+     "root": 0,
+     "quality": "dom7",
+     "name": "C7"
+    },
+    {
+     "root": 0,
+     "quality": "cluster",
+     "name": "cluster"
+    }
+   ],
+   "mood": [
+    {
+     "mood": "happy",
+     "valence": 0.578765,
+     "arousal": 0.070979,
+     "intensity": 0.708171,
+     "chord": {
+      "root": 0,
+      "quality": "major",
+      "name": "C"
+     }
+    },
+    {
+     "mood": "sad",
+     "valence": -0.433425,
+     "arousal": -0.123673,
+     "intensity": 0.615507,
+     "chord": {
+      "root": 2,
+      "quality": "minor",
+      "name": "Dm"
+     }
+    },
+    {
+     "mood": "sassy",
+     "valence": 0.267322,
+     "arousal": 0.070979,
+     "intensity": 0.493609,
+     "chord": {
+      "root": 7,
+      "quality": "dom7",
+      "name": "G7"
+     }
+    },
+    {
+     "mood": "sad",
+     "valence": -0.433425,
+     "arousal": -0.123673,
+     "intensity": 0.615507,
+     "chord": {
+      "root": 9,
+      "quality": "minor",
+      "name": "Am"
+     }
+    },
+    {
+     "mood": "dreamy",
+     "valence": 0.384113,
+     "arousal": -0.201534,
+     "intensity": 0.603641,
+     "chord": {
+      "root": 0,
+      "quality": "maj7",
+      "name": "Cmaj7"
+     }
+    },
+    {
+     "mood": "sad",
+     "valence": -0.428792,
+     "arousal": -0.062825,
+     "intensity": 0.603359,
+     "chord": {
+      "root": 0,
+      "quality": "minor",
+      "name": "Cm"
+     }
+    },
+    {
+     "mood": "tense",
+     "valence": -0.337596,
+     "arousal": 0.35537,
+     "intensity": 0.643114,
+     "chord": {
+      "root": 0,
+      "quality": "dim",
+      "name": "Cdim"
+     }
+    },
+    {
+     "mood": "surprised",
+     "valence": 0.017072,
+     "arousal": 0.211553,
+     "intensity": 0.448569,
+     "chord": {
+      "root": 0,
+      "quality": "aug",
+      "name": "Caug"
+     }
+    },
+    {
+     "mood": "wondering",
+     "valence": 0.150531,
+     "arousal": -0.084743,
+     "intensity": 0.420922,
+     "chord": {
+      "root": 0,
+      "quality": "sus",
+      "name": "Csus4"
+     }
+    },
+    {
+     "mood": "sassy",
+     "valence": 0.200796,
+     "arousal": 0.083778,
+     "intensity": 0.452301,
+     "chord": {
+      "root": 0,
+      "quality": "dom7",
+      "name": "C7"
+     }
+    },
+    {
+     "mood": "angry",
+     "valence": -0.355564,
+     "arousal": 0.654935,
+     "intensity": 0.82166,
+     "chord": {
+      "root": 0,
+      "quality": "cluster",
+      "name": "cluster"
+     }
+    }
+   ]
+  },
+  "ode-g-transposed": {
+   "key": {
+    "key": {
+     "tonic": 7,
+     "scale": "major"
+    },
+    "confidence": 0.579609
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 9,
+     "scale": "minor"
+    },
+    "confidence": 0.656989
+   },
+   "pickChord": [
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G",
+    "G"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    87,
+    82,
+    78,
+    76,
+    74,
+    73,
+    72,
+    72,
+    72,
+    72,
+    72,
+    72
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0.999813
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "id": "ode",
+     "length": 7,
+     "shift": 7,
+     "keyName": "G",
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 15.2,
+     "score": 11.033333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 1,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 2,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 3,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 4,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 5,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 6,
+     "mismatches": 0,
+     "rhythm": 0.878133,
+     "bits": 16.8,
+     "score": 12.117199
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 7,
+     "keyName": "G",
+     "start": 7,
+     "mismatches": 0,
+     "rhythm": 0.426065,
+     "bits": 16.8,
+     "score": 11.439098
+    }
+   ]
+  },
+  "ode-quote-in-noise": {
+   "key": {
+    "key": {
+     "tonic": 2,
+     "scale": "major"
+    },
+    "confidence": 0.570083
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 4,
+     "scale": "minor"
+    },
+    "confidence": 0.576742
+   },
+   "pickChord": [
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "D",
+    "Em"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    109,
+    118,
+    123,
+    127,
+    129,
+    131,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132,
+    132
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0.999813,
+    0.999813,
+    1
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "id": "ode",
+     "length": 7,
+     "shift": 2,
+     "keyName": "D",
+     "start": 14,
+     "mismatches": 1,
+     "rhythm": 0.583333,
+     "bits": 15.2,
+     "score": 9.408333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 1,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.6,
+     "score": 12.433333
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 2,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 3,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 4,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 5,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 6,
+     "mismatches": 0,
+     "rhythm": 0.878133,
+     "bits": 16.8,
+     "score": 12.117199
+    },
+    {
+     "id": "ode",
+     "length": 8,
+     "shift": 2,
+     "keyName": "D",
+     "start": 7,
+     "mismatches": 0,
+     "rhythm": 0.426065,
+     "bits": 16.8,
+     "score": 11.439098
+    },
+    {
+     "id": "ode",
+     "length": 7,
+     "shift": 2,
+     "keyName": "D",
+     "start": 8,
+     "mismatches": 1,
+     "rhythm": 0,
+     "bits": 14.4,
+     "score": 8.4
+    },
+    null
+   ]
+  },
+  "scale-run": {
+   "key": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.901352
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 9,
+     "scale": "minor"
+    },
+    "confidence": 0.863673
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96,
+    96
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "slow-sparse": {
+   "key": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.922199
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.790517
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "F"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    96,
+    92
+   ],
+   "rhythmScore": [
+    1,
+    0.999813,
+    0.999813
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "swing-ioi": {
+   "key": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.745777
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.745777
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    95,
+    111,
+    105,
+    107,
+    118,
+    116
+   ],
+   "rhythmScore": [
+    0.999813,
+    0.999813,
+    0.999813,
+    1,
+    1,
+    1,
+    0.999813
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "twinkle-c": {
+   "key": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.928958
+   },
+   "keyWeighted": {
+    "key": {
+     "tonic": 0,
+     "scale": "major"
+    },
+    "confidence": 0.840594
+   },
+   "pickChord": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "C",
+    "F",
+    "F",
+    "F",
+    "F",
+    "Dm",
+    "Dm"
+   ],
+   "estimateBpm": [
+    96,
+    96,
+    96,
+    97,
+    98,
+    99,
+    99,
+    99,
+    99,
+    99,
+    99,
+    99,
+    99,
+    99
+   ],
+   "rhythmScore": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "isClusterWindows": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "allusion": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+     "id": "twinkle",
+     "length": 7,
+     "shift": 0,
+     "keyName": null,
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 16.2,
+     "score": 11.2
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 0,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 18.6,
+     "score": 12.6
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 1,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 18.6,
+     "score": 12.6
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 2,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 3,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 4,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 5,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    },
+    {
+     "id": "twinkle",
+     "length": 8,
+     "shift": 0,
+     "keyName": null,
+     "start": 6,
+     "mismatches": 0,
+     "rhythm": 1,
+     "bits": 17.2,
+     "score": 12.366667
+    }
+   ]
+  }
+ },
+ "segment": {
+  "pop-static/1": [
+   {
+    "id": "pop-static:1-2",
+    "n": 1,
+    "size": 1
+   },
+   {
+    "id": "pop-static:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:5-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:14-16",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:16-19",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:19-21",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:23-25",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:25-27",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:28-31",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:31-33",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:33-36",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:36-38",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:38-41",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-static:41-43",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-static:43-45",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "pop-static/2": [
+   {
+    "id": "pop-static:1-5",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-static:5-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-static:12-16",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-static:16-21",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-static:21-25",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-static:25-31",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-static:31-36",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-static:36-41",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-static:41-45",
+    "n": 4,
+    "size": 2
+   }
+  ],
+  "pop-static/3": [
+   {
+    "id": "pop-static:1-27",
+    "n": 25,
+    "size": 3
+   },
+   {
+    "id": "pop-static:28-45",
+    "n": 17,
+    "size": 3
+   }
+  ],
+  "pop-static/4": [
+   {
+    "id": "pop-static:1-45",
+    "n": 42,
+    "size": 4
+   }
+  ],
+  "pop-funk/1": [
+   {
+    "id": "pop-funk:0-4",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:5-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:13-16",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:16-20",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:31-35",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:35-39",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:39-41",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:42-46",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:46-49",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:49-51",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-funk:51-54",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "pop-funk/2": [
+   {
+    "id": "pop-funk:0-9",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:9-16",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:16-23",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:24-30",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:31-39",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:39-46",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-funk:46-54",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "pop-funk/3": [
+   {
+    "id": "pop-funk:0-25",
+    "n": 18,
+    "size": 3
+   },
+   {
+    "id": "pop-funk:25-41",
+    "n": 15,
+    "size": 3
+   },
+   {
+    "id": "pop-funk:42-54",
+    "n": 11,
+    "size": 3
+   }
+  ],
+  "pop-funk/4": [
+   {
+    "id": "pop-funk:0-54",
+    "n": 44,
+    "size": 4
+   }
+  ],
+  "pop-edm/1": [
+   {
+    "id": "pop-edm:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:4-8",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:8-12",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:13-16",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:16-19",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:19-22",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:22-24",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:27-29",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:29-32",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-edm:32-35",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "pop-edm/2": [
+   {
+    "id": "pop-edm:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-edm:4-12",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "pop-edm:13-19",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-edm:19-24",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-edm:24-29",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-edm:29-35",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "pop-edm/3": [
+   {
+    "id": "pop-edm:0-17",
+    "n": 16,
+    "size": 3
+   },
+   {
+    "id": "pop-edm:17-35",
+    "n": 18,
+    "size": 3
+   }
+  ],
+  "pop-edm/4": [
+   {
+    "id": "pop-edm:0-35",
+    "n": 34,
+    "size": 4
+   }
+  ],
+  "pop-lofi/1": [
+   {
+    "id": "pop-lofi:1-3",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:7-9",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:13-15",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:19-21",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:25-27",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:31-33",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:33-35",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:35-37",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:37-40",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-lofi:41-44",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "pop-lofi/2": [
+   {
+    "id": "pop-lofi:1-6",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:7-12",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:13-18",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:19-24",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:25-30",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:31-35",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-lofi:35-44",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "pop-lofi/3": [
+   {
+    "id": "pop-lofi:1-12",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "pop-lofi:13-30",
+    "n": 15,
+    "size": 3
+   },
+   {
+    "id": "pop-lofi:31-44",
+    "n": 12,
+    "size": 3
+   }
+  ],
+  "pop-lofi/4": [
+   {
+    "id": "pop-lofi:1-44",
+    "n": 37,
+    "size": 4
+   }
+  ],
+  "pop-boss/1": [
+   {
+    "id": "pop-boss:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:7-9",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:9-11",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:14-16",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:16-18",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:23-25",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:25-27",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:27-32",
+    "n": 5,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:33-41",
+    "n": 8,
+    "size": 1
+   },
+   {
+    "id": "pop-boss:41-49",
+    "n": 8,
+    "size": 1
+   }
+  ],
+  "pop-boss/2": [
+   {
+    "id": "pop-boss:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:4-9",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:9-14",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:14-18",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:18-23",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:23-27",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-boss:27-49",
+    "n": 21,
+    "size": 2
+   }
+  ],
+  "pop-boss/3": [
+   {
+    "id": "pop-boss:0-27",
+    "n": 27,
+    "size": 3
+   },
+   {
+    "id": "pop-boss:27-49",
+    "n": 21,
+    "size": 3
+   }
+  ],
+  "pop-boss/4": [
+   {
+    "id": "pop-boss:0-49",
+    "n": 48,
+    "size": 4
+   }
+  ],
+  "pop-dance/1": [
+   {
+    "id": "pop-dance:1-2",
+    "n": 1,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:5-8",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:11-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:14-17",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:17-20",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:20-23",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:24-28",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:28-32",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:33-36",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:36-39",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:39-42",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:42-45",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-dance:45-48",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "pop-dance/2": [
+   {
+    "id": "pop-dance:1-5",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:5-11",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:11-17",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:17-23",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:24-32",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:33-39",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-dance:39-48",
+    "n": 9,
+    "size": 2
+   }
+  ],
+  "pop-dance/3": [
+   {
+    "id": "pop-dance:1-12",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "pop-dance:13-34",
+    "n": 19,
+    "size": 3
+   },
+   {
+    "id": "pop-dance:34-48",
+    "n": 14,
+    "size": 3
+   }
+  ],
+  "pop-dance/4": [
+   {
+    "id": "pop-dance:1-48",
+    "n": 43,
+    "size": 4
+   }
+  ],
+  "pop-spooky/1": [
+   {
+    "id": "pop-spooky:0-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:6-10",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:11-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:14-18",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:23-26",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:26-30",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:30-34",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:35-38",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:38-40",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:40-42",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:42-44",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-spooky:44-46",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "pop-spooky/2": [
+   {
+    "id": "pop-spooky:0-10",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:11-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:18-23",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:23-30",
+    "n": 7,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:30-38",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:38-42",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "pop-spooky:42-46",
+    "n": 4,
+    "size": 2
+   }
+  ],
+  "pop-spooky/3": [
+   {
+    "id": "pop-spooky:0-26",
+    "n": 20,
+    "size": 3
+   },
+   {
+    "id": "pop-spooky:26-46",
+    "n": 18,
+    "size": 3
+   }
+  ],
+  "pop-spooky/4": [
+   {
+    "id": "pop-spooky:0-46",
+    "n": 38,
+    "size": 4
+   }
+  ],
+  "pop-hyper/1": [
+   {
+    "id": "pop-hyper:0-4",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:7-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:14-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:23-26",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:26-30",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:30-34",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:35-37",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:37-42",
+    "n": 5,
+    "size": 1
+   },
+   {
+    "id": "pop-hyper:42-44",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "pop-hyper/2": [
+   {
+    "id": "pop-hyper:0-7",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-hyper:7-14",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-hyper:14-21",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "pop-hyper:21-26",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "pop-hyper:26-34",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "pop-hyper:35-44",
+    "n": 9,
+    "size": 2
+   }
+  ],
+  "pop-hyper/3": [
+   {
+    "id": "pop-hyper:0-36",
+    "n": 32,
+    "size": 3
+   },
+   {
+    "id": "pop-hyper:36-44",
+    "n": 8,
+    "size": 3
+   }
+  ],
+  "pop-hyper/4": [
+   {
+    "id": "pop-hyper:0-44",
+    "n": 40,
+    "size": 4
+   }
+  ],
+  "buns/1": [
+   {
+    "id": "buns:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "buns:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "buns:6-8",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "buns:8-10",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "buns:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "buns:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "buns:14-17",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "buns/2": [
+   {
+    "id": "buns:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "buns:6-10",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "buns:10-17",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "buns/3": [
+   {
+    "id": "buns:0-17",
+    "n": 17,
+    "size": 3
+   }
+  ],
+  "buns/4": [
+   {
+    "id": "buns:0-17",
+    "n": 17,
+    "size": 4
+   }
+  ],
+  "mary/1": [
+   {
+    "id": "mary:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "mary:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "mary:23-26",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "mary/2": [
+   {
+    "id": "mary:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "mary:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "mary:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "mary:18-26",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "mary/3": [
+   {
+    "id": "mary:0-13",
+    "n": 13,
+    "size": 3
+   },
+   {
+    "id": "mary:13-26",
+    "n": 13,
+    "size": 3
+   }
+  ],
+  "mary/4": [
+   {
+    "id": "mary:0-26",
+    "n": 26,
+    "size": 4
+   }
+  ],
+  "twinkle/1": [
+   {
+    "id": "twinkle:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:30-33",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:33-36",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:36-39",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "twinkle:39-42",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "twinkle/2": [
+   {
+    "id": "twinkle:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:18-24",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:24-30",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:30-36",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "twinkle:36-42",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "twinkle/3": [
+   {
+    "id": "twinkle:0-14",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "twinkle:14-28",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "twinkle:28-42",
+    "n": 14,
+    "size": 3
+   }
+  ],
+  "twinkle/4": [
+   {
+    "id": "twinkle:0-42",
+    "n": 42,
+    "size": 4
+   }
+  ],
+  "ode/1": [
+   {
+    "id": "ode:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "ode:27-30",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "ode/2": [
+   {
+    "id": "ode:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "ode:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "ode:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "ode:18-24",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "ode:24-30",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "ode/3": [
+   {
+    "id": "ode:0-15",
+    "n": 15,
+    "size": 3
+   },
+   {
+    "id": "ode:15-30",
+    "n": 15,
+    "size": 3
+   }
+  ],
+  "ode/4": [
+   {
+    "id": "ode:0-30",
+    "n": 30,
+    "size": 4
+   }
+  ],
+  "lune/1": [
+   {
+    "id": "lune:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "lune:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "lune:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "lune:8-11",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "lune/2": [
+   {
+    "id": "lune:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "lune:5-11",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "lune/3": [
+   {
+    "id": "lune:0-11",
+    "n": 11,
+    "size": 3
+   }
+  ],
+  "lune/4": [
+   {
+    "id": "lune:0-11",
+    "n": 11,
+    "size": 4
+   }
+  ],
+  "jingle/1": [
+   {
+    "id": "jingle:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "jingle:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "jingle:6-8",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "jingle:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "jingle:11-13",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "jingle:13-15",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "jingle:15-17",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "jingle:17-20",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "jingle:20-23",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "jingle:23-26",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "jingle/2": [
+   {
+    "id": "jingle:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "jingle:6-11",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "jingle:11-15",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "jingle:15-20",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "jingle:20-26",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "jingle/3": [
+   {
+    "id": "jingle:0-11",
+    "n": 11,
+    "size": 3
+   },
+   {
+    "id": "jingle:11-26",
+    "n": 15,
+    "size": 3
+   }
+  ],
+  "jingle/4": [
+   {
+    "id": "jingle:0-26",
+    "n": 26,
+    "size": 4
+   }
+  ],
+  "bday/1": [
+   {
+    "id": "bday:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "bday:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:14-17",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:17-19",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "bday:19-22",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "bday:22-25",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "bday/2": [
+   {
+    "id": "bday:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "bday:5-11",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "bday:11-17",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "bday:17-25",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "bday/3": [
+   {
+    "id": "bday:0-5",
+    "n": 5,
+    "size": 3
+   },
+   {
+    "id": "bday:5-17",
+    "n": 12,
+    "size": 3
+   },
+   {
+    "id": "bday:17-25",
+    "n": 8,
+    "size": 3
+   }
+  ],
+  "bday/4": [
+   {
+    "id": "bday:0-25",
+    "n": 25,
+    "size": 4
+   }
+  ],
+  "saints/1": [
+   {
+    "id": "saints:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "saints:2-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "saints:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:30-33",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "saints:33-35",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "saints/2": [
+   {
+    "id": "saints:0-6",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "saints:6-12",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "saints:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "saints:18-24",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "saints:24-30",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "saints:30-35",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "saints/3": [
+   {
+    "id": "saints:0-6",
+    "n": 5,
+    "size": 3
+   },
+   {
+    "id": "saints:6-17",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "saints:17-27",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "saints:27-35",
+    "n": 8,
+    "size": 3
+   }
+  ],
+  "saints/4": [
+   {
+    "id": "saints:0-35",
+    "n": 33,
+    "size": 4
+   }
+  ],
+  "grace/1": [
+   {
+    "id": "grace:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "grace:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:14-17",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:17-20",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "grace:20-22",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "grace/2": [
+   {
+    "id": "grace:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "grace:5-11",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "grace:11-17",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "grace:17-22",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "grace/3": [
+   {
+    "id": "grace:0-4",
+    "n": 4,
+    "size": 3
+   },
+   {
+    "id": "grace:4-13",
+    "n": 9,
+    "size": 3
+   },
+   {
+    "id": "grace:13-19",
+    "n": 6,
+    "size": 3
+   },
+   {
+    "id": "grace:19-22",
+    "n": 3,
+    "size": 3
+   }
+  ],
+  "grace/4": [
+   {
+    "id": "grace:0-22",
+    "n": 22,
+    "size": 4
+   }
+  ],
+  "brahms/1": [
+   {
+    "id": "brahms:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "brahms:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "brahms:23-26",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "brahms/2": [
+   {
+    "id": "brahms:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "brahms:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "brahms:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "brahms:18-26",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "brahms/3": [
+   {
+    "id": "brahms:0-13",
+    "n": 13,
+    "size": 3
+   },
+   {
+    "id": "brahms:13-19",
+    "n": 6,
+    "size": 3
+   },
+   {
+    "id": "brahms:19-26",
+    "n": 7,
+    "size": 3
+   }
+  ],
+  "brahms/4": [
+   {
+    "id": "brahms:0-26",
+    "n": 26,
+    "size": 4
+   }
+  ],
+  "minuet/1": [
+   {
+    "id": "minuet:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:3-5",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:11-13",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:13-16",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:16-19",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:19-21",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:24-26",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:26-29",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:29-32",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:32-35",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:35-37",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:37-40",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:40-43",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:43-45",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:45-48",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:48-51",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:51-53",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:53-56",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:56-58",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "minuet:58-61",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "minuet:61-64",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "minuet/2": [
+   {
+    "id": "minuet:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:5-11",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "minuet:11-16",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:16-21",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:21-26",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:26-32",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "minuet:32-37",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:37-43",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "minuet:43-48",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:48-53",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:53-58",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "minuet:58-64",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "minuet/3": [
+   {
+    "id": "minuet:0-8",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "minuet:8-16",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "minuet:16-26",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "minuet:26-40",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "minuet:40-48",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "minuet:48-58",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "minuet:58-64",
+    "n": 6,
+    "size": 3
+   }
+  ],
+  "minuet/4": [
+   {
+    "id": "minuet:0-64",
+    "n": 64,
+    "size": 4
+   }
+  ],
+  "prelude/1": [
+   {
+    "id": "prelude:0-4",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:4-8",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:8-12",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:12-16",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:16-20",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:20-24",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:24-28",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:28-32",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:32-36",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:36-40",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:40-44",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:44-48",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:48-52",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:52-56",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:56-60",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:60-64",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:64-68",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:68-72",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:72-76",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:76-80",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:80-84",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:84-88",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:88-92",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:92-96",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:96-100",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:100-104",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:104-108",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:108-112",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:112-116",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:116-120",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:120-124",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:124-128",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:128-132",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:132-136",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:136-140",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:140-144",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:144-148",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:148-152",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:152-156",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:156-160",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:160-164",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:164-168",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:168-172",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:172-176",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:176-180",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:180-184",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:184-188",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:188-192",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:192-196",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:196-200",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:200-204",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:204-208",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:208-212",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:212-216",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:216-220",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:220-224",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:224-228",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:228-232",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:232-236",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:236-240",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:240-244",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:244-248",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:248-252",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:252-256",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:256-260",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:260-264",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:264-268",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:268-272",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:272-276",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:276-280",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:280-284",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:284-288",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:288-292",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:292-296",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:296-300",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "prelude:300-305",
+    "n": 5,
+    "size": 1
+   }
+  ],
+  "prelude/2": [
+   {
+    "id": "prelude:0-8",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:8-16",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:16-24",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:24-32",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:32-40",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:40-48",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:48-56",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:56-64",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:64-72",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:72-80",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:80-88",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:88-96",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:96-104",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:104-112",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:112-120",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:120-128",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:128-136",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:136-144",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:144-152",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:152-160",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:160-168",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:168-176",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:176-184",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:184-192",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:192-200",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:200-208",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:208-216",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:216-224",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:224-232",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:232-240",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:240-248",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:248-256",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:256-264",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:264-272",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:272-280",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:280-288",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:288-296",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "prelude:296-305",
+    "n": 9,
+    "size": 2
+   }
+  ],
+  "prelude/3": [
+   {
+    "id": "prelude:0-64",
+    "n": 64,
+    "size": 3
+   },
+   {
+    "id": "prelude:64-128",
+    "n": 64,
+    "size": 3
+   },
+   {
+    "id": "prelude:128-160",
+    "n": 32,
+    "size": 3
+   },
+   {
+    "id": "prelude:160-208",
+    "n": 48,
+    "size": 3
+   },
+   {
+    "id": "prelude:208-240",
+    "n": 32,
+    "size": 3
+   },
+   {
+    "id": "prelude:240-288",
+    "n": 48,
+    "size": 3
+   },
+   {
+    "id": "prelude:288-305",
+    "n": 17,
+    "size": 3
+   }
+  ],
+  "prelude/4": [
+   {
+    "id": "prelude:0-305",
+    "n": 305,
+    "size": 4
+   }
+  ],
+  "greensleeves/1": [
+   {
+    "id": "greensleeves:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:6-8",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:11-13",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:13-16",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:16-19",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:19-22",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:22-25",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:25-27",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:30-33",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:33-35",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "greensleeves:35-37",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "greensleeves/2": [
+   {
+    "id": "greensleeves:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:6-11",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:11-16",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:16-22",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:22-27",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:27-33",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "greensleeves:33-37",
+    "n": 4,
+    "size": 2
+   }
+  ],
+  "greensleeves/3": [
+   {
+    "id": "greensleeves:0-11",
+    "n": 11,
+    "size": 3
+   },
+   {
+    "id": "greensleeves:11-16",
+    "n": 5,
+    "size": 3
+   },
+   {
+    "id": "greensleeves:16-20",
+    "n": 4,
+    "size": 3
+   },
+   {
+    "id": "greensleeves:20-25",
+    "n": 5,
+    "size": 3
+   },
+   {
+    "id": "greensleeves:25-33",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "greensleeves:33-37",
+    "n": 4,
+    "size": 3
+   }
+  ],
+  "greensleeves/4": [
+   {
+    "id": "greensleeves:0-37",
+    "n": 37,
+    "size": 4
+   }
+  ],
+  "elise/1": [
+   {
+    "id": "elise:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:4-6",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:6-8",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:8-10",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:14-16",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:16-18",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:18-20",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:20-22",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:22-24",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:24-26",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:26-28",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:28-30",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:30-32",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "elise:32-35",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "elise/2": [
+   {
+    "id": "elise:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:4-8",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:8-12",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:12-16",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:16-20",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:20-24",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:24-28",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "elise:28-35",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "elise/3": [
+   {
+    "id": "elise:0-12",
+    "n": 12,
+    "size": 3
+   },
+   {
+    "id": "elise:12-30",
+    "n": 18,
+    "size": 3
+   },
+   {
+    "id": "elise:30-35",
+    "n": 5,
+    "size": 3
+   }
+  ],
+  "elise/4": [
+   {
+    "id": "elise:0-35",
+    "n": 35,
+    "size": 4
+   }
+  ],
+  "king/1": [
+   {
+    "id": "king:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:7-10",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:14-17",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:17-19",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:19-21",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:27-29",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:29-32",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:32-35",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "king:35-37",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "king:37-40",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "king/2": [
+   {
+    "id": "king:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "king:4-10",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "king:10-14",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "king:14-19",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "king:19-23",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "king:24-29",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "king:29-35",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "king:35-40",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "king/3": [
+   {
+    "id": "king:0-27",
+    "n": 26,
+    "size": 3
+   },
+   {
+    "id": "king:27-40",
+    "n": 13,
+    "size": 3
+   }
+  ],
+  "king/4": [
+   {
+    "id": "king:0-40",
+    "n": 39,
+    "size": 4
+   }
+  ],
+  "canon/1": [
+   {
+    "id": "canon:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:18-20",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "canon:20-22",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "canon:22-25",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "canon:25-28",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "canon/2": [
+   {
+    "id": "canon:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "canon:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "canon:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "canon:18-22",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "canon:22-28",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "canon/3": [
+   {
+    "id": "canon:0-8",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "canon:8-16",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "canon:16-28",
+    "n": 12,
+    "size": 3
+   }
+  ],
+  "canon/4": [
+   {
+    "id": "canon:0-28",
+    "n": 28,
+    "size": 4
+   }
+  ],
+  "korobeiniki/1": [
+   {
+    "id": "korobeiniki:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:18-22",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:22-25",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:25-28",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:28-31",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:31-34",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:34-36",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "korobeiniki:36-38",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "korobeiniki/2": [
+   {
+    "id": "korobeiniki:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "korobeiniki:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "korobeiniki:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "korobeiniki:18-25",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "korobeiniki:25-31",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "korobeiniki:31-38",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "korobeiniki/3": [
+   {
+    "id": "korobeiniki:0-19",
+    "n": 19,
+    "size": 3
+   },
+   {
+    "id": "korobeiniki:20-38",
+    "n": 18,
+    "size": 3
+   }
+  ],
+  "korobeiniki/4": [
+   {
+    "id": "korobeiniki:0-38",
+    "n": 37,
+    "size": 4
+   }
+  ],
+  "entertainer/1": [
+   {
+    "id": "entertainer:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "entertainer:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "entertainer:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "entertainer:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "entertainer:11-13",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "entertainer:13-16",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "entertainer:16-18",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "entertainer/2": [
+   {
+    "id": "entertainer:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "entertainer:5-11",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "entertainer:11-18",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "entertainer/3": [
+   {
+    "id": "entertainer:0-18",
+    "n": 18,
+    "size": 3
+   }
+  ],
+  "entertainer/4": [
+   {
+    "id": "entertainer:0-18",
+    "n": 18,
+    "size": 4
+   }
+  ],
+  "turkish/1": [
+   {
+    "id": "turkish:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "turkish:5-7",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:7-10",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "turkish:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:14-16",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:16-18",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:18-20",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:20-22",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "turkish:22-24",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "turkish/2": [
+   {
+    "id": "turkish:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "turkish:5-10",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "turkish:10-14",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "turkish:14-18",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "turkish:18-24",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "turkish/3": [
+   {
+    "id": "turkish:0-10",
+    "n": 10,
+    "size": 3
+   },
+   {
+    "id": "turkish:10-18",
+    "n": 8,
+    "size": 3
+   },
+   {
+    "id": "turkish:18-24",
+    "n": 6,
+    "size": 3
+   }
+  ],
+  "turkish/4": [
+   {
+    "id": "turkish:0-24",
+    "n": 24,
+    "size": 4
+   }
+  ],
+  "toccata/1": [
+   {
+    "id": "toccata:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "toccata:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "toccata:7-10",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "toccata/2": [
+   {
+    "id": "toccata:0-10",
+    "n": 9,
+    "size": 2
+   }
+  ],
+  "toccata/3": [
+   {
+    "id": "toccata:0-10",
+    "n": 9,
+    "size": 3
+   }
+  ],
+  "toccata/4": [
+   {
+    "id": "toccata:0-10",
+    "n": 9,
+    "size": 4
+   }
+  ],
+  "beethoven5/1": [
+   {
+    "id": "beethoven5:1-4",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "beethoven5:4-7",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "beethoven5:7-10",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "beethoven5/2": [
+   {
+    "id": "beethoven5:1-10",
+    "n": 8,
+    "size": 2
+   }
+  ],
+  "beethoven5/3": [
+   {
+    "id": "beethoven5:1-10",
+    "n": 8,
+    "size": 3
+   }
+  ],
+  "beethoven5/4": [
+   {
+    "id": "beethoven5:1-10",
+    "n": 8,
+    "size": 4
+   }
+  ],
+  "nachtmusik/1": [
+   {
+    "id": "nachtmusik:0-4",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "nachtmusik:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "nachtmusik:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "nachtmusik:11-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "nachtmusik:16-19",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "nachtmusik:19-22",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "nachtmusik/2": [
+   {
+    "id": "nachtmusik:0-8",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "nachtmusik:8-15",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "nachtmusik:16-22",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "nachtmusik/3": [
+   {
+    "id": "nachtmusik:0-22",
+    "n": 18,
+    "size": 3
+   }
+  ],
+  "nachtmusik/4": [
+   {
+    "id": "nachtmusik:0-22",
+    "n": 18,
+    "size": 4
+   }
+  ],
+  "bumblebee/1": [
+   {
+    "id": "bumblebee:0-4",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:4-8",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:8-12",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:12-16",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:16-20",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:20-24",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:24-28",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "bumblebee:28-33",
+    "n": 5,
+    "size": 1
+   }
+  ],
+  "bumblebee/2": [
+   {
+    "id": "bumblebee:0-8",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "bumblebee:8-16",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "bumblebee:16-24",
+    "n": 8,
+    "size": 2
+   },
+   {
+    "id": "bumblebee:24-33",
+    "n": 9,
+    "size": 2
+   }
+  ],
+  "bumblebee/3": [
+   {
+    "id": "bumblebee:0-33",
+    "n": 33,
+    "size": 3
+   }
+  ],
+  "bumblebee/4": [
+   {
+    "id": "bumblebee:0-33",
+    "n": 33,
+    "size": 4
+   }
+  ],
+  "susanna/1": [
+   {
+    "id": "susanna:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "susanna:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "susanna:5-7",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "susanna:7-10",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "susanna:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "susanna:12-15",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "susanna/2": [
+   {
+    "id": "susanna:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "susanna:5-10",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "susanna:10-15",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "susanna/3": [
+   {
+    "id": "susanna:0-15",
+    "n": 15,
+    "size": 3
+   }
+  ],
+  "susanna/4": [
+   {
+    "id": "susanna:0-15",
+    "n": 15,
+    "size": 4
+   }
+  ],
+  "cucaracha/1": [
+   {
+    "id": "cucaracha:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:8-10",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:10-12",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:12-14",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "cucaracha:14-17",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "cucaracha/2": [
+   {
+    "id": "cucaracha:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "cucaracha:5-10",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "cucaracha:10-17",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "cucaracha/3": [
+   {
+    "id": "cucaracha:0-17",
+    "n": 17,
+    "size": 3
+   }
+  ],
+  "cucaracha/4": [
+   {
+    "id": "cucaracha:0-17",
+    "n": 17,
+    "size": 4
+   }
+  ],
+  "surprise/1": [
+   {
+    "id": "surprise:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "surprise:7-9",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:9-11",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "surprise:14-16",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:16-18",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "surprise:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:23-25",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "surprise:25-28",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "surprise/2": [
+   {
+    "id": "surprise:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "surprise:4-9",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "surprise:9-14",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "surprise:14-18",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "surprise:18-23",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "surprise:23-28",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "surprise/3": [
+   {
+    "id": "surprise:0-28",
+    "n": 28,
+    "size": 3
+   }
+  ],
+  "surprise/4": [
+   {
+    "id": "surprise:0-28",
+    "n": 28,
+    "size": 4
+   }
+  ],
+  "yankee/1": [
+   {
+    "id": "yankee:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:4-6",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "yankee:9-11",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:11-15",
+    "n": 4,
+    "size": 1
+   },
+   {
+    "id": "yankee:15-17",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:17-19",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:19-21",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:21-23",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:23-25",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "yankee:25-28",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "yankee/2": [
+   {
+    "id": "yankee:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "yankee:4-9",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "yankee:9-15",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "yankee:15-19",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "yankee:19-23",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "yankee:23-28",
+    "n": 5,
+    "size": 2
+   }
+  ],
+  "yankee/3": [
+   {
+    "id": "yankee:0-28",
+    "n": 28,
+    "size": 3
+   }
+  ],
+  "yankee/4": [
+   {
+    "id": "yankee:0-28",
+    "n": 28,
+    "size": 4
+   }
+  ],
+  "deckhalls/1": [
+   {
+    "id": "deckhalls:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "deckhalls:2-5",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "deckhalls:5-8",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "deckhalls:8-11",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "deckhalls:11-14",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "deckhalls:14-17",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "deckhalls/2": [
+   {
+    "id": "deckhalls:0-5",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "deckhalls:5-11",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "deckhalls:11-17",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "deckhalls/3": [
+   {
+    "id": "deckhalls:0-17",
+    "n": 17,
+    "size": 3
+   }
+  ],
+  "deckhalls/4": [
+   {
+    "id": "deckhalls:0-17",
+    "n": 17,
+    "size": 4
+   }
+  ],
+  "wewish/1": [
+   {
+    "id": "wewish:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "wewish:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "wewish:4-7",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:7-9",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "wewish:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:15-17",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "wewish:17-20",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:20-23",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:23-26",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "wewish:26-28",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "wewish:28-30",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "wewish/2": [
+   {
+    "id": "wewish:0-4",
+    "n": 4,
+    "size": 2
+   },
+   {
+    "id": "wewish:4-9",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "wewish:9-15",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "wewish:15-20",
+    "n": 5,
+    "size": 2
+   },
+   {
+    "id": "wewish:20-26",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "wewish:26-30",
+    "n": 4,
+    "size": 2
+   }
+  ],
+  "wewish/3": [
+   {
+    "id": "wewish:0-23",
+    "n": 23,
+    "size": 3
+   },
+   {
+    "id": "wewish:23-30",
+    "n": 7,
+    "size": 3
+   }
+  ],
+  "wewish/4": [
+   {
+    "id": "wewish:0-30",
+    "n": 30,
+    "size": 4
+   }
+  ],
+  "oldmac/1": [
+   {
+    "id": "oldmac:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "oldmac:21-24",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "oldmac/2": [
+   {
+    "id": "oldmac:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "oldmac:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "oldmac:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "oldmac:18-24",
+    "n": 6,
+    "size": 2
+   }
+  ],
+  "oldmac/3": [
+   {
+    "id": "oldmac:0-14",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "oldmac:14-24",
+    "n": 10,
+    "size": 3
+   }
+  ],
+  "oldmac/4": [
+   {
+    "id": "oldmac:0-24",
+    "n": 24,
+    "size": 4
+   }
+  ],
+  "invention1/1": [
+   {
+    "id": "invention1:0-2",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "invention1:2-4",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "invention1:4-7",
+    "n": 3,
+    "size": 1
+   }
+  ],
+  "invention1/2": [
+   {
+    "id": "invention1:0-7",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "invention1/3": [
+   {
+    "id": "invention1:0-7",
+    "n": 7,
+    "size": 3
+   }
+  ],
+  "invention1/4": [
+   {
+    "id": "invention1:0-7",
+    "n": 7,
+    "size": 4
+   }
+  ],
+  "morning/1": [
+   {
+    "id": "morning:0-3",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:3-6",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:6-9",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:9-12",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:12-15",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:15-18",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:18-21",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:21-24",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:24-27",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:27-30",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:30-33",
+    "n": 3,
+    "size": 1
+   },
+   {
+    "id": "morning:33-35",
+    "n": 2,
+    "size": 1
+   },
+   {
+    "id": "morning:35-37",
+    "n": 2,
+    "size": 1
+   }
+  ],
+  "morning/2": [
+   {
+    "id": "morning:0-6",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "morning:6-12",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "morning:12-18",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "morning:18-24",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "morning:24-30",
+    "n": 6,
+    "size": 2
+   },
+   {
+    "id": "morning:30-37",
+    "n": 7,
+    "size": 2
+   }
+  ],
+  "morning/3": [
+   {
+    "id": "morning:0-14",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "morning:14-28",
+    "n": 14,
+    "size": 3
+   },
+   {
+    "id": "morning:28-37",
+    "n": 9,
+    "size": 3
+   }
+  ],
+  "morning/4": [
+   {
+    "id": "morning:0-37",
+    "n": 37,
+    "size": 4
+   }
+  ]
+ }
+}

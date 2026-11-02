@@ -1,6 +1,10 @@
-// Moog-style subtractive synth engine. SAFETY: master hard cap 0.15, limiter, Q clamp, stuck-note guard.
+// Moog-style subtractive synth engine. SAFETY: the host 'keys' channel hard cap 0.15, the host limiter, Q clamp, stuck-note guard.
+// App volume/mute are applied only in src/audio/host.ts; params.level (the Boss KEYS fader) is this engine's own gain in front of the channel.
 import { registerPanicTarget } from '../../music/panic'
-import { useAudioSettings, outputScale } from '../../music/audioSettings'
+import { createChannel, getCtx, unlockHost } from '../../audio/host'
+// The old private limiter added ~2x makeup gain; keep the Koog synth about as loud as the family is used to
+// (full chord ~0.16 vs 0.21 before, still under the shared limiter's threshold and the keys cap).
+const KOOG_MAKEUP = 2
 import { DEFAULT_PARAMS, type LfoShape, type LfoTarget, type SynthEngine, type SynthParams, type Wave } from './params'
 
 export const MASTER_CAP = 0.15
@@ -53,7 +57,7 @@ S.sustained ??= new Set(); S.tmap ??= new Map(); S.trans ??= 0; S.bendCents ??= 
 
 const applyLevel = () => {
   if (!S.ctx || !S.master) return
-  S.master.gain.setTargetAtTime(MASTER_CAP * S.params.level * outputScale(), S.ctx.currentTime, 0.02)
+  S.master.gain.setTargetAtTime(S.params.level * KOOG_MAKEUP, S.ctx.currentTime, 0.02)
 }
 
 /** One shared LFO feeding three depth-scaled gains. Gains are 0 unless their target is patched. */
@@ -116,13 +120,21 @@ function release(v: Voice, fast = false) {
 }
 
 function ensureGraph() {
-  if (S.ctx) return
-  const ctx = new AudioContext({ latencyHint: 'interactive' })
-  const master = ctx.createGain(); master.gain.value = 0
-  const lim = ctx.createDynamicsCompressor()
-  lim.threshold.value = -18; lim.knee.value = 6; lim.ratio.value = 20; lim.attack.value = 0.003; lim.release.value = 0.15
+  const ctx = getCtx()
+  if (S.ctx === ctx && S.master) return
+  if (S.ctx && S.ctx !== ctx) { // left over from before the shared host (HMR): drop the old private context
+    const old = S.ctx
+    try { S.master?.gain.cancelScheduledValues(old.currentTime); S.master?.gain.setTargetAtTime(0, old.currentTime, 0.02) } catch { /* noop */ }
+    S.voices = []; S.lfo = undefined; S.bend = undefined; S.stack = []
+    setTimeout(() => { void old.close().catch(() => {}) }, 300)
+  }
+  const master = ctx.createGain(); master.gain.value = S.params.level * KOOG_MAKEUP
+  const ch = createChannel('keys', { cap: MASTER_CAP, label: 'KEYS' })
+  master.connect(ch.input)
+  // scope/meter tap at the old post-cap scale (level x 0.15)
+  const tap = ctx.createGain(); tap.gain.value = MASTER_CAP
   const an = ctx.createAnalyser(); an.fftSize = 1024
-  master.connect(lim); lim.connect(an); lim.connect(ctx.destination)
+  master.connect(tap); tap.connect(an)
   S.ctx = ctx; S.master = master; S.analyser = an
 }
 
@@ -188,7 +200,7 @@ const synth: SynthEngine = {
   },
   async unlock() {
     ensureGraph()
-    if (S.ctx!.state !== 'running') await S.ctx!.resume()
+    if (S.ctx!.state !== 'running') await unlockHost()
     applyLevel()
   },
   analyser: () => S.analyser ?? null,
@@ -275,8 +287,9 @@ export function setOctave(o: number) { S.trans = clamp(Math.round(o), -2, 2) }
 export const getOctave = () => S.trans ?? 0
 
 if (import.meta.hot) {
-  const offSettings = useAudioSettings.subscribe(() => applyLevel())
-  import.meta.hot.dispose(() => { offSettings(); synth.panic() })
+  import.meta.hot.dispose(() => { synth.panic() })
 }
 if (import.meta.hot) { import.meta.hot.accept() }
+// HMR from the pre-host build: move a live private context onto the shared host right away (the page already has a gesture)
+if (S.ctx && S.ctx.state !== 'closed' && S.ctx !== getCtx()) { synth.panic(); ensureGraph(); void unlockHost() }
 registerPanicTarget('synth', () => { synth.panic(); setHold(false) })

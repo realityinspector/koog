@@ -3,8 +3,9 @@
 // another plays piano. src/midi/connection.ts opens every input and routes by role; src/features/dj listens here.
 // STABLE API: useDevices { devices }, setRole(id, role), onDjMessage(fn), sendToDj(bytes), guessRole(name).
 import { create } from 'zustand'
+import { subscribe, emit, send, setSenderOverride, type Role } from '../midi/router'
 
-export type DeviceRole = 'piano' | 'dj' | 'surface' | 'loop' | 'off'
+export type DeviceRole = Role
 export interface Device { id: string; name: string; role: DeviceRole; connected: boolean; hasOutput: boolean }
 export type DjListener = (data: Uint8Array, timeStamp: number, deviceId: string) => void
 
@@ -17,15 +18,11 @@ export const guessRole = (name: string): DeviceRole => (/mixtrack|numark|ddj|pio
 export const roleFor = (name: string): DeviceRole => loadRoles()[name] ?? guessRole(name)
 
 interface DevState { devices: Device[] }
-type Hot = { store?: ReturnType<typeof make>; dj?: Set<DjListener>; surf?: Set<DjListener>; loop?: Set<DjListener>; roles?: Set<(name: string, role: DeviceRole) => void>; send?: { fn: ((b: number[]) => void) | null } }
+type Hot = { store?: ReturnType<typeof make>; roles?: Set<(name: string, role: DeviceRole) => void> }
 const hot = (import.meta.hot?.data ?? {}) as Hot
 function make() { return create<DevState>()(() => ({ devices: [] })) }
 export const useDevices = hot.store ?? make()
-const djListeners: Set<DjListener> = hot.dj ?? new Set()
-const surfListeners: Set<DjListener> = hot.surf ?? new Set()
-const loopListeners: Set<DjListener> = hot.loop ?? new Set()
 const roleListeners: Set<(name: string, role: DeviceRole) => void> = hot.roles ?? new Set()
-const sender: { fn: ((b: number[]) => void) | null } = hot.send ?? { fn: null }
 
 export function setRole(name: string, role: DeviceRole) {
   const r = loadRoles(); r[name] = role
@@ -35,27 +32,23 @@ export function setRole(name: string, role: DeviceRole) {
 }
 /** a device's role was changed with setRole (Controller Mode listens: 'surface' means the controller is a synth control surface) */
 export function onRoleChange(fn: (name: string, role: DeviceRole) => void) { roleListeners.add(fn); return () => { roleListeners.delete(fn) } }
+// Thin wrappers over src/midi/router.ts (the one MIDI router); kept so every consumer works unchanged.
 /** raw MIDI from any device whose role is 'surface' (a DJ controller used as knobs and faders for the synth; src/features/controller) */
-export function onSurfaceMessage(fn: DjListener) { surfListeners.add(fn); return () => { surfListeners.delete(fn) } }
-export function emitSurface(data: Uint8Array, t: number, id: string) { for (const f of [...surfListeners]) { try { f(data, t, id) } catch (e) { console.error('[surface]', e) } } }
+export const onSurfaceMessage = (fn: DjListener) => subscribe('surface', fn)
+export const emitSurface = (data: Uint8Array, t: number, id: string) => emit('surface', data, t, id)
 /** raw MIDI from any device whose role is 'loop' (the controller runs the Loop Station; src/features/loopstation) */
-export function onLoopMessage(fn: DjListener) { loopListeners.add(fn); return () => { loopListeners.delete(fn) } }
-export function emitLoop(data: Uint8Array, t: number, id: string) { for (const f of [...loopListeners]) { try { f(data, t, id) } catch (e) { console.error('[loop]', e) } } }
+export const onLoopMessage = (fn: DjListener) => subscribe('loop', fn)
+export const emitLoop = (data: Uint8Array, t: number, id: string) => emit('loop', data, t, id)
 /** raw MIDI from any device whose role is 'dj' */
-export function onDjMessage(fn: DjListener) { djListeners.add(fn); return () => { djListeners.delete(fn) } }
-/** connection.ts calls this for dj-role input messages */
-export function emitDj(data: Uint8Array, t: number, id: string) { for (const f of [...djListeners]) { try { f(data, t, id) } catch (e) { console.error('[dj]', e) } } }
-/** LEDs etc.: send raw bytes to the DJ controller's output (no-op if none) */
-export const sendToDj = (bytes: number[]) => sender.fn?.(bytes)
-/** connection.ts registers the DJ output sender */
-export const setDjSender = (fn: ((b: number[]) => void) | null) => { sender.fn = fn }
+export const onDjMessage = (fn: DjListener) => subscribe('dj', fn)
+export const emitDj = (data: Uint8Array, t: number, id: string) => emit('dj', data, t, id)
+/** LEDs etc.: send raw bytes to the DJ-style controller's output (dj, surface or loop role; no-op if none) */
+export const sendToDj = (bytes: number[]) => void send(['dj', 'surface', 'loop'], bytes)
+/** legacy: override the DJ output sender (null = look the output up by role) */
+export const setDjSender = (fn: ((b: number[]) => void) | null) => setSenderOverride(fn)
 
 if (import.meta.hot) {
   import.meta.hot.data.store = useDevices
-  import.meta.hot.data.dj = djListeners
-  import.meta.hot.data.surf = surfListeners
-  import.meta.hot.data.loop = loopListeners
   import.meta.hot.data.roles = roleListeners
-  import.meta.hot.data.send = sender
   import.meta.hot.accept()
 }

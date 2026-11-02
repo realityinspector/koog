@@ -10,6 +10,9 @@ import { create } from 'zustand'
 import { onNote } from './notes'
 import { useHarmonyStore } from './harmonyStore'
 import { inKey, pc } from './theory'
+import { isCluster, rhythmScore } from './listen/rhythm'
+
+export { isCluster, rhythmScore }
 
 export type GradeKind = 'tonic' | 'in' | 'spicy'
 export type ClusterKind = 'fizzle' | 'boom'
@@ -70,8 +73,6 @@ const CHORD_WINDOW = 50 // ms: notes this close are one chord
 const PHRASE_GAP = 2000 // ms: a longer gap starts a new phrase (no rhythm comparison)
 const CADENCE_PAUSE = 700 // ms of silence that ends a phrase
 const EMA = 0.12
-// simple duration ratios (log2): 1/4, 1/3, 1/2, 2/3, 1, 3/2, 2, 3, 4
-const RATIOS = [-2, -1.585, -1, -0.585, 0, 0.585, 1, 1.585, 2]
 
 // ---- per-session working state (fine to lose on an edit) ----
 let win: { note: number; t: number }[] = []
@@ -86,22 +87,6 @@ let recentMelody: number[] = []
 let lastMotifT = 0
 let cadenceTimer: ReturnType<typeof setTimeout> | null = null
 
-function closePairs(ns: number[]) {
-  const u = [...new Set(ns)].sort((a, b) => a - b)
-  let c = 0
-  for (let i = 1; i < u.length; i++) if (u[i] - u[i - 1] <= 2) c++
-  return c
-}
-// Forearm test: 4+ notes at once, packed shoulder-to-shoulder (3+ neighbours a step apart), or 7+ notes at all.
-// Real chords are spread out (C E G = gaps of 4 and 3), so they never trip it.
-const isCluster = (ns: number[]) => (ns.length >= 4 && closePairs(ns) >= 3) || ns.length >= 7
-
-function rhythmScore(ioi: number, prev: number) {
-  const r = Math.log2(ioi / prev)
-  let d = Infinity
-  for (const x of RATIOS) d = Math.min(d, Math.abs(r - x))
-  return Math.max(0, Math.min(1, 1 - d / 0.2))
-}
 const styleOf = (step: number | null) => {
   if (step == null) return null
   const a = Math.abs(step)

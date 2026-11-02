@@ -1,6 +1,6 @@
-// Audio plumbing shared by every emulator: lazy AudioContext (only inside a user gesture), a master gain with the
-// 0.15 peak cap x the app volume/mute, a limiter, and a dev peak meter. One Engine per open panel.
-import { outputScale, useAudioSettings } from '../../../music/audioSettings'
+// Audio plumbing shared by every emulator: each engine plugs into the host's shared 'keys' channel (cap 0.15; app volume,
+// mute and the limiter live in src/audio/host.ts), keeps its own mixer-trim gain, and a dev peak meter. One Engine per open panel.
+import { createChannel, getCtx, getNoise, unlockHost, type Channel } from '../../../audio/host'
 import { emitEmuSet, getTrim, onTrim, registerEngine, unregisterEngine } from './bus'
 import type { EmuAudio, EmuSpec, Params, Voice } from './types'
 
@@ -26,38 +26,46 @@ export interface Engine {
   dispose(): void
 }
 
-export function createEngine(spec: EmuSpec): Engine {
+const CEIL = 0.75
+let ceil: Float32Array<ArrayBuffer> | null = null
+const ceilCurve = () => {
+  if (ceil) return ceil
+  const n = 2049; ceil = new Float32Array(n)
+  for (let i = 0; i < n; i++) { const x = ((i / (n - 1)) * 2 - 1) * 2; ceil[i] = CEIL * Math.tanh(x / CEIL) } 
+  return ceil
+}
+export function createEngine(spec: EmuSpec, opts?: { channel?: Channel }): Engine {
   const P: Params = {}
   for (const c of spec.ctls) P[c.key] = c.def
   let ctx: AudioContext | null = null
-  let master: GainNode | null = null
-  let an: AnalyserNode | null = null
+  let master: GainNode | null = null // per-engine mixer trim (bus.ts) in front of the channel
+  let an: AnalyserNode | null = null // tapped after the trim, before the channel
+  let inp: GainNode | null = null
   let voice: Voice | null = null
   let dead = false
   const held = new Set<number>()
   const buf = new Float32Array(1024)
-  const applyGain = () => { if (ctx && master) master.gain.setTargetAtTime(EMU_CAP * outputScale() * getTrim(), ctx.currentTime, 0.03) }
-  const unsubS = useAudioSettings.subscribe(applyGain)
-  const unsubT = onTrim(applyGain)
-  const unsub = () => { unsubS(); unsubT() }
+  const applyGain = () => { if (ctx && master) master.gain.setTargetAtTime(getTrim(), ctx.currentTime, 0.03) }
+  const unsub = onTrim(applyGain)
   const onBlur = () => eng.allOff()
   window.addEventListener('blur', onBlur)
 
   async function unlock() {
     if (dead) return
     if (!ctx) {
-      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-      ctx = new AC({ latencyHint: 'interactive' })
-      master = ctx.createGain(); master.gain.value = 0
-      const lim = ctx.createDynamicsCompressor()
-      lim.threshold.value = -14; lim.knee.value = 6; lim.ratio.value = 20; lim.attack.value = 0.003; lim.release.value = 0.15
-      an = ctx.createAnalyser(); an.fftSize = 1024
-      const inp = ctx.createGain(); inp.gain.value = 1
-      inp.connect(lim); lim.connect(master); master.connect(ctx.destination); master.connect(an)
-      voice = spec.make({ ctx, out: inp }, P)
-      applyGain()
+      const c = getCtx()
+      const channel = opts?.channel ?? createChannel('keys', { cap: EMU_CAP, label: 'KEYS' })
+      master = c.createGain(); master.gain.value = getTrim()
+      an = c.createAnalyser(); an.fftSize = 1024
+      inp = c.createGain(); inp.gain.value = 0.5 // the ceiling curve reads input -1..1 as voice level -2..2
+      const tap = c.createGain(); tap.gain.value = EMU_CAP // meter/scope at the same scale as the capped output
+      // static soft ceiling (replaces the old per-engine compressor): a full chord on any emulator cannot get louder than it was
+      const ws = c.createWaveShaper(); ws.curve = ceilCurve(); inp.connect(ws); ws.connect(master)
+      master.connect(channel.input); master.connect(tap); tap.connect(an)
+      ctx = c
+      voice = spec.make({ ctx: c, out: inp }, P)
     }
-    if (ctx.state !== 'running') await ctx.resume()
+    if (ctx.state !== 'running') await unlockHost()
     applyGain()
   }
   const eng: Engine = {
@@ -88,9 +96,11 @@ export function createEngine(spec: EmuSpec): Engine {
       held.clear()
       try { voice?.allOff(); voice?.dispose() } catch { /* ignore */ }
       unsub(); window.removeEventListener('blur', onBlur)
-      const c = ctx; const m = master
-      if (c && m) { m.gain.cancelScheduledValues(c.currentTime); m.gain.setTargetAtTime(0, c.currentTime, 0.02); setTimeout(() => { void c.close().catch(() => {}) }, 250) }
-      ctx = null; voice = null
+      const c = ctx; const m = master; const i = inp; const a = an
+      if (c && m) { m.gain.cancelScheduledValues(c.currentTime); m.gain.setTargetAtTime(0, c.currentTime, 0.02) }
+      // let the release tail fade, then cut every node loose (the shared context stays open)
+      setTimeout(() => { for (const n of [i, m, a]) { try { n?.disconnect() } catch { /* noop */ } } }, 250)
+      ctx = null; voice = null; master = null; inp = null; an = null
     },
   }
   registerEngine(eng)
@@ -119,12 +129,5 @@ export function adsr(p: AudioParam, t: number, peak: number, a: number, d: numbe
   p.setTargetAtTime(Math.max(floor, peak * s), t + Math.max(0.003, a), Math.max(0.01, d) / 3)
   return (rt: number, r: number) => { p.cancelScheduledValues(rt); p.setValueAtTime(p.value, rt); p.setTargetAtTime(floor, rt, Math.max(0.01, r) / 4) }
 }
-const noiseBufs = new WeakMap<AudioContext, AudioBuffer>() // one per context: two engines open at once (split/layers) must not rebuild a 2 s buffer on every note
-export function noise(ctx: AudioContext) {
-  let b = noiseBufs.get(ctx)
-  if (b) return b
-  b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
-  const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
-  noiseBufs.set(ctx, b)
-  return b
-}
+/** one white-noise buffer per context (shared with the host) */
+export const noise = (ctx: AudioContext) => getNoise(ctx)
