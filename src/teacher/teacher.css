@@ -13,7 +13,6 @@ body { background: var(--k-bg); color: var(--k-ink); font: 14px/1.4 system-ui, -
 .t-fit { width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; }
 .t-stage { position: relative; width: 100%; height: 100%; font-size: calc(var(--u) * 20); }
 .t-frame { position: absolute; border: 0; transform-origin: 0 0; background: #000; }
-.t-sound { position: absolute; text-align: center; text-shadow: 0 1px 6px #000; color: var(--k-lcd); font-size: calc(var(--u) * 20); pointer-events: none; }
 .t-card { position: absolute; box-sizing: border-box; padding: .5em .8em .6em 2.4em; background: rgba(23, 19, 47, .92); border: 1px solid var(--k-line-strong); border-radius: .6em; box-shadow: var(--k-e-2); transition: border-color .3s, box-shadow .3s; }
 .t-card.hot { border-color: var(--k-accent); box-shadow: 0 0 .8em rgba(255, 180, 60, .35); }
 .t-card i { position: absolute; left: .6em; top: .5em; width: 1.4em; height: 1.4em; border-radius: 50%; background: var(--k-accent); color: #1a1200; font-style: normal; font-weight: 700; text-align: center; line-height: 1.4em; font-size: .85em; }
@@ -32,3 +31,34 @@ body { background: var(--k-bg); color: var(--k-ink); font: 14px/1.4 system-ui, -
 .t-lead-dot { fill: var(--k-accent); opacity: .8; }
 .t-dot { fill: var(--k-lcd); filter: drop-shadow(0 0 8px var(--k-lcd)); }
 @media (prefers-reduced-motion: reduce) { .t-card, .t-chips span, .t-bar-v span { transition: none; } }
+kbd { display: inline-block; min-width: 1.5em; padding: 0 .35em; border-radius: .3em; border: 1px solid var(--k-line-strong); border-bottom-width: 2px; background: var(--k-surface-2); color: var(--k-ink); font: 600 .9em/1.5 ui-monospace, monospace; text-align: center; }
+.t-hint { color: var(--k-ink-2); }
+.t-links { align-items: center; }
+.t-link { background: none; border: 0; padding: 0; color: var(--k-ink-2); font: inherit; font-size: var(--k-fs-sm); cursor: pointer; }
+.t-link:hover { color: var(--k-accent); }
+.t-full { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 99px; border: 0; background: var(--k-accent); color: #1a1200; font: 600 13px system-ui, sans-serif; cursor: pointer; }
+.t-stage svg .stage-keys.play { pointer-events: auto; }
+/* "press these keys" strip under the laptop */
+.t-keys { position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: .8em; padding: 0 .8em; background: rgba(23, 19, 47, .92); border: 1px solid var(--k-accent); border-radius: .6em; }
+.t-keys p { margin: 0; flex: 0 0 auto; width: 6.6em; font-size: .85em; line-height: 1.2; color: var(--k-ink-2); }
+.t-keys p b { display: block; color: var(--k-accent); font-size: 1.15em; }
+.t-caps { flex: 1; display: flex; gap: .35em; justify-content: space-between; }
+.t-caps span { flex: 1; display: flex; flex-direction: column; align-items: center; padding: .2em 0 .15em; border-radius: .35em; background: var(--k-surface-2); border: 1px solid var(--k-line-strong); border-bottom-width: 3px; transition: background .08s, transform .08s; }
+.t-caps span b { font: 700 1.1em/1.2 ui-monospace, monospace; color: var(--k-ink); }
+.t-caps span em { font-style: normal; font-size: .7em; color: var(--k-ink-3); }
+.t-caps span.on { background: var(--k-accent); transform: translateY(2px); }
+.t-caps span.on b, .t-caps span.on em { color: #1a1200; }
+/* start card */
+.t-intro { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(8, 6, 20, .72); }
+.t-intro-card { width: min(46em, 90%); box-sizing: border-box; padding: 1.4em 1.8em 1.2em; background: var(--k-surface-1); border: 1px solid var(--k-line-strong); border-radius: .9em; box-shadow: var(--k-e-3, 0 20px 60px rgba(0,0,0,.5)); font-size: 1.05em; }
+.t-intro-card h2 { margin: 0 0 .3em; font-size: 1.6em; }
+.t-intro-card > p { margin: 0 0 .8em; color: var(--k-ink-2); }
+.t-intro-card ol { margin: 0 0 1.1em; padding-left: 1.3em; display: grid; gap: .55em; }
+.t-intro-card li b { color: var(--k-ink); }
+.t-intro-card li { color: var(--k-ink-2); }
+.t-intro-go { display: flex; flex-wrap: wrap; gap: .7em; }
+.t-go, .t-go2 { display: inline-flex; align-items: center; gap: .45em; padding: .65em 1.3em; border-radius: 99px; font: 600 1em system-ui, sans-serif; cursor: pointer; }
+.t-go { border: 0; background: var(--k-accent); color: #1a1200; }
+.t-go2 { background: none; border: 1px solid var(--k-line-strong); color: var(--k-ink); }
+.t-intro-small { margin: .8em 0 0; font-size: .8em; color: var(--k-ink-3); }
+@media (prefers-reduced-motion: reduce) { .t-caps span { transition: none; } }

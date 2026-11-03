@@ -11,6 +11,9 @@ body { font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
 .ld-card .k-ic { color: var(--k-accent); }
 .ld-card h2 { margin: 0; font-size: var(--k-fs-lg); }
 .ld-card p { margin: 0; color: var(--k-ink-2); font-size: var(--k-fs-md); }
+.ld-go { margin-top: auto; align-self: flex-start; padding: 8px 16px; border-radius: 99px; background: var(--k-accent); color: #1a1200; font-weight: 600; font-size: var(--k-fs-md); }
+.ld-go-note { font-style: normal; font-size: var(--k-fs-sm); color: var(--k-ink-3); }
+.ld-go-note b { color: var(--k-ink-2); }
 .ld-gate { background: var(--k-surface-1); border: 1px solid var(--k-line); border-radius: var(--k-r-lg); padding: var(--k-s-5); max-width: 420px; width: 100%; margin: 0 auto; }
 .ld-gate label { display: flex; align-items: center; gap: var(--k-s-2); font-weight: 600; margin-bottom: var(--k-s-3); }
 .ld-row { display: flex; gap: var(--k-s-2); }

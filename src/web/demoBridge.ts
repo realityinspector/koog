@@ -1,8 +1,10 @@
 // Embedded Koog (?embed) <-> teacher demo page. Posts live notes and harmony state to the parent window,
-// and re-dispatches computer-key events the parent forwards (musical typing listens on window).
+// and takes commands from the parent: forwarded computer keys (musical typing listens on window),
+// notes from the drawn keyboard (koog:play), and 'turn on sound' (koog:unlock).
 import { onNote } from '../music/notes'
 import { useHarmonyStore, judge } from '../music/harmonyStore'
 import { PC_NAMES, SCALE_LABEL } from '../music/theory'
+import { playLocal, unlockAudio } from '../music/localNotes'
 
 const post = (msg: unknown) => { try { window.parent.postMessage(msg, location.origin) } catch { /* ignore */ } }
 
@@ -37,7 +39,11 @@ function schedule() {
 function onMessage(e: MessageEvent) {
   if (e.origin !== location.origin || e.source !== window.parent) return
   const d = e.data
-  if (!d || d.type !== 'koog:key' || (d.kind !== 'keydown' && d.kind !== 'keyup')) return
+  if (!d) return
+  // a click on the drawn keyboard plays a note, like clicking Koog's own keys
+  if (d.type === 'koog:play' && Number.isInteger(d.note) && d.note >= 21 && d.note <= 108) { playLocal(d.note, Math.min(127, Math.max(1, Number(d.velocity) || 96)), !!d.on); return }
+  if (d.type === 'koog:unlock') { void unlockAudio(); return }
+  if (d.type !== 'koog:key' || (d.kind !== 'keydown' && d.kind !== 'keyup')) return
   window.dispatchEvent(new KeyboardEvent(d.kind, { code: String(d.code), key: String(d.key ?? ''), repeat: !!d.repeat, bubbles: true }))
 }
 

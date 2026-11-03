@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import './stage.css'
 
 export const LOW = 48
@@ -64,15 +64,24 @@ function Speaker({ cx, cy }: { cx: number; cy: number }) {
   )
 }
 
-export function Stage(props: { held: ReadonlySet<number>; lit?: 'in' | 'out' | 'tonic' | null; children?: ReactNode }) {
+export function Stage(props: { held: ReadonlySet<number>; lit?: 'in' | 'out' | 'tonic' | null; onKey?: (note: number, on: boolean) => void; children?: ReactNode }) {
   const pal = COLORS[props.lit ?? 'in']
+  // clickable keys: press a key, slide across keys, let go anywhere
+  const down = useRef<number | null>(null)
+  const noteAt = (e: React.PointerEvent) => { const n = Number((e.target as Element).getAttribute('data-note')); return Number.isFinite(n) && n > 0 ? n : null }
+  const go = (n: number | null) => { const was = down.current; if (was === n) return; if (was != null) props.onKey?.(was, false); down.current = n; if (n != null) props.onKey?.(n, true) }
+  const keyHandlers = props.onKey ? {
+    onPointerDown: (e: React.PointerEvent) => { const n = noteAt(e); if (n == null) return; e.preventDefault(); e.stopPropagation(); (e.currentTarget as Element).releasePointerCapture?.(e.pointerId); go(n) },
+    onPointerOver: (e: React.PointerEvent) => { if (down.current != null && e.buttons) go(noteAt(e)) },
+    onPointerUp: () => go(null), onPointerLeave: () => go(null), onPointerCancel: () => go(null),
+  } : {}
   const keyEl = (k: Key) => {
     const on = props.held.has(k.note)
     const fill = on ? (k.black ? pal.b : pal.w) : k.black ? '#241b33' : '#f6f0e6'
     return k.black ? (
-      <rect key={k.note} className={'stage-key' + (on ? ' on' : '')} x={k.x} y={KEYS.y} width={BW} height={BH} rx={2.5} fill={fill} />
+      <rect key={k.note} data-note={k.note} className={'stage-key' + (on ? ' on' : '')} x={k.x} y={KEYS.y} width={BW} height={BH} rx={2.5} fill={fill} />
     ) : (
-      <rect key={k.note} className={'stage-key' + (on ? ' on' : '')} x={k.x + 0.6} y={KEYS.y} width={KW - 1.2} height={KEYS.h} rx={3} fill={fill} />
+      <rect key={k.note} data-note={k.note} className={'stage-key' + (on ? ' on' : '')} x={k.x + 0.6} y={KEYS.y} width={KW - 1.2} height={KEYS.h} rx={3} fill={fill} />
     )
   }
   const bx = SCREEN.x - 24, by = SCREEN.y - 24, bw = SCREEN.w + 48, bh = SCREEN.h + 48
@@ -152,14 +161,17 @@ export function Stage(props: { held: ReadonlySet<number>; lit?: 'in' | 'out' | '
       <circle cx="358" cy="732" r="2" fill="#a92f33" />
       {[280, 296, 312, 328, 344, 360].map((x) => <rect key={x} x={x} y="745" width="10" height="5" rx="2.5" fill="#f3d7c0" opacity={0.85} />)}
       <rect x={KEYS.x - 4} y={KEYS.y - 5} width={KEYS.w + 8} height={KEYS.h + 9} rx="5" fill="#2a1a2e" />
-      <g>{KEYLIST.filter((k) => !k.black).map(keyEl)}</g>
-      <g>{KEYLIST.filter((k) => k.black).map(keyEl)}</g>
+      <g className={props.onKey ? 'stage-keys play' : 'stage-keys'} {...keyHandlers}>
+        {KEYLIST.filter((k) => !k.black).map(keyEl)}
+        {KEYLIST.filter((k) => k.black).map(keyEl)}
+      </g>
 
       {/* USB cable */}
       <path d={CABLE_D} fill="none" stroke="#14101f" strokeWidth="7" strokeLinecap="round" />
       <path d={CABLE_D} fill="none" stroke="#5b5878" strokeWidth="3.5" strokeLinecap="round" />
 
-      {/* arms and hands (over keyboard) */}
+      {/* arms and hands (over keyboard); clicks pass through to the keys */}
+      <g pointerEvents="none">
       <path d="M182 622 L166 698" stroke="#37b3a4" strokeWidth="38" strokeLinecap="round" fill="none" />
       <path d="M166 698 L214 780" stroke="#e8ae80" strokeWidth="28" strokeLinecap="round" fill="none" />
       <path d="M342 622 L366 698" stroke="#2d9488" strokeWidth="38" strokeLinecap="round" fill="none" />
@@ -168,8 +180,9 @@ export function Stage(props: { held: ReadonlySet<number>; lit?: 'in' | 'out' | '
       <ellipse cx="316" cy="790" rx="24" ry="14" fill="#e8ae80" />
       {[-16, -8, 0, 8, 16].map((d) => <rect key={d} x={216 + d - 3} y={794} width={6} height={12} rx={3} fill="#e8ae80" />)}
       {[-16, -8, 0, 8, 16].map((d) => <rect key={d + 99} x={316 + d - 3} y={794} width={6} height={12} rx={3} fill="#e8ae80" />)}
+      </g>
 
-      {props.children}
+      <g pointerEvents="none">{props.children}</g>
     </svg>
   )
 }

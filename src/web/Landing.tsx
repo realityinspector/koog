@@ -34,12 +34,15 @@ export function Landing() {
           <a className="ld-card" href="./?play">
             <Icon name="keys" size={28} />
             <h2>Play Koog in your browser</h2>
-            <p>Computer keyboard only.</p>
+            <p>Play with the computer keyboard (Z X C V…) or click the keys on screen.</p>
+            <span className="ld-go">Start playing →</span>
           </a>
           <a className="ld-card" href="./teacher/">
             <Icon name="user" size={28} />
             <h2>Teacher demo</h2>
-            <p>An illustrated view of a student at a keyboard, with live labels showing what Koog does and what the student is learning.</p>
+            <p>For a projector: a drawing of a student at a keyboard and a laptop running Koog live, with labels that explain what Koog does and what the student is learning.</p>
+            <span className="ld-go">Open the teacher demo →</span>
+            <em className="ld-go-note">Then press <b>Start full screen</b>.</em>
           </a>
         </section>
       ) : (

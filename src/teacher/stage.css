@@ -1,3 +1,5 @@
 .stage-key { transition: fill 80ms linear, transform 80ms ease-out; }
 .stage-key.on { transform: translateY(2.5px); }
 @media (prefers-reduced-motion: reduce) { .stage-key { transition: none; } }
+.stage-keys.play .stage-key { cursor: pointer; touch-action: none; }
+.stage-keys.play .stage-key:not(.on):hover { filter: brightness(.93); }
