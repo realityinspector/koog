@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import './smartband.css'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { STYLES, getState, getVersion, panic, setStyle, setVolume, subscribe, toggle, MASTER_CAP, type BandStyle } from './engine'
+import { useOnePop } from '../../ui/onePop'
 
 interface Saved { style?: BandStyle; volume?: number }
 
@@ -16,6 +17,7 @@ export function SmartBandChip({ pill = false }: { pill?: boolean } = {}) {
   useSyncExternalStore(subscribe, getVersion)
   const S = getState()
   const [open, setOpen] = useState(false)
+  useOnePop('band', open, () => setOpen(false))
 
   useEffect(() => {
     applySaved()

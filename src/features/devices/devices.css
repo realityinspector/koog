@@ -23,3 +23,15 @@
 .kg-dev-none, .kg-dev-note { margin: 6px 0 0; font-size: 12px; color: #b9b6d8; }
 
 .kg-dev-pop { max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; }
+
+/* USB foot pedal */
+.kg-pedal { margin-top: 14px; }
+.kg-pedal-opt { margin-left: 6px; font-weight: 600; letter-spacing: .06em; text-transform: none; color: var(--k-ink-3, #9a95bf); }
+.kg-pedal-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.kg-pedal-row b { color: var(--k-accent, #ffb43c); }
+.kg-pedal-wait { flex: 1; color: var(--k-accent, #ffb43c); font-weight: 600; }
+.kg-pedal-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.kg-pedal-led { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #3a3658; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6); transition: background .08s; }
+.kg-pedal-led.on { background: var(--k-accent, #ffb43c); box-shadow: 0 0 6px rgba(255, 180, 60, .8); }
+.kg-pop .kg-pedal-setup, .kg-dev-pop .kg-pedal-setup { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .kg-pedal-led { transition: none; } }

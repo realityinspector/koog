@@ -3,6 +3,7 @@ import './mimic.css'
 import { STYLES, NOTICE, styleById, type StyleDef } from '../../music/styles'
 import { seenCount, markSeen } from '../../coach/coachBus'
 import { finishTrial, getState, getVersion, playQuote, demo, setBacking, setFilter, setOn, setStyle, setVolume, startTrial, subscribe, toggle, type Shown } from './engine'
+import { useOnePop } from '../../ui/onePop'
 
 const hue = (i: number) => (i * 23 + 200) % 360
 
@@ -83,6 +84,7 @@ export function MimicChip({ launcher = false }: { launcher?: boolean } = {}) {
   useSyncExternalStore(subscribe, getVersion)
   const S = getState()
   const [open, setOpen] = useState(false)
+  useOnePop('mimic', open, () => setOpen(false))
   const [credit, setCredit] = useState('')
   const st = styleById(S.styleId)
   useEffect(() => {

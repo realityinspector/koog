@@ -1,6 +1,5 @@
 // BOSS STUDIO: the display of Boss (Dad) mode. No visualizer here: the display is the studio workspace itself.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { LoopStation } from '../loopstation/LoopStation'
 import { EmulatorPanel } from '../synth-history/EmulatorPanel'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
@@ -9,7 +8,7 @@ import { stopAll as stopLoops } from '../loopstation/loopEngine'
 import { setGuide } from '../loopstation/guide'
 import { useProfile } from '../../profile/profile'
 import { setSheetOn, useSheet } from '../../music/scoreStore'
-import { MixerPanel, MonitorPanel, Panel, RackPanel, RoutingPanel, ScenesPanel, SessionHeader, Lcd } from './ProParts'
+import { MixerPanel, MonitorPanel, RackPanel, RoutingPanel, SessionHeader, Lcd } from './ProParts'
 import { setDiag, setStage, startLoadProbe, useBoss } from './bossStore'
 import { mixerClose } from './mixer'
 import { startMonitor, stopMonitor } from './monitor'
@@ -89,25 +88,21 @@ export function ProStudio({ diag }: { diag: ReactNode }) {
   useBossSession()
   const stage = useBoss((s) => s.stage)
   const showDiag = useBoss((s) => s.diag)
-  const page = useBoss((s) => s.page)
   const [emu, setEmu] = useState<string | null>(null)
   return (
     <div className="bx-ws" data-boss>
       {stage ? <Stage /> : (
         <>
           <SessionHeader onDiag={() => setDiag(!showDiag)} />
-          <div className="bx-grid" data-page={page}>
+          <div className="bx-grid">
             <MixerPanel />
             <RackPanel openEmu={setEmu} />
             <RoutingPanel />
-            <Panel title="Loop station" cls="bx-loops pg-b"><LoopStation compact /></Panel>
-            <MonitorPanel />
-            <ScenesPanel />
           </div>
         </>
       )}
       {emu && <div className="bx-over"><EmulatorPanel key={emu} id={emu} onBack={() => setEmu(null)} /></div>}
-      {showDiag && !stage && <div className="bx-over bx-diag"><div className="bx-ph"><h3>⋯ Diagnostics</h3><button className="bx-b" onClick={() => setDiag(false)}>CLOSE</button></div><div className="bx-diag-body">{diag}</div></div>}
+      {showDiag && !stage && <div className="bx-over bx-diag"><div className="bx-ph"><h3>⋯ Diagnostics</h3><button className="bx-b" onClick={() => setDiag(false)}>CLOSE</button></div><div className="bx-diag-body"><MonitorPanel />{diag}</div></div>}
     </div>
   )
 }

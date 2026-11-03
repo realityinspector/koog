@@ -4,6 +4,7 @@ import { useHarmonyStore } from '../../music/harmonyStore'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
 import { KeyPopover } from './KeyPopover'
 import { useJudge } from '../../music/judge'
+import { useOnePop } from '../../ui/onePop'
 
 type TipId = 'key' | 'power' | 'boom'
 const TIPS: Record<TipId, { title: string; text: string }> = {
@@ -55,6 +56,7 @@ function mult(streak: number) {
 export function SmartReadout() {
   const { key, autoDetect, streak, bestStreak, chord, lastJudgement } = useHarmonyStore()
   const [open, setOpen] = useState(false)
+  useOnePop('key', open, () => setOpen(false))
   const [tip, setTip] = useState<TipId | null>(null)
   const keyText = `${PC_NAMES[key.tonic]} ${SCALE_LABEL[key.scale]}`
   const m = mult(streak)

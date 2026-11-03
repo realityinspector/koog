@@ -3,6 +3,7 @@ import { THEMES, type Mode, type Theme } from './engine'
 import { useVibes } from '../../music/vibes'
 import './vizcontrols.css'
 import { Icon } from '../../ui/Icon'
+import { useOnePop } from '../../ui/onePop'
 
 export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'fireworks', icon: '🎆', label: 'Fireworks' },
@@ -39,6 +40,8 @@ export function VizControls(p: Props) {
   const box = useRef<HTMLDivElement>(null)
   const sceneBox = useRef<HTMLDivElement>(null)
   const [sceneOpen, setSceneOpen] = useState(false)
+  useOnePop('viz-style', open, () => setOpen(false))
+  useOnePop('viz-scene', sceneOpen, () => setSceneOpen(false))
   const [toast, setToast] = useState<{ n: number; icon: string; label: string } | null>(null)
   const cur = VISUALS.find((v) => v.id === p.mode) ?? VISUALS[0]
   const pick = (m: Mode) => {

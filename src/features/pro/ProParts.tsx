@@ -18,7 +18,7 @@ import { SplitControl } from '../split/SplitControl'
 import { CHANNELS, mixerOpen, setFader, toggleMute, toggleSolo, useMixer } from './mixer'
 import { clearMonitor, monitorMessages, setMonitor, useMonitor } from './monitor'
 import { panicAll } from './panic'
-import { setPage, setStage, useBoss } from './bossStore'
+import { setStage, useBoss } from './bossStore'
 import { SLOTS, recallScene, saveScene, useScenes } from './scenes'
 import './pro.css'
 
@@ -41,7 +41,6 @@ export function SessionHeader({ onDiag }: { onDiag: () => void }) {
   const auto = useHarmonyStore((s) => s.autoDetect)
   const chord = useHarmonyStore((s) => s.chord)
   const load = useBoss((s) => s.load)
-  const page = useBoss((s) => s.page)
   const [bpmText, setBpmText] = useState<string | null>(null)
   return (
     <div className="bx-head">
@@ -54,22 +53,21 @@ export function SessionHeader({ onDiag }: { onDiag: () => void }) {
         <button className="bx-b" onClick={() => setBpm(m.bpm + 1)} aria-label="Faster">+</button>
         <button className="bx-b" onClick={() => tapTempo()} title="Tap tempo">TAP</button>
         <button className={'bx-b' + (m.running ? ' on' : '')} aria-pressed={m.running} onClick={() => (m.running ? stopMaster() : startMaster())} title="Start / stop the shared clock">{m.running ? '■' : '▶'}</button>
-        <button className={'bx-b' + (m.link ? ' on' : '')} aria-pressed={m.link} onClick={() => setLink(!m.link)} title="Link: the beat machine follows this tempo (the DJ decks already drive it)">LINK</button>
-        {m.following && <span className="bx-tag" title="Following the DJ deck">DJ SYNC</span>}
+        <button className={'bx-b bx-opt' + (m.link ? ' on' : '')} aria-pressed={m.link} onClick={() => setLink(!m.link)} title="Link: the beat machine follows this tempo (the DJ decks already drive it)">LINK</button>
+        {m.following && <span className="bx-tag bx-opt" title="Following the DJ deck">DJ SYNC</span>}
       </div>
-      <div className="bx-grp">
+      <div className="bx-grp bx-keygrp">
         <Lcd label="KEY">
           <select aria-label="Key" className="bx-sel" value={key.tonic} onChange={(e) => useHarmonyStore.getState().setKey({ ...key, tonic: +e.target.value })}>{PC_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select>
           <select aria-label="Scale" className="bx-sel" value={key.scale} onChange={(e) => useHarmonyStore.getState().setKey({ ...key, scale: e.target.value as ScaleType })}>
             {(Object.keys(SCALE_LABEL) as ScaleType[]).map((s) => <option key={s} value={s}>{SCALE_LABEL[s]}</option>)}</select>
         </Lcd>
-        <button className={'bx-b' + (auto ? ' on' : '')} aria-pressed={auto} onClick={() => useHarmonyStore.getState().setAutoDetect(!auto)} title="Detect the key from what is played">AUTO</button>
+        <button className={'bx-b bx-opt' + (auto ? ' on' : '')} aria-pressed={auto} onClick={() => useHarmonyStore.getState().setAutoDetect(!auto)} title="Detect the key from what is played">AUTO</button>
         <Lcd label="CHORD">{chord ?? '–'}</Lcd>
       </div>
       <div className="bx-grp bx-right">
         <Lcd label="LOAD"><span className={load > 40 ? 'hot' : ''}>{load}%</span></Lcd>
         <button className="bx-b bx-panic" onClick={panicAll} title="All notes off, everywhere">PANIC</button>
-        <span className="bx-seg bx-page" role="group" aria-label="Workspace page"><button className={page === 'a' ? 'on' : ''} aria-pressed={page === 'a'} onClick={() => setPage('a')}>MIX</button><button className={page === 'b' ? 'on' : ''} aria-pressed={page === 'b'} onClick={() => setPage('b')}>LOOPS</button></span>
         <button className="bx-b" onClick={() => setStage(true)} title="Performance view">STAGE</button>
         <button className="bx-b" onClick={onDiag} title="MIDI, pre-flight and test tools">⋯ diag</button>
       </div>
@@ -126,7 +124,7 @@ export function RackPanel({ openEmu }: { openEmu?: (id: string) => void }) {
   const sound = useSound((s) => s.id)
   const p = useSyncParams()
   return (
-    <Panel title="Instrument rack" cls="bx-rack">
+    <Panel title="Sound" cls="bx-rack">
       <div className="bx-chips" role="group" aria-label="Piano sound">
         {SOUNDS.map((s) => <button key={s.id} className={'bx-chip' + (sound === s.id ? ' on' : '')} aria-pressed={sound === s.id} onClick={() => { chooseSound(s.id); void unlockAudio() }}>{s.icon} {s.label}</button>)}
       </div>

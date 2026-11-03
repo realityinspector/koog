@@ -3,6 +3,7 @@ import { useAudioSettings, setVolume, setMuted, setComputerSound } from '../../m
 import { unlockAudio } from '../../music/localNotes'
 import './audio.css'
 import { Icon } from '../../ui/Icon'
+import { useOnePop } from '../../ui/onePop'
 
 const WIDE = '(min-width: 1100px)'
 
@@ -13,6 +14,7 @@ export function AudioControls() {
   const computer = useAudioSettings((s) => s.computerSound)
   const [wide, setWide] = useState(() => typeof matchMedia === 'function' && matchMedia(WIDE).matches)
   const [pop, setPop] = useState(false)
+  useOnePop('volume', pop, () => setPop(false))
   const root = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

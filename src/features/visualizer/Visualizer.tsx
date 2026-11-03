@@ -9,6 +9,7 @@ import { PatchDrawer } from './PatchDrawer'
 import { VizControls, VISUALS } from './VizControls'
 import { VibesOverlay, VibesChip } from '../vibes/VibesOverlay'
 import './visualizer.css'
+import { useOnePop } from '../../ui/onePop'
 
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
@@ -29,6 +30,7 @@ export function Visualizer() {
   const [patchOpen, setPatchOpen] = useState(() => {
     try { return localStorage.getItem('koog.viz.patch') === '1' } catch { return false }
   })
+  useOnePop('patch', patchOpen, () => setPatchOpen(false))
   const [played, setPlayed] = useState(false)
   useEffect(() => onNote((n) => { if (n.on) setPlayed(true) }), [])
   const connected = useAppStore((s) => s.midiConnected)

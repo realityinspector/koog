@@ -176,3 +176,25 @@
 .kg-app .pt-btns button { height: 34px; padding: 0 16px; border-radius: var(--k-r-pill); font-size: 13px; font-weight: 600; background: none; border: 1px solid var(--k-line); color: var(--k-ink); box-shadow: none; }
 .kg-app .pt-btns button:first-child { background: var(--k-accent); border-color: transparent; color: #1b1300; }
 .kg-app .pt-tile { border-radius: 8px; font-weight: 700; }
+
+/* Modes popover: two groups. Play-along (one at a time) as three tall cards, helpers as two wide cards. */
+.kg-app .md-sec { margin: 4px 2px 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--k-ink-3); }
+.kg-app .md-sec span { margin-left: 6px; letter-spacing: .04em; text-transform: none; font-weight: 600; color: var(--k-accent); }
+.kg-app .md-grid + .md-sec { margin-top: 14px; }
+.kg-app .md-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.kg-app .md-grid-3 .md-card { grid-template-columns: 1fr auto; grid-template-rows: auto 1fr; align-content: start; align-items: start; }
+.kg-app .md-grid-3 .md-card .md-tx { grid-column: 1 / -1; grid-row: 2; }
+.kg-app .md-grid-3 .md-card .md-sw { grid-column: 2; grid-row: 1; }
+@media (max-width: 640px) { .kg-app .md-grid-3 { grid-template-columns: 1fr; } }
+
+/* PLAY display, top-right: one tidy cluster. [play-along chip][MODES] on top, the mood face under MODES.
+   Mimic and Band never run together (Modes makes them pick-one), so they share the same slot. */
+.kg-app .kg-display .mm-wrap, .kg-app .kg-display .sb.sb-pill { top: 12px; right: 170px; }
+.kg-app .kg-display .sb.sb-pill { min-height: 38px; }
+.kg-app .kg-display .vibes-chip { top: 58px; right: 14px; }
+@media (max-width: 1279px) {
+  .kg-app .kg-display .mm-wrap, .kg-app .kg-display .sb.sb-pill { top: 108px; right: 14px; }
+}
+/* Mentor's robot never climbs into the readouts when the bottom docks are tall */
+.kg-app .mn-seat, .kg-app .mn-ghost { bottom: min(calc(var(--stack-h, 0px) + 40px), calc(100% - 190px)); }
+.kg-app .mn-bubble { bottom: min(calc(var(--stack-h, 0px) + 56px), calc(100% - 174px)); }

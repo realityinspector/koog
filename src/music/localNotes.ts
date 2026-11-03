@@ -17,9 +17,9 @@ import { PC_NAMES } from './theory'
 import { unlockHost } from '../audio/host'
 
 interface Voice { t: Target; n: number }
-interface St { id: number; held: Set<number>; sounding: Map<string, Voice[]>; midiHeld: Set<number>; off?: () => void }
+interface St { id: number; held: Set<number>; sounding: Map<string, Voice[]>; midiHeld: Set<number>; sus?: Map<string, Voice[]>; pedal?: boolean; off?: () => void }
 const st: St = (import.meta.hot?.data.localNotes as St | undefined) ?? { id: 0, held: new Set(), sounding: new Map(), midiHeld: new Set() }
-st.sounding ??= new Map(); st.midiHeld ??= new Set()
+st.sounding ??= new Map(); st.midiHeld ??= new Set(); st.sus ??= new Map()
 // an older version of this module kept one Target per key: let those go quietly before using the new shape
 for (const [k, v] of [...st.sounding]) { if (!Array.isArray(v)) { try { (v as unknown as Target).noteOff(Number(k.slice(1))) } catch { /* ignore */ } st.sounding.delete(k) } }
 
@@ -56,6 +56,8 @@ export async function unlockAudio() {
 function route(key: string, note: number, velocity: number, on: boolean, canUnlock: boolean) {
   if (on) {
     for (const v of st.sounding.get(key) ?? []) v.t.noteOff(v.n)
+    for (const v of st.sus!.get(key) ?? []) v.t.noteOff(v.n) // re-striking a sustained key restarts it
+    st.sus!.delete(key)
     // keyboard zones (split/layer) decide where the note goes; null = single mode or a panel is open
     const hits = routeZones(note, velocity) ?? [{ t: currentTarget(), note, vel: velocity }]
     const voices: Voice[] = hits.map((h) => ({ t: h.t, n: h.note }))
@@ -68,6 +70,7 @@ function route(key: string, note: number, velocity: number, on: boolean, canUnlo
   } else {
     const vs = st.sounding.get(key)
     st.sounding.delete(key)
+    if (st.pedal && vs?.length) { st.sus!.set(key, vs); return } // sustain pedal down: the note rings until the pedal lifts
     for (const v of vs ?? []) v.t.noteOff(v.n)
   }
 }
@@ -92,9 +95,20 @@ function releaseStale() {
     for (const v of vs) if (!ok.has(v.t)) v.t.noteOff(v.n)
     if (keep.length) st.sounding.set(k, keep); else st.sounding.delete(k)
   }
+  for (const [k, vs] of [...st.sus!]) { for (const v of vs) if (!ok.has(v.t)) v.t.noteOff(v.n); const keep = vs.filter((v) => ok.has(v.t)); if (keep.length) st.sus!.set(k, keep); else st.sus!.delete(k) }
 }
 /** Release everything that is sounding (zone/mode change, blur, panic). */
+/** Sustain pedal (the USB foot pedal, see features/pedal): while down, released keys keep ringing; lifting it lets them go. */
+export function setSustain(down: boolean) {
+  st.pedal = down
+  if (down) return
+  for (const vs of st.sus!.values()) for (const v of vs) v.t.noteOff(v.n)
+  st.sus!.clear()
+}
+export const isSustainDown = () => !!st.pedal
 export function releaseAllNotes() {
+  for (const vs of st.sus!.values()) for (const v of vs) v.t.noteOff(v.n)
+  st.sus!.clear(); st.pedal = false
   for (const vs of st.sounding.values()) for (const v of vs) v.t.noteOff(v.n)
   st.sounding.clear(); st.midiHeld.clear(); zonesAllOff()
 }

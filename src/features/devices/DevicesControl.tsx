@@ -4,9 +4,11 @@ import { useDevices, setRole, type DeviceRole } from '../../music/devices'
 import { SOUNDS, chooseSound, useSound } from './soundChoice'
 import { unlockAudio } from '../../music/localNotes'
 import { setScreenMode, useSurface } from '../controller/surface'
-import { SplitControl } from '../split/SplitControl'
+import { PedalSetup } from '../pedal/PedalSetup'
+import { usePedal } from '../pedal/pedal'
 import './devices.css'
 import { Icon } from '../../ui/Icon'
+import { useOnePop } from '../../ui/onePop'
 
 const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['loop', '🔁 Loop'], ['off', 'Off']]
 
@@ -16,6 +18,7 @@ export function DevicesControl() {
   const sound = useSound((s) => s.id)
   const mode = useProfile((s) => s.mode)
   const [open, setOpen] = useState(false)
+  useOnePop('devices', open, () => setOpen(false))
   const root = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
@@ -30,12 +33,15 @@ export function DevicesControl() {
   const surfaceOn = useSurface((s) => s.on)
   const cur = SOUNDS.find((s) => s.id === sound) ?? SOUNDS[0]
   const n = live.length
+  const pedalOn = usePedal((p) => !!p.code && p.action !== 'off')
+  const pedalDown = usePedal((p) => p.down)
   return (
     <div className="kg-dev" ref={root}>
       <button type="button" className={'kg-dev-chip' + (open ? ' open' : '')} aria-expanded={open} aria-haspopup="dialog"
         title={`MIDI devices and piano sound (now: ${cur.label})`} onClick={() => setOpen((o) => !o)}>
         <Icon name="plug" />
         <span className="kg-dev-txt">{n} {n === 1 ? 'device' : 'devices'}</span>
+        {pedalOn && <span className={'kg-pedal-led' + (pedalDown ? ' on' : '')} title="Foot pedal" aria-hidden />}
       </button>
       {open && (
         <div className="kg-dev-pop" role="dialog" aria-label="Devices and sound">
@@ -54,15 +60,18 @@ export function DevicesControl() {
           {live.length === 0 && (
             <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
           )}
-          <h4>🎹 Sound (what the piano plays)</h4>
-          <div className="kg-dev-sounds">
-            {SOUNDS.map((s) => (
-              <button key={s.id} type="button" className={sound === s.id ? 'on' : ''} aria-pressed={sound === s.id}
-                onClick={() => { chooseSound(s.id); void unlockAudio() }}>{s.icon} {s.label}</button>
-            ))}
-          </div>
-          <p className="kg-dev-note">Turn 🔊 Computer sound ON to hear it through the computer.</p>
-          {mode !== 'kid' && <><h4>✂️ Split and layers</h4><SplitControl /></>}
+          {/* Boss mode has the full sound rack and split/layers in STUDIO, so the popover keeps only devices + pedal there */}
+          {mode === 'kid' && <>
+            <h4>Sound (what the piano plays)</h4>
+            <div className="kg-dev-sounds">
+              {SOUNDS.map((s) => (
+                <button key={s.id} type="button" className={sound === s.id ? 'on' : ''} aria-pressed={sound === s.id}
+                  onClick={() => { chooseSound(s.id); void unlockAudio() }}>{s.icon} {s.label}</button>
+              ))}
+            </div>
+            <p className="kg-dev-note">Turn Computer sound ON to hear it through the computer.</p>
+          </>}
+          <PedalSetup />
         </div>
       )}
     </div>

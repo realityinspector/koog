@@ -392,4 +392,11 @@ export const entries: Entry[] = [
     title: '🪶 Making it elegant: one icon style, quiet buttons, one accent color',
     body: 'Designers say "elegant" when nothing is fighting for your eyes. So we went button by button. The colorful emoji on the rail and top bar became simple line icons, all drawn with the same pen thickness. Every button in the top bar is now the same height and shape. We picked ONE highlight color (amber, like a glowing synth light): whatever is selected or is the main thing to press is amber, and everything else stays calm. The readouts on the screen are matching glass tiles. On the keys, the little house that marks the home note became a small amber ring. Challenges no longer show the same challenge twice, songs sit in a neat grid instead of a row that ran off the screen, and games lost the "NEW" stickers (when everything is new, nothing is). Rule of thumb: if two things look different, they should BE different.',
   },
+  {
+    id: 55,
+    time: 'Night',
+    stage: 'ship',
+    title: '🦶 Fewer things open at once, and a foot pedal',
+    body: 'A screen gets messy when lots of things are open at the same time, so we made rules. Rule 1: only ONE pop-up at a time. Open the devices menu and the key picker closes itself. Rule 2: in MODES, DJ + Piano, Band and Mimic all make music next to you, so you pick ONE (two bands playing at once just sounds like noise). Mentor and the Vibes face are helpers, and they can stay on. Rule 3: if something already has its own button, don\'t show it twice. Boss mode\'s studio went from six boxes to three (mixer, sound, routing), because loops and scenes already have their own tabs. NEW: a USB foot pedal! It pretends to be a keyboard key, so Koog asks you to press it once to learn which key it is. Then pick its job: Sustain (notes keep ringing, like a real piano\'s pedal), Loop (tap to record, play and add layers), or Beat (start and stop the drums). Engineers call learning a button like this "MIDI learn", or just "learn".',
+  },
 ]

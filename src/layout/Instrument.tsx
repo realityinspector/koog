@@ -6,6 +6,7 @@ import { useScore, useSheet } from '../music/scoreStore'
 import './instrument.css'
 import koogLogo from '../assets/koog-logo.svg'
 import { Icon } from '../ui/Icon'
+import { useOnePop } from '../ui/onePop'
 
 export type ModeDef = { id: string; icon: ReactNode; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
 
@@ -26,6 +27,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
   // Saved mode may be gone (e.g. DEV after leaving Dad mode): fall back to PLAY.
   const mode = modes.some((m) => m.id === saved) ? saved : 'play'
   const [ideaOpen, setIdeaOpen] = useState(false)
+  useOnePop('idea', ideaOpen, () => setIdeaOpen(false))
   const first = useRef(true)
 
   const select = (id: string) => {
