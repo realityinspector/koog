@@ -1,3 +1,4 @@
+import { isWebDemo } from '../web/webDemo'
 import { useAppStore } from '../store/appStore'
 import { useDevices, roleFor, type Device, type DeviceRole } from '../music/devices'
 import { subscribe, emit, setPorts } from './router'
@@ -134,6 +135,7 @@ async function start() {
   if (keep.access) return attach(keep.access)
   if (keep.requested) return
   keep.requested = true
+  if (isWebDemo()) return // web demo: computer keyboard only
   if (!navigator.requestMIDIAccess) {
     useAppStore.setState({ midiSupported: false })
     return

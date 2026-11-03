@@ -6,6 +6,7 @@
 //   beat     tap = start / stop the beat (master clock)
 // The pedal key is swallowed (so it doesn't also play a note), except while typing in a text box.
 // If pressing the pedal clicks the mouse instead of typing a key, set it to send a key with the pedal's own setup app.
+import { isWebDemo } from '../../web/webDemo'
 import { create } from 'zustand'
 import { setSustain } from '../../music/localNotes'
 import { buttonDown, buttonUp, getSel } from '../loopstation/loopEngine'
@@ -79,12 +80,14 @@ function onUp(e: KeyboardEvent) {
 const onBlur = () => release()
 
 H.off?.()
+if (!isWebDemo()) {
 // capture phase on window: runs before the musical-typing listener, so the pedal key never also plays a note
 window.addEventListener('keydown', onDown, true)
 window.addEventListener('keyup', onUp, true)
 window.addEventListener('blur', onBlur)
 const unPanic = registerPanicTarget('pedal', () => release())
 H.off = () => { window.removeEventListener('keydown', onDown, true); window.removeEventListener('keyup', onUp, true); window.removeEventListener('blur', onBlur); unPanic() }
+}
 
 if (import.meta.hot) {
   import.meta.hot.data.pedal = H

@@ -11,3 +11,4 @@ RESTART.md
 private/
 *.log
 scripts/shots/*.png
+dist-web

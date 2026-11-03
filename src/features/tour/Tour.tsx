@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { isEmbed } from '../../web/webDemo'
 import { isGuest, pload, psave, useProfile } from '../../profile/profile'
 import { TOUR_STEPS, type TourStep } from './steps'
 import { onNote } from '../../music/notes'
@@ -45,7 +46,7 @@ export function Tour() {
   // auto-start once per signed-in player: first the interactive "tap any key" beat
   useEffect(() => {
     window.clearTimeout(later.current); setOpen(false); setPhase('off')
-    if (guest) return
+    if (guest || isEmbed()) return
     if (pload<boolean>('tour', false)) return
     const t = setTimeout(() => setPhase('tap'), 700)
     return () => clearTimeout(t)

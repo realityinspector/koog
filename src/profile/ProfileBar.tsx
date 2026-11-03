@@ -1,3 +1,4 @@
+import { isEmbed } from '../web/webDemo'
 import { useEffect, useRef, useState } from 'react'
 import { checkCode, isGuest, psave, useProfile } from './profile'
 import './profile.css'
@@ -105,7 +106,7 @@ export function WhoIsPlaying() {
   const [err, setErr] = useState<string | null>(null)
   const [hidden, setHidden] = useState(false)
   const [adding, setAdding] = useState(false)
-  if (!isGuest(active) || hidden) return null
+  if (!isGuest(active) || hidden || isEmbed()) return null
 
   const showForm = adding || profiles.length === 0
   const typedExisting = profiles.includes(code.trim().toLowerCase())

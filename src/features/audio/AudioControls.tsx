@@ -4,6 +4,7 @@ import { unlockAudio } from '../../music/localNotes'
 import './audio.css'
 import { Icon } from '../../ui/Icon'
 import { useOnePop } from '../../ui/onePop'
+import { isWebDemo } from '../../web/webDemo'
 
 const WIDE = '(min-width: 1100px)'
 
@@ -63,12 +64,13 @@ export function AudioControls() {
           </div>
         )}
       </div>
-      <button type="button" role="switch" aria-checked={computer} className={'kg-audio-sw' + (computer ? ' on' : '')}
+      {/* the web demo has no USB keyboards, so this switch would do nothing there */}
+      {!isWebDemo() && <button type="button" role="switch" aria-checked={computer} className={'kg-audio-sw' + (computer ? ' on' : '')}
         title="Play your keyboard through the speakers. ON: the notes you play come out of the computer (the Koog synth, or the emulator you have open). OFF: only your keyboard's own sound."
         onClick={() => { const next = !computer; if (next) void unlockAudio(); setComputerSound(next) }}>
         <span className="kg-audio-track" aria-hidden="true"><span className="kg-audio-knob" /></span>
         <span className="kg-audio-label">Computer sound <b>{computer ? 'ON' : 'OFF'}</b></span>
-      </button>
+      </button>}
     </div>
   )
 }

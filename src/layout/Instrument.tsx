@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { isEmbed, isWebDemo } from '../web/webDemo'
 import { StackLayout } from './StackLayout'
 import { Celebration } from '../features/celebrate/Celebration'
 import { useScreen } from './screenStore'
@@ -91,11 +92,11 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
           <header className="kg-strip">
             <span className="kg-badge" aria-label="Koog smart synthesizer"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">smart synth</span></span>
             <div className="kg-strip-mid">{strip}</div>
-            {!lean && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
+            {!lean && !isWebDemo() && !isEmbed() && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
               <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>
             </button>}
             {/* stays mounted when closed so a half-typed idea isn't lost */}
-            {!lean && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}
+            {!lean && !isWebDemo() && !isEmbed() && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}
           </header>
 
           <div className="kg-bezel">

@@ -399,4 +399,11 @@ export const entries: Entry[] = [
     title: '🦶 Fewer things open at once, and a foot pedal',
     body: 'A screen gets messy when lots of things are open at the same time, so we made rules. Rule 1: only ONE pop-up at a time. Open the devices menu and the key picker closes itself. Rule 2: in MODES, DJ + Piano, Band and Mimic all make music next to you, so you pick ONE (two bands playing at once just sounds like noise). Mentor and the Vibes face are helpers, and they can stay on. Rule 3: if something already has its own button, don\'t show it twice. Boss mode\'s studio went from six boxes to three (mixer, sound, routing), because loops and scenes already have their own tabs. NEW: a USB foot pedal! It pretends to be a keyboard key, so Koog asks you to press it once to learn which key it is. Then pick its job: Sustain (notes keep ringing, like a real piano\'s pedal), Loop (tap to record, play and add layers), or Beat (start and stop the drums). Engineers call learning a button like this "MIDI learn", or just "learn".',
   },
+  {
+    id: 56,
+    time: 'Morning',
+    stage: 'ship',
+    title: '🧑‍🏫 A teacher demo, and Koog on the web',
+    body: 'Teachers asked: how do I SHOW a class what Koog does? So Koog got a second front door. The teacher demo is a drawing of a student playing a little keyboard plugged into a laptop, and the laptop is turned around so the whole class can see its screen. The screen is not a picture: it is the real Koog, running live. Labels with numbers explain each step. 1: a key is pressed. 2: the cable carries a tiny message (a dot zooms along the wire). 3: Koog hears the key and the chord. 4: what the student is learning right now, like "C, E and G together make C major". There is also a web version you can try in any browser with a secret demo code, so random visitors stay out. It only uses the computer keys, so for real keyboards and pedals, Koog still runs best on your own computer. Designers call a page like this an "infographic": a picture that explains itself.',
+  },
 ]

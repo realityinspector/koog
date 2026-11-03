@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build:web": "tsc --noEmit && VITE_WEB_DEMO=1 vite build --base=./ --outDir dist-web",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preflight": "node scripts/preflight/run.mjs",

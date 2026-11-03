@@ -82,6 +82,17 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 
 **Hosting for a whole room:** `npm run build` makes a folder of plain static files (`dist/`). Any HTTPS web server can serve it, and stations just open the address in Chrome or Edge. Nothing runs on the server, and no student data is sent to it. (The 💡 Idea box needs the local request inbox, so it's only for home setups.)
 
+### Web demo and teacher demo
+
+`npm run build:web` makes `dist-web/`, a copy of Koog for showing it off. Any static HTTPS host (GitHub Pages, for example) can serve it, at any path.
+
+- It opens on a landing page that asks for a demo code. The code is shared privately, so it isn't printed here.
+- It supports only the computer keyboard. For USB keyboards, pedals and controllers, run Koog on your own computer.
+- The teacher demo lives at `/teacher/` and also works locally at http://localhost:5173/teacher/. It's made for a projector: a drawing of a student at a keyboard plugged into a laptop, turned so the class sees the screen. The screen is Koog running live, and numbered labels explain each step (key press, MIDI message, what Koog hears) and what the student is learning.
+
+![Teacher demo: a drawn student plays a small red keyboard plugged into a laptop. The laptop screen shows Koog live, and numbered labels explain the key press, the MIDI message on the cable, what Koog hears (C major chord) and what the student is learning (C, E and G make C major).](docs/images/08-teacher-demo.jpg)
+
+
 ## Practical details
 
 - **Setup:** a computer with Chrome or Edge, and optionally any class-compliant USB-MIDI keyboard. No keyboard? The on-screen keys and the computer keyboard (`Z S X D C…`) work too.

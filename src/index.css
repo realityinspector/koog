@@ -59,3 +59,5 @@ body { min-height: 100dvh; }
 @media (min-width: 1024px) and (min-height: 640px) { html, body, #root { height: 100dvh; overflow: hidden; } }
 /* panels inside instrument screens should not nest cards in cards */
 .kg-screen:not([data-id='dev']) .kg-screen-body > section { background: none; border: 0; box-shadow: none; margin: 0; }
+
+.kg-keys-chip { display: inline-flex; align-items: center; gap: 6px; height: var(--ctl-h-sm, 28px); padding: 0 10px; border: 1px solid var(--k-line, rgba(255,255,255,.14)); border-radius: 999px; color: var(--k-ink-3, #9a95bf); font-size: 12px; white-space: nowrap; }
