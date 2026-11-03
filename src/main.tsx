@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import { isWebDemo, isEmbed } from './web/webDemo'
 
 const showApp = !isWebDemo() || new URLSearchParams(location.search).has('play')
@@ -13,6 +12,7 @@ async function boot() {
     root.render(<StrictMode><Landing /></StrictMode>)
     return
   }
+  await import('./index.css') // app-wide styles (not for the landing page: they lock page scrolling)
   await import('./midi/connection') // side effect: opens MIDI once, survives HMR (skipped in the web demo)
   const { App } = await import('./App')
   root.render(<StrictMode><App /></StrictMode>)

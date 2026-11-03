@@ -4,6 +4,13 @@
 
 > **Inspired by Moog, coded with Loog, it's... Koog!**
 
+**KOOG is the Koding Synth for Kids:** we make interactive games through classical music.
+*The emotionally aware synth. The curriculum aware synth. The superintelligent synth.*
+
+### ▶ Try it now: **[koog-demo.fly.dev](https://koog-demo.fly.dev)**
+
+No install, no sign-up. Plays with the computer keyboard in Chrome or Edge. The **[teacher demo](https://koog-demo.fly.dev/teacher/)** shows a class what Koog does, live. For USB keyboards and pedals, [run it on your own computer](#setting-it-up).
+
 **Koog is a free, open-source piano and synthesizer app that listens to a child play and turns what it hears into music lessons.** When a student ends a phrase on the home note, Koog says *"Cadence!"* and the fireworks bloom. When they repeat a pattern, it says *"Motif!"* Free play becomes music literacy, and nobody has to stop and lecture.
 
 It runs in Chrome or Edge on any computer. Plug in any USB-MIDI keyboard, or play on the computer keyboard. It has no accounts, no ads, no tracking and no cost.
@@ -88,7 +95,7 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 
 - It opens on a landing page with two choices: play Koog, or the teacher demo. There's no sign-in; the Fly.io setup rate-limits each visitor so the free demo can't be spammed.
 - It supports only the computer keyboard. For USB keyboards, pedals and controllers, run Koog on your own computer.
-- To deploy it to Fly.io: `npm run deploy:fly` (config in `deploy/`; only the built files are uploaded, served by nginx).
+- It's live at https://koog-demo.fly.dev. To deploy your own copy to Fly.io: `npm run deploy:fly` (config in `deploy/`; only the built files are uploaded, served by nginx).
 - The teacher demo lives at `/teacher/` and also works locally at http://localhost:5173/teacher/. It's made for a projector: a drawing of a student at a keyboard plugged into a laptop, turned so the class sees the screen. The screen is Koog running live, and numbered labels explain each step (key press, MIDI message, what Koog hears) and what the student is learning.
 
 ![Teacher demo: a drawn student plays a small red keyboard plugged into a laptop. The laptop screen shows Koog live, and numbered labels explain the key press, the MIDI message on the cable, what Koog hears (C major chord) and what the student is learning (C, E and G make C major).](docs/images/08-teacher-demo.jpg)
