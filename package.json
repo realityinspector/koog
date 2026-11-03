@@ -12,7 +12,8 @@
     "requests": "node scripts/requests-server.mjs",
     "start": "./scripts/start.sh",
     "stop": "./scripts/stop.sh",
-    "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts"
+    "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts",
+    "deploy:fly": "./scripts/deploy-fly.sh"
   },
   "dependencies": {
     "react": "^19.3.1",
