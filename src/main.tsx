@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { isWebDemo, isEmbed } from './web/webDemo'
 
-const showApp = !isWebDemo() || new URLSearchParams(location.search).has('play')
+const showApp = !isWebDemo() || new URLSearchParams(location.search).has('play') || location.hash.startsWith('#/')
 if (isEmbed()) void import('./web/demoBridge')
 
 async function boot() {

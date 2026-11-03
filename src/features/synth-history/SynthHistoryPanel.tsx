@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { consume, linkNote, report, useLinkIn } from '../../links/bus'
+import { getEmu } from './emu'
 import { Timeline } from './Timeline'
 import { SynthPlayground } from './SynthPlayground'
 import { EmulatorPanel } from './EmulatorPanel'
@@ -9,6 +11,16 @@ const TABS = ['Time machine', 'Playground'] as const
 export function SynthHistoryPanel() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Time machine')
   const [emu, setEmu] = useState<{ id: string; preset: number } | null>(null)
+  // Links: open a playable emulator from a canonical link; report which one is open
+  const req = useLinkIn((s) => s.emu)
+  useEffect(() => {
+    if (req === undefined) return
+    consume('emu')
+    if (req && !getEmu(req)) linkNote("That link mentions a synth Koog doesn't have")
+    setEmu(req && getEmu(req) ? { id: req, preset: 0 } : null)
+  }, [req])
+  useEffect(() => { report({ emu: emu?.id ?? null }) }, [emu?.id])
+  useEffect(() => () => report({ emu: null }), [])
   if (emu) return <section className="sh"><EmulatorPanel key={emu.id + emu.preset} id={emu.id} preset={emu.preset} onBack={() => setEmu(null)} /></section>
   return (
     <section className="sh">

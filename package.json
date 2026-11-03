@@ -7,7 +7,11 @@
     "dev": "vite",
     "build:web": "tsc --noEmit && VITE_WEB_DEMO=1 vite build --base=./ --outDir dist-web",
     "build": "tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p server",
+    "typecheck:server": "tsc --noEmit -p server",
+    "server": "node server/index.ts",
+    "build:catalog": "npx --no-install tsx scripts/build-catalog.ts",
+    "check:catalog": "npx --no-install tsx scripts/build-catalog.ts --check",
     "preflight": "node scripts/preflight/run.mjs",
     "requests": "node scripts/requests-server.mjs",
     "start": "./scripts/start.sh",
@@ -16,11 +20,14 @@
     "deploy:fly": "./scripts/deploy-fly.sh"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/webmidi": "^2.1.0",

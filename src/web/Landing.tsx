@@ -26,7 +26,7 @@ const FEATURES: { icon: string; title: string; text: string; img?: string; alt?:
   { icon: 'game', title: 'Interactive games through classical music', text: 'Blast demons by playing Bach and Beethoven, echo a sparring partner, or strut a runway through six eras of music. Only correct, in-time notes score, so winning means playing the piece.', img: gameShot, alt: 'A retro pixel-art game where each enemy is a note' },
   { icon: 'knobs', title: 'A playable history of the synth', text: 'Play emulations of electronic instruments from the 1920 theremin to the 1980s, each linked to a classical piece.', img: historyShot, alt: 'A timeline of playable historic synthesizers' },
   { icon: 'note', title: 'It listens, then names the music', text: 'End a phrase on the home note and Koog says "Cadence!". Repeat a pattern and it says "Motif!". Free play turns into music words.' },
-  { icon: 'trophy', title: 'Challenges, beats and sheet music', text: '16 challenges with badges, 8 original drum grooves, and a grand staff that follows along and writes down what you play.' },
+  { icon: 'trophy', title: 'Challenges, beats and sheet music', text: '15 challenges with badges, 8 original drum grooves, and a grand staff that follows along and writes down what you play.' },
 ]
 
 const STEPS: [string, string][] = [
@@ -59,6 +59,7 @@ export function Landing() {
             <a className="ld-btn" href={PLAY}><Icon name="keys" size={18} /> Play in your browser</a>
             <a className="ld-btn ghost" href={TEACHER}><Icon name="user" size={18} /> Teacher demo</a>
           </div>
+          <p className="ld-fine">Or sit back: <a className="ld-inline" href="./#/gallery">watch the self-playing gallery →</a> (every feature, about 18 minutes, with music).</p>
           <p className="ld-fine">No sign-up, no ads, no tracking. Ages about 6–13.</p>
         </div>
         <figure className="ld-hero-art">

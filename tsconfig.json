@@ -9,6 +9,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "types": ["vite/client", "webmidi"]
   },

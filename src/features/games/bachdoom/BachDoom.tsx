@@ -11,10 +11,11 @@ import { SceneList } from './scene'
 import { buildTextures } from './textures'
 import { buildSprites } from './sprites'
 import { buildFaces, buildGun } from './gunface'
+import { linkNote, report } from '../../../links/bus'
 import './bachdoom.css'
 
 /** BachDoom: a rail shooter where the weapon is a piano. See docs in this folder's modules. */
-export function BachDoom({ onExit }: { onExit: () => void }) {
+export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: string }) {
   const host = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<Game | null>(null)
@@ -98,6 +99,18 @@ export function BachDoom({ onExit }: { onExit: () => void }) {
   }, [])
 
   const game = gameRef.current
+  // Links: preselect a level (it still waits for the Start button) and report the chosen one
+  const levelDone = useRef(false)
+  useEffect(() => {
+    if (!levelId || levelDone.current || !gameRef.current) return
+    levelDone.current = true
+    const i = LEVELS.findIndex((l) => l.id.toLowerCase() === levelId)
+    if (i < 0) { linkNote("That link mentions a level Koog doesn't have"); return }
+    if (!isUnlocked(i, gameRef.current.save?.unlocked ?? 1)) { linkNote("That level isn't open yet. Play on to unlock it"); return }
+    setSel(i); setEpSel(episodeOf(LEVELS[i]))
+  })
+  useEffect(() => { report({ level: sel != null ? LEVELS[sel].id.toLowerCase() : null }) }, [sel])
+  useEffect(() => () => report({ level: null }), [])
   const phase = game?.phase ?? 'title'
   const save = game?.save
   const unlocked = save?.unlocked ?? 1

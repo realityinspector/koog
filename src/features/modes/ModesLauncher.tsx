@@ -78,6 +78,7 @@ export function ModesLauncher() {
           <div className="md-grid md-grid-3">{play.map(card)}</div>
           <div className="md-sec">Helpers</div>
           <div className="md-grid">{helpers.map(card)}</div>
+          <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery' }}>▶ Gallery <span>a self-playing tour of everything</span></button>
         </div>
       )}
     </div>

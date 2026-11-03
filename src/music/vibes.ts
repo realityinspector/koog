@@ -36,6 +36,12 @@ export const useVibes = hot.store ?? make()
 const core = hot.core ?? new VibeCore()
 
 // ---- events for scenes (polled, so there is nothing to unsubscribe) ----
+/** Forget the mood history so the face starts calm again (used between gallery stops). */
+export function resetVibes() {
+  Object.assign(core, new VibeCore())
+  useVibes.setState({ valence: 0, arousal: -0.5, mood: 'calm', intensity: 0.2, reasons: [], chord: null, activity: 0 })
+}
+
 export type VibeEvent = (VibeEv | { type: 'mood'; mood: MoodId; prev: MoodId }) & { seq: number; t: number }
 interface Ring { seq: number; list: VibeEvent[] }
 const ring: Ring = hot.ring ?? { seq: 0, list: [] }

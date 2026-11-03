@@ -17,6 +17,7 @@ import { lhAdvance, lhHitIdxs, lhNear, lhPress, makeLh, type LhState } from './l
 import { useScreen } from '../../layout/screenStore'
 import { PhraseTrainer } from '../learn/PhraseTrainer'
 import { songProgress, usePhraseTick } from '../../music/phraseEngine'
+import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -117,6 +118,7 @@ export function SongsPanel() {
   useEffect(() => { if (screen !== 'songs') { setSongId(null); setLearn(false) } }, [screen])
   useEffect(() => { if (!songId) setLearn(false) }, [songId])
   const [mode, setMode] = useState<Mode>('wait')
+  const [learnStart, setLearnStart] = useState<{ phrase?: number; rung?: number } | undefined>()
   const level = useSheetLevel((s) => s.level)
   const [speed, setSpeed] = useState(0.8)
   const [names, setNames] = useState(true)
@@ -131,6 +133,25 @@ export function SongsPanel() {
   const [mine, setMineState] = useState<Song[]>(loadMine)
   const setMine = (l: Song[]) => { setMineState(l); saveMine(l) }
   const song = mine.find((s) => s.id === songId) ?? SONGS.find((s) => s.id === songId) ?? null
+
+  // Links: open a song, its mode, and the Learn-it ladder from a canonical link; report where we are so the address bar can follow.
+  const linkReq = useLinkIn((s) => s.song)
+  useEffect(() => {
+    if (!linkReq) return
+    consume('song')
+    if (linkReq.id == null) { setSongId(null); setLearn(false); return }
+    if (!SONGS.some((x) => x.id === linkReq.id)) { linkNote("That link mentions a song Koog doesn't have"); setSongId(null); setLearn(false); return }
+    setSongId(linkReq.id)
+    setMode(linkReq.mode === 'flow' ? 'flow' : 'wait')
+    setLearnStart(linkReq.mode === 'learn' ? { phrase: linkReq.phrase, rung: linkReq.rung } : undefined)
+    setLearn(linkReq.mode === 'learn')
+  }, [linkReq])
+  const learnOn = learn && !!song
+  useEffect(() => {
+    const id = song && SONGS.some((x) => x.id === song.id) ? song.id : null
+    report({ song: id ? { id, mode: learnOn ? 'learn' : mode === 'flow' ? 'flow' : undefined } : null })
+  }, [song, learnOn, mode])
+  useEffect(() => () => report({ song: null, learn: null }), [])
 
   const lyr = useMemo(() => (song ? buildLyrics(song) : null), [song])
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -415,7 +436,7 @@ export function SongsPanel() {
   return (
     <section className="sg">
       {song && learn ? (
-        <PhraseTrainer key={song.id} song={song} onClose={() => setLearn(false)} />
+        <PhraseTrainer key={song.id} song={song} start={learnStart} onClose={() => { setLearn(false); setLearnStart(undefined) }} />
       ) : song ? (
         <div className="play">
           <div className="bar">

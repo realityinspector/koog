@@ -1,0 +1,12 @@
+{
+  "name": "koog-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Koog API and remote MCP server. Stateless: stores nothing. Deployed beside nginx (see deploy/).",
+  "engines": { "node": ">=24" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

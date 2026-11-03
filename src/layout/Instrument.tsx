@@ -8,6 +8,7 @@ import './instrument.css'
 import koogLogo from '../assets/koog-logo.svg'
 import { Icon } from '../ui/Icon'
 import { useOnePop } from '../ui/onePop'
+import { consume, useLinkIn } from '../links/bus'
 
 export type ModeDef = { id: string; icon: ReactNode; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
 
@@ -37,6 +38,13 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
   }
 
   useEffect(() => { useScreen.setState({ screen: mode }) }, [mode])
+
+  // Links: a canonical link asks for a screen. Wait until this layout (kid or Boss) actually has it.
+  const wantScreen = useLinkIn((s) => s.screen)
+  useEffect(() => {
+    if (wantScreen && modes.some((m) => m.id === wantScreen)) { consume('screen'); select(wantScreen) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantScreen, modes.map((m) => m.id).join()])
 
   // Focus: opening a screen moves focus to its heading; closing returns it to the rail button that opened it.
   const rail = useRef<HTMLElement>(null)

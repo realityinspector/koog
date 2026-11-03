@@ -3,13 +3,14 @@ import { useAppStore, type NoteEvent } from '../../store/appStore'
 import { onNote } from '../../music/notes'
 import { onJudge } from '../../music/judge'
 import { useScreen } from '../../layout/screenStore'
-import { createEngine, type Engine, type Mode, type Theme } from './engine'
+import { createEngine, THEMES, type Engine, type Mode, type Theme } from './engine'
 import { getSynth } from '../synth-history/engine'
 import { PatchDrawer } from './PatchDrawer'
 import { VizControls, VISUALS } from './VizControls'
 import { VibesOverlay, VibesChip } from '../vibes/VibesOverlay'
 import './visualizer.css'
 import { useOnePop } from '../../ui/onePop'
+import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 
 export function Visualizer() {
   const wrap = useRef<HTMLDivElement>(null)
@@ -27,6 +28,21 @@ export function Visualizer() {
     try { return localStorage.getItem('koog.viz.sparkle') !== '0' } catch { return true }
   })
   const [theme, setTheme] = useState<Theme>('rainbow')
+  // Links: set the visual and palette from a canonical link; report both so the address bar can follow
+  const reqVisual = useLinkIn((s) => s.visual), reqPalette = useLinkIn((s) => s.palette)
+  useEffect(() => {
+    if (reqVisual === undefined) return
+    consume('visual')
+    if (VISUALS.some((x) => x.id === reqVisual)) setMode(reqVisual as Mode); else linkNote("That link mentions a picture Koog doesn't have")
+  }, [reqVisual])
+  useEffect(() => {
+    if (reqPalette === undefined) return
+    consume('palette')
+    if (THEMES.some((x) => x.id === reqPalette)) setTheme(reqPalette as Theme); else linkNote("That link mentions a colour set Koog doesn't have")
+  }, [reqPalette])
+  useEffect(() => { report({ visual: mode }) }, [mode])
+  useEffect(() => { report({ palette: theme }) }, [theme])
+  useEffect(() => () => report({ visual: null, palette: null }), [])
   const [patchOpen, setPatchOpen] = useState(() => {
     try { return localStorage.getItem('koog.viz.patch') === '1' } catch { return false }
   })

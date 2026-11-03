@@ -10,6 +10,7 @@ import { loadSave as jSave, BELTS } from './jiujitsu/data'
 import { loadSave as fSave, ERAS } from './fashion/data'
 import { LEVELS } from './bachdoom/levels'
 import { pload } from '../../profile/profile'
+import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 import './games.css'
 
 type GameId = 'zombies' | 'bachdoom' | 'jiujitsu' | 'fashion'
@@ -40,6 +41,20 @@ const dailyPick = (): GameId => GAMES[Math.floor(Date.now() / 864e5) % GAMES.len
 /** GAMES screen: pick a game. The game takes over the whole display while it runs. */
 export function GamesPanel() {
   const [game, setGame] = useState<GameId | null>(null)
+  const [levelReq, setLevelReq] = useState<string | undefined>()
+  // Links: open a game (and a BachDoom level) from a canonical link; report which game is open
+  const linkReq = useLinkIn((s) => s.game)
+  useEffect(() => {
+    if (!linkReq) return
+    consume('game')
+    const g = GAMES.find((x) => x.id === linkReq.id)
+    if (linkReq.id && !g) linkNote("That link mentions a game Koog doesn't have")
+    setGame(g ? g.id : null)
+    setLevelReq(g?.id === 'bachdoom' ? linkReq.level : undefined)
+    if (linkReq.level && g && g.id !== 'bachdoom') linkNote('That game has no levels to pick from')
+  }, [linkReq])
+  useEffect(() => { report({ game }); if (!game) report({ level: null }) }, [game])
+  useEffect(() => () => report({ game: null, level: null }), [])
   const screen = useScreen((s) => s.screen)
   const active = screen === 'games' && game
   useEffect(() => {
@@ -50,7 +65,7 @@ export function GamesPanel() {
 
   const exit = () => setGame(null)
   if (active === 'zombies') return <div className="gm-stage"><ZombieLanes onExit={exit} /></div>
-  if (active === 'bachdoom') return <div className="gm-stage"><BachDoom onExit={exit} /></div>
+  if (active === 'bachdoom') return <div className="gm-stage"><BachDoom onExit={exit} levelId={levelReq} /></div>
   if (active === 'jiujitsu') return <div className="gm-stage"><JiuJitsu onExit={exit} /></div>
   if (active === 'fashion') return <div className="gm-stage"><Fashion onExit={exit} /></div>
   const prog = progress(), daily = dailyPick()

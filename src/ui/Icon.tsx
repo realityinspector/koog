@@ -25,6 +25,7 @@ const P: Record<string, string> = {
   user: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M4 21a8 8 0 0 1 16 0',
   down: 'M6 9l6 6 6-6',
   close: 'M6 6l12 12 M18 6L6 18',
+  link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
 }
 export type IconName = keyof typeof P
 

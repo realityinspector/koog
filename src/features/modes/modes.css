@@ -31,3 +31,7 @@
 @media (prefers-reduced-motion: reduce) { .md-pop { animation: none } }
 @media (max-height: 760px) { .md-card { min-height: 46px; padding-block: 4px; } .md-tx em { font-size: var(--k-fs-xs); } }
 .kg-display[data-screen] .md-wrap { display: none; }
+
+.md-gallery { margin-top: 8px; width: 100%; display: flex; gap: 8px; align-items: baseline; justify-content: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--k-line, rgba(255,255,255,.14)); background: none; color: var(--k-ink-2, #cfcbea); font-size: 13px; font-weight: 600; cursor: pointer; }
+.md-gallery span { font-weight: 400; font-size: 11px; color: var(--k-ink-3, #9a95bf); }
+.md-gallery:hover { color: var(--k-ink, #fff); border-color: var(--k-line-strong, rgba(255,255,255,.3)); }

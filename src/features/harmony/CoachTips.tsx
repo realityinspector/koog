@@ -4,6 +4,7 @@ import { useScreen } from '../../layout/screenStore'
 import { pload, psave } from '../../profile/profile'
 import { useScore } from '../../music/scoreStore'
 import { usePhraseView } from '../../music/phrases'
+import { flags } from '../../links/bus'
 import { useMentor } from '../mentor/mentorStore'
 
 type TipId = 'fizzle' | 'boom' | 'resolve' | 'cadence' | 'motif' | 'charged' | 'phrase'
@@ -36,6 +37,7 @@ export function CoachTips() {
     const off = onJudge((e: JudgeEvent) => {
       let id: TipId | null = e.type === 'cluster' ? (e.boom ? 'boom' : 'fizzle') : e.type === 'resolve' || e.type === 'cadence' || e.type === 'motif' || e.type === 'charged' ? e.type : null
       if (!id) return
+      if (flags.gallery) return // the gallery's placard is the narrator
       // Mentor mode is listening: it names these moments itself, so the coach stays quiet (no duplicate captions)
       if (useMentor.getState().on && id !== 'charged') return
       if (id === 'motif') {

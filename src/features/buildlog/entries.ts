@@ -406,4 +406,11 @@ export const entries: Entry[] = [
     title: '🧑‍🏫 A teacher demo, and Koog on the web',
     body: 'Teachers asked: how do I SHOW a class what Koog does? So Koog got a second front door. The teacher demo is a drawing of a student playing a little keyboard plugged into a laptop, and the laptop is turned around so the whole class can see its screen. The screen is not a picture: it is the real Koog, running live. Labels with numbers explain each step. 1: a key is pressed. 2: the cable carries a tiny message (a dot zooms along the wire). 3: Koog hears the key and the chord. 4: what the student is learning right now, like "C, E and G together make C major". There is also a web version anyone can try in a browser. To stop one visitor from hammering it, the server has a speed limit: too many requests too fast and it says "slow down" (engineers call this rate limiting). It only uses the computer keys, so for real keyboards and pedals, Koog still runs best on your own computer. Designers call a page like this an "infographic": a picture that explains itself.',
   },
+  {
+    id: 57,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🔗 Links to everything, an AI helper, and a self-playing gallery',
+    body: 'Three big ones. 1: every place in Koog now has its own web address. A song in Learn mode on step 2? It has a link. A game, a challenge, a key, the robot mentor switched on? Links. The address bar changes as you move around, and a little link button copies it, so a grown-up can send you straight to the right spot. Engineers call these "deep links", and making sure each spot has exactly ONE address is called "canonical". 2: grown-ups can now ask an AI chatbot "my kid is 8, loves zombies, we have 15 minutes" and it asks Koog\'s new helper server for a plan, with links that open Koog in exactly the right place. The helper remembers nothing about you: it only knows Koog\'s songs and games. That connection is called an API, and the plug that AIs use is called MCP. 3: the GALLERY. Press one button and Koog gives a tour of every single feature by itself, like a museum: a "ghost pianist" plays real songs, beats every challenge and plays the games, while a little card explains each stop. Press any key and it hands the keyboard to you. And the ghost never touches your stars or high scores.',
+  },
 ]

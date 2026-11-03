@@ -57,6 +57,13 @@ function make() { return create<JudgeState>()(() => ({ ...INIT })) }
 // One listener set for the whole session, so subscribers survive edits to this file.
 const listeners: Set<JudgeListener> = (hot?.judgeListeners as Set<JudgeListener> | undefined) ?? new Set()
 
+/** Forget the current moment: BOOM charge, averages, counters and the phrase being tracked (used between gallery stops). */
+export function resetJudge() {
+  useJudge.setState({ ...INIT })
+  win = []; burst = null; lastGroupT = -1e9; prevIoi = null; lastGroup = []; prevMelody = null; phraseLen = 0; intervals = []; recentMelody = []; lastMotifT = 0
+  if (cadenceTimer) { clearTimeout(cadenceTimer); cadenceTimer = null }
+}
+
 export function onJudge(fn: JudgeListener): () => void {
   listeners.add(fn)
   return () => { listeners.delete(fn) }

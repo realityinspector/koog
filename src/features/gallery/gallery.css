@@ -1,0 +1,30 @@
+/* Gallery: calm, dark, museum-like. Fades only (no flashes); slower fades under reduced motion. */
+.gl-root { position: fixed; z-index: 70; pointer-events: none; overflow: hidden; border-radius: 14px; --gl-fade: .45s; }
+@media (prefers-reduced-motion: reduce) { .gl-root { --gl-fade: .9s; } }
+.gl-veil { position: absolute; inset: 0; background: #05030c; opacity: 0; transition: opacity var(--gl-fade) ease; }
+.gl-veil.on { opacity: .96; }
+.gl-card { pointer-events: auto; position: absolute; inset: 0; margin: auto; width: min(520px, calc(100% - 32px)); height: fit-content; padding: 28px 30px; border-radius: 18px; text-align: center;
+  background: rgba(14, 11, 32, .94); border: 1px solid rgba(255, 255, 255, .14); color: var(--k-ink, #f4f2ff); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+.gl-card small { letter-spacing: .28em; text-transform: uppercase; font-size: 11px; color: var(--k-ink-3, #9a95bf); }
+.gl-card h2 { margin: 8px 0 10px; font-size: 26px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--k-ink, #f4f2ff); }
+.gl-card p { margin: 0 0 16px; color: var(--k-ink-2, #cfcbea); font-size: 15px; line-height: 1.45; }
+.gl-card .gl-fine { font-size: 12px; margin: 10px 0 0; }
+.gl-big { display: block; margin: 0 auto 10px; height: 52px; padding: 0 34px; border-radius: 999px; border: 1px solid var(--k-accent, #ffb43c); background: rgba(255, 180, 60, .14); color: var(--k-ink, #fff); font-size: 18px; font-weight: 700; cursor: pointer; }
+.gl-big:hover { background: rgba(255, 180, 60, .24); }
+.gl-link { background: none; border: 0; color: var(--k-ink-3, #9a95bf); font-size: 13px; cursor: pointer; text-decoration: underline; }
+.gl-label { pointer-events: auto; position: absolute; left: 14px; bottom: 56px; max-width: 320px; padding: 12px 14px; border-radius: 12px; background: rgba(14, 11, 32, .88); border: 1px solid rgba(255, 255, 255, .12); color: var(--k-ink, #f4f2ff); backdrop-filter: blur(6px); }
+.gl-label h3 { margin: 2px 0 6px; font-size: 16px; font-weight: 700; }
+.gl-label p { margin: 0 0 6px; font-size: 12.5px; line-height: 1.4; color: var(--k-ink-2, #cfcbea); }
+.gl-label a { color: var(--k-accent, #ffb43c); }
+.gl-room { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--k-accent, #ffb43c); }
+.gl-learn b { color: var(--k-ink, #fff); font-weight: 600; }
+.gl-hold { color: var(--k-ink, #fff) !important; font-weight: 600; }
+.gl-count { font-size: 11px; color: var(--k-ink-3, #9a95bf); }
+.gl-bar { pointer-events: auto; position: absolute; left: 46%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 6px; align-items: center; padding: 5px; border-radius: 999px; background: rgba(14, 11, 32, .88); border: 1px solid rgba(255, 255, 255, .12); max-width: calc(100% - 24px); }
+.gl-bar button, .gl-bar select { height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .05); color: var(--k-ink-2, #cfcbea); font-size: 12px; font-weight: 600; cursor: pointer; }
+.gl-bar select { max-width: 170px; background-color: #15122b; }
+.gl-bar button:hover:not(:disabled) { background: rgba(255, 255, 255, .1); color: var(--k-ink, #fff); }
+.gl-bar button:disabled { opacity: .4; cursor: default; }
+.gl-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .08); }
+.gl-line i { display: block; height: 100%; background: var(--k-accent, #ffb43c); opacity: .8; transition: width .6s ease; }
+.gl-root[data-sheet] .gl-label { bottom: 150px; }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { flags } from '../../links/bus'
 
 export type CelebrateKind = 'badge' | 'gold' | 'best'
 export interface CelebrateOpts { title: string; emoji?: string; kind?: CelebrateKind }
@@ -15,6 +16,8 @@ if (import.meta.hot) import.meta.hot.data.celebrateStore = useCelebrateStore
 let nextId = (import.meta.hot?.data.celebrateId as number | undefined) ?? 1
 
 export function celebrate(opts: CelebrateOpts) {
+  if (flags.gallery) return // no pop-ups over the self-playing tour
+
   const kind = opts.kind ?? 'badge'
   const emoji = opts.emoji ?? (kind === 'gold' ? '🥇' : kind === 'best' ? '⭐' : '🏅')
   if (import.meta.hot) import.meta.hot.data.celebrateId = nextId + 1

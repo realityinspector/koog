@@ -13,13 +13,13 @@
 .kg-app .kg-badge { background: none; border: 0; box-shadow: none; padding: 0 6px 0 2px; align-items: flex-start; }
 .kg-app .kg-sub { font-size: 9px; font-weight: 700; letter-spacing: .3em; color: var(--k-ink-3); margin-top: 3px; padding-left: 2px; }
 /* every strip control: same height, same ghost pill */
-.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold) {
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn) {
   height: var(--c-h); min-height: var(--c-h); box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px;
   border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); box-shadow: none;
   color: var(--k-ink-2); font-size: 13px; font-weight: 600; letter-spacing: 0; transition: background .15s, border-color .15s, color .15s; }
-.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold):hover { background: var(--c-pill-hov); border-color: var(--k-line-strong); color: var(--k-ink); }
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn):hover { background: var(--c-pill-hov); border-color: var(--k-line-strong); color: var(--k-ink); }
 .kg-app .kg-strip :is(.kg-dev-chip.open, .sh-toggle.on, .kg-idea.on) { color: var(--k-ink); border-color: var(--k-accent); background: rgba(255, 180, 60, .08); box-shadow: none; }
-.kg-app .kg-strip :is(.kg-audio-btn, .tour-replay, .pf-hold) { width: var(--c-h); min-width: var(--c-h); padding: 0; justify-content: center; }
+.kg-app .kg-strip :is(.kg-audio-btn, .tour-replay, .pf-hold, .kg-link-btn) { width: var(--c-h); min-width: var(--c-h); padding: 0; justify-content: center; }
 .kg-app .kg-strip .pf-hold { opacity: 1; }
 .kg-app .kg-strip .pf-hold .pf-ring { inset: 2px; }
 .kg-app .kg-strip .pf-hold .pf-lock { display: grid; place-items: center; }
@@ -198,3 +198,8 @@
 /* Mentor's robot never climbs into the readouts when the bottom docks are tall */
 .kg-app .mn-seat, .kg-app .mn-ghost { bottom: min(calc(var(--stack-h, 0px) + 40px), calc(100% - 190px)); }
 .kg-app .mn-bubble { bottom: min(calc(var(--stack-h, 0px) + 56px), calc(100% - 174px)); }
+
+/* link toast + copy-link feedback */
+.kg-link-note { position: fixed; z-index: 90; left: 50%; bottom: 88px; transform: translateX(-50%); max-width: min(480px, calc(100vw - 32px)); padding: 8px 16px; border-radius: 999px; background: rgba(20, 18, 40, .92); border: 1px solid var(--k-line-strong, rgba(255,255,255,.2)); color: var(--k-ink, #f4f2ff); font-size: 13px; font-weight: 600; pointer-events: none; animation: kg-link-note 4.5s ease both; }
+@keyframes kg-link-note { 0% { opacity: 0 } 8% { opacity: 1 } 85% { opacity: 1 } 100% { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .kg-link-note { animation: none; } }

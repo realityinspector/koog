@@ -31,6 +31,10 @@ import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pr
 import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
+import { useEffect } from 'react'
+import { startLinks } from './links/sync'
+import { LinkNote } from './links/LinkNote'
+import { Gallery } from './features/gallery/Gallery'
 import './music/judge'
 import './ui/chrome.css'
 
@@ -39,6 +43,7 @@ export function App() {
   const player = useProfile((s) => s.active)
   const badgeCount = useChallengeStore((s) => Object.keys(s.badges).length)
   const dad = mode === 'dad'
+  useEffect(() => startLinks(), [])
   const modes: ModeDef[] = [
     { id: 'play', icon: <Icon name="keys" />, label: 'PLAY', title: 'Play' },
     { id: 'songs', icon: <Icon name="note" />, label: 'SONGS', title: 'Songs', node: <SongsPanel key={'so-' + player} /> },
@@ -63,6 +68,8 @@ export function App() {
       <ErrorBoundary>
         <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
         <WhoIsPlaying />
+        <LinkNote />
+        <Gallery />
       </ErrorBoundary>
     )
   }
@@ -70,6 +77,8 @@ export function App() {
     <ErrorBoundary>
       <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
+      <LinkNote />
+      <Gallery />
       <Tour />
     </ErrorBoundary>
   )

@@ -9,7 +9,7 @@
 
 ### ▶ Try it now: **[koog-demo.fly.dev](https://koog-demo.fly.dev)**
 
-No install, no sign-up. Plays with the computer keyboard in Chrome or Edge. The **[teacher demo](https://koog-demo.fly.dev/teacher/)** shows a class what Koog does, live. For USB keyboards and pedals, [run it on your own computer](#setting-it-up).
+No install, no sign-up. Plays with the computer keyboard in Chrome or Edge. The **[teacher demo](https://koog-demo.fly.dev/teacher/)** shows a class what Koog does, live, and the **[gallery](https://koog-demo.fly.dev/#/gallery)** is a self-playing, ~18-minute tour of every feature with music. For USB keyboards and pedals, [run it on your own computer](#setting-it-up).
 
 **Koog is a free, open-source piano and synthesizer app that listens to a child play and turns what it hears into music lessons.** When a student ends a phrase on the home note, Koog says *"Cadence!"* and the fireworks bloom. When they repeat a pattern, it says *"Motif!"* Free play becomes music literacy, and nobody has to stop and lecture.
 
@@ -81,6 +81,20 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 - **Memorize a tune (15 min):** SONGS → *Ode to Joy* → 🧠 Learn it. Students climb from Listen to Memory on the first few phrases.
 - **Reward round:** a few minutes of BachDoom or Zombie Lanes. Only correct, in-time notes score.
 
+## Ask an AI to get your kid started
+
+Koog has a small API and a remote [MCP](https://modelcontextprotocol.io) server, so a parent can tell ChatGPT, Claude or Grok "my 7-year-old loves zombies, we have 15 minutes" and get back a short plan, links that open Koog in exactly the right place, instructions for you and a line to read to your kid. It asks a couple of questions first (age, minutes, whether you have a USB keyboard, what your kid likes).
+
+It is stateless: no accounts, nothing about your child is stored or logged. Progress stays in your kid's own browser. Endpoints and the link format are in [docs/api.md](docs/api.md).
+
+- **Claude:** in Settings, open Connectors (some versions say Customize, then Connectors), choose *Add custom connector*, and enter `https://koog-demo.fly.dev/mcp`. No sign-in is needed. Where your plan supports custom connectors; on Team and Enterprise plans an owner adds it for the organization.
+- **ChatGPT:** where your plan supports custom connectors, turn on Developer mode (Settings, Connectors, Advanced), then create a connector with the URL `https://koog-demo.fly.dev/mcp` and no authentication. Or build a custom GPT and import `https://koog-demo.fly.dev/openapi.json` as an Action.
+- **Grok:** add it as a remote MCP tool through the xAI API (`server_url` = `https://koog-demo.fly.dev/mcp`), or just paste `https://koog-demo.fly.dev/llms.txt` into a chat and ask it to follow the instructions.
+
+Menus change often; if yours differs, look for "custom connector" or "MCP server" in the product's help. Any other MCP client can use the same URL (Streamable HTTP, stateless). Without any AI, `curl "https://koog-demo.fly.dev/api/start?age=7&minutes=15&interests=zombies"` gives the same plan as JSON.
+
+Run it yourself with `npm run server` (port 8787). Deploying the demo with `npm run deploy:fly` ships the API beside the static site.
+
 ## Setting it up
 
 ![Setup at home: one computer with Chrome or Edge, an optional USB-MIDI keyboard, and speakers or headphones. 1. Install Node, then run npm install and npm start. 2. Plug in the keyboard, or use the computer keys. 3. Open Koog in Chrome at localhost:5173. 4. Each kid picks a code word, so siblings keep their own stars.](docs/images/setup-home.svg)
@@ -104,6 +118,7 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 ## Practical details
 
 - **Setup:** a computer with Chrome or Edge, and optionally any class-compliant USB-MIDI keyboard. No keyboard? The on-screen keys and the computer keyboard (`Z S X D C…`) work too.
+- **Links to anything:** every screen, song, game, challenge, key and helper has its own link (for example `#/songs/ode/learn?rung=2` or `#/play?key=a-minor&modes=mentor,vibes`). The address bar follows along as you play, and the link button in the top bar copies it. The format is in [docs/api.md](docs/api.md).
 - **Foot pedal (optional):** any single USB foot switch that types a key (most USB "HID" pedals sold for transcription or push-to-talk). Open the devices menu, tap *Set up a USB foot pedal* and press the pedal once. It can then hold notes like a piano's sustain pedal, run the loop station (tap to record, play or overdub, hold to clear), or start and stop the beat. If pressing the pedal clicks the mouse instead, use the pedal's own setup app to make it send a key.
 - **Students:** each student picks a short code word, so siblings or classmates sharing a computer keep separate progress. These are not secure logins (see below).
 - **Hearing and eyesight safety:** volume is capped with a limiter, a panic button stops all sound, visual effects stay at 3 flashes per second or fewer, and Koog respects the computer's "reduce motion" setting.
@@ -128,7 +143,7 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | **🎓 The judge** (everywhere) | Every note is graded for KEY, BEAT and STYLE, and the judge spots *tension → release*, *motifs*, *cadences* and forearm *tone clusters*. Visuals react: good playing launches big, steady fireworks, and slams fizzle… unless you've charged **⚡ BOOM** by playing in key. Then the same slam is a giant finale. The rules are in `src/music/judge.ts`, and the design is in [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md). |
 | **🎮 GAMES** | **Jiu-Jitsu Flow:** echo your training partner's phrases on the beat to move up the positions (real competition points, belts from white to black, and the tap-out lesson). **Runway Remix:** style a model through six eras of music (chords pick the colour palette on the circle of fifths), then play the era's piece to strut the runway. **Zombie Lanes:** zombies walk down lanes lined up with your keys; play the note on the sign to blast them. **BachDoom:** a retro first-person rail shooter where the piece *is* the ammo. Final boss: Bach's Prelude in C (WTC I). A fan-made parody, not affiliated with id Software. |
 | **SONGS** | 🎻 Classical (Bach, Beethoven, Grieg, Satie, Dvořák, Vivaldi, Strauss and more), 🎧 Koog Originals (original pop songs written for this project), 🔥 public-domain Bangers and warm-ups. *Wait* mode pauses for you; *Flow* mode keeps time with a backing beat. Includes a My Songs recorder. |
-| **CHALLENGE** | 16 games, including intervals, echo, black keys only, mirror mode, major or minor, a boss level and a daily challenge. Earns badges, personal bests and confetti. |
+| **CHALLENGE** | 15 games, including intervals, echo, black keys only, mirror mode, major or minor, a boss level and a daily challenge. Earns badges, personal bests and confetti. |
 | **BEATS** | 8 original grooves synthesized in the browser, plus a jam score. |
 | **SYNTH** | How Moog and the analog synthesizer changed music: a timeline from the 1920 theremin to Eurorack, and a quiz. Tap **▶ Play it** on a timeline card to open a playable **emulator** of that instrument: theremin, Ondes Martenot, tonewheel organ, Moog-style modular and mono synths, ARP-style, a Prophet-style polysynth, a 303-style bass with a step sequencer, a Juno-style synth, DX7-style FM, and a Mellotron-style tape keyboard (synthesized; no original recordings). Each one links a classical piece to learn. These are educational emulations, not affiliated with or endorsed by the makers; the names are trademarks of their owners. |
 | **LOG** | A live "behind the scenes" build log in middle-school language. Kids send feature requests with 💡 Idea and get replies as pop-ups. |

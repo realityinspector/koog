@@ -104,3 +104,5 @@ html { scroll-behavior: smooth; }
   .ld-sub { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) { .ld-btn { transition: none; } .ld-btn:hover { transform: none; } }
+.ld-inline { color: var(--k-accent) !important; font-weight: 600; text-decoration: none; }
+.ld-inline:hover { text-decoration: underline; }

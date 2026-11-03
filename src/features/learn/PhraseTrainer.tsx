@@ -8,6 +8,7 @@ import { clearScore } from '../../music/scoreStore'
 import { setSheetLevel, useSheetLevel } from '../../music/sheetLevel'
 import { celebrate } from '../celebrate/celebrate'
 import { SCALES, noteName } from '../../music/theory'
+import { flags, linkNote, report } from '../../links/bus'
 import './learn.css'
 
 const RUNG_INFO: Record<Rung, { icon: string; label: string; ask: string }> = {
@@ -22,7 +23,7 @@ const RUNG_INFO: Record<Rung, { icon: string; label: string; ask: string }> = {
 const stepOf = (m: number) => { const w = SCALES.major; const o = Math.floor(m / 12); const pcv = m % 12; let i = 0; for (let k = 0; k < 7; k++) if (w[k] <= pcv) i = k; return o * 7 + i }
 type NState = 'idle' | 'ok' | 'bad'
 
-export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => void }) {
+export function PhraseTrainer({ song, onClose, start }: { song: Song; onClose: () => void; start?: { phrase?: number; rung?: number } }) {
   usePhraseTick((s) => s.v)
   const level = useSheetLevel((s) => s.level)
   const nbpb = song.beatsPerBar
@@ -42,7 +43,33 @@ export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => vo
   const pinRef = useRef(false); pinRef.current = pinned
   const curRef = useRef(cur); curRef.current = cur
 
-  const pick = useCallback(() => setCur(nextPhrase(song.id, song.notes, nbpb)), [song, nbpb])
+  // Opened from a link: begin at its phrase / rung, but wait for the first key or tap before any sound
+  const startRef = useRef(start)
+  const [waiting, setWaiting] = useState(!!start && !flags.gallery)
+  useEffect(() => {
+    if (!waiting) return
+    const go = () => setWaiting(false)
+    window.addEventListener('keydown', go, { once: true }); window.addEventListener('pointerdown', go, { once: true })
+    return () => { window.removeEventListener('keydown', go); window.removeEventListener('pointerdown', go) }
+  }, [waiting])
+  const pick = useCallback(() => {
+    const s0 = startRef.current // kept (not cleared): React StrictMode runs this effect twice on mount
+    const next = nextPhrase(song.id, song.notes, nbpb)
+    if (s0 && (s0.phrase || s0.rung)) {
+      const ph = s0.phrase ? all.filter((p) => p.size === 1)[s0.phrase - 1] : undefined
+      const rg = s0.rung ? RUNGS[s0.rung - 1] : undefined
+      if ((s0.phrase && !ph) || (s0.rung && !rg)) linkNote("That link mentions a part of the song Koog doesn't have")
+      if (ph) setPinned(true)
+      if (ph || rg) { setCur({ phrase: ph ?? next.phrase, rung: rg ?? (ph ? practiceRung(ph) : next.rung) }); return }
+    }
+    setCur(next)
+  }, [song, nbpb, all])
+  useEffect(() => {
+    const n = cur ? tiny.findIndex((p) => p.id === cur.phrase.id) + 1 : 0
+    report({ learn: cur ? { phrase: n > 0 ? n : undefined, rung: RUNGS.indexOf(cur.rung) + 1 } : null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cur?.phrase.id, cur?.rung])
+  useEffect(() => () => report({ learn: null }), [])
   useEffect(() => { alive.current = true; pick(); return () => { alive.current = false; stopAll(); clearScore('phrase') } }, [pick])
   useEffect(() => onPhraseEvent((e) => {
     if (e.type !== 'chain' || e.to.songId !== song.id) return
@@ -54,7 +81,7 @@ export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => vo
 
   // one pass: (hear it,) then play
   useEffect(() => {
-    if (!cur) return
+    if (!cur || waiting) return
     const { phrase, rung } = cur
     let dead = false
     setStates(phrase.notes.map(() => 'idle')); setTone(''); setMsg(RUNG_INFO[rung].ask)
@@ -82,7 +109,7 @@ export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => vo
     void go()
     return () => { dead = true; cancelRef.current?.(); cancelRef.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run, cur?.phrase.id, cur?.rung])
+  }, [run, cur?.phrase.id, cur?.rung, waiting])
   const cancelRef = useRef<(() => void) | null>(null)
 
   const onClimb = (p: Phrase, to: Rung) => {
@@ -117,6 +144,7 @@ export function PhraseTrainer({ song, onClose }: { song: Song; onClose: () => vo
         <span className="pt-prog" title="phrases you know">{known}/{tiny.length} phrases</span>
       </div>
 
+      {waiting && <div className="pt-chain" role="status">Press any key or tap to begin.</div>}
       {chainMsg && <div className="pt-chain" role="status">{chainMsg}</div>}
 
       <div className={'pt-card ' + tone}>

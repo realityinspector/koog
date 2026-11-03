@@ -104,7 +104,8 @@ export function WhoIsPlaying() {
   const [code, setCode] = useState('')
   const [claim, setClaim] = useState(true)
   const [err, setErr] = useState<string | null>(null)
-  const [hidden, setHidden] = useState(false)
+  // a link that names a screen opens it as a guest: the picker must not cover it
+  const [hidden, setHidden] = useState(() => location.hash.startsWith('#/'))
   const [adding, setAdding] = useState(false)
   if (!isGuest(active) || hidden || isEmbed()) return null
 
