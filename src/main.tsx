@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { isWebDemo, isUnlocked, isEmbed } from './web/webDemo'
+import { isWebDemo, isEmbed } from './web/webDemo'
 
-const showApp = !isWebDemo() || (isUnlocked() && new URLSearchParams(location.search).has('play'))
+const showApp = !isWebDemo() || new URLSearchParams(location.search).has('play')
 if (isEmbed()) void import('./web/demoBridge')
 
 async function boot() {

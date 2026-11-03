@@ -86,7 +86,7 @@ Koog doesn't claim to be research-validated. It borrows well-known ideas from mu
 
 `npm run build:web` makes `dist-web/`, a copy of Koog for showing it off. Any static HTTPS host (GitHub Pages, for example) can serve it, at any path.
 
-- It opens on a landing page that asks for a demo code. The code is shared privately, so it isn't printed here.
+- It opens on a landing page with two choices: play Koog, or the teacher demo. There's no sign-in; the Fly.io setup rate-limits each visitor so the free demo can't be spammed.
 - It supports only the computer keyboard. For USB keyboards, pedals and controllers, run Koog on your own computer.
 - To deploy it to Fly.io: `npm run deploy:fly` (config in `deploy/`; only the built files are uploaded, served by nginx).
 - The teacher demo lives at `/teacher/` and also works locally at http://localhost:5173/teacher/. It's made for a projector: a drawing of a student at a keyboard plugged into a laptop, turned so the class sees the screen. The screen is Koog running live, and numbered labels explain each step (key press, MIDI message, what Koog hears) and what the student is learning.
