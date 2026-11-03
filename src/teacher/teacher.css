@@ -62,3 +62,11 @@ kbd { display: inline-block; min-width: 1.5em; padding: 0 .35em; border-radius: 
 .t-go2 { background: none; border: 1px solid var(--k-line-strong); color: var(--k-ink); }
 .t-intro-small { margin: .8em 0 0; font-size: .8em; color: var(--k-ink-3); }
 @media (prefers-reduced-motion: reduce) { .t-caps span { transition: none; } }
+/* main call to action: quiet until the viewer "gets it", then the amber primary */
+.t-cta { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--k-line-strong); color: var(--k-ink-2); text-decoration: none; font: 600 13px system-ui, sans-serif; transition: background .3s, color .3s, border-color .3s; }
+.t-cta:hover { color: var(--k-accent); border-color: var(--k-accent); }
+.t-cta.on { background: var(--k-accent); border-color: var(--k-accent); color: #1a1200; box-shadow: 0 0 14px rgba(255, 180, 60, .45); }
+.t-full.t-ghost { background: none; border: 1px solid var(--k-line-strong); color: var(--k-ink-2); }
+.t-got { display: inline-block; margin-top: .6em; padding: .35em .9em; border-radius: 99px; background: var(--k-accent); color: #1a1200; text-decoration: none; font-size: .8em; pointer-events: auto; }
+.t-got b { font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .t-cta { transition: none; } }

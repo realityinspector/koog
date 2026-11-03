@@ -37,6 +37,7 @@ export function Teacher() {
   const [pulse, setPulse] = useState(false)
   const [intro, setIntro] = useState(true)
   const [full, setFull] = useState(isFull)
+  const [count, setCount] = useState(0) // notes played so far
   const [u, setU] = useState(0.6) // px per viewBox unit
   const wrap = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
@@ -88,6 +89,7 @@ export function Teacher() {
         setHeld((h) => { const n = new Set(h); if (d.on) n.add(d.note); else n.delete(d.note); return n })
         if (d.on) {
           setLast({ note: d.note, name: d.name, velocity: d.velocity })
+          setCount((c) => c + 1)
           const j = d.judgement as Lit | null
           lastJ.current = j; setLit(j)
           see('notes')
@@ -130,6 +132,9 @@ export function Teacher() {
     return out.slice(0, 2)
   }, [held, last, harm])
 
+  // "got it": a few notes and ideas in, the main call to action becomes the full Koog
+  const got = count >= 10 || seen.size >= 3
+  const APP = '../?play'
   const px = (n: number) => `${(n / W) * 100}%`
   const py = (n: number) => `${(n / H) * 100}%`
   const vel = last?.velocity ?? 0
@@ -150,7 +155,8 @@ export function Teacher() {
           <button type="button" className="t-link" onClick={() => setIntro(true)}>How it works</button>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">GitHub</a>
           <a href="../">Home</a>
-          <button type="button" className="t-full" onClick={toggleFull}><Icon name={full ? 'close' : 'expand'} size={16} />{full ? 'Exit full screen' : 'Full screen'}</button>
+          <button type="button" className={got ? 't-full t-ghost' : 't-full'} onClick={toggleFull}><Icon name={full ? 'close' : 'expand'} size={16} />{full ? 'Exit full screen' : 'Full screen'}</button>
+          <a className={got ? 't-cta on' : 't-cta'} href={APP}><Icon name="keys" size={16} />Play the full Koog</a>
         </nav>
       </header>
       <main className="t-main">
@@ -194,6 +200,7 @@ export function Teacher() {
               <i>4</i><h3>What the student is learning</h3>
               {lessons.length ? lessons.map((l) => <p key={l.h}><b>{l.h}:</b> {l.t}</p>) : <p className="idle">Press a few keys to start.</p>}
               <div className="t-chips">{CONCEPTS.map(([c, label]) => <span key={c} className={seen.has(c) ? 'on' : ''}>{label}</span>)}</div>
+              {got && <a className="t-got" href={APP}>Got it? <b>Play the full Koog →</b></a>}
             </div>
             {intro && (
               <div className="t-intro" role="dialog" aria-label="How the teacher demo works">
