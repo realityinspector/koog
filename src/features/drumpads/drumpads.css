@@ -56,3 +56,48 @@
 }
 @media (prefers-reduced-motion: reduce) { .dp-pad, .dp-pad * { transition: none !important; } .dp-pad.hit { filter: none; } }
 .dp-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* ---- round 2: decks, banks, mute / solo, accent, status, help, phone scroll ---- */
+.dp-status { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
+.dp-status b { font-size: 11px; color: #cfd0ff; white-space: normal; line-height: 1.25; } .dp-status b.go { color: #7dffb1; } .dp-status b.rec { color: #ff9a9a; }
+.dp-status small { opacity: .8; font-size: 11px; line-height: 1.25; min-height: 14px; }
+.dp-decks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dp-deck { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 6px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .03); }
+.dp-deck-t { font-size: 9px; font-weight: 800; letter-spacing: .12em; opacity: .65; }
+.dp-deck .dp-pads { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.dp-pad { position: relative; --vel: 1; }
+.dp-pad.hit { filter: brightness(calc(.95 + var(--vel) * .7)); box-shadow: 0 0 calc(4px + var(--vel) * 14px) hsl(var(--h) 90% 60% / calc(.3 + var(--vel) * .5)), 0 4px 0 hsl(var(--h) 70% 14%); }
+.dp-pad-n { position: absolute; top: 3px; left: 6px; font-size: 9px; font-weight: 900; opacity: .75; letter-spacing: .05em; }
+.dp-pad-m { position: absolute; bottom: 2px; font-size: 8px; font-weight: 900; color: #ffd86c; }
+.dp-pad.muted { opacity: .45; } .dp-pad.solo { border-color: #ffd86c; }
+.dp-big.fill { color: #ffd86c; } .dp-big.fill.on { background: #ffb020; color: #1b1832; border-color: #ffd86c; touch-action: none; }
+.dp-chip.q { box-shadow: 0 0 0 2px #7fe3ff inset; }
+.dp-scroll { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; border-radius: 8px; }
+.dp-grid { display: flex; flex-direction: column; gap: 3px; min-width: 560px; }
+.dp-row { grid-template-columns: 112px repeat(16, minmax(26px, 1fr)) 20px; }
+.dp-rl { display: flex; align-items: stretch; gap: 2px; position: sticky; left: 0; z-index: 2; background: #151136; border: 0; padding: 0; border-radius: 7px; }
+.dp-rlb { flex: 1; min-width: 0; display: flex; align-items: center; gap: 3px; font: inherit; font-size: 10px; color: hsl(var(--h) 90% 82%); background: hsl(var(--h) 50% 20% / .6); border: 1px solid hsl(var(--h) 60% 45% / .6); border-radius: 7px; padding: 0 4px; cursor: pointer; overflow: hidden; white-space: nowrap; }
+.dp-rlb b { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+.dp-ms { font: inherit; font-size: 9px; font-weight: 900; width: 20px; padding: 0; cursor: pointer; border-radius: 5px; color: #cfc9f5; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .18); }
+.dp-ms.m.on { background: #e5484d; color: #fff; } .dp-ms.s.on { background: #ffd86c; color: #1b1832; }
+.dp-row.muted .dp-cell.on { opacity: .35; }
+.dp-row.editing .dp-rlb { box-shadow: 0 0 0 2px #7fe3ff; }
+.dp-acc .dp-rl b { font-size: 9px; letter-spacing: .1em; color: #ffd86c; padding: 0 6px; align-self: center; }
+.dp-cell.acc.on { background: #ffd86c; border-color: #fff3c0; } .dp-cell.accd.on { box-shadow: 0 0 0 2px #ffd86c inset; }
+.dp-cell.pg { border-color: rgba(127, 227, 255, .7); }
+.dp-help { font-size: 11px; border-top: 1px solid rgba(255, 255, 255, .1); padding-top: 6px; } .dp-help summary { cursor: pointer; font-weight: 800; color: #ffd86c; }
+.dp-help dl { margin: 6px 0; display: grid; gap: 4px; } .dp-help dl div { display: grid; grid-template-columns: minmax(120px, 210px) 1fr; gap: 8px; } .dp-help dt { font-weight: 800; color: #7fe3ff; } .dp-help dd { margin: 0; opacity: .9; }
+.dp-help-in { margin: 4px 0; opacity: .85; }
+@media (max-width: 760px) {
+  .dp-row { grid-template-columns: 92px repeat(16, minmax(26px, 1fr)) 18px; gap: 2px; }
+  .dp-rlb b { display: inline; } .dp-rl { justify-content: flex-start; }
+  .dp-cell { min-height: 28px; border-radius: 5px; }
+  .dp-help dl div { grid-template-columns: 1fr; gap: 0; }
+  .dp-pad-e { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .dp-pad.hit { filter: none; box-shadow: none; } }
+@media (max-width: 760px) {
+  .dp-status { flex: 1 1 100%; order: 5; }
+  .dp-head h3 { flex: 1; }
+  .dp-pad-l { font-size: 10px; }
+}

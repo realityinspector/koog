@@ -25,6 +25,10 @@ export interface Piece {
   ui?: UiStep[]
   /** minimum seconds on screen (a song stays until it has finished) */
   seconds?: number
+  /** holiday playlists: the wall label says the season instead of a room */
+  season?: 'thanksgiving' | 'christmas'
+  /** playback speed of a song (1 = as written) */
+  speed?: number
 }
 
 export const ART_ROOMS: Room[] = ['Play', 'Feel', 'Learn', 'History']
@@ -66,8 +70,8 @@ export const PIECES: Piece[] = [
   songScreen('art-song-gymnopedie', 'Slow music', 'gymnopedie', 'Floating piano music from 1888. Every note has room to ring.'),
 
   // ---------------------------------------------------------------- History: sounds from the synth time machine
-  sound('art-organ', 'Tonewheel organ', 'organ', 'ripples', 'sunset', 'jesu', 'The warm, humming organ of the 1930s, rebuilt in code.'),
-  sound('art-strings', 'Tape strings', 'strings', 'rise', 'ocean', 'newworld', 'A 1960s keyboard where every key played a loop of recorded tape.'),
+  sound('art-organ', 'Drawbar organ', 'organ', 'ripples', 'sunset', 'jesu', 'A warm, humming organ in the style of the 1930s, built in code.'),
+  sound('art-strings', 'Tape strings', 'strings', 'rise', 'ocean', 'newworld', 'A tape-style keyboard in the spirit of the 1960s, built in code.'),
   sound('art-bells', 'FM bells', 'bell', 'ripples', 'night', 'twinkle', 'Glassy bells, made by one sound wave bending another.'),
   sound('art-pad', 'Lush pad', 'pad', 'ghost', 'galaxy', 'brahms', 'A soft 1980s synth sound, like a warm cloud under the tune.'),
 ]

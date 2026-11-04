@@ -9,7 +9,9 @@
 // BEAT MACHINE LINK: setLink(true) makes the beat machine (features/beats/engine) follow the master bpm through its own +-20 bpm
 // adjust (setBpmAdj). Minimal on purpose: the master never reads the beat machine back, and the Pro workspace may wire more.
 // State lives in import.meta.hot.data so editing this file never stops the clock.
+import { bpmFromTaps, pushTap } from './tapTempo'
 import { create } from 'zustand'
+import { wClear, wInterval, wTimeout } from '../audio/workerTimer' // the tick and the beat timers run in a worker: not throttled in a hidden tab
 import { getBeat } from '../features/dj/clock'
 import { bpm as beatsBpm, getState as beatsState, setBpmAdj, subscribe as beatsSubscribe } from '../features/beats/engine'
 
@@ -76,7 +78,7 @@ function tick(full = false) {
   while (timeOfBeat(A.nextBeat) <= end) {
     const n = A.nextBeat++
     const at = timeOfBeat(n)
-    window.setTimeout(() => {
+    wTimeout(() => {
       const b: ClockBeat = { n, beat: ((n % 4) + 4) % 4, bar: Math.floor(n / 4), bpm: A.bpm, time: performance.now() }
       emit(beatFns, b)
       if (b.beat === 0) emit(barFns, b)
@@ -90,13 +92,13 @@ export function startMaster() {
   A.running = true; A.t0 = now(); A.b0 = 0; A.nextBeat = 0; bump()
   useMaster.setState({ running: true })
   tick(true) // join the DJ grid straight away (a whole-beat shift is fine before anything plays)
-  if (!timer) timer = window.setInterval(() => tick(), 20)
+  if (!timer) timer = wInterval(() => tick(), 20)
 }
 export function stopMaster() {
   if (!A.running) return
   const b = beatPos()
   A.running = false; A.b0 = b
-  if (timer) { clearInterval(timer); timer = 0 }
+  if (timer) { wClear(timer); timer = 0 }
   useMaster.setState({ running: false, following: false })
 }
 /** put beat 0 at this very moment (a free-running master only: with the DJ playing the grid belongs to the DJ) */
@@ -119,10 +121,9 @@ export function realign(bpm: number, atMs: number, beat: number) {
 }
 /** tap tempo: average of the last few gaps; a pause over 2 s starts a fresh count */
 export function tapTempo(at = now()) {
-  const taps = A.taps
-  if (taps.length && at - taps[taps.length - 1] > 2000) taps.length = 0
-  taps.push(at); if (taps.length > 5) taps.shift()
-  if (taps.length >= 2) setBpm((60000 * (taps.length - 1)) / (taps[taps.length - 1] - taps[0]))
+  A.taps = pushTap(A.taps, at)
+  const b = bpmFromTaps(A.taps)
+  if (b != null) setBpm(b)
 }
 
 // ---------- beat machine link ----------
@@ -138,7 +139,7 @@ export function setLink(on: boolean) { useMaster.setState({ link: on }); if (on)
 
 hot.offBeats?.()
 const offBeats = beatsSubscribe(() => pushToBeats())
-if (A.running && !timer) timer = window.setInterval(() => tick(), 20)
+if (A.running && !timer) timer = wInterval(() => tick(), 20)
 
 if (import.meta.hot) {
   import.meta.hot.data.store = useMaster
@@ -147,6 +148,6 @@ if (import.meta.hot) {
   import.meta.hot.data.bar = barFns
   import.meta.hot.data.tick = tickFns
   import.meta.hot.data.offBeats = offBeats
-  import.meta.hot.dispose(() => { if (timer) clearInterval(timer); import.meta.hot!.data.timer = 0 })
+  import.meta.hot.dispose(() => { if (timer) wClear(timer); import.meta.hot!.data.timer = 0 })
   import.meta.hot.accept()
 }

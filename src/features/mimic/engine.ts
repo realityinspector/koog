@@ -22,13 +22,13 @@ const BASS: Patch = { wave: 'triangle', detune: 0, cutoff: 700, res: 1, fenv: 50
 
 export interface Shown { events: Ev[]; beats: number; label: string; startMs: number; bpm: number; call: number[]; credit?: string }
 interface Trial { active: boolean; startMs: number; notes: PlayedNote[]; result: TraitResult[] | null; held: Map<number, number> }
-interface Voice { end: number; gain: GainNode; stop: () => void }
+interface Voice { start: number; end: number; gain: GainNode; stop: () => void }
 interface State {
   version: number; listeners: Set<() => void>
   on: boolean; styleId: string; filter: boolean; backing: boolean; volume: number
   ctx: AudioContext | null; master: GainNode | null; analyser: AnalyserNode | null
   voices: Voice[]; back: Voice[]
-  listening: boolean; callNotes: { note: number; t: number; dur: number }[]; held: Map<number, number>; callTimer: ReturnType<typeof setTimeout> | null
+  listening: boolean; callNotes: { note: number; t: number; dur: number; vel?: number }[]; held: Map<number, number>; callTimer: ReturnType<typeof setTimeout> | null
   answer: Shown | null; answerTimer: ReturnType<typeof setTimeout> | null; ansCount: number; seed: number
   timer: ReturnType<typeof setTimeout> | null; bar: number; nextBar: number; barSec: number; clockStart: number
   trial: Trial; snapped: { from: number; to: number; at: number } | null
@@ -77,17 +77,22 @@ export function mimicPeak(): number {
   let p = 0; for (const x of b) p = Math.max(p, Math.abs(x)); return p
 }
 
-function reserve(list: Voice[], cap: number, t: number): boolean {
-  for (let i = list.length - 1; i >= 0; i--) if (list[i].end < t - 0.05) list.splice(i, 1)
-  return list.length < cap
+/** room for one more voice sounding at audio time t? Voices that have really finished are dropped; voices scheduled for LATER stay in the list
+ *  (so off / panic can still stop them). The cap counts only the voices that overlap this note. */
+function reserve(list: Voice[], cap: number, t: number, end: number): boolean {
+  const now = S.ctx?.currentTime ?? 0
+  for (let i = list.length - 1; i >= 0; i--) if (list[i].end < now - 0.05) list.splice(i, 1)
+  let overlap = 0
+  for (const v of list) if (v.start < end && v.end > t) overlap++
+  return overlap < cap
 }
 /** schedule one voice at audio time `t` */
 function voice(patch: Patch, t: number, dur: number, note: number, vel: number, group: 'lead' | 'back', bend?: number) {
   const c = S.ctx, m = S.master
   if (!c || !m) return
   const list = group === 'lead' ? S.voices : S.back
-  if (!reserve(list, group === 'lead' ? MAX_VOICES : MAX_BACK, t)) return
   const p = patch, f = mtof(note)
+  if (!reserve(list, group === 'lead' ? MAX_VOICES : MAX_BACK, t, t + Math.max(0.04, dur) + patch.r)) return
   const peak = Math.max(0.02, (vel / 127)) * p.level * 0.5
   const dd = Math.max(0.04, dur)
   const end = t + dd + p.r + 0.06
@@ -122,7 +127,7 @@ function voice(patch: Patch, t: number, dur: number, note: number, vel: number, 
   }
   const all = [...oscs, ...extra]
   for (const o of all) { o.start(t); o.stop(end) }
-  const v: Voice = { end, gain: g, stop: () => { try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(0, c.currentTime, 0.015); for (const o of all) o.stop(c.currentTime + 0.1) } catch { /* ignore */ } } }
+  const v: Voice = { start: t, end, gain: g, stop: () => { try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(0, c.currentTime, 0.015); for (const o of all) o.stop(c.currentTime + 0.1) } catch { /* ignore */ } } }
   list.push(v)
   oscs[0].onended = () => { try { g.disconnect(); flt.disconnect() } catch { /* ignore */ } const i = list.indexOf(v); if (i >= 0) list.splice(i, 1) }
 }
@@ -135,6 +140,8 @@ function play(evs: Ev[], t0: number, bpm: number, patch: Patch) {
   const sec = 60 / bpm
   for (const e of evs) voice(e.kind === 'bass' ? BASS : patch, t0 + e.t * sec, e.dur * sec, e.note, e.vel, e.kind === 'bass' || e.kind === 'chord' ? 'back' : 'lead', e.bend)
 }
+/** average velocity (0..127) of the player's call -> a gain for the answer (0.7..1.25; 80 is neutral) */
+export const answerGain = (avgVel: number) => Math.max(0.7, Math.min(1.25, avgVel / 80))
 function beatSec() { return 60 / currentStyle().bpm }
 /** next time (audio clock) the answer should start: the next beat of the backing, otherwise a short breath after the call */
 function answerStart(): number {
@@ -168,6 +175,9 @@ async function finishCall() {
   S.ansCount++
   const bar = S.backing && S.timer ? S.bar + 1 : S.ansCount * 2
   const ans = makeAnswer(st, notes.map((n) => ({ note: n.note })), { seed: S.seed++ * 977 + notes[0].note, key: key(), bar, index: S.ansCount })
+  // the answer follows how hard you played: a soft call gets a softer answer, a strong one a stronger answer
+  const vs = notes.map((n) => n.vel ?? 0).filter((v) => v > 0)
+  if (vs.length) { const k = answerGain(vs.reduce((a, b) => a + b, 0) / vs.length); for (const ev of ans.events) if (ev.kind !== 'bass' && ev.kind !== 'chord') ev.vel = Math.max(24, Math.min(120, Math.round(ev.vel * k))) }
   const t0 = answerStart()
   play(ans.events, t0, st.bpm, st.patch)
   showAnswer({ events: ans.events, beats: ans.beats, label: ans.label, bpm: st.bpm, call: notes.map((n) => n.note) }, t0)
@@ -182,7 +192,7 @@ function onPlayerNote(e: { id: number; note: number; on: boolean; velocity: numb
     if (S.on) {
       if (S.answer) cancelAnswer() // the player plays again: Koog stops talking
       S.listening = true
-      S.callNotes.push({ note: e.note, t: nowMs(), dur: 0.3 }); S.held.set(e.note, nowMs())
+      S.callNotes.push({ note: e.note, t: nowMs(), dur: 0.3, vel: e.velocity }); S.held.set(e.note, nowMs())
       if (S.callNotes.length > MAX_CALL) S.callNotes.shift()
       if (S.callTimer) clearTimeout(S.callTimer)
       S.callTimer = setTimeout(() => { void finishCall() }, CALL_GAP_MS)

@@ -55,7 +55,7 @@ export const QUESTS: Quest[] = [
     check: (p) => p.detune >= 10 && p.detune <= 25,
   },
   {
-    id: 'theremin', emoji: '🛸', name: 'Slide like a theremin',
+    id: 'theremin', emoji: '🛸', name: 'Slide like a ghost',
     goal: 'Glide over 0.15 s.',
     hint: 'Glide (portamento) makes the pitch slide from one note to the next instead of jumping. Play two different notes in a row.',
     watch: 'You should see streaks connecting one note to the next.',

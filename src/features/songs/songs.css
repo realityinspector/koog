@@ -183,3 +183,10 @@ body:has(.kg-screen:not([hidden]) .sg .stage) .tour-tap { display: none; }
   .sg .sg-info { min-height: 20px; }
   .sg .play { gap: 4px; }
 }
+
+/* Holiday tab: groups per holiday */
+.sg .hol-note { margin: 0 0 10px 2px; font-size: 13px; color: var(--k-ink-2, var(--text-dim)); }
+.sg .hol-note a { color: var(--k-accent, #7c5cff); font-weight: 650; }
+.sg .hol-group { margin-bottom: 14px; }
+.sg .hol-h { font-size: 13px; font-weight: 700; letter-spacing: .06em; margin: 0 0 8px 2px; color: var(--k-ink, #fff); }
+.sg .card-s.t-holiday { --cat: #e5484d; background: var(--k-surface-1); border-color: var(--k-line); }

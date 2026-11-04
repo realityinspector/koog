@@ -1,4 +1,4 @@
-// Moog-style subtractive synth engine. SAFETY: the host 'keys' channel hard cap 0.15, the host limiter, Q clamp, stuck-note guard.
+// classic subtractive synth engine. SAFETY: the host 'keys' channel hard cap 0.15, the host limiter, Q clamp, stuck-note guard.
 // App volume/mute are applied only in src/audio/host.ts; params.level (the Boss KEYS fader) is this engine's own gain in front of the channel.
 import { registerPanicTarget } from '../../music/panic'
 import { createChannel, getCtx, unlockHost } from '../../audio/host'
@@ -18,6 +18,8 @@ const LFO_TARGETS: LfoTarget[] = ['none', 'pitch', 'filter', 'amp']
 interface Voice {
   note: number; oscs: OscillatorNode[]; f1: BiquadFilterNode; f2: BiquadFilterNode; cut: ConstantSourceNode; vca: GainNode; trem?: GainNode
   t: number; released: boolean; timer: number; vel: number
+  /** AudioContext time (s) this voice starts sounding (a timed noteOn: a little in the future) */
+  at: number
 }
 interface Lfo { osc: OscillatorNode; pitchG: GainNode; filtG: GainNode; ampG: GainNode }
 interface Shared { lfo?: Lfo; ctx?: AudioContext; master?: GainNode; analyser?: AnalyserNode; voices: Voice[]; stack: number[]; params: SynthParams; subs?: Set<(p: SynthParams) => void>
@@ -27,6 +29,9 @@ interface Shared { lfo?: Lfo; ctx?: AudioContext; master?: GainNode; analyser?: 
 const hot = import.meta.hot
 const S: Shared = hot ? (hot.data.synth ??= { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }) : { voices: [], stack: [], params: { ...DEFAULT_PARAMS } }
 
+/** Timed notes (the looper): while a noteOn / noteOff with a start time runs, every "now" inside it is `shift` seconds later, so the envelope starts on the audio clock. 0 = exactly as before. */
+let shift = 0
+const tn = (c: AudioContext) => c.currentTime + shift
 const clamp = (v: number, lo: number, hi: number) => (Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : lo)
 const hz = (n: number) => 440 * Math.pow(2, (n - 69) / 12)
 /** Lower voice gain as Q rises so resonance can't get loud. */
@@ -99,12 +104,12 @@ function release(v: Voice, fast = false) {
   if (!c || (v.released && !fast)) return
   v.released = true
   clearTimeout(v.timer)
-  const t = c.currentTime, r = fast ? 0.025 : S.params.release
-  v.vca.gain.cancelScheduledValues(t)
-  v.vca.gain.setValueAtTime(v.vca.gain.value, t)
+  const t = tn(c), r = fast ? 0.025 : S.params.release
+  // a release in the future (timed noteOff) must hold the value the envelope will HAVE at t, not the value it has now
+  const hold = (p: AudioParam) => { if (t > c.currentTime + 0.002 && 'cancelAndHoldAtTime' in p) p.cancelAndHoldAtTime(t); else { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t) } }
+  hold(v.vca.gain)
   v.vca.gain.linearRampToValueAtTime(0, t + r)
-  v.cut.offset.cancelScheduledValues(t)
-  v.cut.offset.setValueAtTime(v.cut.offset.value, t)
+  hold(v.cut.offset)
   for (const o of v.oscs) { try { o.stop(t + r + 0.03) } catch { /* already stopped */ } }
   try { v.cut.stop(t + r + 0.03) } catch { /* already stopped */ }
   window.setTimeout(() => {
@@ -116,7 +121,7 @@ function release(v: Voice, fast = false) {
     if (l) for (const o of v.oscs) { try { l.pitchG.disconnect(o.detune) } catch { /* noop */ } }
     if (l) for (const f of [v.f1, v.f2]) { try { l.filtG.disconnect(f.frequency) } catch { /* noop */ } }
     try { l?.ampG.disconnect(v.trem!.gain) } catch { /* noop */ }
-  }, (r + 0.15) * 1000)
+  }, (r + 0.15 + shift) * 1000)
 }
 
 function ensureGraph() {
@@ -141,7 +146,7 @@ function ensureGraph() {
 function peakCutoff(p: SynthParams) { return clamp(p.cutoff + p.filterEnv, 40, 16000) }
 
 function startEnv(v: Voice) {
-  const c = S.ctx!, p = S.params, t = c.currentTime
+  const c = S.ctx!, p = S.params, t = tn(c)
   const amp = (0.25 + 0.75 * v.vel) * qComp(p.resonance) * 0.5
   const g = v.vca.gain
   g.cancelScheduledValues(t); g.setValueAtTime(0, t)
@@ -154,7 +159,7 @@ function startEnv(v: Voice) {
 }
 
 function makeVoice(note: number, vel: number): Voice {
-  const c = S.ctx!, p = S.params, t = c.currentTime
+  const c = S.ctx!, p = S.params, t = tn(c)
   const o1 = c.createOscillator(), o2 = c.createOscillator()
   o1.type = o2.type = p.wave
   o1.frequency.value = hz(note); o2.frequency.value = hz(note); o2.detune.value = p.detune
@@ -174,7 +179,7 @@ function makeVoice(note: number, vel: number): Voice {
   ensureBend()
   if (S.bend) { S.bend.connect(o1.detune); S.bend.connect(o2.detune) }
   o1.start(t); o2.start(t)
-  const v: Voice = { note, oscs: [o1, o2], f1, f2, cut, vca, trem, t: performance.now(), released: false, timer: 0, vel }
+  const v: Voice = { note, oscs: [o1, o2], f1, f2, cut, vca, trem, t: performance.now(), released: false, timer: 0, vel, at: t }
   v.timer = window.setTimeout(() => release(v), STUCK_MS)
   return v
 }
@@ -205,7 +210,23 @@ const synth: SynthEngine = {
   },
   analyser: () => S.analyser ?? null,
   onParams(fn) { S.subs!.add(fn); return () => { S.subs!.delete(fn) } },
-  noteOn(played, velocity) {
+  noteOn(played, velocity, when) {
+    const c = S.ctx
+    if (c && when != null && Number.isFinite(when)) shift = clamp(when - c.currentTime, 0, 0.5)
+    try { noteOnNow(played, velocity) } finally { shift = 0 }
+  },
+  noteOff(played, when) {
+    const c = S.ctx
+    if (c && when != null && Number.isFinite(when)) shift = clamp(when - c.currentTime, 0, 2)
+    try { noteOffNow(played) } finally { shift = 0 }
+  },
+  panic() {
+    S.stack = []; S.sustained!.clear(); S.tmap!.clear()
+    for (const v of [...S.voices]) release(v, true)
+  },
+}
+function noteOnNow(played: number, velocity: number) {
+  {
     const c = S.ctx
     if (!c || !S.master || c.state !== 'running' || played < 0 || played > 127) return
     const note = clamp(played + 12 * (S.trans ?? 0), 0, 127)
@@ -217,14 +238,14 @@ const synth: SynthEngine = {
       const cur = S.voices.find(v => !v.released)
       if (cur) {
         for (const v of S.voices) if (v !== cur) release(v, true)
-        const t = c.currentTime
+        const t = tn(c)
         for (const o of cur.oscs) { o.frequency.cancelScheduledValues(t); o.frequency.setTargetAtTime(hz(note), t, p.glide / 3) }
         cur.note = note
         clearTimeout(cur.timer); cur.timer = window.setTimeout(() => release(cur), STUCK_MS)
         return
       }
     }
-    const same = S.voices.find(v => v.note === note && !v.released)
+    const same = S.voices.find(v => v.note === note && !v.released && (shift === 0 || v.at < tn(c)))
     if (same) release(same, true)
     while (S.voices.filter(v => !v.released).length >= MAX_VOICES) {
       const oldest = S.voices.filter(v => !v.released).sort((a, b) => a.t - b.t)[0]
@@ -233,17 +254,18 @@ const synth: SynthEngine = {
     const v = makeVoice(note, vel)
     S.voices.push(v)
     startEnv(v)
-  },
-  noteOff(played) {
-    const note = S.tmap!.get(played) ?? played
-    S.tmap!.delete(played)
-    if (S.hold) { S.sustained!.add(note); return } // latched: the key is up but the note rings until HOLD is released
-    releaseNote(note)
-  },
-  panic() {
-    S.stack = []; S.sustained!.clear(); S.tmap!.clear()
-    for (const v of [...S.voices]) release(v, true)
-  },
+  }
+}
+function noteOffNow(played: number) {
+  const note = S.tmap!.get(played) ?? played
+  S.tmap!.delete(played)
+  if (S.hold) { S.sustained!.add(note); return } // latched: the key is up but the note rings until HOLD is released
+  releaseNote(note)
+}
+/** Cancel every voice of this note right now, including ones scheduled to start a moment from now (the looper's stop / mute / clear / undo). */
+export function silenceNote(played: number) {
+  const note = clamp(played + 12 * (S.trans ?? 0), 0, 127)
+  for (const v of [...S.voices]) if (v.note === note || v.note === played) release(v, true)
 }
 
 function releaseNote(note: number) {
@@ -256,14 +278,14 @@ function releaseNote(note: number) {
       const back = S.stack[S.stack.length - 1]
       if (back !== undefined) {
         if (cur.note !== back) {
-          const t = c.currentTime
+          const t = tn(c)
           for (const o of cur.oscs) { o.frequency.cancelScheduledValues(t); o.frequency.setTargetAtTime(hz(back), t, S.params.glide / 3) }
           cur.note = back
         }
       } else release(cur)
       return
     }
-    for (const v of S.voices) if (v.note === note && !v.released) release(v)
+    for (const v of S.voices) if (v.note === note && !v.released && (shift === 0 || v.at < tn(c))) release(v)
   }
 }
 

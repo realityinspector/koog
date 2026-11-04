@@ -6,6 +6,8 @@ export interface NoteEvent {
   name: string
   velocity: number
   on: boolean
+  /** when the key actually went down (performance.now() ms; the MIDI event's own timeStamp), if known */
+  t?: number
 }
 
 export interface AppState {

@@ -1,4 +1,4 @@
-// Prophet-5-spirit: 5 voices, each with two oscillators -> 24 dB lowpass -> amp, plus POLY-MOD: the filter envelope
+// Programmable-polysynth-spirit: 5 voices, each with two oscillators -> 24 dB lowpass -> amp, plus POLY-MOD: the filter envelope
 // (and Osc B) steer Osc A's pitch and the filter cutoff. Filter and amp share the A/D/S/R knobs for simplicity.
 import { adsr, clamp, hz, lp24, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -16,9 +16,10 @@ interface V {
 }
 
 export const prophet: EmuSpec = {
-  id: 'prophet', name: 'Programmable polyphonic synth (Prophet-5 spirit)', year: '1978', skin: 'skin-prophet',
-  blurb: 'The Prophet-5 was the first synth that could play five notes at once AND remember your sounds with a tiny computer chip. Before it, you had to write knob positions on paper! Its "poly-mod" section lets one part of the synth wobble another, which makes bells and metallic tones.',
-  songs: ['canon', 'air', 'jesu', 'prelude', 'minuet'], songWhy: 'The first fully programmable polyphonic synth with memory, so sounds could be saved and recalled on stage.',
+  id: 'five', name: 'Koog Five', year: '1970s style', skin: 'skin-five',
+  inspired: 'the late-1970s programmable polyphonic synths, which played five notes at once and could remember your sounds',
+  blurb: 'A five-voice programmable-style synth: five notes at once, two oscillators per note, a steep low-pass filter and a Cross-mod section where one oscillator wobbles the filter, which makes bells and metallic tones. Chords and pads are its home.',
+  songs: ['canon', 'air', 'jesu', 'prelude', 'minuet'], songWhy: 'Chords and pads shine on a polyphonic synth: these pieces let all five voices sing.',
   ctls: [
     { key: 'wA', label: 'Wave A', min: 0, max: 1, def: 0, kind: 'pick', opts: ['Saw', 'Pulse'], group: 'Oscillators' },
     { key: 'wB', label: 'Wave B', min: 0, max: 1, def: 0, kind: 'pick', opts: ['Saw', 'Pulse'] },
@@ -28,7 +29,7 @@ export const prophet: EmuSpec = {
     { key: 'cutoff', label: 'Cutoff', min: 80, max: 9000, def: 1200, group: 'Filter' },
     { key: 'reso', label: 'Resonance', min: 0, max: 12, def: 2, step: 0.1 },
     { key: 'env', label: 'Env amount', min: 0, max: 7000, def: 2500 },
-    { key: 'pm', label: 'Poly-mod amount', min: 0, max: 1, def: 0, step: 0.01, group: 'Poly-mod' },
+    { key: 'pm', label: 'Cross-mod amount', min: 0, max: 1, def: 0, step: 0.01, group: 'Cross-mod' },
     { key: 'bmod', label: 'Mod: Osc B > cutoff', min: 0, max: 1, def: 0, step: 0.01 },
     { key: 'a', label: 'Attack', min: 0.003, max: 2, def: 0.02, group: 'Envelope' },
     { key: 'd', label: 'Decay', min: 0.02, max: 2.5, def: 0.6 },
@@ -37,8 +38,9 @@ export const prophet: EmuSpec = {
   ],
   presets: [
     { name: 'Warm pad', values: { wA: 0, wB: 0, bdet: 8, int: 2, drift: 6, cutoff: 900, reso: 2, env: 2500, pm: 0, bmod: 0, a: 0.25, d: 0.8, s: 0.7, r: 0.8 } },
-    { name: 'Poly-mod bell', values: { wA: 0, wB: 1, bdet: 0, int: 4, drift: 3, cutoff: 2500, reso: 3, env: 3000, pm: 0.45, bmod: 0.3, a: 0.005, d: 1.0, s: 0.15, r: 1.0 } },
+    { name: 'Cross-mod bell', values: { wA: 0, wB: 1, bdet: 0, int: 4, drift: 3, cutoff: 2500, reso: 3, env: 3000, pm: 0.45, bmod: 0.3, a: 0.005, d: 1.0, s: 0.15, r: 1.0 } },
     { name: 'Brass stab', values: { wA: 0, wB: 0, bdet: 5, int: 2, drift: 4, cutoff: 700, reso: 1, env: 4500, pm: 0.05, bmod: 0, a: 0.04, d: 0.35, s: 0.6, r: 0.2 } },
+    { name: 'Koog glass pad', values: { wA: 0, wB: 1, bdet: 6, int: 4, drift: 5, cutoff: 1600, reso: 2, env: 2200, pm: 0.2, bmod: 0.15, a: 0.3, d: 0.9, s: 0.65, r: 1.0 } },
   ],
   make({ ctx, out }, P) {
     // pulse (about 30% width) as a custom periodic wave

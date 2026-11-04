@@ -1,4 +1,4 @@
-// Moog / Minimoog-style: three detunable oscillators -> 24 dB/oct lowpass (two cascaded biquads) with a filter
+// Classic analog-style mono synth:: three detunable oscillators -> 24 dB/oct lowpass (two cascaded biquads) with a filter
 // envelope, mono with glide. Reference implementation of the EmuSpec contract.
 import { adsr, clamp, hz, lp24, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -6,9 +6,10 @@ import type { EmuSpec } from './types'
 const WAVES: OscillatorType[] = ['sawtooth', 'square', 'triangle']
 
 export const moog: EmuSpec = {
-  id: 'moog', name: 'Voltage-controlled modular / Minimoog-style', year: '1964 / 1970', skin: 'skin-moog',
-  blurb: 'In 1964 Robert Moog showed that one voltage could steer another: oscillators, a filter and an envelope wired together made an instrument. The Minimoog (1970) put that into one wooden box you could carry to a gig, and in 1968 Wendy Carlos proved a synth could play Bach.',
-  songs: ['invention1', 'minuet', 'prelude', 'jesu'], songWhy: 'Wendy Carlos made Bach famous on a Moog in 1968 (Switched-On Bach).',
+  id: 'ladder', name: 'Koog Ladder', year: '1960s-70s style', skin: 'skin-ladder',
+  inspired: 'the 1960s-70s analog synths, where oscillators, a ladder-style filter and envelopes were wired together, and a portable mono synth became a stage instrument',
+  blurb: 'A one-voice-at-a-time analog-style synth: three detunable oscillators feed a steep four-pole low-pass filter, and an envelope opens the filter on each note. Turn Cutoff and Resonance while holding a key to learn how fat bass and soaring leads are made.',
+  songs: ['invention1', 'minuet', 'prelude', 'jesu'], songWhy: 'A classical-meets-electronics classic: a Baroque invention sounds great on a fat analog-style lead.',
   ctls: [
     { key: 'wave', label: 'Wave', min: 0, max: 2, def: 0, kind: 'pick', opts: ['Saw', 'Square', 'Tri'], group: 'Oscillators' },
     { key: 'det2', label: 'Osc 2 tune', min: -50, max: 50, def: 7, step: 1 },
@@ -24,8 +25,9 @@ export const moog: EmuSpec = {
   ],
   presets: [
     { name: 'Fat bass', values: { wave: 0, det2: 6, det3: -6, cutoff: 500, reso: 5, env: 2500, a: 0.005, d: 0.3, s: 0.35, r: 0.15, glide: 0.05 } },
-    { name: 'Carlos-style lead', values: { wave: 1, det2: 4, det3: -4, cutoff: 1800, reso: 2, env: 1800, a: 0.01, d: 0.5, s: 0.6, r: 0.25, glide: 0 } },
+    { name: 'Space-age lead', values: { wave: 1, det2: 4, det3: -4, cutoff: 1800, reso: 2, env: 1800, a: 0.01, d: 0.5, s: 0.6, r: 0.25, glide: 0 } },
     { name: 'Squelchy zap', values: { wave: 0, det2: 0, det3: 12, cutoff: 250, reso: 10, env: 6000, a: 0.003, d: 0.18, s: 0.1, r: 0.12, glide: 0.12 } },
+    { name: 'Koog sunset lead', values: { wave: 1, det2: 7, det3: -5, cutoff: 1500, reso: 3, env: 2200, a: 0.02, d: 0.6, s: 0.55, r: 0.35, glide: 0.06 } },
   ],
   make({ ctx, out }, P) {
     const oscs = [0, 1, 2].map(() => ctx.createOscillator())

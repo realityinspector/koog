@@ -19,7 +19,7 @@ export const PRESETS: Preset[] = [
     params: { wave: 'sawtooth', detune: 6, cutoff: 900, resonance: 3, filterEnv: 4000, attack: 0.08, decay: 0.3, sustain: 0.7, release: 0.2, glide: 0.02, level: 0.65 } },
   { id: 'laser', name: 'Laser zap', emoji: '🔫', blurb: 'A square wave, a very fast decay and a huge filter sweep make a quick "pew!". Short decay and zero sustain are the secret.',
     params: { wave: 'square', detune: 0, cutoff: 6000, resonance: 10, filterEnv: 7000, attack: 0.001, decay: 0.12, sustain: 0, release: 0.08, glide: 0.2, level: 0.5 } },
-  { id: 'wobble', name: 'Wobbly sci-fi', emoji: '🛸', blurb: 'Big glide (portamento) slides between notes like a theremin, and high resonance with a moderate cutoff gives an alien, hollow tone.',
+  { id: 'wobble', name: 'Wobbly sci-fi', emoji: '🛸', blurb: 'Big glide (portamento) slides between notes like a gliding ghost, and high resonance with a moderate cutoff gives an alien, hollow tone.',
     params: { wave: 'triangle', detune: 25, cutoff: 1100, resonance: 12, filterEnv: 2000, attack: 0.15, decay: 0.5, sustain: 0.7, release: 0.5, glide: 0.4, level: 0.55 } },
   { id: 'bells', name: 'Plucky bells', emoji: '🔔', blurb: 'Sine waves are pure. A quick attack, medium decay and zero sustain make each note ring then fade like a struck bell.',
     params: { wave: 'sine', detune: 4, cutoff: 8000, resonance: 1, filterEnv: 2000, attack: 0.002, decay: 0.9, sustain: 0, release: 1.0, glide: 0, level: 0.55 } },

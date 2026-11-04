@@ -5,19 +5,20 @@ import { create } from 'zustand'
 import { setActiveInstrument, onInstrumentChange, getActiveInstrument } from '../../music/instrument'
 import { createEngine, type Engine } from '../synth-history/emu/core'
 import { getEmu } from '../synth-history/emu'
+import { canonSoundId } from '../synth-history/emu/aliases'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 
 export interface SoundChoice { id: string; label: string; icon: string; emu?: string; preset?: string }
 export const SOUNDS: SoundChoice[] = [
   { id: 'koog', label: 'Koog synth', icon: '🎹' },
-  { id: 'organ', label: 'Organ', icon: '⛪', emu: 'hammond', preset: 'Smoky lounge' },
-  { id: 'moog', label: 'Analog-style', icon: '🎛️', emu: 'moog', preset: 'Carlos-style lead' },
-  { id: 'epiano', label: 'Electric piano (FM)', icon: '✨', emu: 'dx', preset: 'Glassy e-piano' },
-  { id: 'bell', label: 'Bells (FM)', icon: '🔔', emu: 'dx', preset: 'Tubular bell' },
-  { id: 'strings', label: 'Strings (tape)', icon: '🎻', emu: 'mellotron', preset: 'Dreamy strings' },
-  { id: 'choir', label: 'Choir (tape)', icon: '🎶', emu: 'mellotron', preset: 'Old choir' },
-  { id: 'pad', label: 'Lush pad', icon: '☁️', emu: 'juno', preset: 'Lush pad' },
-  { id: 'brass', label: 'Brass stab', icon: '🎺', emu: 'prophet', preset: 'Brass stab' },
+  { id: 'organ', label: 'Organ', icon: '⛪', emu: 'wheelhouse', preset: 'Smoky lounge' },
+  { id: 'ladder', label: 'Analog-style', icon: '🎛️', emu: 'ladder', preset: 'Space-age lead' },
+  { id: 'epiano', label: 'Electric piano (FM)', icon: '✨', emu: 'bellfm', preset: 'Glassy e-piano' },
+  { id: 'bell', label: 'Bells (FM)', icon: '🔔', emu: 'bellfm', preset: 'Tubular bell' },
+  { id: 'strings', label: 'Strings (tape)', icon: '🎻', emu: 'tapechoir', preset: 'Dreamy strings' },
+  { id: 'choir', label: 'Choir (tape)', icon: '🎶', emu: 'tapechoir', preset: 'Old choir' },
+  { id: 'pad', label: 'Lush pad', icon: '☁️', emu: 'shimmer', preset: 'Lush pad' },
+  { id: 'brass', label: 'Brass stab', icon: '🎺', emu: 'five', preset: 'Brass stab' },
 ]
 const KEY = 'sound.v1'
 
@@ -34,6 +35,7 @@ function dropEngine() {
 }
 
 function apply(id: string) {
+  id = canonSoundId(id)
   const ch = SOUNDS.find((s) => s.id === id) ?? SOUNDS[0]
   dropEngine()
   useSound.setState({ id: ch.id })
@@ -51,7 +53,7 @@ function apply(id: string) {
 export const soundEngine = (): Engine | null => cur.e
 
 /** Pick a sound for the piano (saved for the active kid). */
-export function chooseSound(id: string) { psave(KEY, id); apply(id) }
+export function chooseSound(id: string) { id = canonSoundId(id); psave(KEY, id); apply(id) }
 
 hot.off?.()
 const offProfile = onProfileChange(() => apply(pload<string>(KEY, 'koog')))

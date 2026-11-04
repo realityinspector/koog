@@ -18,7 +18,7 @@ export function GalleryButton() {
   const go = (hash: string) => { setOpen(false); location.hash = hash }
   return (
     <div className="kg-gal" ref={box}>
-      <button className={'kg-gal-btn' + (open ? ' on' : '')} aria-expanded={open} aria-haspopup="menu" aria-label="Gallery" title="Gallery: a guided tour, or calm Art Gallery mode"
+      <button className={'kg-gal-btn' + (open ? ' on' : '')} aria-expanded={open} aria-haspopup="menu" aria-label="Gallery" title="Gallery: a guided tour, calm Art Gallery mode, or the holiday galleries"
         onClick={() => setOpen((v) => !v)}>
         <span aria-hidden>🖼</span> <span className="kg-gal-t">Gallery</span>
       </button>
@@ -29,6 +29,12 @@ export function GalleryButton() {
           </button>
           <button role="menuitem" onClick={() => go('#/gallery/art')}>
             <b>🖼 Art Gallery mode</b><span>Full screen moving art and calm music, loops forever</span>
+          </button>
+          <button role="menuitem" onClick={() => go('#/gallery/art/thanksgiving')}>
+            <b>🍂 Thanksgiving Art Gallery</b><span>Falling leaves, golden lights, calm harvest tunes</span>
+          </button>
+          <button role="menuitem" onClick={() => go('#/gallery/art/christmas')}>
+            <b>🎄 Christmas Art Gallery</b><span>Snow, string lights and old carols</span>
           </button>
         </div>
       )}

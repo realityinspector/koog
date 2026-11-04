@@ -1,4 +1,4 @@
-// ARP 2600-style: semi-modular. Two oscillators, a ring modulator, a lowpass and an envelope, plus a modulator
+// Semi-modular-style: semi-modular. Two oscillators, a ring modulator, a lowpass and an envelope, plus a modulator
 // (sine LFO / square LFO / random sample-and-hold) that you route with "patch cable" sliders to pitch, filter and loudness.
 import { adsr, clamp, hz, lp24, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -6,8 +6,9 @@ import type { EmuSpec } from './types'
 const WAVES: OscillatorType[] = ['sawtooth', 'square', 'triangle']
 
 export const arp: EmuSpec = {
-  id: 'arp', name: 'ARP 2600-style', year: '1971', skin: 'skin-arp',
-  blurb: 'The 2600 was a "semi-modular" synth: it worked out of the box, but sliders and patch cables let you rewire it, so it was great for learning how sound is built. Its sounds were in sci-fi movies and on stage with big rock bands.',
+  id: 'patchbay', name: 'Koog Patchbay', year: '1970s style', skin: 'skin-patchbay',
+  inspired: 'the 1970s semi-modular synths, which worked out of the box but let you rewire them with sliders and patch cables',
+  blurb: 'A semi-modular style synth: it plays right away, but sliders and a patch bay let you rewire what controls the pitch, the filter and the loudness. Great for learning how sound is built. Try the random sample-and-hold setting for robot chatter.',
   songs: ['toccata', 'king', 'invention1', 'prelude'], songWhy: 'Bold, buzzy and wobbly: try the Mountain King with some random sample-and-hold patching.',
   ctls: [
     { key: 'wave1', label: 'Osc 1', min: 0, max: 2, def: 0, kind: 'pick', opts: ['Saw', 'Square', 'Tri'], group: 'Sound' },
@@ -29,6 +30,7 @@ export const arp: EmuSpec = {
     { name: 'Laser zap', values: { wave1: 0, wave2: 1, det2: 700, ring: 0.4, cutoff: 2500, reso: 6, env: 4000, a: 0.003, r: 0.15, src: 1, rate: 12, cPitch: 0.5, cFilt: 0, cAmp: 0 } },
     { name: 'Robot S&H', values: { wave1: 1, wave2: 0, det2: 5, ring: 0, cutoff: 900, reso: 7, env: 1000, a: 0.005, r: 0.2, src: 2, rate: 8, cPitch: 0, cFilt: 0.8, cAmp: 0 } },
     { name: 'Wobble lead', values: { wave1: 0, wave2: 0, det2: 9, ring: 0, cutoff: 1800, reso: 3, env: 800, a: 0.02, r: 0.3, src: 0, rate: 5.5, cPitch: 0.15, cFilt: 0.3, cAmp: 0.1 } },
+    { name: 'Koog bubble pop', values: { wave1: 1, wave2: 0, det2: 12, ring: 0.15, cutoff: 1400, reso: 5, env: 2500, a: 0.004, r: 0.18, src: 2, rate: 6, cPitch: 0.1, cFilt: 0.5, cAmp: 0 } },
   ],
   make({ ctx, out }, P) {
     const o1 = ctx.createOscillator(), o2 = ctx.createOscillator()

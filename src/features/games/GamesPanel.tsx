@@ -5,6 +5,9 @@ import { ZombieLanes } from './zombielanes/ZombieLanes'
 import { BachDoom } from './bachdoom/BachDoom'
 import { JiuJitsu } from './jiujitsu/JiuJitsu'
 import { Fashion } from './fashion/Fashion'
+import { MemoryGame } from './memory/MemoryGame'
+import { HolidayGame } from './holiday/HolidayGame'
+import { loadAll as holidayAll } from './holiday/data'
 import { loadSave as zSave } from './zombielanes/data'
 import { loadSave as jSave, BELTS } from './jiujitsu/data'
 import { loadSave as fSave, ERAS } from './fashion/data'
@@ -13,19 +16,30 @@ import { pload } from '../../profile/profile'
 import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 import './games.css'
 
-type GameId = 'zombies' | 'bachdoom' | 'jiujitsu' | 'fashion'
+type GameId = 'zombies' | 'bachdoom' | 'jiujitsu' | 'fashion' | 'memory' | 'feast' | 'tree'
 const GAMES: { id: GameId; icon: string; title: string; blurb: string; skill: string }[] = [
   { id: 'zombies', icon: '🧟', title: 'Zombie Lanes', blurb: 'Zombies march down the lanes toward your keys. Play the note on the zombie to blast it.', skill: 'Learn where every note lives' },
   { id: 'jiujitsu', icon: '🥋', title: 'Jiu-Jitsu Flow', blurb: 'Roll on the mats. Answer your partner\'s moves with the right notes, keep the flow, and earn your belts.', skill: 'Rhythm, call and response' },
   { id: 'fashion', icon: '👗', title: 'Runway Remix', blurb: 'Style a model through the eras of music, then play the era\'s piece on the beat so they strut the runway.', skill: 'Musical eras and style' },
+  { id: 'memory', icon: '🃏', title: 'Phrase Match', blurb: 'Flip cards to hear short tunes, find the twins, then play each tune back on the keys to win the pair.', skill: 'Ear and memory for phrases' },
+  { id: 'feast', icon: '🦃', title: 'Harvest Feast', blurb: 'Learn a Thanksgiving song step by step, from hunt-and-peck to master. Every phrase you nail puts a dish on the table.', skill: 'Memorize songs, one level at a time' },
+  { id: 'tree', icon: '🎄', title: 'Light the Tree', blurb: 'Learn a Christmas song step by step, from hunt-and-peck to master. Every phrase hangs an ornament, and master puts the star on top.', skill: 'Memorize songs, one level at a time' },
   { id: 'bachdoom', icon: '💀', title: 'BachDoom', blurb: 'Clashing-note demons invade the cathedral. Only real music can stop them. Final boss: Bach\'s Prelude in C.', skill: 'Play real pieces, in time' },
 ]
 
 interface Prog { played: boolean; line: string }
+/** Harvest Feast / Light the Tree: levels finished across that holiday's songs */
+function holidayLine(game: 'feast' | 'tree', all: ReturnType<typeof holidayAll>): Prog {
+  const ids = Object.keys(all).filter((id) => (game === 'feast') === (['overriver', 'gather', 'thankful', 'simplegifts'].includes(id)))
+  const lv = ids.reduce((n, id) => n + (all[id]?.done ?? []).filter(Boolean).length, 0)
+  return { played: lv > 0, line: `${lv} level${lv === 1 ? '' : 's'} done` }
+}
 /** Per-game progress, read from each game's own save (per kid). */
 function progress(): Record<GameId, Prog> {
   const z = zSave(), j = jSave(), f = fSave()
   const b = pload<{ unlocked?: number; best?: Record<string, { stars: number }> }>('bachdoom', {}) ?? {}
+  const m = pload<{ best?: Record<string, unknown> }>('memory', {}) ?? {}
+  const hol = holidayAll()
   const bestScore = Math.max(z.best.easy, z.best.normal), wave = Math.max(z.wave.easy, z.wave.normal)
   const bStars = Object.values(b.best ?? {}).reduce((n, x) => n + (x?.stars ?? 0), 0)
   const bLv = Math.min(LEVELS.length, Math.max(0, (b.unlocked ?? 1)))
@@ -33,6 +47,8 @@ function progress(): Record<GameId, Prog> {
     zombies: { played: bestScore > 0 || wave > 1, line: bestScore > 0 || wave > 1 ? `Best wave ${wave} · High score ${Math.round(bestScore)}` : '' },
     jiujitsu: { played: j.total > 0 || j.belt > 0 || j.best > 0, line: j.total > 0 || j.belt > 0 || j.best > 0 ? `${BELTS[j.belt].name} belt${j.stripes ? ' · ' + '|'.repeat(j.stripes) : ''}` : '' },
     fashion: { played: f.looks.length > 0 || f.unlocked.length > 1 || Object.keys(f.best).length > 0, line: `${f.unlocked.length}/${ERAS.length} eras unlocked` },
+    memory: { played: Object.keys(m.best ?? {}).length > 0, line: `${Object.keys(m.best ?? {}).length} best score${Object.keys(m.best ?? {}).length === 1 ? '' : 's'} saved` },
+    feast: holidayLine('feast', hol), tree: holidayLine('tree', hol),
     bachdoom: { played: Object.keys(b.best ?? {}).length > 0 || bLv > 1, line: `Level ${Math.min(bLv, LEVELS.length)}/${LEVELS.length} · ${bStars} ★` },
   }
 }
@@ -67,7 +83,9 @@ export function GamesPanel() {
   if (active === 'zombies') return <div className="gm-stage"><ZombieLanes onExit={exit} /></div>
   if (active === 'bachdoom') return <div className="gm-stage"><BachDoom onExit={exit} levelId={levelReq} /></div>
   if (active === 'jiujitsu') return <div className="gm-stage"><JiuJitsu onExit={exit} /></div>
+  if (active === 'memory') return <div className="gm-stage"><MemoryGame onExit={exit} /></div>
   if (active === 'fashion') return <div className="gm-stage"><Fashion onExit={exit} /></div>
+  if (active === 'feast' || active === 'tree') return <div className="gm-stage"><HolidayGame kind={active} onExit={exit} /></div>
   const prog = progress(), daily = dailyPick()
   return (
     <div className="gm-menu">

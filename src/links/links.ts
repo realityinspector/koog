@@ -12,11 +12,13 @@
 //   #/challenges[/<challengeId>]             the challenge list, or one challenge started
 //   #/games[/<gameId>]                       the games list, or one game opened ("level" option for BachDoom)
 //   #/beats[/<beatId>]                       the beat list, or one groove playing
-//   #/synth[/<emulatorId>]                   synth history, or one playable emulator open
+//   #/synth[/<emulatorId>]                   the instruments rack, or one playable emulator open
+//   #/synth/timeline                         the year-by-year history of electronic music
 //   #/log                                    the build log
 //   #/boss/<studio|dj|loops|drums|synth|scenes>    Boss (adult) mode screens
 //   #/gallery[/<stopId>]                     the self-playing gallery tour (title card first; the click that starts it also unlocks audio)
 //   #/gallery/art                            Art Gallery mode: full screen, calm music, loops forever (title card first, same click rule)
+//   #/gallery/art/thanksgiving | christmas   the same, as a holiday playlist (seasonal palettes, falling leaves or snow, string lights, holiday songs)
 //
 // Options (any screen; defaults are left out of the canonical form):
 //   key=c-major | a-minor | f-sharp-major ...   the key Koog listens in ("auto" = detect it)
@@ -32,6 +34,7 @@
 // Canonical form: lowercase ids, path first, then options in OPTION_ORDER, defaults omitted, list values sorted.
 // Two states that mean the same thing always give the same URL.
 
+import { canonEmuId, canonSoundId } from '../features/synth-history/emu/aliases.ts'
 export const DEFAULT_ORIGIN = 'https://koog-demo.fly.dev/'
 
 // 'gallery' (added): the self-playing tour. #/gallery opens its title card, #/gallery/<stopId> starts at that stop (ids: src/features/gallery/stops.data.ts),
@@ -68,6 +71,8 @@ export interface KoogState {
   modes?: HelperMode[]
   sheet?: boolean
   sound?: string
+  /** gallery/art only: a holiday playlist ('thanksgiving' | 'christmas') */
+  sub?: string
 }
 
 export const OPTION_ORDER = ['key', 'visual', 'palette', 'modes', 'sheet', 'sound', 'phrase', 'rung', 'level'] as const
@@ -104,6 +109,7 @@ export function toHash(s: KoogState): string {
     if (s.item && s.screen !== 'play' && s.screen !== 'log') {
       path.push(clean(s.item))
       if (s.screen === 'songs' && s.songMode) path.push(s.songMode)
+      if (s.screen === 'gallery' && s.item === 'art' && s.sub) path.push(clean(s.sub))
     }
   }
   const o: Record<string, string> = {}
@@ -147,11 +153,12 @@ export function parseHash(input: string): Parsed {
     if ((SCREENS as readonly string[]).includes(seg[0])) st.screen = seg[0] as Screen
     else problems.push(`Unknown screen "${seg[0]}"`)
     if (seg[1]) {
-      if (ID.test(seg[1])) st.item = seg[1]
+      if (ID.test(seg[1])) st.item = st.screen === 'synth' ? canonEmuId(seg[1]) : seg[1] // older emulator ids still open (silently renamed)
       else problems.push(`Bad id "${seg[1]}"`)
     }
     if (seg[2]) {
       if (st.screen === 'songs' && (SONG_MODES as readonly string[]).includes(seg[2])) st.songMode = seg[2] as SongMode
+      else if (st.screen === 'gallery' && st.item === 'art' && (seg[2] === 'thanksgiving' || seg[2] === 'christmas')) st.sub = seg[2]
       else problems.push(`Unknown option "${seg[2]}" for ${st.screen}`)
     }
   }
@@ -160,7 +167,7 @@ export function parseHash(input: string): Parsed {
     switch (k) {
       case 'key': { const key = slugToKey(v); if (key) st.key = key; else problems.push(`Bad key "${raw}" (try c-major or a-minor)`); break }
       case 'visual': case 'palette': case 'sound': case 'level':
-        if (ID.test(v)) st[k] = v; else problems.push(`Bad ${k} "${raw}"`); break
+        if (ID.test(v)) st[k] = k === 'sound' ? canonSoundId(v) : v; else problems.push(`Bad ${k} "${raw}"`); break
       case 'modes': {
         const ms = v.split(',').filter(Boolean)
         const ok = ms.filter((m): m is HelperMode => (HELPER_MODES as readonly string[]).includes(m))

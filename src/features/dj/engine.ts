@@ -184,6 +184,13 @@ export function setTrim(v: number) { djChannel().setTrim(v) }
 export const subscribe = (f: () => void) => { subs.add(f); return () => { subs.delete(f) } }
 export const getVersion = () => S.version
 function emit() { S.version++; S.view = null; subs.forEach((f) => f()); syncLeds() }
+// Fader/knob floods (200 CC/s): the sound changes at once in apply(), but the screen and LEDs refresh once per animation frame (a timer covers a hidden tab).
+let softRaf = 0, softTimer = 0
+function emitSoon() {
+  if (softRaf) return
+  const go = () => { cancelAnimationFrame(softRaf); clearTimeout(softTimer); softRaf = 0; softTimer = 0; emit() }
+  softRaf = requestAnimationFrame(go); softTimer = window.setTimeout(go, 100)
+}
 function deckView(d: DeckId): DeckView {
   const k = S.core?.decks[d]
   return {
@@ -403,15 +410,15 @@ function apply(a: DjAction) {
       } else d.held[n] = false
       break
     }
-    case 'vol': it.vol = a.value; d.applyVol(); break
+    case 'vol': it.vol = a.value; d.applyVol(); ensureTick(); emitSoon(); return
     case 'tempo': {
       if (a.fine) a.value = (tempoMsb[a.deck] * 128 + a.value) / 16383 // LSB arrived: refine the MSB we have
       else tempoMsb[a.deck] = Math.round(a.value * 127)
-      it.tempo = a.value; d.setTempo(); break
+      it.tempo = a.value; d.setTempo(); ensureTick(); emitSoon(); return
     }
-    case 'hi': it.hi = a.value; d.applyEQ(); break
-    case 'mid': it.mid = a.value; d.applyEQ(); break
-    case 'low': it.low = a.value; d.applyEQ(); break
+    case 'hi': it.hi = a.value; d.applyEQ(); ensureTick(); emitSoon(); return
+    case 'mid': it.mid = a.value; d.applyEQ(); ensureTick(); emitSoon(); return
+    case 'low': it.low = a.value; d.applyEQ(); ensureTick(); emitSoon(); return
     case 'jogtouch': return // nothing to do yet: the calibration and the knob check watch it
     case 'jog': d.nudge(a.value); return // no UI refresh for every tick
   }
@@ -425,7 +432,7 @@ export function dispatch(a: DjAction) {
   if (!S.core) {
     if (a.id === 'jog') return
     queue.push({ a, at: performance.now() }); if (queue.length > 24) queue.shift()
-    if (hasActivation()) void ensure(); else { S.needsTap = true; emit() }
+    if (hasActivation()) void ensure(); else if (!S.needsTap) { S.needsTap = true; emit() }
     return
   }
   if (S.core.ctx.state === 'suspended') void S.core.ctx.resume().catch(() => {})

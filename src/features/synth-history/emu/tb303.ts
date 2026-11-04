@@ -1,4 +1,4 @@
-// TB-303-style bass: saw/square, resonant lowpass with a decaying filter envelope, ACCENT and SLIDE, and a
+// Step-bass-style bass: saw/square, resonant lowpass with a decaying filter envelope, ACCENT and SLIDE, and a
 // little 16-step pattern sequencer (lookahead scheduler) the kid can program. Mono.
 import { clamp, hz, lp24 } from './core'
 import type { EmuSpec, Voice } from './types'
@@ -30,9 +30,10 @@ const PATTERNS = [
 const clone = (a: Step[]) => a.map((s) => ({ ...s }))
 
 export const tb303: EmuSpec = {
-  id: 'tb303', name: 'TB-303-style bass', year: '1981', skin: 'skin-303',
-  blurb: 'This little silver box was made to play bass lines for guitarists to practise with, and it flopped. Years later, kids in Chicago twisted its filter knob and invented "acid house", so a failure became one of the most copied sounds in dance music.',
-  songs: ['king', 'toccata', 'elise'], songWhy: 'In the Hall of the Mountain King is a creeping bass line that gets faster, perfect for a squelchy 303 pattern.',
+  id: 'squelch', name: 'Koog Squelch', year: '1980s style', skin: 'skin-squelch',
+  inspired: 'the little 1980s bass-line boxes with a step sequencer, whose twisty resonant filter later started acid house',
+  blurb: 'A bass-line box: fill in the 16 steps, add Accent and Slide to some of them, then sweep Cutoff and Resonance while it plays for that squelchy, wobbling acid sound. It was meant for practising bass lines and ended up inventing a whole kind of dance music.',
+  songs: ['king', 'toccata', 'elise'], songWhy: 'In the Hall of the Mountain King is a creeping bass line that gets faster, perfect for a squelchy pattern.',
   extra: 'seq303',
   ctls: [
     { key: 'wave', label: 'Wave', min: 0, max: 1, def: 0, kind: 'pick', opts: ['Saw', 'Square'], group: 'Sound' },
@@ -48,6 +49,7 @@ export const tb303: EmuSpec = {
     { name: 'Squelch', values: { wave: 0, cutoff: 350, reso: 11, envmod: 3800, decay: 0.28, accent: 0.8, root: 0, tempo: 125 } },
     { name: 'Round bass', values: { wave: 1, cutoff: 700, reso: 3, envmod: 1200, decay: 0.2, accent: 0.4, root: 0, tempo: 110 } },
     { name: 'Screamer', values: { wave: 0, cutoff: 900, reso: 13, envmod: 4500, decay: 0.55, accent: 1, root: 5, tempo: 135 } },
+    { name: 'Koog bounce', values: { wave: 1, cutoff: 520, reso: 7, envmod: 2600, decay: 0.3, accent: 0.6, root: 0, tempo: 118 } },
   ],
   make({ ctx, out }, P): Voice303 {
     const osc = ctx.createOscillator(); osc.frequency.value = 55

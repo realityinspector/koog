@@ -14,9 +14,10 @@ interface V {
 }
 
 export const dx: EmuSpec = {
-  id: 'dx', name: 'Digital FM synth (DX-style)', year: '1983', skin: 'skin-dx',
-  blurb: 'FM synthesis makes one sound wave wobble the pitch of another, super fast, until it turns glassy, bell-like or bright. The DX7 (1983) was digital, played softer or harder like a piano, and its electric-piano and bell sounds ended up in countless 80s songs.',
-  songs: ['gymnopedie', 'clairdelune', 'air', 'canon'], songWhy: 'DX-style FM made glassy electric pianos and bells; it was digital, and its sounds were all over 80s pop.',
+  id: 'bellfm', name: 'Koog Bell FM', year: '1980s style', skin: 'skin-bellfm',
+  inspired: 'the 1980s digital FM synths, where one wave wobbles the pitch of another until it turns glassy and bell-like',
+  blurb: 'A digital FM synth: one sound wave wobbles the pitch of another, super fast, until it turns glassy, bell-like or bright. Played softer or harder like a piano, it makes electric pianos, tubular bells and brass, and the idea filled the pop of the 1980s.',
+  songs: ['gymnopedie', 'clairdelune', 'air', 'canon'], songWhy: 'FM makes glassy electric pianos and bells; try slow, floaty pieces.',
   ctls: [
     { key: 'alg', label: 'Algorithm', min: 0, max: 2, def: 1, kind: 'pick', opts: ['Stack', 'Pairs', 'Triple'], group: 'Operators' },
     { key: 'r2', label: 'Op 2 ratio', min: 0, max: 8, def: 1, kind: 'pick', opts: RATIOS.map(String) },
@@ -33,6 +34,7 @@ export const dx: EmuSpec = {
     { name: 'Glassy e-piano', values: { alg: 1, r2: 1, r3: 1, r4: 8, depth: 2.2, mdecay: 0.7, a: 0.004, d: 1.8, s: 0.12, r: 0.35 } },
     { name: 'Tubular bell', values: { alg: 1, r2: 4, r3: 2, r4: 6, depth: 5, mdecay: 2.8, a: 0.003, d: 3.5, s: 0.0, r: 1.8 } },
     { name: 'Brass / bass', values: { alg: 0, r2: 1, r3: 1, r4: 1, depth: 3.5, mdecay: 0.5, a: 0.04, d: 0.6, s: 0.8, r: 0.15 } },
+    { name: 'Koog glass bell', values: { alg: 1, r2: 3, r3: 2, r4: 5, depth: 3.2, mdecay: 1.6, a: 0.003, d: 2.6, s: 0.0, r: 1.2 } },
   ],
   make({ ctx, out }, P) {
     let voices: V[] = []

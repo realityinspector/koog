@@ -1,4 +1,4 @@
-// Special playing surfaces: the pitch field (theremin / ribbon), the TB-303 step sequencer, the Mellotron tape timer.
+// Special playing surfaces: the pitch field (air / ribbon), the acid-bass step sequencer, the tape timer.
 import { useEffect, useRef, useState } from 'react'
 import { ROWS, type SeqApi, type Voice303 } from './tb303'
 import type { Engine } from './core'
@@ -89,7 +89,7 @@ export function Seq303({ engine }: { engine: Engine }) {
   )
 }
 
-/** Mellotron: shows how much of the 8 second tape the held key has used. */
+/** Tape: shows how much of the 8 second tape the held key has used. */
 export function TapeBar() {
   const [held, setHeld] = useState<Record<number, number>>({})
   const [now, setNow] = useState(0)
@@ -165,7 +165,7 @@ export function KeyLeds() {
   )
 }
 
-/** Hammond: the rotary speaker cabinet, its horn and drum visibly spinning at the chosen speed. */
+/** Drum organ: the rotary speaker cabinet, its horn and drum visibly spinning at the chosen speed. */
 export function Rotary({ speed }: { speed: number }) {
   const s = Math.round(speed)
   return (
@@ -176,7 +176,7 @@ export function Rotary({ speed }: { speed: number }) {
   )
 }
 
-/** ARP-style patch bay: the three mod destinations as jacks with a drawn cable when the amount is above zero. */
+/** Patch bay: the three mod destinations as jacks with a drawn cable when the amount is above zero. */
 export function PatchBay({ vals }: { vals: Params }) {
   const dest = [['cPitch', 'Pitch', '#ff5a3a'], ['cFilt', 'Filter', '#ffd23a'], ['cAmp', 'Loud', '#4ad0ff']] as const
   return (
@@ -203,7 +203,7 @@ export function PatchBay({ vals }: { vals: Params }) {
   )
 }
 
-/** DX-style LCD: algorithm and operator values as a small green-on-black readout with a block diagram. */
+/** FM LCD: algorithm and operator values as a small green-on-black readout with a block diagram. */
 export function Lcd({ vals, ratios }: { vals: Params; ratios: number[] }) {
   const alg = Math.round(vals.alg ?? 0)
   const ops = [1, ratios[Math.round(vals.r2 ?? 1)], ratios[Math.round(vals.r3 ?? 1)], ratios[Math.round(vals.r4 ?? 1)]]

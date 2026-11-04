@@ -1,6 +1,7 @@
 // Drum pads: the pure rules (no DOM, no audio) so scripts/drum-fixtures.ts can test them under node.
 // A pattern is 8 drum rows x up to 32 sixteenth-note steps. A cell holds a velocity 0..1 (0 = no hit).
 // STABLE API: VOICES, newPattern, nearestStep, swingOffset, stepBeats, recordHit, clearRow, clearAll, setLength, toggleCell, repeatPositions, parsePattern, STARTERS.
+// Added in round 2: four pattern banks (A-D), an accent track, per-drum mute and solo, copy bar 1 to bar 2, a roll fill, step-edit pages, the status line.
 
 export const STEPS_1 = 16
 export const STEPS_MAX = 32
@@ -20,10 +21,11 @@ export const VOICES: VoiceDef[] = [
 ]
 export const N_VOICES = VOICES.length
 
-export interface Pattern { len: BarLen; rows: number[][] }
+/** `acc` is the accent track: 1 on a step makes every drum on that step play louder (see effVel). */
+export interface Pattern { len: BarLen; rows: number[][]; acc: number[] }
 
-export const newPattern = (len: BarLen = 16): Pattern => ({ len, rows: VOICES.map(() => new Array<number>(STEPS_MAX).fill(0)) })
-export const clonePattern = (p: Pattern): Pattern => ({ len: p.len, rows: p.rows.map((r) => r.slice()) })
+export const newPattern = (len: BarLen = 16): Pattern => ({ len, rows: VOICES.map(() => new Array<number>(STEPS_MAX).fill(0)), acc: new Array<number>(STEPS_MAX).fill(0) })
+export const clonePattern = (p: Pattern): Pattern => ({ len: p.len, rows: p.rows.map((r) => r.slice()), acc: p.acc.slice() })
 export const isEmpty = (p: Pattern) => p.rows.every((r) => r.every((v) => v <= 0))
 export const rowEmpty = (p: Pattern, voice: number) => p.rows[voice].every((v) => v <= 0)
 
@@ -48,14 +50,14 @@ export function recordHit(p: Pattern, voice: number, posSteps: number, vel: numb
   return s
 }
 export function clearRow(p: Pattern, voice: number) { p.rows[voice].fill(0) }
-export function clearAll(p: Pattern) { for (const r of p.rows) r.fill(0) }
+export function clearAll(p: Pattern) { for (const r of p.rows) r.fill(0); p.acc.fill(0) }
 
 /** 16 <-> 32 steps. Growing from an empty second bar copies bar 1 (same groove, ready to vary); shrinking keeps the data so growing again brings it back. */
 export function setLength(p: Pattern, len: BarLen) {
   if (len === p.len) return
   if (len === 32) {
     const second = p.rows.every((r) => r.slice(16, 32).every((v) => v <= 0))
-    if (second) for (const r of p.rows) for (let i = 0; i < 16; i++) r[16 + i] = r[i]
+    if (second) { for (const r of p.rows) for (let i = 0; i < 16; i++) r[16 + i] = r[i]; for (let i = 0; i < 16; i++) p.acc[16 + i] = p.acc[i] }
   }
   p.len = len
 }
@@ -110,6 +112,71 @@ export function parsePattern(rows: string[], len: BarLen = 16): Pattern {
   return p
 }
 
+// ---------- round 2: banks, accent, mute / solo, copy, fill, step-edit pages, status ----------
+export const N_BANKS = 4
+export const BANK_NAMES = ['A', 'B', 'C', 'D']
+/** velocity a pattern step plays at: an accented step is full strength, the rest sit at 80% so the accent is clearly louder */
+export const ACCENT_GAIN = 1, NORMAL_GAIN = 0.8
+export const effVel = (vel: number, accent: boolean) => Math.min(1, vel * (accent ? ACCENT_GAIN : NORMAL_GAIN))
+export function toggleAccent(p: Pattern, step: number): boolean {
+  if (step < 0 || step >= STEPS_MAX) return false
+  const on = !(p.acc[step] > 0); p.acc[step] = on ? 1 : 0; return on
+}
+/** copy bar 1 onto bar 2 (and make the pattern two bars long). Bar 1 is never changed. */
+export function copyBar(p: Pattern) {
+  p.len = 32
+  for (const r of p.rows) for (let i = 0; i < 16; i++) r[16 + i] = r[i]
+  for (let i = 0; i < 16; i++) p.acc[16 + i] = p.acc[i]
+}
+/** does a drum sound from the pattern? Solo wins over mute: with any solo on, only soloed drums play. */
+export function audible(voice: number, mute: boolean[], solo: boolean[]): boolean {
+  return solo.some(Boolean) ? !!solo[voice] : !mute[voice]
+}
+/** the bank to play after `cur` when chaining: the next bank that has something in it (cycles; stays on `cur` when it is the only one) */
+export function nextBank(cur: number, filled: boolean[]): number {
+  for (let k = 1; k <= N_BANKS; k++) { const b = (cur + k) % N_BANKS; if (filled[b]) return b }
+  return cur
+}
+/** a queued pattern change happens on the first step of a cycle of the playing pattern (the bar line) */
+export const atBarLine = (n: number, patStart: number, len: number) => (((n - patStart) % len) + len) % len === 0
+/** a hold-to-roll fill: 16th notes whose velocity swells from 0.45 to 1 over two beats */
+export const fillVel = (elapsedBeats: number) => 0.45 + 0.55 * Math.min(1, Math.max(0, elapsedBeats / 2))
+/** step edit: the pads (0-7) toggle one page of 8 steps. A 1-bar pattern has 2 pages, a 2-bar pattern 4. */
+export const STEP_PAGE = 8
+export const pagesOf = (len: number) => Math.max(1, Math.floor(len / STEP_PAGE))
+export const stepOfPad = (page: number, pad: number) => page * STEP_PAGE + pad
+/** the name of a pad on the controller: A1..A4 (deck A, left) and B1..B4 (deck B, right) */
+export const padName = (voice: number) => (voice < 4 ? 'A' : 'B') + ((voice % 4) + 1)
+
+export interface StatusIn { running: boolean; rec: boolean; bank: number; queued: number; chain: boolean; kitName: string; bpm: number; edit: boolean; editVoice: number; page: number; pages: number; muted: number; solo: number; fill: boolean }
+/** the one-line status under the title */
+export function statusLine(s: StatusIn): string {
+  const bits: string[] = []
+  bits.push(s.running ? (s.rec ? 'RECORDING' : 'PLAYING') : s.rec ? 'REC ARMED' : 'STOPPED')
+  bits.push(`Pattern ${BANK_NAMES[s.bank]}${s.queued >= 0 ? ` then ${BANK_NAMES[s.queued]} at the bar line` : ''}${s.chain ? ' (chain on)' : ''}`)
+  bits.push(`${s.kitName} kit, ${Math.round(s.bpm)} bpm`)
+  if (s.edit) bits.push(`STEP EDIT: ${VOICES[s.editVoice].label}, steps ${s.page * STEP_PAGE + 1}-${s.page * STEP_PAGE + STEP_PAGE} (page ${s.page + 1} of ${s.pages})`)
+  if (s.solo) bits.push(`${s.solo} solo`); else if (s.muted) bits.push(`${s.muted} muted`)
+  if (s.fill) bits.push('FILL')
+  return bits.join(' · ')
+}
+
+/** The control map, one row per control. The help card on screen and the fixtures both read this, so the two cannot drift apart. */
+export const HELP_MAP: { keys: string; does: string }[] = [
+  { keys: 'Pads A1-A4 (left) and B1-B4 (right)', does: 'KICK SNARE HAT OPEN and CLAP LO-TOM HI-TOM RIM. Hit harder, louder. Light up when their drum sounds.' },
+  { keys: 'PLAY', does: 'Start or stop the beat. Hold 2 seconds to clear everything.' },
+  { keys: 'CUE', does: 'Record on or off. Hold 0.7 seconds to undo the last take. CUE + a pad erases that drum.' },
+  { keys: 'SYNC', does: 'Tap tempo (tap it in time). SYNC + a pad mutes that drum.' },
+  { keys: 'PLAY + a pad', does: 'Solo that drum: only soloed drums play.' },
+  { keys: 'PAD MODE B', does: 'Next drum kit.' },
+  { keys: 'PAD MODE + A1 A2 A3 A4', does: 'Choose pattern A, B, C or D. While playing it waits for the end of the bar.' },
+  { keys: 'PAD MODE + B1 / B2 / B3', does: 'B1 chain the patterns, B2 copy bar 1 to bar 2, B3 all drums back on.' },
+  { keys: 'PAD MODE + B4 (hold)', does: 'FILL: a fast roll that gets louder. It is never recorded.' },
+  { keys: 'PAD MODE A', does: 'STEP EDIT on or off. The 8 pads become steps 1-8 and a lit pad is a step that is on.' },
+  { keys: 'In step edit', does: 'Tap a pad to flip a step. PAD MODE B shows the next 8 steps. JOG B or SYNC + a pad picks the drum. CUE + a pad makes an accent (louder step).' },
+  { keys: 'Faders and knobs', does: 'TEMPO bpm, VOL A drum volume, VOL B beat level, JOG A swing, JOG B fine tempo. Deck A knobs shape the last drum (pitch, decay, tone). Deck B knobs: kit, bars, roll.' },
+]
+
 // ---------- undo of recording passes ----------
 export interface UndoStack { snaps: Pattern[] }
 export const newUndo = (): UndoStack => ({ snaps: [] })
@@ -117,24 +184,41 @@ export function pushUndo(u: UndoStack, p: Pattern) { u.snaps.push(clonePattern(p
 /** restore the most recent snapshot into p; false when there is nothing to undo */
 export function popUndo(u: UndoStack, p: Pattern): boolean {
   const s = u.snaps.pop(); if (!s) return false
-  p.len = s.len; p.rows = s.rows.map((r) => r.slice())
+  p.len = s.len; p.rows = s.rows.map((r) => r.slice()); p.acc = s.acc.slice()
   return true
 }
 
 // ---------- serialising ----------
-export interface Saved { len: BarLen; rows: number[][]; kit: number; swing: number; vol: number; patVol: number; repeat: number; tweak: Tweak[] }
+/** Saved data (localStorage 'drumpads.v1' via pkey). Top-level len/rows/acc are pattern A, exactly as the first build saved them, so old saves load and
+ *  an old build still reads a new save (it sees pattern A). `more` holds B, C, D; the rest are optional and default when missing. */
+export interface PatData { len: BarLen; rows: number[][]; acc?: number[] }
+export interface Saved {
+  len: BarLen; rows: number[][]; acc?: number[]; kit: number; swing: number; vol: number; patVol: number; repeat: number; tweak: Tweak[]
+  more?: PatData[]; bank?: number; chain?: boolean; mute?: boolean[]; solo?: boolean[]
+}
 export interface Tweak { pitch: number; decay: number; tone: number } // pitch -1..1 (about +/-7 semitones), decay 0..1 (0.5 = normal), tone 0..1 (1 = open)
 export const defaultTweak = (): Tweak => ({ pitch: 0, decay: 0.5, tone: 1 })
+const cleanRows = (src: unknown) => VOICES.map((_, i) => {
+  const r = Array.isArray((src as unknown[] | undefined)?.[i]) ? (src as unknown[][])[i] : []
+  return Array.from({ length: STEPS_MAX }, (_, s) => { const x = Number(r[s]); return Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0 })
+})
+const cleanAcc = (a: unknown) => Array.from({ length: STEPS_MAX }, (_, s) => (Array.isArray(a) && Number(a[s]) > 0 ? 1 : 0))
+const cleanBools = (a: unknown) => VOICES.map((_, i) => Array.isArray(a) && a[i] === true)
+/** a saved blob -> a clean Saved, or null when it is not one. Always returns acc, more (3 entries), bank, chain, mute and solo filled in. */
 export function reviveSaved(v: unknown): Saved | null {
   try {
     const o = v as Partial<Saved>
     if (!o || !Array.isArray(o.rows)) return null
-    const rows = VOICES.map((_, i) => {
-      const r = Array.isArray(o.rows![i]) ? o.rows![i] : []
-      return Array.from({ length: STEPS_MAX }, (_, s) => { const x = Number(r[s]); return Number.isFinite(x) ? Math.min(1, Math.max(0, x)) : 0 })
-    })
+    const rows = cleanRows(o.rows)
     const n = (x: unknown, d: number, lo: number, hi: number) => { const y = Number(x); return Number.isFinite(y) ? Math.min(hi, Math.max(lo, y)) : d }
     const tweak = VOICES.map((_, i) => { const t = (o.tweak?.[i] ?? {}) as Partial<Tweak>; return { pitch: n(t.pitch, 0, -1, 1), decay: n(t.decay, 0.5, 0, 1), tone: n(t.tone, 1, 0, 1) } })
-    return { len: o.len === 32 ? 32 : 16, rows, kit: Math.round(n(o.kit, 0, 0, 2)), swing: n(o.swing, 0, 0, 0.6), vol: n(o.vol, 0.8, 0, 1), patVol: n(o.patVol, 1, 0, 1), repeat: Math.round(n(o.repeat, 0, 0, 2)), tweak }
+    const more: PatData[] = Array.from({ length: N_BANKS - 1 }, (_, i) => {
+      const m = Array.isArray(o.more) ? (o.more[i] as Partial<PatData> | undefined) : undefined
+      return { len: (m?.len === 32 ? 32 : 16) as BarLen, rows: cleanRows(m?.rows), acc: cleanAcc(m?.acc) }
+    })
+    return {
+      len: o.len === 32 ? 32 : 16, rows, acc: cleanAcc(o.acc), kit: Math.round(n(o.kit, 0, 0, 2)), swing: n(o.swing, 0, 0, 0.6), vol: n(o.vol, 0.8, 0, 1), patVol: n(o.patVol, 1, 0, 1), repeat: Math.round(n(o.repeat, 0, 0, 2)), tweak,
+      more, bank: Math.round(n(o.bank, 0, 0, N_BANKS - 1)), chain: o.chain === true, mute: cleanBools(o.mute), solo: cleanBools(o.solo),
+    }
   } catch { return null }
 }

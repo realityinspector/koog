@@ -1,4 +1,4 @@
-// Hammond-style tonewheel organ: nine drawbars of additive sines, key click, percussion, drive, and a rotary speaker.
+// Tonewheel-style organ: nine drawbars of additive sines, key click, percussion, drive, and a rotary speaker.
 // Polyphonic, no envelope decay: fast attack, sustain at full, ~40 ms release.
 import { clamp, hz, noise, softClip, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -8,9 +8,10 @@ const FOOT = ["16'", "5 1/3'", "8'", "4'", "2 2/3'", "2'", "1 3/5'", "1 1/3'", "
 const BARS = ['d0', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8']
 
 export const hammond: EmuSpec = {
-  id: 'hammond', name: 'Tonewheel Organ', year: '1935', skin: 'skin-hammond',
-  blurb: 'Laurens Hammond made an organ without pipes: spinning metal wheels made tiny electric hums, and sliding drawbars mixed them together like a recipe. It gave churches, clubs and living rooms an organ sound in a box small enough to fit through a door.',
-  songs: ['toccata', 'jesu', 'prelude', 'canon'], songWhy: 'Toccata in D minor is the classic organ blockbuster; Hammond put organ sound in small spaces.',
+  id: 'wheelhouse', name: 'Koog Wheelhouse', year: '1930s style', skin: 'skin-wheelhouse',
+  inspired: 'the 1930s tonewheel organs, which made sound with spinning metal wheels and sliding drawbars',
+  blurb: 'A drawbar organ with no pipes: nine sliders mix harmonics together like a recipe, and a spinning-speaker cabinet makes the sound swirl. It gave churches, clubs and living rooms an organ sound in a box small enough to fit through a door.',
+  songs: ['toccata', 'jesu', 'prelude', 'canon'], songWhy: 'Toccata in D minor is the classic organ blockbuster; drawbar organs put organ sound in small spaces.',
   ctls: [
     ...BARS.map((k, i) => ({ key: k, label: FOOT[i], min: 0, max: 8, def: i === 2 ? 8 : 0, step: 1, kind: 'slider' as const, group: i === 0 ? 'Drawbars' : undefined })),
     { key: 'perc', label: 'Percussion', min: 0, max: 2, def: 0, step: 1, kind: 'pick', opts: ['Off', '2nd', '3rd'], group: 'Extras' },
@@ -22,6 +23,7 @@ export const hammond: EmuSpec = {
     { name: 'Smoky lounge', values: { d0: 8, d1: 8, d2: 8, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0, d8: 0, perc: 2, click: 0.35, rotary: 1, drive: 0.25 } },
     { name: 'Cathedral full', values: { d0: 8, d1: 8, d2: 8, d3: 8, d4: 8, d5: 8, d6: 8, d7: 8, d8: 8, perc: 0, click: 0.15, rotary: 0, drive: 0.1 } },
     { name: 'Soft flutes', values: { d0: 0, d1: 0, d2: 6, d3: 3, d4: 0, d5: 2, d6: 0, d7: 0, d8: 0, perc: 0, click: 0.1, rotary: 1, drive: 0 } },
+    { name: 'Koog sunrise', values: { d0: 6, d1: 8, d2: 7, d3: 4, d4: 0, d5: 3, d6: 0, d7: 0, d8: 2, perc: 1, click: 0.2, rotary: 1, drive: 0.15 } },
   ],
   make({ ctx, out }, P) {
     // shared effects bus: voices -> drive -> (dry + rotary) -> out

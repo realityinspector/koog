@@ -210,7 +210,7 @@ function applyHash() {
   const h = location.hash
   if (!h || h === '#') return applyState({ screen: 'play' }, [])
   const { state, problems } = parseHash(h)
-  if (state?.screen === 'gallery' && !state.mode) { galleryHooks.open?.(state.item); return }
+  if (state?.screen === 'gallery' && !state.mode) { galleryHooks.open?.(state.item === 'art' && state.sub ? 'art/' + state.sub : state.item); return }
   if (state) applyState(state, problems)
 }
 

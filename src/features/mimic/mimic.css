@@ -41,3 +41,7 @@
 @media (max-width: 760px) { .mm-body { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .mm-led.live { animation: none; } }
 @media (max-height: 760px) { .mm-blurb { -webkit-line-clamp: 2; } .mm-tile { min-height: 46px; } .mm-ribbon { height: 46px; } .mm-notice { margin-top: 4px; } }
+.mm-pick { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mm-groups { display: flex; gap: 6px; flex-wrap: wrap; } .mm-groups small { opacity: .7; margin-left: 4px; }
+.mm-blurb { -webkit-line-clamp: 4; }
+@media (max-height: 760px) { .mm-blurb { -webkit-line-clamp: 3; } }

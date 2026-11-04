@@ -12,7 +12,7 @@ import { resyncLeds } from '../dj/engine'
 import { getSynth, setHold, setOctave, setPitchBend } from '../synth-history/engine'
 import { onEmuSet, touchKey } from '../synth-history/emu/bus'
 import { onProfileChange, pload, psave } from '../../profile/profile'
-import { ALL_CONTROLS, CLASS_OF, compatible, currentTopology, MOOG_PATCH, physName, type Param, type Topology } from './catalog'
+import { ALL_CONTROLS, CLASS_OF, compatible, currentTopology, CLASSIC_PATCH, physName, type Param, type Topology } from './catalog'
 
 export interface Row { phys: string; param: string; label: string; short: string }
 interface SurfState {
@@ -212,7 +212,7 @@ export function setSavedLayout(v: Record<string, Record<string, string>>) { save
 function enter() {
   topo = currentTopology()
   for (const k of Object.keys(pick)) delete pick[k]
-  if (topo.id === 'koog' && !hot.applied) { hot.applied = true; getSynth().setParams(MOOG_PATCH) } // first time: a Moog-flavoured patch (saw, 24 dB filter, a little glide)
+  if (topo.id === 'koog' && !hot.applied) { hot.applied = true; getSynth().setParams(CLASSIC_PATCH) } // first time: a classic-analog patch (saw, 24 dB filter, a little glide)
   refreshView()
 }
 function leave() {

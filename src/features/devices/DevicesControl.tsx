@@ -8,6 +8,8 @@ import { setControllerPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
 import { PedalSetup } from '../pedal/PedalSetup'
 import { usePedal } from '../pedal/pedal'
+import { setBoardOpen } from '../pedalboard/boardOpen'
+import { LatencyMeter, useBluetoothTip } from './LatencyMeter'
 import './devices.css'
 import { Icon } from '../../ui/Icon'
 import { useOnePop } from '../../ui/onePop'
@@ -38,12 +40,14 @@ export function DevicesControl() {
   const n = live.length
   const pedalOn = usePedal((p) => (!!p.code || p.midi) && p.action !== 'off')
   const pedalDown = usePedal((p) => p.down)
+  const bt = useBluetoothTip()
   return (
     <div className="kg-dev" ref={root}>
       <button type="button" className={'kg-dev-chip' + (open ? ' open' : '')} aria-expanded={open} aria-haspopup="dialog"
         title={`MIDI devices and piano sound (now: ${cur.label})`} onClick={() => setOpen((o) => !o)}>
         <Icon name="plug" />
         <span className="kg-dev-txt">{n} {n === 1 ? 'device' : 'devices'}</span>
+        {bt && <span className="kg-dev-bt" title="Your sound goes through Bluetooth: notes will feel late" aria-label="Bluetooth sound delay">🎧</span>}
         {pedalOn && <span className={'kg-pedal-led' + (pedalDown ? ' on' : '')} title="Foot pedal" aria-hidden />}
       </button>
       {open && (
@@ -59,6 +63,7 @@ export function DevicesControl() {
               </div>
             </div>
           ))}
+          <p className="kg-dev-hint" title="On a Mac: open Audio MIDI Setup, Window > Show MIDI Studio, click Bluetooth, and Connect your keyboard. Then reload Koog. Bluetooth adds about 7 to 15 ms; a USB-C cable is the quickest.">Bluetooth keyboard? Pair it in Audio MIDI Setup (Mac). USB-C is the quickest.</p>
           {hasDj && <p className="kg-dev-hint">Close any DJ software first: it grabs the controller.</p>}
           {live.length === 0 && (
             <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
@@ -76,6 +81,8 @@ export function DevicesControl() {
             <p className="kg-dev-note">Turn Computer sound ON to hear it through the computer.</p>
           </>}
           <PedalSetup />
+          <button type="button" className="kg-pedal-setup" title="Stompbox effects and piano pedals" onClick={() => { setOpen(false); setBoardOpen(true) }}>🦶 Open the Pedalboard</button>
+          <LatencyMeter devices={live} />
         </div>
       )}
     </div>

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { BPM_MAX, BPM_MIN, setBpm, useMaster } from '../../music/masterClock'
 import { BIG_WORDS, type BigState } from './loopCore'
-import { INSTRUMENTS, bigDown, bigHoldProgress, bigLayers, bigProgress, bigRedo, bigState, bigUndo, bigUp, canBigRedo, clearAll, clearLayer, instLabel, nextSound, setLayerInst, setNextSound, setOpt, stopAll, timingInfo, toggleMute, useLoop } from './loopEngine'
+import { INSTRUMENTS, bigDown, canUndoClear, setMetronomeOn, undoClear, bigHoldProgress, bigLayers, bigProgress, bigRedo, bigState, bigUndo, bigUp, canBigRedo, clearAll, clearLayer, instLabel, nextSound, setLayerInst, setNextSound, setOpt, stopAll, timingInfo, toggleMute, useLoop } from './loopEngine'
 import { setGuide, unlockGuide, useGuide } from './guide'
-import { pedalJob, usePedal } from '../pedal/pedal'
+import { LOOP_STYLES, pedalJob, setLoopStyle, usePedal, type LoopStyle } from '../pedal/pedal'
+import { hideClearToast, useClearToast } from './clearToast'
 
 // The simple looper: ONE big button (also the foot pedal, and Space), like a guitar loop pedal.
 //   tap: record -> tap: loop it -> tap: add a layer -> tap: finish the layer    press twice: stop    hold 2 s: undo / redo (stopped: clear)
@@ -38,6 +39,40 @@ export function ConfirmChip({ label, onConfirm, disabled, title, className = 'lp
   )
 }
 
+/** the big "Cleared" toast after the pedal's 2 s hold (simple style), with Undo clear for 5 s */
+export function ClearedToast() {
+  const t = useClearToast((s) => s.t)
+  useLoop((s) => s.rev) // re-render when the loops change (recording something new retires the Undo)
+  useEffect(() => {
+    if (!t) return
+    const h = window.setTimeout(hideClearToast, Math.max(0, t.until - Date.now()))
+    return () => window.clearTimeout(h)
+  }, [t])
+  if (!t) return null
+  const can = t.undo && canUndoClear()
+  return (
+    <div className="lps-cleared" role="status" aria-live="assertive" key={t.n} style={{ ['--ms' as string]: Math.max(0, t.until - Date.now()) + 'ms' }}>
+      <b>🧹 Cleared</b>
+      {can && <button type="button" className="lps-cleared-undo" onClick={() => undoClear()}>↶ Undo clear</button>}
+      {can && <i className="lps-cleared-bar" aria-hidden />}
+    </div>
+  )
+}
+
+/** which style the foot pedal uses for the looper (the same switch is in the pedal setup) */
+function PedalStyle({ here }: { here: boolean }) {
+  const style = usePedal((p) => p.loopStyle) ?? 'simple'
+  const desc = LOOP_STYLES.find(([k]) => k === style)
+  return (
+    <label className="lps-pedalstyle" title={desc?.[2]}>
+      <span>Foot pedal style{here ? ' (in use)' : ''}</span>{' '}
+      <select value={style} onChange={(e) => setLoopStyle(e.target.value as LoopStyle)} aria-label="Foot pedal style for the looper" data-pedal-style={style}>
+        {LOOP_STYLES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+      </select>
+    </label>
+  )
+}
+
 /** the loop ring and the hold ring follow the loop (rAF while running or held, a slow timer otherwise; 4 Hz under reduced motion) */
 function useBigRings(root: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -67,7 +102,7 @@ function useBigRings(root: React.RefObject<HTMLElement | null>) {
 const formField = (t: EventTarget | null) => { const el = t as HTMLElement | null; return !!el?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]') }
 
 function BigButton({ st, count }: { st: BigState; count: number }) {
-  const down = (e: React.PointerEvent) => { if (e.button !== 0) return; e.preventDefault(); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); bigDown() }
+  const down = (e: React.PointerEvent) => { if (e.button !== 0) return; e.preventDefault(); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); bigDown('classic', e.timeStamp) }
   const up = () => bigUp()
   const w = BIG_WORDS[st]
   return (
@@ -101,7 +136,7 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
     const seen = () => !!root.current && root.current.getClientRects().length > 0
     const mine = (e: KeyboardEvent) => e.code === 'Space' && !e.ctrlKey && !e.metaKey && !e.altKey && !formField(e.target) && seen()
       && !(e.target instanceof HTMLElement && e.target.closest('button, a, [role=button]') && !root.current!.contains(e.target))
-    const kd = (e: KeyboardEvent) => { if (e.defaultPrevented || !mine(e)) return; e.preventDefault(); if (!e.repeat && !held) { held = true; bigDown() } }
+    const kd = (e: KeyboardEvent) => { if (e.defaultPrevented || !mine(e)) return; e.preventDefault(); if (!e.repeat && !held) { held = true; bigDown('classic', e.timeStamp) } }
     const ku = (e: KeyboardEvent) => { if (e.code !== 'Space' || !held) return; e.preventDefault(); held = false; bigUp() }
     const blur = () => { if (held) { held = false; bigUp() } }
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); window.addEventListener('blur', blur)
@@ -136,8 +171,8 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
             <button type="button" className={'lps-tog' + (s.countIn > 0 ? ' on' : '')} aria-pressed={s.countIn > 0} onClick={() => setOpt('countIn', s.countIn > 0 ? 0 : 1)}
               title="Four clicks before recording starts, and the loop snaps to whole bars">🥁 Count-in {s.countIn > 0 ? 'on' : 'off'}</button>
             <button type="button" className={'lps-tog' + (guideOn ? ' on' : '')} aria-pressed={guideOn} onClick={() => { unlockGuide(); setGuide({ on: !guideOn }) }} title="A soft drum beat to play along with">🎵 Beat {guideOn ? 'on' : 'off'}</button>
-            <button type="button" className={'lps-tog' + (s.metro ? ' on' : '')} aria-pressed={s.metro} onClick={() => { unlockGuide(); setOpt('metro', !s.metro) }}
-              title="A soft click on every beat (louder on beat 1) while you loop. It is not recorded.">🔔 Metronome {s.metro ? 'on' : 'off'}</button>
+            <button type="button" className={'lps-tog' + (s.metro ? ' on' : '')} aria-pressed={s.metro} onClick={() => setMetronomeOn(!s.metro)}
+              title="A soft click on every beat (louder on beat 1). It needs no loop, and it is not recorded. Press M anywhere to flip it (Shift+M while Keys play notes is on).">🔔 Metronome {s.metro ? 'on' : 'off'}</button>
             <label className="lps-bpm" title={tempoTitle}>Tempo <BpmField bpm={bpm} disabled={following || ti.tempoLocked} title={tempoTitle} />{ti.tempoLocked && !following ? <small className="lps-bpm-hint">clear to change tempo</small> : null}</label>
           </div>
           <p className={'lps-timing lps-timing-' + ti.mode} data-timing={ti.mode}>{ti.mode === 'free' ? '〰️' : '📏'} {ti.words}</p>
@@ -149,7 +184,11 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
               </select>
             </label>
           </div>
-          <p className="lps-keys"><kbd>Space</kbd>{pedalHere ? <> or the <b>foot pedal</b></> : null} = the big button · press twice = stop · hold 2 s = undo / redo (stopped: clear)</p>
+          <p className="lps-keys"><kbd>Space</kbd> = the big button · press twice = stop · hold 2 s = undo / redo (stopped: clear) · <kbd>M</kbd> = metronome (<kbd>Shift</kbd>+<kbd>M</kbd> while Keys play notes is on)</p>
+          <PedalStyle here={!!pedalHere} />
+          {pedalHere && <p className="lps-keys lps-pedalline" data-pedal-line={pedal.loopStyle ?? 'simple'}>🦶 <b>Foot pedal</b>, {(pedal.loopStyle ?? 'simple') === 'simple'
+            ? 'simple style: one tap = record, then one tap = loop it. Tap to add a layer. Two quick taps = stop all. Hold 2 s = clear all.'
+            : 'classic style: tap = record, loop, add a layer. Press twice = stop. Hold 2 s = undo / redo (stopped: clear).'}</p>}
         </div>
       </div>
       <ol className="lps-layers" aria-label="Layers">

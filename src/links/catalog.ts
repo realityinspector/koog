@@ -73,19 +73,22 @@ const GAME_META: Record<string, { concepts: ConceptId[]; age: number; level: num
   zombies: { concepts: ['notes', 'reading-music'], age: 5, level: 2 },
   jiujitsu: { concepts: ['rhythm-pulse', 'ear-training', 'phrases-cadences'], age: 7, level: 3 },
   fashion: { concepts: ['style-history', 'chords'], age: 7, level: 3 },
+  memory: { concepts: ['memorizing', 'ear-training', 'phrases-cadences'], age: 6, level: 2 },
+  feast: { concepts: ['memorizing', 'notes', 'phrases-cadences'], age: 6, level: 2 },
+  tree: { concepts: ['memorizing', 'notes', 'phrases-cadences'], age: 6, level: 2 },
   bachdoom: { concepts: ['memorizing', 'phrases-cadences', 'rhythm-pulse'], age: 8, level: 4 },
 }
 const EMU_META: Record<string, { concepts: ConceptId[]; blurb: string }> = {
-  theremin: { concepts: ['style-history', 'ear-training'], blurb: 'Play the 1920 instrument you never touch: slide your pointer to bend the pitch.' },
-  ondes: { concepts: ['style-history'], blurb: 'A voice-like electronic instrument from 1928, played by sliding a ring.' },
-  hammond: { concepts: ['style-history'], blurb: 'The 1935 organ with no pipes: slide the drawbars to mix the sound like a recipe.' },
-  mellotron: { concepts: ['style-history'], blurb: 'A keyboard that plays tape recordings, so one machine sounds like an orchestra.' },
-  moog: { concepts: ['style-history'], blurb: 'The classic knobs-and-cables synth: oscillator, filter and envelope, wired together.' },
-  arp: { concepts: ['style-history'], blurb: 'A synth with sliders you can rewire, great for finding out how sound is built.' },
-  tb303: { concepts: ['rhythm-pulse', 'style-history'], blurb: 'The little silver bass box that flopped, then started a whole kind of dance music.' },
-  prophet: { concepts: ['style-history', 'chords'], blurb: 'The first synth that played five notes at once and remembered its sounds.' },
-  juno: { concepts: ['style-history', 'chords'], blurb: 'Cheap, easy and lush: one knob for each job and a shimmery chorus.' },
-  dx: { concepts: ['style-history'], blurb: 'Digital FM sound: glassy electric pianos and bells.' },
+  airhands: { concepts: ['style-history', 'ear-training'], blurb: 'Play an instrument you never touch: slide your pointer through the air to bend the pitch.' },
+  ribbon: { concepts: ['style-history'], blurb: 'A voice-like electronic instrument played by sliding a ring or ribbon.' },
+  wheelhouse: { concepts: ['style-history'], blurb: 'A pipeless drawbar organ: slide the drawbars to mix the sound like a recipe.' },
+  tapechoir: { concepts: ['style-history'], blurb: 'A tape-style keyboard where one machine sounds like strings, flutes or a choir.' },
+  ladder: { concepts: ['style-history'], blurb: 'A classic analog-style synth: oscillator, filter and envelope, wired together.' },
+  patchbay: { concepts: ['style-history'], blurb: 'A semi-modular synth with sliders you can rewire, great for finding out how sound is built.' },
+  squelch: { concepts: ['rhythm-pulse', 'style-history'], blurb: 'A step-sequenced bass box with a squelchy filter, the sound behind acid dance music.' },
+  five: { concepts: ['style-history', 'chords'], blurb: 'A five-voice synth that plays chords and remembers its sounds.' },
+  shimmer: { concepts: ['style-history', 'chords'], blurb: 'Easy and lush: one knob for each job and a shimmery chorus.' },
+  bellfm: { concepts: ['style-history'], blurb: 'Digital FM sound: glassy electric pianos and bells.' },
 }
 const HELPERS: Record<string, { title: string; blurb: string; concepts: ConceptId[]; level: number; age: number }> = {
   mentor: { title: 'Mentor (a robot audience)', blurb: 'A friendly synth robot names what you just played: motif, cadence, and more.', concepts: ['motifs-form', 'phrases-cadences', 'tension-release'], level: 1, age: 5 },
@@ -235,7 +238,7 @@ const concepts: Concept[] = [
   { id: 'dynamics', title: 'Dynamics and control', link: L('challenge-dynamics'), examples: ['challenge-dynamics', 'play-free'],
     parent: 'Loud and soft, and knowing when each fits. In Koog a forearm slam fizzles until about 16 good notes charge the BOOM meter, then the same slam is a giant finale, so children learn noise has a time and place. Touch-sensitive keyboards show the difference best.',
     kid: 'Soft notes whisper and loud notes thunder. Play nicely to charge the BOOM meter, then let it rip.' },
-  { id: 'style-history', title: 'Style and music history', link: L('synth-moog'), examples: ['synth-moog', 'synth-theremin', 'helper-mimic'],
+  { id: 'style-history', title: 'Style and music history', link: L('synth-ladder'), examples: ['synth-ladder', 'synth-airhands', 'helper-mimic'],
     parent: 'Mimic answers a phrase in styles such as Baroque, ragtime and blues, and the Synth screen is a timeline of electronic instruments from 1920 to 1983, each playable as a synthesized emulation and linked to a classical piece.',
     kid: 'Music sounds different in every era. Hear your tune in a new style, or play the strange instruments people invented long ago.' },
   { id: 'ear-training', title: 'Ear training', link: L('challenge-majmin'), examples: ['challenge-majmin', 'challenge-echo', 'challenge-interval'],
@@ -257,7 +260,7 @@ export const CURRICULUM = [
   'play-free', 'challenge-black', 'challenge-detective', 'song-lune', 'helper-mentor', 'challenge-climb', 'song-ode', 'beat-pop',
   'challenge-rhythm', 'helper-vibes', 'challenge-majmin', 'song-buns', 'challenge-chords', 'play-sheet', 'song-twinkle', 'challenge-echo',
   'game-zombies', 'level-e0m1', 'level-e0m2', 'level-e0m3', 'song-minuet', 'game-bachdoom', 'challenge-dynamics', 'helper-band',
-  'synth-theremin', 'helper-mimic', 'challenge-interval', 'game-jiujitsu', 'song-canon', 'synth-moog', 'level-e1m1', 'game-fashion', 'song-prelude',
+  'synth-airhands', 'helper-mimic', 'challenge-interval', 'game-jiujitsu', 'song-canon', 'synth-ladder', 'level-e1m1', 'game-fashion', 'song-prelude',
 ]
 
 export const CATALOG = {

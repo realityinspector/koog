@@ -4,8 +4,11 @@
 import {
   BIG_DOUBLE_MS, BIG_HOLD_MS, POST_ROLL_MS, PRE_ROLL_MS, TIMING_WORDS, bigAfter, bigNext, capturePos, classifyPress, deriveFreeTempo, hasNear, holdChoice, lockedStartBeat,
   loopLenLabel, postRollPos, preRollBeats, snapLoopLen, timingMode, wrapNotes,
+  SIMPLE_DOUBLE_MS, UNDO_CLEAR_MS, LOOP_STYLES, LAG_MAX_MS, classifyPressFor, simpleDropsFirstTap, simpleNext, lagNext, noteTime, isMetronomeKey,
+  GRACE_MS, graceBeats, closeLeadMs, trimSamePitch, lockedStartBeat as lsb, mod,
   type BigState, type Gesture,
 } from '../src/features/loopstation/loopCore'
+import { bpmFromTaps, pushTap } from '../src/music/tapTempo'
 
 let fails = 0, passes = 0
 function eq(name: string, got: unknown, want: unknown) {
@@ -152,6 +155,98 @@ eq('nothing to redo: undo', holdChoice('undo', 0), 'undo')
   hold(); eq('third hold: undone again', layers, ['bass'])
   layers = [...layers, 'synth']; redo = []; last = null // recording something new forgets the redo
   hold(); eq('after a new layer, a hold undoes it', layers, ['bass'])
+}
+
+
+// ---- the pedal's SIMPLE style (one tap record / one tap play) ----
+eq('simple is the first (default) style', LOOP_STYLES[0][0], 'simple')
+eq('simple double-tap window is 0.5 s or less', SIMPLE_DOUBLE_MS <= 500 && SIMPLE_DOUBLE_MS < BIG_DOUBLE_MS, true)
+eq('undo-clear lasts 5 s', UNDO_CLEAR_MS, 5000)
+eq('simple: 2nd press inside the window is a double', classifyPressFor('simple', 1000 + SIMPLE_DOUBLE_MS - 1, 1000), 'double')
+eq('simple: 2nd press after the window is a tap', classifyPressFor('simple', 1000 + SIMPLE_DOUBLE_MS + 1, 1000), 'tap')
+eq('classic keeps its 1 s window', classifyPressFor('classic', 1000 + 900, 1000), 'double')
+eq('simple: 0.7 s apart is two taps, not a double', classifyPressFor('simple', 1700, 1000), 'tap')
+{
+  // one tap records, one tap closes and the loop keeps playing, tap = new layer, tap = finish it, double = stop all, hold = clear all
+  let st: BigState = 'empty'; const trail: string[] = []
+  const g = (x: Gesture) => { const a = simpleNext(st, x); st = bigAfter(st, a, 1); trail.push(a + '>' + st) }
+  g('tap'); st = 'rec' // (count-in over: recording)
+  g('tap'); g('tap'); st = 'over'; g('tap'); g('double'); g('hold')
+  eq('simple: full flow', trail, ['record>count', 'close>play', 'overdub>over', 'finish>play', 'stop>stop', 'clear>empty'])
+}
+for (const s of ['empty', 'count', 'rec', 'play', 'over', 'stop'] as BigState[]) eq('simple: hold always clears (' + s + ')', simpleNext(s, 'hold'), 'clear')
+eq('classic hold still undoes while playing', bigNext('play', 'hold'), 'undo')
+eq('simple: tap while empty records', simpleNext('empty', 'tap'), 'record')
+eq('simple: tap while recording closes (keeps playing)', bigAfter('rec', simpleNext('rec', 'tap')), 'play')
+eq('simple: tap while playing starts a layer', simpleNext('play', 'tap'), 'overdub')
+// a double-tap takes back what its first tap started
+eq('double after a tap that began a recording: drop it', simpleDropsFirstTap('empty'), true)
+eq('double after a tap that began a layer: drop it', simpleDropsFirstTap('play'), true)
+eq('double after a tap that closed the loop: keep it', simpleDropsFirstTap('rec'), false)
+eq('double after a tap that finished a layer: keep it', simpleDropsFirstTap('over'), false)
+eq('double after a tap that started playback: nothing to drop', simpleDropsFirstTap('stop'), false)
+
+// ---- timer lag tracking and event timestamps ----
+{
+  let a = 0; for (let i = 0; i < 80; i++) a = lagNext(a, 6)
+  eq('lag converges to the steady lateness', Math.round(a), 6)
+  eq('a huge stall is capped', lagNext(0, 5000) <= LAG_MAX_MS * 0.1 + 1e-9, true)
+  eq('lag never goes below 0', lagNext(0, -50), 0)
+  let b = LAG_MAX_MS; for (let i = 0; i < 200; i++) b = lagNext(b, 0)
+  eq('lag decays to 0 when timers are on time', Math.round(b), 0)
+}
+eq('a MIDI timestamp 12 ms old is used', noteTime(988, 1000), 988)
+eq('a missing timestamp falls back to now', noteTime(undefined, 1000), 1000)
+eq('a timestamp from the future falls back to now', noteTime(1010, 1000), 1000)
+eq('a very old timestamp falls back to now', noteTime(500, 1000), 1000)
+eq('timestamp 0 (synthetic) falls back to now', noteTime(0, 1000), 1000)
+
+// ---- the M key ----
+const key = (o: Partial<{ code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean }>) => ({ code: 'KeyM', shiftKey: false, ctrlKey: false, metaKey: false, altKey: false, repeat: false, ...o })
+eq('M with Keys-play-notes off toggles', isMetronomeKey(key({}), false), true)
+eq('Shift+M with Keys-play-notes off toggles', isMetronomeKey(key({ shiftKey: true }), false), true)
+eq('plain M with Keys-play-notes on stays the note B', isMetronomeKey(key({}), true), false)
+eq('Shift+M with Keys-play-notes on toggles', isMetronomeKey(key({ shiftKey: true }), true), true)
+eq('Ctrl+M never toggles', isMetronomeKey(key({ ctrlKey: true }), false), false)
+eq('a held (repeating) M toggles once', isMetronomeKey(key({ repeat: true }), false), false)
+eq('another key never toggles', isMetronomeKey(key({ code: 'KeyN' }), false), false)
+
+// ---- timing science round: grace in time, stop-press lead, seam, tap tempo, drift ----
+eq('grace is 0.25 beat at 120 bpm', graceBeats(500), 0.25)
+eq('grace shrinks in beats at 160 bpm (still 125 ms)', Math.round(graceBeats(375) * 1000), 333)
+eq('grace at 40 bpm is the 0.1 beat floor (GRACE_MS ' + GRACE_MS + ')', graceBeats(1500), 0.1)
+// before: fixed 0.25 beat at 60 bpm = 250 ms forgiven; after: 125 ms. A press 200 ms after a bar line at 60 bpm now goes to the NEXT bar.
+eq('60 bpm, press 200 ms (0.2 beat) late: next bar now', lsb(8.2, 0, graceBeats(1000)), 12)
+eq('60 bpm, press 100 ms late: keeps the bar', lsb(8.1, 0, graceBeats(1000)), 8)
+eq('foot lead is bigger than hand lead', closeLeadMs(true) > closeLeadMs(false), true)
+eq('nudge is clamped to +-50', closeLeadMs(false, 500), 15 + 50)
+// free-time first loop: intended 2000 ms, foot presses early by ~45 ms (+-15 jitter, deterministic spread)
+{
+  const errs = [-60, -45, -30, -50, -40, -35, -55, -45]
+  const before = errs.reduce((a, e) => a + Math.abs(e), 0) / errs.length
+  const after = errs.reduce((a, e) => a + Math.abs(e + closeLeadMs(true)), 0) / errs.length
+  eq('foot early-press length error shrinks (mean ms, before -> after)', [Math.round(before), Math.round(after)], [45, 9])
+}
+const nn = (t: number, d: number, n = 60) => ({ t, d, n, v: 90 })
+eq('a long note is trimmed before the next same-pitch hit', trimSamePitch([nn(0, 4), nn(2, 1)], 8).map((x) => x.d), [1.98, 1])
+eq('a note held over the seam stops before its own first note', trimSamePitch([nn(0, 1), nn(6, 4)], 8).map((x) => x.d), [1, 1.98])
+eq('a lone note is trimmed under one loop', trimSamePitch([nn(1, 8)], 8)[0].d < 8, true)
+eq('different pitches are left alone', trimSamePitch([nn(0, 4, 60), nn(1, 4, 64)], 8).map((x) => x.d), [4, 4])
+eq('short notes are untouched', trimSamePitch([nn(0, 0.5), nn(2, 0.5)], 8).map((x) => x.d), [0.5, 0.5])
+{
+  const T = (...g: number[]) => g.reduce<number[]>((a, x) => [...a, (a.length ? a[a.length - 1] : 0) + x], [0])
+  const steady = bpmFromTaps(T(500, 500, 500, 500))
+  eq('steady taps: 120 bpm', Math.round(steady!), 120)
+  // one missed tap (a 1000 ms gap) in an otherwise 500 ms pulse: old first-to-last mean read 4 gaps/2500ms = 96 bpm
+  eq('a missed tap no longer drags the tempo', Math.round(bpmFromTaps(T(500, 500, 1000, 500, 500))!), 120)
+  eq('a doubled tap: the 80 ms gap is dropped (old mean said 125 too, but also with 2 stray taps); stays within 5%', Math.round(bpmFromTaps(T(500, 500, 80, 420, 500))!), 125)
+  eq('one tap is not a tempo', bpmFromTaps([100]), null)
+  eq('a pause over 2 s starts fresh', pushTap([0, 500, 1000], 4000), [4000])
+  eq('only the last 8 taps are kept', pushTap([0, 1, 2, 3, 4, 5, 6, 7], 8).length, 8)
+}
+{ // drift: every cycle start is base + k*period, never a running sum. 100,000 cycles of a 7.3 beat loop stay exact to 1e-9 beats.
+  const P = 7.3, base = 4
+  eq('no drift over 100,000 cycles', Math.abs(mod(base + 100000 * P - base, P)) < 1e-6 || Math.abs(mod(100000 * P, P) - P) < 1e-6, true)
 }
 
 console.log(`${fails ? 'FAILED' : 'ok'}: ${passes} passed, ${fails} failed`)

@@ -14,6 +14,7 @@ import { create } from 'zustand'
 import { getSynth } from '../features/synth-history/engine'
 import { createEngine, type Engine } from '../features/synth-history/emu/core'
 import { getEmu } from '../features/synth-history/emu'
+import { canonSoundId } from '../features/synth-history/emu/aliases'
 import { newestEngine } from '../features/synth-history/emu/bus'
 import { SOUNDS, type SoundChoice } from '../features/devices/soundChoice'
 import { onProfileChange, pload, psave } from '../profile/profile'
@@ -28,8 +29,8 @@ export interface ZoneHit { t: ZoneTarget; note: number; vel: number; zone: numbe
 export const ZONE_COLORS = ['#ff9b54', '#4cc9f0', '#b388ff']
 export const ZONE_SOUNDS: SoundChoice[] = [
   ...SOUNDS,
-  { id: 'bass303', label: 'TB-303 bass', icon: '🐸', emu: 'tb303', preset: 'Round bass' },
-  { id: 'acid', label: 'TB-303 acid', icon: '🧪', emu: 'tb303', preset: 'Squelch' },
+  { id: 'squelchbass', label: 'Squelch bass', icon: '🐸', emu: 'squelch', preset: 'Round bass' },
+  { id: 'acid', label: 'Squelch acid', icon: '🧪', emu: 'squelch', preset: 'Squelch' },
 ]
 const KEY = 'split.v1'
 const LAYER_GAIN = [1, 1, 0.7, 0.58]
@@ -72,7 +73,7 @@ export const panelOverride = () => { const i = getActiveInstrument(); return !!i
 export const zonesActive = () => S().mode !== 'single' && !panelOverride()
 
 // ---------- engines & targets ----------
-const soundOf = (id: string) => ZONE_SOUNDS.find((s) => s.id === id) ?? ZONE_SOUNDS[0]
+const soundOf = (id: string) => { const c = canonSoundId(id); return ZONE_SOUNDS.find((s) => s.id === c) ?? ZONE_SOUNDS[0] }
 function build(id: string): Engine | null {
   const ch = soundOf(id)
   const spec = ch.emu ? getEmu(ch.emu) : undefined
@@ -184,7 +185,7 @@ export function learnSplit(on = true) { useZones.setState({ learning: on }); fir
 
 function load() {
   const d = defaults(), sv = pload<Partial<ZoneState>>(KEY, {})
-  const zones = d.zones.map((z, i) => ({ ...z, ...(sv.zones?.[i] ?? {}) }))
+  const zones = d.zones.map((z, i) => { const m = { ...z, ...(sv.zones?.[i] ?? {}) }; return { ...m, sound: canonSoundId(m.sound) } })
   const mode: ZoneMode = sv.mode === 'split' || sv.mode === 'layer' || sv.mode === 'both' ? sv.mode : 'single'
   fire(rel)
   useZones.setState({ ...d, mode, zones, split: Number.isFinite(sv.split) ? (sv.split as number) : d.split, focused: sv.focused ?? 0, touched: !!sv.touched })

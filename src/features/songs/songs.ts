@@ -3,14 +3,17 @@ import type { Key } from '../../music/theory'
 import { PRELUDE_C, preludeFigure } from '../../music/scores'
 import { CLASSICAL, seq } from '../../music/classical'
 import type { ArrStyle, HarmonyBar } from '../../music/arrange'
+import { HOLIDAY_SONGS, type Season } from './holidaySongs'
 
 // lyric (optional, sounding notes only): one syllable per note. Trailing "-" = the word continues on the next
 // note (joined when shown). Trailing "/" = a new lyric line starts after this syllable. Rests never carry a lyric.
 export interface SongNote { note: number | null; beats: number; lyric?: string } // null = rest
-export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex' | 'classical'
+export type Tier = 'pop' | 'bang' | 'easy' | 'medium' | 'flex' | 'classical' | 'holiday'
 export interface Song {
   id: string; title: string; origin: string; year: string
   key: Key; bpm: number; tier: Tier; notes: SongNote[]; hook?: string; mine?: boolean
+  /** holiday songs: which holiday (the Holiday tab and the holiday games group by this) */
+  season?: Season
   /** classical library only: false = melody written from memory, not yet verified by ear */
   checked?: boolean
   /** meter for bar lines and the arranger (default 4) */
@@ -28,7 +31,7 @@ export interface Song {
 const maj = (tonic: number): Key => ({ tonic, scale: 'major' })
 const min = (tonic: number): Key => ({ tonic, scale: 'minor' })
 
-export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex', classical: '🎻 Classical' }
+export const TIER_LABEL: Record<Tier, string> = { pop: '🎧 Koog Originals (pop)', bang: 'Bangers', easy: 'Warm-up: classics', medium: 'Warm-up: getting good', flex: 'Warm-up: flex', classical: '🎻 Classical', holiday: '🎄 Holiday' }
 
 const BASE: Song[] = [
   { id: 'pop-static', title: 'Static in My Headphones', origin: 'Koog Original', year: '2026', key: min(4), bpm: 124, tier: 'pop', hook: 'Sad but loud. Smash the build, then scream the hook.',
@@ -153,8 +156,12 @@ const META: Record<string, Partial<Song>> = {
   prelude: { harmony: PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) },
 }
 
-export const SONGS: Song[] = [...BASE, ...CLASSICAL].map((x) => {
+// the three holiday songs that were already in the warm-ups (they stay where they were; the Holiday tab lists them too)
+const OLD_SEASON: Record<string, Season> = { jingle: 'christmas', deckhalls: 'christmas', wewish: 'christmas' }
+
+export const SONGS: Song[] = [...BASE, ...CLASSICAL, ...HOLIDAY_SONGS.filter((h) => !BASE.some((b) => b.id === h.id))].map((x) => {
   const s = META[x.id] ? { ...x, ...META[x.id] } : x
+  if (OLD_SEASON[s.id]) s.season = OLD_SEASON[s.id]
   const txt = LYRICS[s.id]
   if (!txt) return s
   const syl = txt.trim().split(/\s+/)

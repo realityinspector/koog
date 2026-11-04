@@ -129,6 +129,8 @@ To build a link yourself, call /api/link or the make_link tool: it validates ids
 - ${APP_URL}#/play
 - ${APP_URL}#/gallery     the self-playing tour of every feature
 - ${APP_URL}#/gallery/art     Art Gallery mode: full-screen moving art with calm music, loops forever
+- ${APP_URL}#/gallery/art/thanksgiving     Thanksgiving Art Gallery: falling leaves, golden lights, calm harvest tunes
+- ${APP_URL}#/gallery/art/christmas     Christmas Art Gallery: snow, string lights, old carols
 - ${APP_URL}#/songs/ode/learn?rung=2     Learn "Ode to Joy" a few notes at a time
 - ${APP_URL}#/boss/loops     Boss mode loop station: one big button, tap to record and layer
 - ${APP_URL}#/games/bachdoom

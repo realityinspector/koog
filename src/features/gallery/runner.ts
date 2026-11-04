@@ -10,8 +10,8 @@
 import { create } from 'zustand'
 import { STOPS, TOTAL_SECONDS, stopIndex, type Stop } from './stops.data'
 import { ART_ROOMS, PIECES, type Piece } from './art.data'
-import { SONGS } from '../songs/songs'
-import { Run, perform } from './ghost'
+import { Run, perform, duck, inGhost } from './ghost'
+import { findSong, holidayPieces, isSeason, SEASONS, type Season } from './holiday'
 import { applyForGallery, galleryHooks, resetWorld, setGalleryHash } from '../../links/sync'
 import { onNote } from '../../music/notes'
 import { flags } from '../../links/bus'
@@ -23,10 +23,14 @@ interface G {
   phase: Phase; idx: number; veil: boolean; started: boolean
   /** Art Gallery mode: the piece on show, when it began (performance clock) and how long it should last (ms) */
   art: boolean; piece: Piece | null; pieceAt: number; pieceMs: number
+  /** which Art Gallery playlist: the everyday one, or a holiday one */
+  kind: 'art' | Season
+  /** true while the gallery's own music is turned down because someone is playing */
+  ducked: boolean
 }
 type Hot = { store?: ReturnType<typeof make> }
 const hot = (import.meta.hot?.data ?? {}) as Hot
-function make() { return create<G>()(() => ({ phase: 'off', idx: 0, veil: false, started: false, art: false, piece: null, pieceAt: 0, pieceMs: 0 })) }
+function make() { return create<G>()(() => ({ phase: 'off', idx: 0, veil: false, started: false, art: false, piece: null, pieceAt: 0, pieceMs: 0, kind: 'art', ducked: false })) }
 export const useGallery = hot.store ?? make()
 if (import.meta.hot) { import.meta.hot.data.store = useGallery; import.meta.hot.accept() }
 const set = (p: Partial<G>) => useGallery.setState(p)
@@ -115,6 +119,9 @@ async function finish(my: number) {
 
 // ---------- Art Gallery mode ----------
 const ART_HASH = '#/gallery/art'
+const hashFor = (k: 'art' | Season) => (k === 'art' ? ART_HASH : SEASONS[k].hash)
+/** the pieces of a playlist */
+export const piecesFor = (k: 'art' | Season): Piece[] => (k === 'art' ? PIECES : holidayPieces(k))
 const ART_FADE = () => (reduced() ? 2200 : 1700) // the soft dip to dark between pieces (a slow fade, never a flash)
 let artQ: Piece[] = [], artI = 0, artPass = 0
 let cam: Animation | null = null
@@ -123,8 +130,10 @@ let wentFull = false
 const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]] } return b }
 /** one pass: the rooms in order the first time, then shuffled (and shuffled inside), never the same piece twice in a row */
 function artPassList(): Piece[] {
-  const rooms = artPass++ === 0 ? ART_ROOMS : shuffle(ART_ROOMS)
-  const q = rooms.flatMap((r) => { const ps = PIECES.filter((p) => p.room === r); return artPass === 1 ? ps : shuffle(ps) })
+  const kind = get().kind, all = piecesFor(kind)
+  const first = artPass++ === 0
+  const rooms = first ? ART_ROOMS : shuffle(ART_ROOMS)
+  const q = kind === 'art' ? rooms.flatMap((r) => { const ps = all.filter((p) => p.room === r); return first ? ps : shuffle(ps) }) : first ? all : shuffle(all)
   const last = artQ[artQ.length - 1]
   if (last && q[0]?.id === last.id && q.length > 1) q.push(q.shift()!)
   return q
@@ -136,7 +145,7 @@ function resolvePiece(p: Piece) {
 }
 /** how long a song takes (ms), so the progress line and the label know */
 function songMs(id: string, speed: number, lead: number) {
-  const s = SONGS.find((x) => x.id === id)
+  const s = findSong(id)
   if (!s) return 0
   return ((s.notes.reduce((n, x) => n + x.beats, 0) + lead) * 60000) / (s.bpm * speed)
 }
@@ -182,7 +191,7 @@ async function runPiece(my: number) {
     if (my !== token) return
   }
   const flow = state.songMode === 'flow'
-  const speed = flow ? 0.8 : 1, lead = flow ? 2 : 0
+  const speed = flow ? 0.8 : p.speed ?? 1, lead = flow ? 2 : 0
   const ms = Math.max(seconds * 1000, pf.k === 'song' ? songMs(pf.id, speed, lead) + 2500 : 0)
   startCamera(ms + ART_FADE() * 2)
   set({ veil: false, piece: p, pieceAt: performance.now(), pieceMs: ms })
@@ -216,19 +225,20 @@ export function startArt() {
   } catch { /* no full screen here: fine */ }
   document.addEventListener('fullscreenchange', onFullscreen)
   artQ = []; artI = 0; artPass = 0
-  set({ started: true, art: true, idx: 0 })
-  setGalleryHash(ART_HASH)
+  set({ started: true, art: true, idx: 0, ducked: false })
+  duck.level = 1
+  setGalleryHash(hashFor(get().kind))
   idleCursor(true)
   void runPiece(++token)
 }
 
-// the cursor hides after 2 s without moving (art mode only)
+// the cursor and the controls fade after 3.5 s without a move, tap or key (art mode only)
 let idleT = 0
-const wake = () => {
+export const wake = () => {
   const h = document.documentElement
   h.removeAttribute('data-idle')
   clearTimeout(idleT)
-  idleT = window.setTimeout(() => { if (get().art) h.setAttribute('data-idle', '') }, 2000)
+  idleT = window.setTimeout(() => { if (get().art) h.setAttribute('data-idle', '') }, 3500)
 }
 function idleCursor(on: boolean) {
   window.removeEventListener('pointermove', wake)
@@ -241,29 +251,64 @@ function idleCursor(on: boolean) {
 /** show the title card (nothing plays, nothing changes). id 'art' = the Art Gallery mode card. */
 export function openGallery(id?: string) {
   if (isEmbed()) return
-  if (id === 'art') {
-    set({ phase: 'title', idx: 0, veil: false, started: false, art: true, piece: null })
-    setGalleryHash(ART_HASH)
+  const sub = id?.startsWith('art/') ? id.slice(4) : ''
+  if (id === 'art' || (sub && isSeason(sub))) {
+    const kind = isSeason(sub) ? sub : 'art'
+    set({ phase: 'title', idx: 0, veil: false, started: false, art: true, piece: null, kind, ducked: false })
+    setGalleryHash(hashFor(kind))
     listen()
     return
   }
   const i = id ? stopIndex(id) : 0
-  set({ phase: 'title', idx: i < 0 ? 0 : i, veil: false, started: false, art: false, piece: null })
+  set({ phase: 'title', idx: i < 0 ? 0 : i, veil: false, started: false, art: false, piece: null, kind: 'art' })
   setGalleryHash('#/gallery' + (i > 0 ? '/' + STOPS[i].id : ''))
   listen()
 }
 /** the big button: this click unlocks audio, then the tour runs by itself */
 export function startGallery() { if (get().art) { startArt(); return } shield(); flags.gallery = true; set({ started: true }); void runStop(get().idx) }
 /** from the art title card: back to the guided tour's card */
-export function tourInstead() { if (get().phase !== 'title') return; set({ art: false, idx: 0 }); setGalleryHash('#/gallery') }
+export function tourInstead() { if (get().phase !== 'title') return; set({ art: false, idx: 0, kind: 'art' }); setGalleryHash('#/gallery') }
 export function jump(i: number) {
   if (get().art) return
   const n = Math.max(0, Math.min(STOPS.length - 1, i))
   if (get().phase === 'title') { set({ idx: n }); setGalleryHash('#/gallery' + (n > 0 ? '/' + STOPS[n].id : '')); return }
   void runStop(n)
 }
-export const next = () => jump(get().idx + 1)
-export const prev = () => jump(get().idx - 1)
+export const next = () => { if (get().art) skip(1); else jump(get().idx + 1) }
+export const prev = () => { if (get().art) skip(-1); else jump(get().idx - 1) }
+
+/** Art Gallery mode: leave this piece now (a soft fade, then the next one; or the one before). Works while paused too. */
+export function skip(dir: 1 | -1 = 1) {
+  if (!get().art || (get().phase !== 'run' && get().phase !== 'paused')) return
+  token++; killRun()
+  artI = Math.max(0, artI + dir)
+  void runPiece(token)
+}
+/** Art Gallery mode: jump straight to one piece; the playlist carries on from there */
+export function pick(id: string) {
+  if (!get().art || (get().phase !== 'run' && get().phase !== 'paused')) return
+  const p = piecesFor(get().kind).find((x) => x.id === id)
+  if (!p) return
+  token++; killRun()
+  artQ = [p, ...artQ.slice(artI + 1).filter((x) => x.id !== p.id)]; artI = 0
+  void runPiece(token)
+}
+
+// ---------- playing over the art: the gallery's music ducks, then comes back ----------
+const DUCK_TO = 0.3, QUIET_MS = 4000
+let quietT = 0, rampT = 0
+function kidPlayed() {
+  window.clearTimeout(quietT); window.clearInterval(rampT)
+  duck.level = DUCK_TO
+  if (!get().ducked) set({ ducked: true })
+  quietT = window.setTimeout(() => { // a few quiet seconds: the music glides back up
+    rampT = window.setInterval(() => {
+      duck.level = Math.min(1, duck.level + 0.1)
+      if (duck.level >= 1) { window.clearInterval(rampT); set({ ducked: false }) }
+    }, 150)
+  }, QUIET_MS)
+}
+function resetDuck() { window.clearTimeout(quietT); window.clearInterval(rampT); duck.level = 1; if (get().ducked) set({ ducked: false }) }
 export function pause(taken = false) {
   if (get().phase !== 'run') return
   if (get().art) { token++; killRun(); try { cam?.pause() } catch { /* ignore */ } set({ phase: 'paused', veil: false }); return } // the picture stays, the music stops
@@ -276,7 +321,7 @@ export const again = () => { if (get().art) return; void runStop(0) }
 
 /** leave. If the tour ever started, reload so the page is exactly as it was (nothing was saved); otherwise just go. */
 export function exitGallery(target = '#/play') {
-  token++; killRun(); stopCamera()
+  token++; killRun(); stopCamera(); resetDuck()
   try { resetWorld() } catch { /* ignore */ }
   unlisten(); flags.gallery = false
   idleCursor(false)
@@ -284,7 +329,7 @@ export function exitGallery(target = '#/play') {
   try { delete document.documentElement.dataset.art } catch { /* ignore */ }
   if (wentFull && document.fullscreenElement) { wentFull = false; void document.exitFullscreen?.().catch(() => {}) }
   const wasStarted = get().started
-  set({ phase: 'off', veil: false, started: false, art: false, piece: null })
+  set({ phase: 'off', veil: false, started: false, art: false, piece: null, kind: 'art' })
   setGalleryHash(null)
   history.replaceState(null, '', location.pathname + location.search + target)
   if (wasStarted) { location.reload(); return }
@@ -301,10 +346,11 @@ function onKey(e: KeyboardEvent) {
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
   const eat = () => { e.preventDefault(); e.stopImmediatePropagation() }
   if (e.key === 'Escape') { eat(); exitGallery(); return }
-  if (get().art && p !== 'title') { // Art Gallery mode: Space pauses, any other key hands the keys back
-    if (e.repeat || ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Fn', 'F11', 'F12'].includes(e.key) || e.metaKey || e.ctrlKey) return
-    eat()
-    if (e.key === ' ') toggle(); else exitGallery()
+  if (get().art && p !== 'title') { // Art Gallery mode: Space pauses, arrows skip, Esc leaves. Every other key plays (the piano keys are never taken)
+    wake()
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (e.key === ' ' && tag !== 'BUTTON') { eat(); if (!e.repeat) toggle(); return }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { eat(); if (!e.repeat) skip(e.key === 'ArrowRight' ? 1 : -1) }
     return
   }
   if (e.key === ' ' && !(tag === 'BUTTON' && p === 'title')) { eat(); toggle(); return }
@@ -314,7 +360,7 @@ function onKey(e: KeyboardEvent) {
 }
 function onPointer(e: PointerEvent) {
   const p = get().phase
-  if (get().art && (p === 'run' || p === 'paused') && e.isTrusted) { e.preventDefault(); e.stopImmediatePropagation(); exitGallery(); return } // a click hands the keys back
+  if (get().art && p !== 'title' && p !== 'off') { wake(); return } // art mode: a tap only brings the controls back; clicks never end the show
   if (get().phase === 'run' && e.isTrusted && (e.target as HTMLElement | null)?.closest?.('.kg-keybed')) pause(true)
 }
 let listening = false
@@ -324,10 +370,13 @@ function listen() {
   window.addEventListener('keydown', onKey, true)
   window.addEventListener('pointerdown', onPointer, true)
   offNote = onNote((e) => { // a real MIDI keyboard
-    if (!(e.id >= 0 && e.on)) return
     const p = get().phase
-    if (get().art && (p === 'run' || p === 'paused')) exitGallery()
-    else if (p === 'run') pause(true)
+    if (get().art) { // anyone playing (MIDI keyboard, computer keys, on-screen keys, a controller) keeps the show going and turns the music down
+      if (e.on && (p === 'run' || p === 'paused') && !inGhost()) kidPlayed()
+      return
+    }
+    if (!(e.id >= 0 && e.on)) return
+    if (p === 'run') pause(true)
   })
 }
 function unlisten() {
@@ -342,11 +391,12 @@ galleryHooks.open = openGallery
 galleryHooks.hash = (st) => {
   const p = get().phase
   if (p === 'off') return
-  if (get().art && p !== 'title') { if (st?.item !== 'art') exitGallery(location.hash || '#/play'); return }
-  if (st?.item === 'art') { // the address bar asked for Art Gallery mode: its title card (the start needs a click)
+  const want = st?.item === 'art' ? (isSeason(st.sub) ? st.sub : 'art') : null
+  if (get().art && p !== 'title') { if (want !== get().kind) exitGallery(location.hash || '#/play'); return }
+  if (want) { // the address bar asked for Art Gallery mode: its title card (the start needs a click)
     const was = get().started
     token++; killRun(); try { resetWorld() } catch { /* ignore */ }
-    openGallery('art'); set({ started: was })
+    openGallery(want === 'art' ? 'art' : 'art/' + want); set({ started: was })
     return
   }
   if (st && p === 'title' && get().art) set({ art: false })

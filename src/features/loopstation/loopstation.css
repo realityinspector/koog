@@ -137,3 +137,21 @@ select.lps-inst, .lps-next select { font: 600 12px system-ui, sans-serif; color:
 /* kid-mode looper dock (✨ Modes > 🔁 Looper) */
 .lps-dock { padding-top: 44px; }
 .lps-dock-x { position: absolute; top: 8px; right: 10px; z-index: 2; }
+
+/* "Cleared" toast (pedal hold, simple style) + the pedal style row */
+.lps-cleared { position: fixed; z-index: 80; left: 50%; top: 64px; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; padding: 16px 26px; border-radius: 20px; overflow: hidden;
+  background: rgba(24, 22, 44, .96); border: 2px solid #ffbf3c; color: #fff; box-shadow: 0 12px 36px rgba(0, 0, 0, .55); animation: lps-cleared-in .25s ease both; }
+.lps-cleared b { font-size: clamp(26px, 5vw, 44px); letter-spacing: .02em; }
+.lps-cleared-undo { font: inherit; font-size: 18px; font-weight: 800; color: #10122a; cursor: pointer; padding: 10px 18px; border-radius: 12px; border: 0; background: linear-gradient(180deg, #ffe08a, #ffbf3c); }
+.lps-cleared-undo:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.lps-cleared-bar { position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: #ffbf3c; transform-origin: left; animation: lps-cleared-bar var(--ms, 5s) linear both; }
+@keyframes lps-cleared-in { from { opacity: 0; transform: translate(-50%, -10px) } to { opacity: 1; transform: translate(-50%, 0) } }
+@keyframes lps-cleared-bar { from { transform: scaleX(1) } to { transform: scaleX(0) } }
+@media (prefers-reduced-motion: reduce) { .lps-cleared, .lps-cleared-bar { animation: none; } }
+.lps-pedalstyle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #b9b6d2; flex-wrap: wrap; }
+.lps-pedalstyle select { max-width: 100%; }
+.lps-pedalline { color: #ffe08a; }
+.lps-keys kbd { font-family: inherit; font-weight: 800; padding: 0 5px; border-radius: 4px; border: 1px solid #5a5c70; background: #1a1b22; }
+
+.lps-cleared-undo { white-space: nowrap; }
+@media (max-width: 520px) { .lps-cleared { gap: 10px; padding: 12px 14px; } .lps-cleared-undo { font-size: 15px; padding: 8px 12px; } }

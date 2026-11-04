@@ -37,3 +37,18 @@
 @media (prefers-reduced-motion: reduce) { .kg-pedal-led { transition: none; } }
 .kg-pedal-job { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; font-weight: 600; }
 .kg-pedal-job select { flex: 1; min-width: 0; font: inherit; font-weight: 600; padding: 4px 6px; border-radius: 8px; }
+
+/* Timing / latency meter */
+.kg-lat { margin-top: 14px; }
+.kg-lat-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; padding: 2px 0; }
+.kg-lat-row span { color: #b9b6d8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kg-lat-row b { text-align: right; }
+.kg-lat-great { color: #6cffa8; } .kg-lat-okay { color: #ffd36b; } .kg-lat-late { color: #ff8a7a; }
+.kg-lat-tip { margin: 4px 0 6px; padding: 8px 10px; border-radius: 10px; font-size: 12px; line-height: 1.35; background: rgba(255, 138, 122, .15); border: 1px solid rgba(255, 138, 122, .5); color: #ffd7d0; }
+.kg-lat-tap { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; font-size: 12px; }
+.kg-lat-big { min-height: 44px; font-weight: 800; }
+.kg-lat-res { flex: 1 1 100%; }
+.kg-lat-off { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; }
+.kg-lat-off input { flex: 1; min-width: 0; }
+.kg-lat-off em { font-style: normal; min-width: 4.5em; text-align: right; color: #ffd36b; }
+.kg-dev-bt { color: #ff8a7a; }

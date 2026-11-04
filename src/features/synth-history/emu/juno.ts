@@ -1,4 +1,4 @@
-// Juno-style: per voice a saw, a PWM pulse (saw minus a delayed copy, delay swept by an LFO), a square sub one octave
+// Chorus-polysynth-style: per voice a saw, a PWM pulse (saw minus a delayed copy, delay swept by an LFO), a square sub one octave
 // down -> high-pass -> 24 dB lowpass with envelope -> amp. All voices feed a shared stereo chorus (two modulated delays).
 import { adsr, clamp, hz, lp24, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -17,10 +17,11 @@ interface V {
 }
 
 export const juno: EmuSpec = {
-  id: 'juno', name: 'Chorus polysynth (Juno-style)', year: '1982', skin: 'skin-juno',
-  blurb: 'The Juno was cheap, light and easy: one knob for each job, so you could make a good sound in seconds. Its secret was a built-in chorus that doubles the sound with a gently wobbling copy in each ear, which makes it sound wide and lush.',
-  songs: ['canon', 'air', 'minuet', 'jesu', 'prelude'], songWhy: 'A cheap, great-sounding, easy-to-program polysynth with lush chorus; it became a classic of 80s synth-pop, house and techno.',
-  note: 'The chorus is a two-delay approximation of the original analog bucket-brigade circuit.',
+  id: 'shimmer', name: 'Koog Shimmer', year: '1980s style', skin: 'skin-shimmer',
+  inspired: 'the early-1980s affordable chorus polysynths, one knob for each job, famous for wide lush pads',
+  blurb: 'A chorus polysynth: one knob for each job, so you can make a good sound in seconds. Its secret is a built-in chorus that doubles the sound with a gently wobbling copy in each ear, which makes pads sound wide and lush.',
+  songs: ['canon', 'air', 'minuet', 'jesu', 'prelude'], songWhy: 'An easy-to-program polysynth with lush chorus: perfect for slow, wide chords and pads.',
+  note: 'The chorus is a two-delay approximation of an analog chorus circuit.',
   ctls: [
     { key: 'mix', label: 'Saw / Pulse', min: 0, max: 1, def: 0.4, step: 0.01, group: 'Oscillator' },
     { key: 'sub', label: 'Sub osc', min: 0, max: 1, def: 0.3, step: 0.01 },
@@ -40,6 +41,7 @@ export const juno: EmuSpec = {
     { name: 'Lush pad', values: { mix: 0.7, sub: 0.2, pwmD: 0.6, pwmR: 0.5, hpf: 0, cutoff: 1400, reso: 1.5, env: 1200, a: 0.35, d: 0.8, s: 0.8, r: 0.9, chorus: 3 } },
     { name: 'Pluck bass', values: { mix: 0.1, sub: 0.7, pwmD: 0.2, pwmR: 1, hpf: 0, cutoff: 450, reso: 4, env: 3500, a: 0.004, d: 0.25, s: 0.3, r: 0.15, chorus: 1 } },
     { name: 'Bright stab', values: { mix: 0.5, sub: 0.25, pwmD: 0.7, pwmR: 2, hpf: 1, cutoff: 1800, reso: 2, env: 3500, a: 0.005, d: 0.35, s: 0.4, r: 0.2, chorus: 2 } },
+    { name: 'Koog moon shimmer', values: { mix: 0.6, sub: 0.15, pwmD: 0.8, pwmR: 0.4, hpf: 0, cutoff: 2200, reso: 1.2, env: 800, a: 0.5, d: 1.0, s: 0.85, r: 1.2, chorus: 3 } },
   ],
   make({ ctx, out }, P) {
     // ---- shared chorus bus

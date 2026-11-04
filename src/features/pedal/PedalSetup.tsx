@@ -1,17 +1,38 @@
-import { PEDAL_ACTIONS, forgetPedal, learnPedal, pedalKeyLabel, setPedalAction, usePedal, type PedalAction } from './pedal'
+import { PEDALS, pedalDef } from '../pedalboard/effects'
+import { selectPedal, useBoard } from '../pedalboard/boardEngine'
+import { LOOP_STYLES, PEDAL_ACTIONS, forgetPedal, learnPedal, pedalKeyLabel, setLoopStyle, setPedalAction, usePedal, type LoopStyle, type PedalAction } from './pedal'
 
 /** Devices popover section: learn the USB foot pedal's key (a MIDI sustain pedal needs no setup) and pick its one job. */
 export function PedalSetup() {
-  const { code, action, learning, down, midi } = usePedal()
+  const { code, action, learning, down, midi, loopStyle } = usePedal()
+  const styleDesc = LOOP_STYLES.find(([k]) => k === loopStyle)?.[2]
+  const sel = useBoard((b) => b.selected)
   const desc = PEDAL_ACTIONS.find(([a]) => a === action)?.[2]
   const jobs = (
     <>
       <label className="kg-pedal-job">What it does
         <select value={action} onChange={(e) => setPedalAction(e.target.value as PedalAction)} aria-label="What the foot pedal does">
-          {PEDAL_ACTIONS.map(([a, l]) => <option key={a} value={a}>{l}</option>)}
+          {PEDAL_ACTIONS.map(([a, l]) => <option key={a} value={a}>{a === 'stomp' ? `Foot pedal stomps: ${pedalDef(sel)?.name ?? 'a pedal'}` : l}</option>)}
         </select>
       </label>
       {desc && <p className="kg-dev-note">{desc}</p>}
+      {action === 'stomp' && (
+        <label className="kg-pedal-job">Which pedal
+          <select value={sel} onChange={(e) => selectPedal(e.target.value)} aria-label="Which pedalboard pedal the foot pedal stomps">
+            {PEDALS.map((p) => <option key={p.id} value={p.id}>{p.icon} {p.name}</option>)}
+          </select>
+        </label>
+      )}
+      {(action === 'loop' || action === 'auto') && (
+        <>
+          <label className="kg-pedal-job">Looper style
+            <select value={loopStyle} onChange={(e) => setLoopStyle(e.target.value as LoopStyle)} aria-label="How the foot pedal runs the looper">
+              {LOOP_STYLES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            </select>
+          </label>
+          {styleDesc && <p className="kg-dev-note" data-testid="pedal-style-note">{styleDesc}</p>}
+        </>
+      )}
     </>
   )
   return (

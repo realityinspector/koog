@@ -7,9 +7,11 @@
 //  - kind 'style' : post-1930 / still-copyrighted idioms (cool jazz, bebop, blues, funk ...). We emulate STYLE TRAITS only
 //                   (modes, rhythm feel, space, register, articulation, timbre, form). No melodies, solos or licks are copied;
 //                   every generated phrase is rule-based and original. Styles are named by IDIOM, never by a person.
+//  - Round 2: jazz and modern players (src/features/mimic/peopleStyles.ts) may be NAMED, but only their general habits are emulated: still no melodies, solos or licks.
 //  - No likenesses: icons are original abstract SVG paths (see ICONS).
 import { SONGS } from '../features/songs/songs'
 import type { Key } from './theory'
+import { PEOPLE_DET, PEOPLE_QUAL, PEOPLE_STYLES } from '../features/mimic/peopleStyles'
 
 export type Rng = () => number
 export function mulberry32(seed: number): Rng {
@@ -91,7 +93,7 @@ export interface StyleDef {
   /** rubato amount in beats (0 = strict) */
   rubato: number
   patch: Patch
-  comp: 'walk' | 'sparse' | 'alberti' | 'roll' | 'oompah' | 'boogie' | 'funk' | 'pulse' | 'arps' | 'gospel' | 'bossa' | 'satie' | 'planing'
+  comp: 'walk' | 'sparse' | 'alberti' | 'roll' | 'oompah' | 'boogie' | 'funk' | 'pulse' | 'arps' | 'gospel' | 'bossa' | 'satie' | 'planing' | 'five'
   traits: [Trait, Trait, Trait]
   /** ids from the songs library that may be quoted on purpose (public domain only) */
   quotes?: string[]
@@ -117,6 +119,7 @@ export const QUAL: Record<string, { tones: number[]; scale: number[] }> = {
   bg: { tones: [0, 4, 7, 10], scale: [0, 3, 4, 5, 7, 9, 10] },
   fk: { tones: [0, 4, 7, 10], scale: [0, 3, 5, 7, 9, 10] },
   gp: { tones: [0, 4, 7], scale: [0, 2, 4, 5, 7, 9] },
+  ...PEOPLE_QUAL,
 }
 const ch = (root: number, q: string): Chord => ({ root, q })
 
@@ -369,6 +372,7 @@ export const STYLES: StyleDef[] = [
       { id: 'space', label: 'Relaxed spaces', hint: 'Leave short gaps between phrases.' }],
   },
 ]
+STYLES.push(...PEOPLE_STYLES) // the named jazz and modern players (round 2)
 export const styleById = (id: string): StyleDef => STYLES.find((s) => s.id === id) ?? STYLES[0]
 
 // ---------- harmony helpers ----------
@@ -478,7 +482,12 @@ function buildAnswer(st: StyleDef, call: CallNote[], o: AnswerOpts): Answer {
     slots.push({ t: ts, dur: dur + (t - ts) })
     t += dur
   }
-  if (slots.length < 2) slots.push({ t: Math.min(len - 1, 2), dur: 1 })
+  // an answer to a phrase always has at least 3 notes (sparse styles used to answer a 4-note call with just 2)
+  if (slots.length < 3) {
+    let nt = slots.length ? Math.ceil(slots[slots.length - 1].t + slots[slots.length - 1].dur - 1e-6) : 0
+    while (slots.length < 3) { if (nt > len - 1) nt = Math.max(0, len - 1 - (3 - slots.length)); slots.push({ t: nt, dur: 1 }); nt += 1 }
+    slots.sort((x, y) => x.t - y.t)
+  }
   const N = slots.length
   // 3. pitch material by development habits
   const devsUsed: string[] = []
@@ -676,6 +685,8 @@ export function backingBar(st: StyleDef, key: Key, bar: number, seed = 1): Ev[] 
     case 'arps': for (let i = 0; i < 16; i++) B(i * 0.25, [triad[0], triad[1], triad[2], triad[1] + 12][i % 4], 0.22, 40); B(0, bassRoot, 1.9, 66); B(2, bassRoot, 1.9, 62); break
     case 'gospel': C(0, triad.slice(0, 4), 1.8, 54); B(0, bassRoot, 1.8, 70); C(2, triad.slice(0, 4), 1.6, 50); B(2, fifth, 1.6, 62); B(3.5, bassRoot + 2, 0.4, 52); break
     case 'bossa': B(0, bassRoot, 1.4, 70); B(1.5, fifth, 1.4, 62); B(2, bassRoot, 1.4, 66); B(3.5, fifth, 0.5, 58); C(0, triad.slice(1, 4), 0.8, 42); C(1.5, triad.slice(1, 4), 0.8, 42); C(3, triad.slice(1, 4), 0.8, 42); break
+    case 'five': { // 5/4 felt as 3 + 2: bass on 1 and 4, chord stabs on 1, 3 and 4
+      B(0, bassRoot, 2.4, 72); B(3, r() < 0.5 ? fifth : bassRoot, 1.8, 62); C(0, triad.slice(0, 3), 0.6, 44); C(3, triad.slice(0, 3), 0.6, 46); if (r() < 0.5) C(1.5, triad.slice(1, 4), 0.4, 36); break }
     case 'satie': B(0, bassRoot - 0, 1.5, 48); C(1, triad.slice(0, 3), 1.8, 34); break
     case 'planing': { const stp = [0, 2, 4, 2][mod(bar, 4)]; C(0, [triad[0] + stp, triad[1] + stp, triad[2] + stp], 3.6, 34); B(0, bassRoot + stp, 3.6, 46); break }
   }
@@ -755,6 +766,7 @@ export function silenceFraction(ns: PlayedNote[]): number {
 }
 const iois = (s: PlayedNote[]) => s.slice(1).map((n, i) => n.t - s[i].t).filter((x) => x > 0.03)
 const DET: Record<string, (s: PlayedNote[], home: number) => boolean> = {
+  ...PEOPLE_DET,
   space: (s) => silenceFraction(s) >= 0.3 || iois(s).filter((x) => x >= 0.9).length >= 2 || s.slice(1).some((n, i) => n.t - (s[i].t + s[i].dur) >= 0.7),
   longNotes: (s) => s.filter((n) => n.dur >= 0.7).length >= 2 || (s.length >= 3 && median(s.map((n) => n.dur)) >= 0.5),
   dorian: (s, h) => { const p = new Set(s.map((n) => mod(n.note - h, 12))); return p.has(3) && p.has(10) },

@@ -4,6 +4,7 @@ import { onNote } from '../../music/notes'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { msPerBeat, noteName, pc as pcOf, keyName } from '../../music/theory'
 import { SONGS, TIER_LABEL, hasLyrics, type Song, type Tier } from './songs'
+import { HOLIDAY_ORDER, SEASON_LABEL, type Season } from './holidaySongs'
 import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
 import { pload, psave } from '../../profile/profile'
@@ -428,15 +429,22 @@ export function SongsPanel() {
     return m ? m : 0
   }
   const curBest = song ? bests[song.id + ':' + mode] : undefined
-  const [tab, setTab] = useState<'pop' | 'bang' | 'warm' | 'classical'>('pop')
-  const rows: { id: 'pop' | 'bang' | 'warm' | 'classical'; label: string; tabLabel: string; tiers: Tier[] }[] = [
+  const [tab, setTab] = useState<'pop' | 'bang' | 'warm' | 'classical' | 'holiday'>('pop')
+  const rows: { id: 'pop' | 'bang' | 'warm' | 'classical' | 'holiday'; label: string; tabLabel: string; tiers: Tier[] }[] = [
     { id: 'pop', label: TIER_LABEL.pop, tabLabel: 'Originals', tiers: ['pop'] },
     { id: 'bang', label: TIER_LABEL.bang, tabLabel: 'Bangers', tiers: ['bang'] },
     { id: 'warm', label: 'Warm-ups', tabLabel: 'Warm-ups', tiers: ['easy', 'medium', 'flex'] },
     { id: 'classical', label: TIER_LABEL.classical, tabLabel: 'Classical', tiers: ['classical'] },
+    { id: 'holiday', label: TIER_LABEL.holiday, tabLabel: '🎄 Holiday', tiers: ['holiday'] },
   ]
   const liveAcc = g.current && mode === 'wait' && ui.hits > 0 ? Math.round((g.current.firstTry / ui.hits) * 100) : null
-  const listFor = (r: { tiers: Tier[] }) => SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))
+  const listFor = (r: { id?: string; tiers: Tier[] }) => r.id === 'holiday'
+    ? SONGS.filter((s) => s.season && (!sing || hasLyrics(s)))
+    : SONGS.filter((s) => r.tiers.includes(s.tier) && (!sing || hasLyrics(s)))
+  // the Holiday tab: grouped by holiday, in the order the games list them
+  const holidayGroups = (['thanksgiving', 'christmas'] as Season[]).map((season) => ({
+    season, songs: HOLIDAY_ORDER[season].map((id) => listFor({ id: 'holiday', tiers: [] }).find((s) => s.id === id)).filter((s): s is Song => !!s),
+  })).filter((g) => g.songs.length)
   const effTab = sing && !listFor(rows.find((r) => r.id === tab)!).length ? (rows.find((r) => listFor(r).length)?.id ?? tab) : tab
   // difficulty 1-3 stars: tier sets the base, long tunes nudge it up
   const diffOf = (s: Song) => {
@@ -559,9 +567,21 @@ export function SongsPanel() {
           {rows.map((r) => (
             <div key={r.id} className={'row' + (effTab === r.id ? ' on' : '') + (listFor(r).length ? '' : ' empty')}>
               <div className="rl">{r.label}</div>
-              <div className="car">
-                {listFor(r).map((s) => cardFor(s))}
-              </div>
+              {r.id === 'holiday' ? (
+                <>
+                  <p className="hol-note">Learn these with <b>Wait</b>, <b>Flow</b> or <b>Learn it</b>, then play the memory games <a href="#/games/feast">🦃 Harvest Feast</a> and <a href="#/games/tree">🎄 Light the Tree</a>.</p>
+                  {holidayGroups.map((g) => (
+                    <div key={g.season} className="hol-group">
+                      <div className="hol-h">{SEASON_LABEL[g.season]}</div>
+                      <div className="car">{g.songs.map((s) => cardFor(s))}</div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="car">
+                  {listFor(r).map((s) => cardFor(s))}
+                </div>
+              )}
             </div>
           ))}
         </div>

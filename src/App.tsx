@@ -32,10 +32,12 @@ import { DrumsDock, DrumsScreen } from './features/drumpads/DrumPads'
 import { LoopsDock } from './features/loopstation/LoopsDock'
 import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
+import { PedalboardDock } from './features/pedalboard/Pedalboard'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
 import { useEffect } from 'react'
 import { startLinks } from './links/sync'
 import { LinkNote } from './links/LinkNote'
+import { GlobalClearedToast } from './features/loopstation/GlobalClearedToast'
 import { Gallery } from './features/gallery/Gallery'
 import './music/judge'
 import './ui/chrome.css'
@@ -69,18 +71,18 @@ export function App() {
     ]
     return (
       <ErrorBoundary>
-        <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
+        <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
         <WhoIsPlaying />
-        <LinkNote />
+        <LinkNote /><GlobalClearedToast />
         <Gallery />
       </ErrorBoundary>
     )
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
-      <LinkNote />
+      <LinkNote /><GlobalClearedToast />
       <Gallery />
       <Tour />
     </ErrorBoundary>

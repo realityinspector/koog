@@ -27,3 +27,16 @@
 .kg-audio-label b { display: inline-block; min-width: 3ch; color: #9fa0b8; }
 .kg-audio-sw.on .kg-audio-label b { color: #6cffa8; }
 .kg-audio-label b { text-transform: uppercase; }
+
+/* Boost: +6 dB for quiet speakers (warning dialog, toggle, BOOST badge) */
+.kg-boost-btn { font: inherit; font-size: 12px; font-weight: 800; color: #f4f2ff; cursor: pointer; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); white-space: nowrap; }
+.kg-boost-btn:hover { border-color: #ff9d3c; } .kg-boost-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.kg-boost-btn.on { color: #1b0e00; background: #ff9d3c; border-color: #ff9d3c; }
+.kg-boost-badge { font-size: 11px; font-weight: 900; letter-spacing: .08em; color: #1b0e00; background: #ffb04d; padding: 3px 8px; border-radius: 6px; box-shadow: 0 0 0 2px rgba(255, 157, 60, .35); }
+.kg-boost-veil { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 6, 20, .6); }
+.kg-boost-dlg { max-width: 420px; padding: 22px; border-radius: 18px; background: #1d1a38; border: 2px solid #ff9d3c; color: #f4f2ff; box-shadow: 0 16px 40px rgba(0, 0, 0, .6); }
+.kg-boost-dlg p { margin: 0 0 18px; font-size: 18px; font-weight: 700; line-height: 1.4; }
+.kg-boost-btns { display: flex; gap: 12px; justify-content: flex-end; }
+.kg-boost-btns button { font: inherit; font-size: 16px; font-weight: 800; padding: 10px 18px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .08); color: #f4f2ff; }
+.kg-boost-btns button.yes { background: #ff9d3c; border-color: #ff9d3c; color: #1b0e00; }
+.kg-boost-btns button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }

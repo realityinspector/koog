@@ -12,7 +12,8 @@ export const vel01 = (v: number) => clamp(v / 127, 0.05, 1)
 export interface Engine {
   spec: EmuSpec
   P: Params
-  noteOn(n: number, v: number): void
+  /** `when` (optional): AudioContext seconds to start the note at (every voice reads its "now" through a shifted clock). Omitted = now. Release is always now. */
+  noteOn(n: number, v: number, when?: number): void
   noteOff(n: number): void
   allOff(): void
   unlock(): Promise<void>
@@ -26,6 +27,11 @@ export interface Engine {
   dispose(): void
 }
 
+/** Timed notes: while a noteOn with a start time runs, the clock the voices see is `shift` seconds ahead (voices only ever read ctx.currentTime and call the ctx's own methods). */
+let shift = 0
+const shifted = (c: AudioContext): AudioContext => new Proxy(c, {
+  get(t, k) { if (k === 'currentTime') return t.currentTime + shift; const v = Reflect.get(t, k, t) as unknown; return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(t) : v },
+})
 const CEIL = 0.75
 let ceil: Float32Array<ArrayBuffer> | null = null
 const ceilCurve = () => {
@@ -63,16 +69,19 @@ export function createEngine(spec: EmuSpec, opts?: { channel?: Channel }): Engin
       const ws = c.createWaveShaper(); ws.curve = ceilCurve(); inp.connect(ws); ws.connect(master)
       master.connect(channel.input); master.connect(tap); tap.connect(an)
       ctx = c
-      voice = spec.make({ ctx: c, out: inp }, P)
+      voice = spec.make({ ctx: shifted(c), out: inp }, P)
     }
     if (ctx.state !== 'running') await unlockHost()
     applyGain()
   }
   const eng: Engine = {
     spec, P,
-    noteOn(n, v) {
+    noteOn(n, v, when) {
       held.add(n)
-      if (voice && ctx?.state === 'running') voice.noteOn(n, v)
+      if (voice && ctx?.state === 'running') {
+        if (when != null && Number.isFinite(when)) shift = clamp(when - ctx.currentTime, 0, 0.5)
+        try { voice.noteOn(n, v) } finally { shift = 0 }
+      }
       else void unlock().then(() => { if (held.has(n) && !dead) voice?.noteOn(n, v) })
     },
     noteOff(n) { held.delete(n); voice?.noteOff(n) },

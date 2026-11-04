@@ -70,9 +70,24 @@ const cueHold: Record<string, { t: number; fired: boolean }> = {} // eslint-disa
 const CUE_HOLD_MS = 700
 const STEP = [0, 0.5, 0.25] as const
 /** One control moved (hardware or the picture). Buttons/pads: 1 down, 0 up. Sliders 0..1. Jogs: signed ticks. id like "pad1.A", "xfade". */
+// A CC flood (jog wheel, faders: 200 messages a second) used to commit React once per message. The "touched" glow is only
+// read at 600 ms resolution, so collect the ids and publish them once per animation frame (a timer covers a hidden tab).
+const pendTouch: Record<string, number> = {}
+let touchRaf = 0, touchTimer = 0
+function flushTouch() {
+  cancelAnimationFrame(touchRaf); clearTimeout(touchTimer); touchRaf = 0; touchTimer = 0
+  const add = { ...pendTouch }
+  for (const k of Object.keys(pendTouch)) delete pendTouch[k]
+  if (Object.keys(add).length) useLoopPage.setState((s) => ({ touched: { ...s.touched, ...add } }))
+}
+function touchSoon(id: string, now: number) {
+  pendTouch[id] = now
+  if (!touchRaf) { touchRaf = requestAnimationFrame(flushTouch); touchTimer = window.setTimeout(flushTouch, 100) }
+}
+
 export function loopInput(id: string, value: number) {
   const now = performance.now()
-  useLoopPage.setState((s) => ({ touched: { ...s.touched, [id]: now } }))
+  touchSoon(id, now)
   const [base, d] = id.split('.'), deck = (d === 'B' ? 'B' : 'A') as 'A' | 'B'
   const L = useLoop.getState()
   if (getSel() !== lastSel) { lastSel = getSel(); for (const k of Object.keys(pick)) delete pick[k] }

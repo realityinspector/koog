@@ -11,6 +11,7 @@ import { useOnePop } from '../../ui/onePop'
 import { setLoopsDock, useLoopsDock } from '../loopstation/LoopsDock'
 import { setControllerPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
+import { setBoardOpen } from '../pedalboard/boardOpen'
 
 interface CardDef { id: string; icon: string; name: string; blurb: string; on: boolean; toggle: () => void }
 
@@ -63,6 +64,7 @@ export function ModesLauncher() {
       toggle: () => { if (!looper && drums) setControllerPage('dj'); setLoopsDock(!looper); setOpen(false) } },
     { id: 'drums', icon: '🥁', name: 'Drum pads', blurb: 'Eight drum pads and a beat you build step by step. Works on a DJ controller too.', on: drums,
       toggle: () => { if (!drums) setLoopsDock(false); setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
+    { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: false, toggle: () => { setBoardOpen(true); setOpen(false) } },
   ]
   const cards = [...play, ...make, ...helpers]
   const count = cards.filter((c) => c.on).length

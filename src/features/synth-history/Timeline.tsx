@@ -18,7 +18,7 @@ export function Timeline({ onPlay }: { onPlay: (id: string, preset: number) => v
         <div className="sh-quiz-top">
           <b>🧠 Which came first?</b>
           {done === QUIZ.length && <span className="sh-score">You got {score} of {QUIZ.length}. <button className="sh-reset" onClick={() => setAnswers({})}>Again</button></span>}
-          <button className="btn-ghost sh-small" onClick={() => setQuiz(false)}>← Time machine</button>
+          <button className="btn-ghost sh-small" onClick={() => setQuiz(false)}>← Timeline</button>
         </div>
         <div className="sh-qs">
           {QUIZ.map((q, i) => {
@@ -68,7 +68,7 @@ export function Timeline({ onPlay }: { onPlay: (id: string, preset: number) => v
               <span className="sh-year">{e.year}</span>
               <span className="sh-emoji">{e.emoji}</span>
               <h3>{e.title}</h3>
-              {e.emu && getEmu(e.emu) && <span className="sh-play-tag">▶ Play it</span>}
+              {e.emu && getEmu(e.emu) && <span className="sh-play-tag">▶ Try a Koog instrument</span>}
             </button>
           ))}
         </div>
@@ -77,7 +77,7 @@ export function Timeline({ onPlay }: { onPlay: (id: string, preset: number) => v
             <button className="sh-x" onClick={() => setOpen(null)} aria-label="Close card">✕</button>
             <div className="sh-side-h"><span>{ev.emoji}</span><div><small>{ev.year}</small><h3>{ev.title}</h3></div></div>
             <p className="sh-body">{ev.body}</p>
-            {ev.emu && getEmu(ev.emu) && <button className="sh-play" onClick={() => onPlay(ev.emu!, ev.emuPreset ?? 0)}>▶ Play it</button>}
+            {ev.emu && getEmu(ev.emu) && <button className="sh-play" onClick={() => onPlay(ev.emu!, ev.emuPreset ?? 0)}>▶ Try a Koog instrument from this family</button>}
             <p className="sh-try">👉 {ev.hook}</p>
           </aside>
         )}

@@ -96,6 +96,39 @@ export function lockedStartBeat(beatNow: number, countInBars: number, graceBeats
   return bar + countInBars * 4
 }
 
+/** a press just after a bar line keeps that bar for this long (in TIME, so it feels the same at 60 and 160 bpm): 0.25 beat at 120 bpm */
+export const GRACE_MS = 125
+export const graceBeats = (msPerBeat: number): number => clamp(GRACE_MS / Math.max(1, msPerBeat), 0.1, 0.5)
+
+/**
+ * Stop-press lead. A stop press is timed to a beat you hear in your head, so people press EARLY (negative mean asynchrony: ~20-50 ms,
+ * more with the foot). The first loop in free time would come out that much short. Add the lead back to the closing press.
+ * `nudgeMs` is the grown-up's own fine-tune (Boss mode), -50..+50.
+ */
+export const CLOSE_LEAD_FOOT_MS = 40
+export const CLOSE_LEAD_HAND_MS = 15
+export const closeLeadMs = (foot: boolean, nudgeMs = 0): number => (foot ? CLOSE_LEAD_FOOT_MS : CLOSE_LEAD_HAND_MS) + clamp(nudgeMs, -50, 50)
+
+/**
+ * Notes of one pitch must not overlap each other round the loop: a long note's scheduled release would cut the next cycle's (or the next
+ * note's) same-pitch hit. Trim each note to end just before the next same-pitch onset, counting the wrap to the start of the loop.
+ */
+export function trimSamePitch<N extends CoreNote>(notes: N[], len: number): N[] {
+  if (len <= 0) return notes
+  const byPitch = new Map<number, N[]>()
+  for (const x of notes) { const a = byPitch.get(x.n); if (a) a.push(x); else byPitch.set(x.n, [x]) }
+  const out = new Map<N, number>()
+  for (const arr of byPitch.values()) {
+    const s = [...arr].sort((a, b) => a.t - b.t)
+    s.forEach((x, k) => {
+      const nx = s[(k + 1) % s.length]
+      let gap = nx.t - x.t; if (gap <= 1e-9) gap += len // same moment: wrap a whole loop (single note: its own next cycle)
+      out.set(x, Math.min(x.d, Math.max(0.05, gap - 0.02)))
+    })
+  }
+  return notes.map((x) => ({ ...x, d: out.get(x) ?? x.d }))
+}
+
 /** a hold while playing: undo, or (right after an undo, with something to bring back) redo */
 export const holdChoice = (lastHold: 'undo' | 'redo' | null, redoCount: number): 'undo' | 'redo' => (lastHold === 'undo' && redoCount > 0 ? 'redo' : 'undo')
 
@@ -145,6 +178,29 @@ export function bigNext(state: BigState, g: Gesture): BigAction {
   }
 }
 
+// ---------- the pedal's two styles ----------
+// classic: the guitar-pedal rules above (press twice within BIG_DOUBLE_MS = stop, hold 2 s = undo / redo, hold while stopped = clear).
+// simple:  tap = record / close the loop and keep it playing / start a layer / finish the layer.
+//          two quick taps (SIMPLE_DOUBLE_MS) = stop everything.   hold 2 s = clear everything (with a 5 s "Undo clear").
+//   A tap acts at once (no waiting out the double-tap window, so a single tap never feels late). The second tap of a double
+//   quietly takes back whatever the first tap started (a layer that was just begun, a recording that was just begun) and stops.
+export type LoopStyle = 'simple' | 'classic'
+export const SIMPLE_DOUBLE_MS = 500
+export const UNDO_CLEAR_MS = 5000
+export const LOOP_STYLES: [LoopStyle, string, string][] = [
+  ['simple', 'Simple (one tap record / one tap play)', 'Tap: record, tap again: loop it and keep it playing. Tap to add a layer, tap to finish it. Two quick taps: stop everything. Hold 2 s: clear everything (you get 5 s to Undo).'],
+  ['classic', 'Classic (hold = undo)', 'Like a guitar looper pedal. Tap: record, loop, add a layer. Press twice: stop. Hold 2 s: undo the newest layer, hold again to redo. Hold while stopped: clear.'],
+]
+export const classifyPressFor = (style: LoopStyle, now: number, lastDown: number | null): 'tap' | 'double' =>
+  lastDown != null && now - lastDown < (style === 'simple' ? SIMPLE_DOUBLE_MS : BIG_DOUBLE_MS) ? 'double' : 'tap'
+/** does the first tap of a simple double-tap have to be taken back? (it began a recording or a layer, which is dropped) */
+export const simpleDropsFirstTap = (firstPrev: BigState): boolean => firstPrev === 'empty' || firstPrev === 'play'
+/** simple style: what a gesture does (the first tap of a double already happened) */
+export function simpleNext(state: BigState, g: Gesture): BigAction {
+  if (g === 'hold') return 'clear'
+  return bigNext(state, g)
+}
+
 /** what the state becomes after an action (for the tests and the hint line) */
 export function bigAfter(state: BigState, a: BigAction, layersLeft = 1): BigState {
   switch (a) {
@@ -167,4 +223,17 @@ export const BIG_WORDS: Record<BigState, { word: string; hint: string }> = {
   play: { word: 'PLAYING', hint: 'Tap to add a layer. Press twice to stop. Hold 2 s to undo.' },
   over: { word: 'ADDING A LAYER', hint: 'Tap to finish this layer.' },
   stop: { word: 'STOPPED', hint: 'Tap to play. Hold 2 s to clear everything.' },
+}
+
+/** timer lag tracking: a smoothed average of how late timers fire (ms), kept within 0..LAG_MAX_MS so a stall never makes notes fire far too early */
+export const LAG_MAX_MS = 20
+export const lagNext = (avg: number, lateMs: number): number => Math.min(LAG_MAX_MS, Math.max(0, avg * 0.9 + Math.min(LAG_MAX_MS, Math.max(0, lateMs)) * 0.1))
+
+/** a note's own timestamp (the MIDI event's timeStamp, performance.now ms) when it is sane (not in the future, under 250 ms old), else `now` */
+export function noteTime(t: number | undefined, now = performance.now()): number { return t != null && t > 0 && t <= now && now - t < 250 ? t : now }
+
+/** does this key press mean "flip the metronome"? M anywhere; while the computer keys play notes (M is the note B) it takes Shift+M */
+export function isMetronomeKey(e: { code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean; isComposing?: boolean }, keysPlayNotes: boolean): boolean {
+  if (e.code !== 'KeyM' || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false
+  return keysPlayNotes ? e.shiftKey : true
 }

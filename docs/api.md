@@ -35,7 +35,7 @@ Also: the prompt `get_my_kid_started` and the resource `koog://catalog` (the who
 | `GET /llms.txt` | Plain-text instructions for any AI |
 | `GET /healthz` | Health check |
 
-Activity ids are `<kind>-<sourceId>`: `song-ode`, `challenge-echo`, `game-bachdoom`, `level-e1m1`, `beat-disco`, `synth-moog`, `visual-fireworks`, `helper-mentor`, `play-free`. A bare source id such as `ode` works when only one activity ends with it. Kinds: song, challenge, game, level, beat, synth, visual, helper, play.
+Activity ids are `<kind>-<sourceId>`: `song-ode`, `challenge-echo`, `game-bachdoom`, `level-e1m1`, `beat-disco`, `synth-ladder`, `visual-fireworks`, `helper-mentor`, `play-free`. A bare source id such as `ode` works when only one activity ends with it. Kinds: song, challenge, game, level, beat, synth, visual, helper, play.
 
 Concepts: notes, keys-scales, chords, rhythm-pulse, phrases-cadences, motifs-form, tension-release, mood-emotion, reading-music, memorizing, dynamics, style-history, ear-training.
 
@@ -55,7 +55,7 @@ https://koog-demo.fly.dev/#/<screen>[/<item>[/<mode>]][?<options>]
 | `#/songs/ode/learn?rung=2` | A song in `wait`, `flow` or `learn` mode (`rung` 1-7 and `phrase` for learn) |
 | `#/challenges/echo` | A challenge |
 | `#/games/bachdoom?level=e1m1` | A game; `level` for BachDoom |
-| `#/beats/disco`, `#/synth/moog` | A groove, a synth emulator |
+| `#/beats/disco`, `#/synth/ladder` | A groove, a synth emulator |
 | `#/play?key=a-minor&modes=mentor,vibes&visual=fireworks` | Free play with options |
 | `#/log` | The build log |
 | `#/boss/studio`, `#/boss/dj`, `#/boss/loops`, `#/boss/synth`, `#/boss/scenes` | Boss (grown-up) mode screens; `#/boss/loops` is the loop station |

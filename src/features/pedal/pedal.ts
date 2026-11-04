@@ -5,73 +5,96 @@
 // Then the pedal does one job:
 //   auto     the loop station's big button while the loop station is on screen, sustain everywhere else (the default)
 //   sustain  hold = notes keep ringing on the piano / synth / emulators (like a piano's damper pedal), lift = they stop
-//   loop     the loop station's big button: tap = record / close the loop / add a layer, double-tap = stop, hold = undo
+//   loop     the loop station's big button, in one of two styles (loopStyle):
+//              simple (default): tap = record / close the loop and keep it playing / add a layer, two quick taps = stop all, hold 2 s = clear all (5 s Undo clear)
+//              classic: tap = record / close / add a layer, double-tap = stop, hold = undo / redo
 //   beat     tap = start / stop the beat (master clock)
 // The pedal key is swallowed (so it doesn't also play a note), except while typing in a text box.
 // If pressing the pedal clicks the mouse instead of typing a key, set it to send a key with the pedal's own setup app.
 import { isWebDemo } from '../../web/webDemo'
 import { create } from 'zustand'
-import { setSustain } from '../../music/localNotes'
+import { setHalfSustain, setSustain } from '../../music/localNotes'
+import { setSoft, setSostenuto } from '../pedalboard/pianoPedals'
+import { stompSelected } from '../pedalboard/boardEngine'
 import { bigDown, bigUp, isLooperOpen } from '../loopstation/loopEngine'
+import { LOOP_STYLES, type LoopStyle } from '../loopstation/loopCore'
 import { subscribe as subscribeMidi } from '../../midi/router'
 import { isRunning, startMaster, stopMaster } from '../../music/masterClock'
 import { registerPanicTarget } from '../../music/panic'
+import { drumPageActive, kickDown, kickUp } from '../drumpads/pedalKick'
 
-export type PedalAction = 'auto' | 'sustain' | 'loop' | 'beat' | 'off'
+export type PedalAction = 'auto' | 'sustain' | 'loop' | 'beat' | 'kick' | 'soft' | 'sostenuto' | 'stomp' | 'off'
 export const PEDAL_ACTIONS: [PedalAction, string, string][] = [
   ['auto', 'Automatic', 'Runs the loop station while it is open. Everywhere else it holds your notes, like a piano pedal.'],
   ['sustain', 'Sustain (piano / synth)', 'Hold it down and your notes keep ringing, like a piano pedal. Lift it and they stop.'],
-  ['loop', 'Loop station', 'Tap: record, then tap again to loop it. Tap to add a layer. Double-tap: stop. Hold: undo.'],
+  ['loop', 'Loop station', 'Tap: record, then tap again to loop it. Tap to add a layer. Two quick taps: stop. Hold 2 s: clear (see the looper style below).'],
   ['beat', 'Beat', 'Tap to start or stop the beat.'],
+  ['kick', 'Kick drum', 'Plays the KICK drum on the Drums page. Automatic does this by itself while the drum pads are open.'],
+  ['soft', 'Soft pedal (quieter, mellower)', 'Hold it down and the piano plays quieter and softer, like the left pedal on a piano.'],
+  ['sostenuto', 'Sostenuto (hold chosen notes)', 'Play some notes, press and hold the pedal, then let go of the keys: only those notes keep ringing, like the middle pedal on a piano.'],
+  ['stomp', 'Pedalboard stomp', 'Each tap switches the selected effect pedal (Fuzz, Echo, Wobble...) on or off. Pick which one in the Pedalboard.'],
   ['off', 'Off', 'The pedal does nothing.'],
 ]
-interface PedalState { code: string | null; action: PedalAction; learning: boolean; down: boolean; /** a MIDI sustain pedal (CC 64) was seen */ midi: boolean }
+export { LOOP_STYLES }
+export type { LoopStyle }
+interface PedalState { code: string | null; action: PedalAction; /** how the looper reads the pedal */ loopStyle: LoopStyle; learning: boolean; down: boolean; /** a MIDI sustain pedal (CC 64) was seen */ midi: boolean }
 const KEY = 'koog.pedal'
-function load(): Pick<PedalState, 'code' | 'action'> {
+function load(): Pick<PedalState, 'code' | 'action' | 'loopStyle'> {
   try {
     const j = JSON.parse(localStorage.getItem(KEY) || '{}')
     // version 1 saved 'sustain' as the default: move those to 'auto' once (a later pick is saved with v: 2 and kept)
     const action: PedalAction = PEDAL_ACTIONS.some(([a]) => a === j.action) ? (j.v !== 2 && j.action === 'sustain' ? 'auto' : j.action) : 'auto'
-    return { code: typeof j.code === 'string' ? j.code : null, action }
-  } catch { return { code: null, action: 'auto' } }
+    return { code: typeof j.code === 'string' ? j.code : null, action, loopStyle: j.ls === 'classic' ? 'classic' : 'simple' }
+  } catch { return { code: null, action: 'auto', loopStyle: 'simple' } }
 }
 const hot = import.meta.hot?.data as { pedal?: { store: ReturnType<typeof make>; off?: () => void } } | undefined
 function make() { return create<PedalState>()(() => ({ ...load(), learning: false, down: false, midi: false })) }
 const H = hot?.pedal ?? { store: make(), off: undefined as (() => void) | undefined }
 export const usePedal = H.store
-const save = () => { const { code, action } = usePedal.getState(); try { localStorage.setItem(KEY, JSON.stringify({ v: 2, code, action })) } catch { /* ignore */ } }
+if (!H.store.getState().loopStyle) H.store.setState({ loopStyle: load().loopStyle }) // an HMR session keeps the old store
+const save = () => { const { code, action, loopStyle } = usePedal.getState(); try { localStorage.setItem(KEY, JSON.stringify({ v: 2, code, action, ls: loopStyle })) } catch { /* ignore */ } }
 
 export function learnPedal(on = true) { release(); usePedal.setState({ learning: on }) }
 export function setPedalAction(a: PedalAction) { release(); usePedal.setState({ action: a }); save() }
+export function setLoopStyle(l: LoopStyle) { release(); usePedal.setState({ loopStyle: l }); save() }
 export function forgetPedal() { release(); usePedal.setState({ code: null, learning: false }); save() }
 /** label for a key code, e.g. "KeyB" -> "B", "F13" -> "F13" */
 export const pedalKeyLabel = (code: string) => code.replace(/^Key|^Digit/, '').replace(/^Numpad/, 'Num ')
 
 /** what the pedal does right now ('auto' resolved: the looper while it is on screen, otherwise sustain) */
-export function pedalJob(a = usePedal.getState().action): Exclude<PedalAction, 'auto'> { return a === 'auto' ? (isLooperOpen() ? 'loop' : 'sustain') : a }
+export function pedalJob(a = usePedal.getState().action): Exclude<PedalAction, 'auto'> { return a === 'auto' ? (drumPageActive() ? 'kick' : isLooperOpen() ? 'loop' : 'sustain') : a }
 let held: PedalAction | null = null
-function press() {
+function press(at?: number) {
   if (held) return
   const a = pedalJob()
   if (a === 'off') return
   held = a
-  usePedal.setState({ down: true })
+  // the action first, the LED / store update after it (the sound never waits for a React re-render)
   if (a === 'sustain') setSustain(true)
-  else if (a === 'loop') bigDown()
+  else if (a === 'loop') bigDown(usePedal.getState().loopStyle, at, true)
+  else if (a === 'kick') kickDown()
+  else if (a === 'soft') setSoft(1)
+  else if (a === 'sostenuto') setSostenuto(true)
+  else if (a === 'stomp') stompSelected(usePedal.getState().loopStyle)
   else if (a === 'beat') { if (isRunning()) stopMaster(); else startMaster() }
+  usePedal.setState({ down: true })
 }
 function release() {
   const a = held
   held = null
-  if (usePedal.getState().down) usePedal.setState({ down: false })
   if (a === 'sustain') setSustain(false)
   else if (a === 'loop') bigUp()
+  else if (a === 'kick') kickUp()
+  else if (a === 'soft') setSoft(0)
+  else if (a === 'sostenuto') setSostenuto(false)
+  if (usePedal.getState().down) usePedal.setState({ down: false })
 }
 /** a sustain pedal on the MIDI keyboard: CC 64, down at >= 64 */
-function onMidi(d: Uint8Array) {
+function onMidi(d: Uint8Array, ts = 0) {
   if (d.length < 3 || (d[0] & 0xf0) !== 0xb0 || d[1] !== 64) return
   if (!usePedal.getState().midi) usePedal.setState({ midi: true })
-  if (d[2] >= 64) press(); else release()
+  if (d[2] >= 64) { setHalfSustain(0); press(ts > 0 ? ts : undefined) }
+  else { release(); setHalfSustain(d[2] > 0 && pedalJob() === 'sustain' ? d[2] / 63 : 0) } // a continuous pedal pressed less than halfway = half pedal
 }
 
 const typingInField = (e: KeyboardEvent) => {
@@ -88,7 +111,7 @@ function onDown(e: KeyboardEvent) {
   }
   if (!s.code || e.code !== s.code || typingInField(e)) return
   e.preventDefault(); e.stopImmediatePropagation()
-  if (!e.repeat) press()
+  if (!e.repeat) press(e.timeStamp)
 }
 function onUp(e: KeyboardEvent) {
   const s = usePedal.getState()
@@ -105,7 +128,7 @@ window.addEventListener('keydown', onDown, true)
 window.addEventListener('keyup', onUp, true)
 window.addEventListener('blur', onBlur)
 const unPanic = registerPanicTarget('pedal', () => release())
-const unMidi = subscribeMidi('piano', (d) => onMidi(d))
+const unMidi = subscribeMidi('piano', (d, ts) => onMidi(d, ts))
 H.off = () => { window.removeEventListener('keydown', onDown, true); window.removeEventListener('keyup', onUp, true); window.removeEventListener('blur', onBlur); unPanic(); unMidi() }
 }
 

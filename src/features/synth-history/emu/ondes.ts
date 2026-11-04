@@ -1,4 +1,4 @@
-// Ondes-Martenot-style: a ribbon/ring glide, finger-wobble vibrato, and four "diffuser" timbres. Mono, with field().
+// Ring-and-ribbon-style: a ribbon/ring glide, finger-wobble vibrato, and four "diffuser" timbres. Mono, with field().
 import { clamp, hz, noise, vel01 } from './core'
 import type { EmuSpec } from './types'
 
@@ -12,12 +12,13 @@ const MIX: number[][] = [
 ]
 
 export const ondes: EmuSpec = {
-  id: 'ondes', name: 'Ondes Martenot', year: '1928', skin: 'skin-ondes',
-  blurb: 'Maurice Martenot built this instrument so you could slide your finger on a ring and make a voice-like electronic note. Special speakers called diffusers (one even had strings that buzzed along) gave it different colours. Composers such as Olivier Messiaen wrote music for it, and it was one of the first electronic instruments to get real concert use.',
+  id: 'ribbon', name: 'Koog Ribbon', year: '1920s style', skin: 'skin-ribbon',
+  inspired: 'the early French electronic keyboards of the 1920s, played with a sliding ring and special resonating speakers',
+  blurb: 'A ribbon-and-ring instrument: slide your finger to glide between notes, add finger wobble (vibrato), and pick one of four speaker colours. It sounds like a human voice made of electricity, and early composers wrote concert music for instruments like it.',
   songs: ['swan', 'gymnopedie', 'air', 'jesu', 'clairdelune'], songWhy: 'Slow, singing tunes show off the ribbon glide and the wobbly finger vibrato.',
   extra: 'field', fieldRange: [LO, HI],
   ctls: [
-    { key: 'timbre', label: 'Timbre', min: 0, max: 3, def: 0, step: 1, kind: 'pick', opts: ['Sine', 'Reed', 'Gamba', 'Gong'], group: 'Diffuser' },
+    { key: 'timbre', label: 'Timbre', min: 0, max: 3, def: 0, step: 1, kind: 'pick', opts: ['Sine', 'Reed', 'Gamba', 'Gong'], group: 'Speaker' },
     { key: 'skin', label: 'Drum-skin', min: 0, max: 1, def: 0.25, step: 0.01 },
     { key: 'glide', label: 'Glide', min: 0, max: 1, def: 0.2, step: 0.01, group: 'Ribbon' },
     { key: 'vrate', label: 'Wobble rate', min: 2, max: 9, def: 5.5, step: 0.1 },
@@ -28,6 +29,7 @@ export const ondes: EmuSpec = {
     { name: 'Pure ribbon', values: { timbre: 0, skin: 0.1, glide: 0.25, vrate: 5.5, vdepth: 12, attack: 0.06 } },
     { name: 'Reedy voice', values: { timbre: 1, skin: 0.3, glide: 0.12, vrate: 6, vdepth: 22, attack: 0.04 } },
     { name: 'Gong shimmer', values: { timbre: 3, skin: 0.7, glide: 0.1, vrate: 4.8, vdepth: 18, attack: 0.03 } },
+    { name: 'Koog aurora', values: { timbre: 0, skin: 0.4, glide: 0.3, vrate: 5, vdepth: 20, attack: 0.1 } },
   ],
   make({ ctx, out }, P) {
     const fq = ctx.createConstantSource(); fq.offset.value = 220

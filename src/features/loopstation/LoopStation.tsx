@@ -3,8 +3,8 @@ import './loopstation.css'
 import { ControllerPic } from '../dj/Controller'
 import { setLink, tapTempo, useMaster } from '../../music/masterClock'
 import {
-  INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, clearLayer, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
-  registerLooperView, saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, timingInfo, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
+  INSTRUMENTS, closeNudgeMs, setCloseNudgeMs, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, clearLayer, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
+  registerLooperView, saveSession, select, setMetronomeOn, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, timingInfo, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
 } from './loopEngine'
 import { BpmField, ConfirmChip, SimpleLooper } from './SimpleLooper'
 import { GUIDE_PATS, setGuide, unlockGuide, useGuide, type GuidePat } from './guide'
@@ -150,6 +150,8 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
         <span className="lp-grp"><b>BPM</b>
           <BpmField bpm={bpm} disabled={following || ti.tempoLocked} title={tempoTitle} />
           <button type="button" className="lp-chip" disabled={following || ti.tempoLocked} onClick={() => tapTempo()} title={ti.tempoLocked ? 'Clear to change tempo' : 'Tap tempo'}>TAP</button></span>
+        <span className="lp-grp" title="Fine-tune the closing press of a free-time loop, in milliseconds. 0 is right for most people; nudge it if your first loops come out a hair short (-) or long (+)."><b>NUDGE</b>
+          <input type="range" min={-50} max={50} step={5} value={closeNudgeMs()} aria-label="Loop close timing nudge in milliseconds" onChange={(e) => { setCloseNudgeMs(+e.target.value); bump((n) => n + 1) }} /> <span>{closeNudgeMs()} ms</span></span>
       </div>
       <div className="lp-set">
         <span className="lp-grp"><b>REC →</b>
@@ -159,7 +161,7 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
         <Seg on={s.measure} onClick={() => setOpt('measure', !s.measure)} title="MEASURE: REC / DUB / PLAY wait for the next bar line (the ring blinks while waiting)">MEASURE</Seg>
         <span className="lp-grp"><Seg on={g.on} onClick={() => { unlockGuide(); setGuide({ on: !g.on }) }} title="Rhythm guide: a light drum pattern on the loop's tempo">GUIDE</Seg>
           <select aria-label="Guide pattern" value={g.pat} onChange={(e) => setGuide({ pat: e.target.value as GuidePat })}>{GUIDE_PATS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></span>
-        <Seg on={s.metro} onClick={() => { unlockGuide(); setOpt('metro', !s.metro) }} title="Metronome: a soft click every beat, accent on beat 1, while the looper runs (not recorded)">🔔 METRO</Seg>
+        <Seg on={s.metro} onClick={() => setMetronomeOn(!s.metro)} title="Metronome: a soft click every beat, accent on beat 1. It needs no loop and is not recorded. Press M anywhere to flip it (Shift+M while Keys play notes is on).">🔔 METRO</Seg>
         <small className="lp-timing" data-timing={ti.mode}>{ti.words}</small>
         <Seg on={more} onClick={() => setMore(!more)} title="Show tracks 6 to 8">{more ? '◂ 1-5' : '6-8 ▸'}</Seg>
         <details className="lp-more"><summary title="More settings: quantise, bars, save / load, export">⋯ MORE</summary>

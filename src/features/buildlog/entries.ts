@@ -180,7 +180,7 @@ export const entries: Entry[] = [
     time: 'Next morning',
     stage: 'ship',
     title: '🚀 Meet Koog: open source + your own sign-in',
-    body: 'Big day. The app has a new name, Koog: Moog (the famous synth company) → one letter back is Loog → one more letter back is Koog, and it sounds like "code". It is now "open source": the code goes on GitHub, where anyone in the world can read it, learn from it and build their own version, under the MIT licence (basically "use it, just keep our name on it"). Before publishing, we scrubbed it for private info. Good engineers never put personal details in public code. New: type your own code word under "Who\'s playing?" and your badges are yours alone, so siblings can\'t mess up your scores. It\'s not a password, just a name tag. There\'s also a Dad mode that hides the grown-up tools from Kid mode. And a new 🎛️ Synth History panel: a timeline from the 1920 theremin to today, a playable Moog-style synth with real knobs, and a Patch Lab where you plug virtual cables like a modular synth.',
+    body: 'Big day. The app has a new name, Koog: Moog (the famous synth company) → one letter back is Loog → one more letter back is Koog, and it sounds like "code". It is now "open source": the code goes on GitHub, where anyone in the world can read it, learn from it and build their own version, under the MIT licence (basically "use it, just keep our name on it"). Before publishing, we scrubbed it for private info. Good engineers never put personal details in public code. New: type your own code word under "Who\'s playing?" and your badges are yours alone, so siblings can\'t mess up your scores. It\'s not a password, just a name tag. There\'s also a Dad mode that hides the grown-up tools from Kid mode. And a new 🎛️ Synth History panel: a year-by-year timeline of electronic music, a playable classic analog-style synth with real knobs, and a Patch Lab where you plug virtual cables like a modular synth.',
   },
   {
     id: 25,
@@ -222,7 +222,7 @@ export const entries: Entry[] = [
     time: 'Noon',
     stage: 'ship',
     title: '🎛️ Koog is now an instrument',
-    body: 'Big redesign. Koog stopped being a long web page and became ONE instrument, like a real synthesizer: a big display, a rail of glowing mode buttons, and a keybed at the bottom, with wooden side panels like classic Moog synths. Designers call this a "skeuomorphic" design (great spelling-bee word): it borrows the look of a real-world object so you instantly know how to use it. The Patch Lab moved INTO the display. Open 🎛️ Patch and change the waveform, and the sparks change shape: sine = soft orbs, square = pixels, sawtooth = shards. Close the filter and everything goes dark and muffled. You\'re seeing the sound.',
+    body: 'Big redesign. Koog stopped being a long web page and became ONE instrument, like a real synthesizer: a big display, a rail of glowing mode buttons, and a keybed at the bottom, with wooden side panels like classic analog synths. Designers call this a "skeuomorphic" design (great spelling-bee word): it borrows the look of a real-world object so you instantly know how to use it. The Patch Lab moved INTO the display. Open 🎛️ Patch and change the waveform, and the sparks change shape: sine = soft orbs, square = pixels, sawtooth = shards. Close the filter and everything goes dark and muffled. You\'re seeing the sound.',
   },
   {
     id: 31,
@@ -236,7 +236,7 @@ export const entries: Entry[] = [
     time: 'Afternoon',
     stage: 'ship',
     title: '🤖 Smart Band + 🧩 Patch Quests',
-    body: 'Koog has a BAND now. Tap 🤖 BAND, then play a melody. It listens to your notes, guesses which chord fits (it scores every chord in your key by how many of your notes it contains, and only switches on the first beat of a bar so it doesn\'t jump around), and works out your speed by measuring the gaps between your notes. Then it plays bass and chords along with you. That\'s a "smart" algorithm: no magic, just clear rules that are good at guessing. Also new: 🧩 Quests in the Patch drawer teach real synth patching. "Make it dark", "make it scream", "slide like a theremin"… and you can SEE each sound change in the visuals.',
+    body: 'Koog has a BAND now. Tap 🤖 BAND, then play a melody. It listens to your notes, guesses which chord fits (it scores every chord in your key by how many of your notes it contains, and only switches on the first beat of a bar so it doesn\'t jump around), and works out your speed by measuring the gaps between your notes. Then it plays bass and chords along with you. That\'s a "smart" algorithm: no magic, just clear rules that are good at guessing. Also new: 🧩 Quests in the Patch drawer teach real synth patching. "Make it dark", "make it scream", "slide like a ghost"… and you can SEE each sound change in the visuals.',
   },
   {
     id: 33,
@@ -271,7 +271,7 @@ export const entries: Entry[] = [
     time: 'Afternoon',
     stage: 'ship',
     title: '🥋👗🎛️🎼 Jiu-Jitsu, Runway Remix, real synth emulators, sheet music, and computer-key piano',
-    body: 'Seven AI helpers built at the same time, each in its own folder. NEW GAMES: 🥋 Jiu-Jitsu Flow (copy your partner\'s phrases on the beat to win positions, earn belts, and learn to tap out) and 👗 Runway Remix (style a model through 400 years of music; chords pick the colors, because neighbors on the circle of fifths are like neighbor colors on the color wheel). In SYNTH, tap ▶ Play it on the timeline to PLAY a theremin, an organ, a Moog-style synth, a 303 bass, a DX7-style FM synth and more. They are rebuilt from the physics of sound, not recordings. 🎼 Sheet music can ride along the bottom of the screen any time, and notes turn green when you nail them. No MIDI keyboard? Your computer keys are a piano now (Z S X D C… and Q 2 W 3 E…). And in BachDoom your organ shots now actually fly into the demons and knock them back.',
+    body: 'Seven AI helpers built at the same time, each in its own folder. NEW GAMES: 🥋 Jiu-Jitsu Flow (copy your partner\'s phrases on the beat to win positions, earn belts, and learn to tap out) and 👗 Runway Remix (style a model through 400 years of music; chords pick the colors, because neighbors on the circle of fifths are like neighbor colors on the color wheel). In SYNTH, tap ▶ Play it on the timeline to PLAY a hands-in-the-air glide instrument, a drawbar organ, a classic analog synth, a squelchy step-sequenced bass, a digital FM synth and more. They are rebuilt from the physics of sound, not recordings. 🎼 Sheet music can ride along the bottom of the screen any time, and notes turn green when you nail them. No MIDI keyboard? Your computer keys are a piano now (Z S X D C… and Q 2 W 3 E…). And in BachDoom your organ shots now actually fly into the demons and knock them back.',
   },
   {
     id: 38,
@@ -313,7 +313,7 @@ export const entries: Entry[] = [
     time: 'Afternoon',
     stage: 'ship',
     title: '🎧🎹 DUO mode: one DJs, one plays piano, together',
-    body: 'Plug in a DJ controller AND the piano at the same time! Koog now listens to every MIDI device and gives each one a job (🎛️ Devices at the top). Tap 🎧 DUO and the DJ decks slide in at the bottom. The DJ is the band: whatever track is playing sets the KEY and the BEAT, so the piano player gets graded in the DJ\'s key, and the screen pulses on the DJ\'s beat. It works both ways: when the piano player nails 8 in-key notes, the DJ gets a filter sweep, a cadence throws an echo, and a BOOM launches a riser into the drop. The DJ\'s pads light up piano keys that fit the song. Try the 🎯 8-bar Duo Challenge. Also new: 🎹 Sound lets you swap the piano for an organ, a Moog, an electric piano, strings and more.',
+    body: 'Plug in a DJ controller AND the piano at the same time! Koog now listens to every MIDI device and gives each one a job (🎛️ Devices at the top). Tap 🎧 DUO and the DJ decks slide in at the bottom. The DJ is the band: whatever track is playing sets the KEY and the BEAT, so the piano player gets graded in the DJ\'s key, and the screen pulses on the DJ\'s beat. It works both ways: when the piano player nails 8 in-key notes, the DJ gets a filter sweep, a cadence throws an echo, and a BOOM launches a riser into the drop. The DJ\'s pads light up piano keys that fit the song. Try the 🎯 8-bar Duo Challenge. Also new: 🎹 Sound lets you swap the piano for an organ, a classic analog synth, an electric piano, strings and more.',
   },
   {
     id: 44,
@@ -334,7 +334,7 @@ export const entries: Entry[] = [
     time: 'Evening',
     stage: 'ship',
     title: '🎛️ Controller Mode: the DJ board becomes a synthesizer',
-    body: 'Flip the DJ controller to 🎛️ Synth and it turns into the knobs of a Moog-style synthesizer for the piano. The crossfader sweeps the FILTER (that classic "wow" sound), the knobs set resonance, envelope, glide and wobble, the faders shape each note (attack, decay, sustain, release), the jog wheel bends the pitch, and the pads pick the waveform. Open a synth from the timeline and the knobs re-map to THAT instrument: organ drawbars, a 303\'s sequencer steps, a DX7\'s FM ratios. The screen labels every knob, and 🎓 Learn lets you put any setting on any knob. Also: drum-only beats no longer force a key. Drums don\'t have a key, so play in any key you like.',
+    body: 'Flip the DJ controller to 🎛️ Synth and it turns into the knobs of a classic analog synthesizer for the piano. The crossfader sweeps the FILTER (that classic "wow" sound), the knobs set resonance, envelope, glide and wobble, the faders shape each note (attack, decay, sustain, release), the jog wheel bends the pitch, and the pads pick the waveform. Open a synth from the timeline and the knobs re-map to THAT instrument: organ drawbars, a bass box\'s sequencer steps, an FM synth\'s ratios. The screen labels every knob, and 🎓 Learn lets you put any setting on any knob. Also: drum-only beats no longer force a key. Drums don\'t have a key, so play in any key you like.',
   },
   {
     id: 47,
@@ -468,5 +468,40 @@ export const entries: Entry[] = [
     stage: 'test',
     title: '🔍 A checkup for every button in Koog',
     body: 'Six AI helpers each took one part of Koog and played it with pretend fingers, checking that every button really does its job: loops record and play back on the beat, songs finish with stars, challenges save your badges, every game can be won and lost, every picture moves when you play and every synth knob changes the sound. They fixed what they found. Now the first time you finish a song you get confetti, a challenge badge needs at least half marks (no more badges for zero!), the Advanced looper has an ✕ to remove a track, your picture style and colors stay after you close Koog, and the Songs, Learn, DJ and Visual screens fit on a phone. New in ✨ Modes: 🔁 Looper and 🥁 Drum pads, so you do not need Boss mode for them. The tour got five new stops too. Testers call this kind of check "end-to-end testing": you test the whole path a real player takes, not just one piece.',
+  },
+  {
+    id: 66,
+    time: 'Day',
+    stage: 'ship',
+    title: "🃏 Phrase Match: a memory game for your ears",
+    body: "Phrase Match is a memory card game for tunes. Flip two cards to hear their phrases, and if they match you have to play the tune back on the keys to win the pair. That makes it ear training in disguise: your brain stores a melody as its shape and rhythm, and Hard mode hides look-alike tunes with the same rhythm but different notes to test it.",
+  },
+  {
+    id: 67,
+    time: 'Day',
+    stage: 'ship',
+    title: "🎄 Holiday songs, 🦃 Harvest Feast and 🎄 Light the Tree",
+    body: "Songs has a new 🎄 Holiday tab with Thanksgiving and Christmas songs that are old enough to be free for everyone (so no Rudolph, sorry!). Two new games teach any of them in five steps, from hunting for each key to playing the whole song by heart with a beat: every phrase you nail puts a dish on the table or an ornament on the tree. It is how real musicians memorize: the first steps give you hints and the last steps take them away, so your fingers learn the tune instead of just copying the screen.",
+  },
+  {
+    id: 68,
+    time: 'Day',
+    stage: 'ship',
+    title: "🖼 Art Gallery plays along, and has holiday rooms",
+    body: "Art Gallery now has Skip and a picker for any piece, and it plays along with you: your notes make the pictures move, and the gallery's own music quietly turns itself down while you play, then fades back up. It does this by telling your notes apart from the ghost pianist's. New rooms: 🦃 Thanksgiving with falling leaves and 🎄 Christmas with snow and string lights, each with its own holiday songs.",
+  },
+  {
+    id: 69,
+    time: 'Day',
+    stage: 'ship',
+    title: "🥁 Pattern banks, step edit and a kick-drum pedal; 🎭 Mimic learns jazz",
+    body: "Koog's drum machine now thinks in patterns: four banks you can switch right on the bar line, accent steps for louder hits, mute and solo, and a hold-to-roll fill. The DJ controller's pads can turn into a step editor, and the foot pedal is your kick drum, just like a real drummer's. Mimic learned to answer in the style of Miles Davis, Coltrane, Monk, Ellington, Armstrong, Ella and more, copying their habits (space, fast runs, crunchy notes, scat) and never their recordings.",
+  },
+  {
+    id: 70,
+    time: 'Day',
+    stage: 'ship',
+    title: "🔁 A tighter looper, a pedal that just works, and Boost",
+    body: "Your loop is only as tight as the clock that runs it. Timers on a web page slow down whenever the page is busy, so the looper clock now lives in a background helper called a Web Worker, and recordings use the exact moment you pressed each key. The pedal runs the looper the simple way: one tap records, one tap loops, two taps stop, hold to clear. Press M (Shift+M when the computer keys play notes) for the metronome anywhere. And 🔊 Boost makes quiet laptop speakers louder, asks you twice, and switches itself off after an hour to protect ears.",
   },
 ]

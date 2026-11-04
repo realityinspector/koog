@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import './mimic.css'
 import { STYLES, NOTICE, styleById, type StyleDef } from '../../music/styles'
+import { GROUP_LABEL, groupOf, type StyleGroup } from './peopleStyles'
 import { seenCount, markSeen } from '../../coach/coachBus'
 import { finishTrial, getState, getVersion, playQuote, demo, setBacking, setFilter, setOn, setStyle, setVolume, startTrial, subscribe, toggle, type Shown } from './engine'
 import { useOnePop } from '../../ui/onePop'
@@ -87,6 +88,8 @@ export function MimicChip({ launcher = false }: { launcher?: boolean } = {}) {
   useOnePop('mimic', open, () => setOpen(false))
   const [credit, setCredit] = useState('')
   const st = styleById(S.styleId)
+  const [grp, setGrp] = useState<StyleGroup>(groupOf(S.styleId))
+  useEffect(() => { setGrp(groupOf(S.styleId)) }, [S.styleId])
   useEffect(() => {
     if (!open) return
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -116,12 +119,20 @@ export function MimicChip({ launcher = false }: { launcher?: boolean } = {}) {
             <button className="mm-btn" aria-label="Close" onClick={() => setOpen(false)}>✕</button>
           </div>
           <div className="mm-body">
+            <div className="mm-pick">
+            <div className="mm-groups" role="tablist" aria-label="Style groups">
+              {(Object.keys(GROUP_LABEL) as StyleGroup[]).map((g) => (
+                <button key={g} role="tab" aria-selected={grp === g} className={'mm-btn' + (grp === g ? ' on' : '')} onClick={() => setGrp(g)}
+                  title={g === 'classical' ? 'Public-domain composers' : g === 'jazz' ? 'Jazz players and styles' : 'Funk, soul, synth-pop and more'}>{GROUP_LABEL[g]} <small>{STYLES.filter((s) => groupOf(s.id) === g).length}</small></button>
+              ))}
+            </div>
             <div className="mm-tiles" role="listbox" aria-label="Pick a style">
-              {STYLES.map((s) => (
+              {STYLES.filter((s) => groupOf(s.id) === grp).map((s) => (
                 <button key={s.id} role="option" aria-selected={s.id === S.styleId} className={'mm-tile' + (s.id === S.styleId ? ' on' : '')} onClick={() => setStyle(s.id)} title={s.name}>
                   <Icon st={s} size={24} /><span>{s.name.replace(/ \(.*\)/, '')}</span>
                 </button>
               ))}
+            </div>
             </div>
             <div className="mm-side">
               <Card st={st} key={st.id} />

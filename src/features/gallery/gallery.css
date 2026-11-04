@@ -105,3 +105,30 @@ body:has(.gl-card) .tour-tap { display: none !important; }
 .kg-gal-pop b { font-size: 14px; font-weight: 700; }
 .kg-gal-pop span { font-size: 12px; color: var(--k-ink-2, #cfcbea); line-height: 1.35; }
 @media (max-width: 1399px) { .kg-gal-t { display: none; } .kg-gal-btn { width: 34px; padding: 0; justify-content: center; } }
+
+/* ---------- Art Gallery mode controls: unobtrusive, they fade when idle and come back on a move, tap or key ---------- */
+.gl-art-bar { pointer-events: auto; position: absolute; right: 22px; bottom: 20px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; max-width: calc(100% - 44px); padding: 5px; border-radius: 999px;
+  background: rgba(10, 8, 22, .72); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(6px); transition: opacity .8s ease; opacity: 1; }
+html[data-idle] .gl-art-bar:not(:focus-within) { opacity: 0; pointer-events: none; }
+.gl-art-bar button, .gl-art-bar select { height: 34px; min-width: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); color: rgba(250, 246, 238, .9); font: 600 13px system-ui, -apple-system, sans-serif; cursor: pointer; }
+.gl-art-bar select { max-width: 170px; background-color: #15122b; font-weight: 500; }
+.gl-art-bar button:hover { background: rgba(255, 255, 255, .14); color: #fff; }
+.gl-art-bar button.on { background: rgba(245, 225, 190, .22); border-color: rgba(245, 225, 190, .6); }
+.gl-art-bar .gl-skip { background: rgba(245, 225, 190, .16); border-color: rgba(245, 225, 190, .5); }
+.gl-art-bar button:focus-visible, .gl-art-bar select:focus-visible { outline: 2px solid #f5e1be; outline-offset: 2px; }
+@media (max-width: 560px) { .gl-art-bar { left: 12px; right: 12px; bottom: 12px; max-width: none; border-radius: 22px; justify-content: center; } .gl-art-bar select { max-width: 120px; } }
+.gl-art-duck { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(10, 8, 22, .6); font: 500 12px system-ui, -apple-system, sans-serif; letter-spacing: .06em; color: rgba(250, 246, 238, .8); animation: gl-in 1.2s ease both; }
+html[data-idle] .gl-art-duck { opacity: 0; transition: opacity 1s; }
+.gl-art-hint { right: 22px; top: 18px; }
+
+/* the on-screen piano, tucked over the bottom of the picture when asked for (🎹) */
+html[data-art][data-art-keys] .kg-keybed { position: fixed; left: 50%; bottom: 66px; transform: translateX(-50%); width: min(1000px, calc(100vw - 24px)); z-index: 80; opacity: .92; margin: 0; }
+html[data-art][data-art-keys] .gl-wall { display: none; }
+@media (max-width: 560px) { html[data-art][data-art-keys] .kg-keybed { bottom: 128px; } }
+
+/* ---------- holiday modes: a soft seasonal wash, falling leaves or snow, a string of glowing lights ---------- */
+.gl-tint { position: absolute; inset: 0; mix-blend-mode: soft-light; }
+.gl-art[data-kind='thanksgiving'] .gl-tint { background: radial-gradient(ellipse 110% 90% at 50% 100%, rgba(255, 150, 40, .85), rgba(190, 70, 20, .55) 55%, rgba(120, 40, 10, .7)); }
+.gl-art[data-kind='christmas'] .gl-tint { background: linear-gradient(120deg, rgba(210, 30, 40, .65), rgba(20, 120, 60, .6) 55%, rgba(255, 200, 80, .55)); }
+.gl-season { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gl-art-row { display: flex; gap: 8px; justify-content: center; margin: 0 0 8px; } .gl-art-row .gl-art-btn { margin: 0; padding: 7px 12px; font-size: 13px; }

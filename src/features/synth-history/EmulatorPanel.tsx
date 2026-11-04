@@ -53,25 +53,25 @@ export function EmulatorPanel({ id, preset = 0, onBack }: { id: string; preset?:
   return (
     <div className={'emu ' + spec.skin} onPointerDown={() => { void engine?.unlock() }}>
       <div className="emu-top">
-        <button className="btn-ghost emu-back" aria-label="Back to the time machine" onClick={onBack}>◀ Time machine</button>
+        <button className="btn-ghost emu-back" aria-label="Back to the instruments" onClick={onBack}>◀ Instruments</button>
         <div className="emu-title" title={spec.name}><h3>{spec.name}</h3><span>{spec.year}</span></div>
         {engine && <Scope engine={engine} />}
         <div className="emu-presets" role="group" aria-label="Presets">
           {spec.presets.map((p, i) => <button key={p.name} className={pre === i ? 'on' : ''} onClick={() => applyPreset(i)}>{p.name}</button>)}
         </div>
-        <button className={'emu-tabbtn' + (pop === 'why' ? ' on' : '')} onClick={() => setPop(pop === 'why' ? null : 'why')}>ℹ️ Why it mattered</button>
+        <button className={'emu-tabbtn' + (pop === 'why' ? ' on' : '')} onClick={() => setPop(pop === 'why' ? null : 'why')}>ℹ️ About it</button>
         <button className={'emu-tabbtn' + (pop === 'learn' ? ' on' : '')} onClick={() => setPop(pop === 'learn' ? null : 'learn')}>🎼 Learn a piece</button>
       </div>
-      <div className="emu-pop emu-why" hidden={pop !== 'why'}><h4>Why it mattered</h4><p>{spec.blurb}</p>{spec.note && <p className="emu-warn">{spec.note}</p>}</div>
+      <div className="emu-pop emu-why" hidden={pop !== 'why'}><h4>About this instrument</h4><p>{spec.blurb}</p><p>This is {spec.name}, inspired by {spec.inspired}. The history of the idea is on the Timeline tab.</p>{spec.note && <p className="emu-warn">{spec.note}</p>}</div>
       <EmuLearn ids={songIds} why={spec.songWhy} open={pop === 'learn'} />
-      <div className={'emu-plate' + (spec.extra === 'seq303' ? ' p303' : '')}>
+      <div className={'emu-plate' + (spec.extra === 'seq303' ? ' pseq' : '')}>
         <ControlRow ctls={spec.ctls} values={vals} onChange={change}
-          aside={spec.id === 'hammond' ? <Rotary speed={vals.rotary ?? 0} /> : spec.id === 'arp' ? <PatchBay vals={vals} /> : spec.id === 'dx' ? <Lcd vals={vals} ratios={RATIOS} /> : undefined} />
+          aside={spec.id === 'wheelhouse' ? <Rotary speed={vals.rotary ?? 0} /> : spec.id === 'patchbay' ? <PatchBay vals={vals} /> : spec.id === 'bellfm' ? <Lcd vals={vals} ratios={RATIOS} /> : undefined} />
         {engine && spec.extra === 'field' && spec.fieldRange && <FieldPad engine={engine} range={spec.fieldRange} />}
         {engine && spec.extra === 'seq303' && <Seq303 engine={engine} />}
         {spec.extra === 'tape' && <TapeBar />}
         <KeyLeds />
-        <span className="emu-legal">Educational emulation. Not affiliated with or endorsed by the makers. Names are trademarks of their owners.</span>
+        <span className="emu-legal">Koog's own take on a classic idea, built for learning. The history of the idea is on the Timeline tab.</span>
       </div>
     </div>
   )

@@ -10,6 +10,8 @@ import { tb303 } from './tb303'
 import { juno } from './juno'
 import { dx } from './dx'
 import type { EmuSpec } from './types'
+import { canonEmuId } from './aliases'
 
 export const EMULATORS: EmuSpec[] = [theremin, ondes, hammond, mellotron, moog, arp, tb303, prophet, juno, dx]
-export const getEmu = (id: string) => EMULATORS.find((e) => e.id === id)
+export { canonEmuId, EMU_ALIASES } from './aliases'
+export const getEmu = (id: string) => { const c = canonEmuId(id); return EMULATORS.find((e) => e.id === c) }

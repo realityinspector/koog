@@ -2,12 +2,13 @@
 // STABLE API: useGuide with { targets, tone }, setGuide(targets, tone?), clearGuide().
 import { create } from 'zustand'
 
-export type GuideTone = 'next' | 'danger' | 'gold'
-export interface GuideState { targets: number[]; tone: GuideTone }
-function make() { return create<GuideState>()(() => ({ targets: [], tone: 'next' as GuideTone })) }
+export type GuideTone = 'next' | 'danger' | 'gold' | 'good' | 'soon'
+/** soon = upcoming notes, drawn dimmer than the targets */
+export interface GuideState { targets: number[]; tone: GuideTone; soon: number[] }
+function make() { return create<GuideState>()(() => ({ targets: [], tone: 'next' as GuideTone, soon: [] as number[] })) }
 export const useGuide = (import.meta.hot?.data.guideStore as ReturnType<typeof make> | undefined) ?? make()
-export const setGuide = (targets: number[], tone: GuideTone = 'next') => useGuide.setState({ targets, tone })
-export const clearGuide = () => useGuide.setState({ targets: [] })
+export const setGuide = (targets: number[], tone: GuideTone = 'next', soon: number[] = []) => useGuide.setState({ targets, tone, soon })
+export const clearGuide = () => useGuide.setState({ targets: [], soon: [] })
 
 if (import.meta.hot) {
   import.meta.hot.data.guideStore = useGuide

@@ -63,6 +63,7 @@ function onDown(e: KeyboardEvent) {
     if (!e.repeat && i >= 0 && i < SHIFTS.length) st.store.setState({ shift: SHIFTS[i] })
     return
   }
+  if (e.code === 'KeyM' && e.shiftKey) return // Shift+M flips the metronome (src/features/loopstation/metroKey.ts); plain M is the note B
   const base = MAP.get(e.code)
   if (base === undefined || e.repeat || st.held.has(e.code)) return
   const note = base + st.store.getState().shift

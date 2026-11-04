@@ -1,4 +1,4 @@
-// Mellotron-style tape keyboard, SYNTHESIZED (no recordings): strings / flute / choir with tape wobble, age darkness,
+// Tape-keyboard-style tape keyboard, SYNTHESIZED (no recordings): strings / flute / choir with tape wobble, age darkness,
 // hiss, and the famous 8-second tape limit. Polyphonic, up to 8 voices (oldest stolen).
 import { clamp, hz, noise, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -6,11 +6,12 @@ import type { EmuSpec } from './types'
 const TAPE_SECS = 8, MAX_VOICES = 8
 
 export const mellotron: EmuSpec = {
-  id: 'mellotron', name: 'Tape Keyboard', year: '1963', skin: 'skin-mellotron',
-  blurb: 'Each key on a Mellotron pressed a strip of recorded tape against a spinning roller, so one keyboard could sound like a whole orchestra. The tape only lasted about eight seconds before it ran out, so players learned to release the key and press again.',
-  note: 'The real Mellotron played tape recordings, which we cannot use. This is a synthesized approximation of tape strings, flute and choir, with tape wobble and the 8-second tape limit.',
+  id: 'tapechoir', name: 'Koog Tape Choir', year: '1960s style', skin: 'skin-tapechoir',
+  inspired: 'the 1960s tape-replay keyboards, where each key played a strip of recorded tape',
+  blurb: 'A tape-style keyboard: it imitates strings, flute and choir with tape wobble and age, and the tape runs out after about eight seconds, so players learn to let go of a key and press again. One keyboard can sound like a whole orchestra.',
+  note: 'This is a synthesized tape sound with no recordings in it: a Koog approximation of strings, flute and choir, with tape wobble and the 8-second tape limit.',
   extra: 'tape',
-  songs: ['jesu', 'air', 'morning', 'swan', 'gymnopedie'], songWhy: 'Mellotron strings and flutes sound dreamy on slow melodies like Morning (Grieg); its fame came from 1960s-70s rock, but these old tunes are public domain.',
+  songs: ['jesu', 'air', 'morning', 'swan', 'gymnopedie'], songWhy: 'Tape strings and flutes sound dreamy on slow melodies like Morning (Grieg); the tunes are old public-domain pieces.',
   ctls: [
     { key: 'tape', label: 'Tape', min: 0, max: 2, def: 0, step: 1, kind: 'pick', opts: ['Strings', 'Flute', 'Choir'], group: 'Tape' },
     { key: 'wobble', label: 'Wobble', min: 0, max: 1, def: 0.35, step: 0.01 },
@@ -22,6 +23,7 @@ export const mellotron: EmuSpec = {
     { name: 'Dreamy strings', values: { tape: 0, wobble: 0.35, age: 0.4, attack: 0.25, rel: 0.4 } },
     { name: 'Breathy flute', values: { tape: 1, wobble: 0.3, age: 0.3, attack: 0.08, rel: 0.2 } },
     { name: 'Old choir', values: { tape: 2, wobble: 0.6, age: 0.7, attack: 0.3, rel: 0.5 } },
+    { name: 'Koog moonlit strings', values: { tape: 0, wobble: 0.5, age: 0.55, attack: 0.35, rel: 0.6 } },
   ],
   make({ ctx, out }, P) {
     // shared tape wobble: slow wow + two flutters, in cents, fed to every voice's detune

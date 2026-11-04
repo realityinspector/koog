@@ -1,9 +1,9 @@
 // The one shared audio host. One AudioContext, one master bus, per-source channels.
-//   channel.input -> capGain (cap x trim) -> master (app volume x mute, applied ONLY here) -> limiter -> makeup trim -> analyser -> destination
+//   channel.input -> capGain (cap x trim) -> master (app volume x mute x Boost, applied ONLY here) -> limiter -> makeup trim -> analyser -> destination
 // STABLE API: getCtx(), unlockHost(), createChannel(id, {cap, label}) / getChannel(id), masterBus, getNoise(ctx), listChannels().
 // State lives in import.meta.hot.data so editing this file never drops the context or a connected engine.
 // Legacy engines (DJ, beats, band, guide, loops, mimic, fx) still own their own contexts until they migrate.
-import { outputScale, useAudioSettings } from '../music/audioSettings'
+import { boostGain, outputScale, setBoost, useAudioSettings } from '../music/audioSettings'
 import { registerPanicTarget } from '../music/panic'
 
 export interface Channel {
@@ -31,7 +31,7 @@ interface Host {
 }
 
 // One host per page, even if this file is loaded under two URLs (Vite versions edited modules with ?t=): keep it on globalThis.
-const G = globalThis as unknown as { __koogHost?: Host }
+const G = globalThis as unknown as { __koogHost?: Host; __koogInserts?: Map<string, { ctx: BaseAudioContext; input: AudioNode; output: AudioNode }> }
 const cur = (): Host | null => G.__koogHost ?? null
 
 /** Chrome's DynamicsCompressor adds automatic makeup gain (~2.2x at -12 dB / ratio 20); this trims it so quiet signals pass at 1x. */
@@ -41,7 +41,7 @@ function build(): Host {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
   const ctx = new AC({ latencyHint: 'interactive' })
   const master = ctx.createGain()
-  master.gain.value = outputScale()
+  master.gain.value = outputScale() * boostGain()
   const limiter = ctx.createDynamicsCompressor()
   limiter.threshold.value = -12; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.003; limiter.release.value = 0.1
   const trim = ctx.createGain(); trim.gain.value = MAKEUP_TRIM
@@ -58,7 +58,10 @@ function host(): Host {
 
 function applyMaster() {
   const h = cur(); if (!h) return
-  h.master.gain.setTargetAtTime(outputScale(), h.ctx.currentTime, 0.02)
+  // Boost (x2) is applied here, BEFORE the limiter. Start from the value it has right now so a quick change never leaves an old ramp behind.
+  const g = h.master.gain, t = h.ctx.currentTime
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t)
+  g.setTargetAtTime(outputScale() * boostGain(), t, 0.02)
 }
 
 /** The shared AudioContext (created lazily; it may be suspended until a gesture calls unlockHost). */
@@ -90,7 +93,9 @@ export function createChannel(id: string, opts: { cap: number; label?: string })
   const input = ctx.createGain(); input.gain.value = 1
   const capGain = ctx.createGain(); capGain.gain.value = opts.cap
   const an = ctx.createAnalyser(); an.fftSize = 1024
-  input.connect(capGain); capGain.connect(h.master); capGain.connect(an)
+  const ins = G.__koogInserts?.get(id) // Pedalboard insert (setChannelInsert): input -> insert -> capGain, so the cap still bounds the result
+  if (ins && ins.ctx === ctx) { input.connect(ins.input); ins.output.connect(capGain) } else input.connect(capGain)
+  capGain.connect(h.master); capGain.connect(an)
   const st = { trim: 1, buf: new Float32Array(1024) } as ChanState
   const cap = Math.max(0, Math.min(1, opts.cap))
   capGain.gain.value = cap
@@ -109,6 +114,16 @@ export function createChannel(id: string, opts: { cap: number; label?: string })
   return ch
 }
 export const getChannel = (id: string): Channel | null => cur()?.chans.get(id)?.ch ?? null
+/** Put an effect chain between a channel's input and its cap (null removes it). Used by the Pedalboard on 'keys'. */
+export function setChannelInsert(id: string, ins: { ctx: BaseAudioContext; input: AudioNode; output: AudioNode } | null) {
+  const m = ((G.__koogInserts ??= new Map()) as Map<string, { ctx: BaseAudioContext; input: AudioNode; output: AudioNode }>)
+  const old = m.get(id); const st = cur()?.chans.get(id)
+  if (ins) m.set(id, ins); else m.delete(id)
+  if (!st) return // the channel is not built yet: createChannel picks the insert up
+  const input = st.ch.input
+  try { input.disconnect(); old?.output.disconnect(st.capGain) } catch { /* not connected */ }
+  if (ins) { input.connect(ins.input); ins.output.connect(st.capGain) } else input.connect(st.capGain)
+}
 export const listChannels = (): { id: string; label: string; cap: number; trim: number; peak: number }[] =>
   [...(cur()?.chans.values() ?? [])].map((s) => ({ id: s.ch.id, label: s.ch.label, cap: s.ch.cap, trim: s.trim, peak: s.ch.peak() }))
 
@@ -117,7 +132,7 @@ export const masterBus = {
   peak: (): number => ((h) => (h ? peakOf(h.an, h.buf) : 0))(cur()),
   /** how many dB the limiter is pulling down right now (<= 0) */
   reduction: (): number => cur()?.limiter.reduction ?? 0,
-  /** current master gain (volume x mute) */
+  /** current master gain (volume x mute x Boost) */
   gain: (): number => cur()?.master.gain.value ?? 0,
   /** the node every channel feeds (for the analyser/scope) */
   analyser: (): AnalyserNode => host().an,
@@ -135,6 +150,8 @@ export function getNoise(ctx: BaseAudioContext): AudioBuffer {
   return b
 }
 
+// Panic also turns Boost off.
+registerPanicTarget('boost', () => setBoost(false))
 // Panic: duck the master for a moment (engines silence themselves through their own panic targets), then restore.
 registerPanicTarget('audio-host', () => {
   const h = cur(); if (!h) return

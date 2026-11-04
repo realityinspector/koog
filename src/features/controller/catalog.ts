@@ -1,5 +1,5 @@
 // Controller Mode: what each instrument's knobs MEAN. A "topology" is the list of parameters an instrument has
-// (in its own vocabulary: cutoff, drawbars, operator ratios, 303 steps...), the real setters behind them, and the
+// (in its own vocabulary: cutoff, drawbars, operator ratios, bass steps...), the real setters behind them, and the
 // default layout that puts them on the DJ controller's physical controls. Pure data + closures: no state here.
 // Every continuous param is normalised 0..1; safety caps (resonance, drive, gain) live in each engine and are clamped again here.
 import { getSynth, setPitchBend, getPitchBend, setHold, getHold, setOctave, getOctave } from '../synth-history/engine'
@@ -55,7 +55,7 @@ export interface Param {
 export interface Stage { name: string; hint: string; params: string[] }
 export interface Topology {
   id: string; name: string
-  /** short Moog-style teaching line for this instrument */
+  /** short classic-analog teaching line for this instrument */
   caption: string
   stages: Stage[]
   params: Param[]
@@ -71,8 +71,8 @@ const secText = (v: number) => (v < 0.1 ? Math.round(v * 1000) + ' ms' : v.toFix
 const num = (v: number) => (Math.abs(v) >= 100 ? String(Math.round(v)) : Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2))
 const pct = (v: number) => Math.round(v * 100) + '%'
 
-// ---------- Koog synth (Moog-style) ----------
-export const MOOG_PATCH: Partial<SynthParams> = {
+// ---------- Koog synth (classic analog style) ----------
+export const CLASSIC_PATCH: Partial<SynthParams> = {
   wave: 'sawtooth', detune: 7, cutoff: 700, resonance: 5, filterEnv: 3500, attack: 0.01, decay: 0.35, sustain: 0.5, release: 0.3,
   glide: 0.04, lfoRate: 5, lfoDepth: 0, lfoTarget: 'none',
 }
@@ -115,7 +115,7 @@ const koogParams = (): Param[] => [
   } },
   { id: '@lfoTarget', label: 'LFO goes to (pitch / cutoff / volume)', short: 'LFO>', kind: 'action', press: () => getSynth().setParams({ lfoTarget: LFO_TARGETS[(LFO_TARGETS.indexOf(sp().lfoTarget) + 1) % 4] }), lit: () => sp().lfoTarget !== 'none', text: () => sp().lfoTarget },
   { id: '@lfoShape', label: 'LFO shape', short: 'SHAPE', kind: 'action', press: () => getSynth().setParams({ lfoShape: LFO_SHAPES[(LFO_SHAPES.indexOf(sp().lfoShape) + 1) % 3] }), text: () => sp().lfoShape },
-  { id: '@moog', label: 'Reset to the classic analog patch', short: 'MOOG', kind: 'action', press: () => { setHold(false); setOctave(0); getSynth().setParams(MOOG_PATCH) } },
+  { id: '@classic', label: 'Reset to the classic analog patch', short: 'SAW', kind: 'action', press: () => { setHold(false); setOctave(0); getSynth().setParams(CLASSIC_PATCH) } },
 ]
 
 // ---------- emulators: params come straight from the EmuSpec controls ----------
@@ -130,7 +130,7 @@ const fmtVal = (c: Ctl, v: number) => {
   return num(v)
 }
 const shortOf = (s: string) => s.replace(/[^A-Za-z0-9+\-½ ]/g, '').toUpperCase().slice(0, 6).trim()
-/** field (theremin / ribbon) state: pitch across the field and the volume antenna */
+/** field (hands-in-the-air / ribbon) state: pitch across the field and the volume antenna */
 const field = { x: 0.5, y: 0 }
 function pushField(e: Engine | null) { if (e) e.field(field.y > 0.02 ? field.x : null, field.y) }
 
@@ -206,21 +206,21 @@ function layoutOf(l: LayoutSpec): Record<string, string> {
 const PRESET_PADS = ['@preset.0', '@preset.1', '@preset.2', '@preset.3']
 const GEN_B = ['@preset+', '@panic', '@preset-']
 const EMU_LAYOUT: Record<string, LayoutSpec> = {
-  moog: { X: 'cutoff', K: ['reso', 'env', 'glide', 'det2', 'det3'], F: ['a', 'd', 's', 'r'], J: ['det2', 'cutoff'], PA: ['wave=0', 'wave=1', 'wave=2'], PB: PRESET_PADS, B: GEN_B },
-  hammond: { X: 'drive', K: ['d0', 'd5', 'd6', 'd7', 'd8', 'click'], F: ['d1', 'd2', 'd3', 'd4'], J: ['rotary', 'perc'], PA: ['rotary=0', 'rotary=1', 'rotary=2', 'perc=0'], PB: PRESET_PADS, B: GEN_B },
-  tb303: { X: 'cutoff', K: ['cutoff', 'reso', 'envmod', 'decay', 'accent', 'root'], F: ['tempo'], J: ['cutoff', 'tempo'],
+  ladder: { X: 'cutoff', K: ['reso', 'env', 'glide', 'det2', 'det3'], F: ['a', 'd', 's', 'r'], J: ['det2', 'cutoff'], PA: ['wave=0', 'wave=1', 'wave=2'], PB: PRESET_PADS, B: GEN_B },
+  wheelhouse: { X: 'drive', K: ['d0', 'd5', 'd6', 'd7', 'd8', 'click'], F: ['d1', 'd2', 'd3', 'd4'], J: ['rotary', 'perc'], PA: ['rotary=0', 'rotary=1', 'rotary=2', 'perc=0'], PB: PRESET_PADS, B: GEN_B },
+  squelch: { X: 'cutoff', K: ['cutoff', 'reso', 'envmod', 'decay', 'accent', 'root'], F: ['tempo'], J: ['cutoff', 'tempo'],
     PA: ['@step.1', '@step.2', '@step.3', '@step.4'], PB: ['@step.5', '@step.6', '@step.7', '@step.8'], B: ['@run', '@panic', '@pat', '', '', '', '@page', '@clear'] },
-  dx: { X: 'depth', K: ['r2', 'r3', 'r4', 'mdecay', 'alg'], F: ['a', 'd', 's', 'r'], J: ['depth', 'mdecay'], PA: ['alg=0', 'alg=1', 'alg=2'], PB: PRESET_PADS, B: GEN_B },
-  theremin: { X: 'vol', K: ['vrate', 'vdepth', 'bright', 'glide', 'attack'], J: ['pitch', 'vdepth'], PB: PRESET_PADS, B: GEN_B },
-  ondes: { X: 'vol', K: ['skin', 'glide', 'vrate', 'vdepth', 'attack'], J: ['pitch', 'vdepth'], PA: ['timbre=0', 'timbre=1', 'timbre=2', 'timbre=3'], PB: PRESET_PADS, B: GEN_B },
-  mellotron: { X: 'wobble', K: ['age'], F: ['attack', 'rel'], J: ['tape', 'age'], PA: ['tape=0', 'tape=1', 'tape=2'], PB: PRESET_PADS, B: GEN_B },
-  arp: { X: 'cutoff', K: ['reso', 'env', 'rate', 'cPitch', 'cFilt', 'cAmp'], F: ['a', 'r', 'ring', 'det2'], J: ['src', 'cutoff'], PA: ['wave1=0', 'wave1=1', 'wave1=2'], PB: ['wave2=0', 'wave2=1', 'wave2=2'], B: GEN_B },
-  prophet: { X: 'cutoff', K: ['reso', 'env', 'pm', 'bmod', 'bdet', 'drift'], F: ['a', 'd', 's', 'r'], J: ['int', 'cutoff'], PA: ['wA=0', 'wA=1', 'wB=0', 'wB=1'], PB: PRESET_PADS, B: GEN_B },
-  juno: { X: 'cutoff', K: ['reso', 'env', 'mix', 'sub', 'pwmD', 'pwmR'], F: ['a', 'd', 's', 'r'], J: ['chorus', 'hpf'], PA: ['chorus=0', 'chorus=1', 'chorus=2', 'chorus=3'], PB: ['hpf=0', 'hpf=1', 'hpf=2', 'hpf=3'], B: GEN_B },
+  bellfm: { X: 'depth', K: ['r2', 'r3', 'r4', 'mdecay', 'alg'], F: ['a', 'd', 's', 'r'], J: ['depth', 'mdecay'], PA: ['alg=0', 'alg=1', 'alg=2'], PB: PRESET_PADS, B: GEN_B },
+  airhands: { X: 'vol', K: ['vrate', 'vdepth', 'bright', 'glide', 'attack'], J: ['pitch', 'vdepth'], PB: PRESET_PADS, B: GEN_B },
+  ribbon: { X: 'vol', K: ['skin', 'glide', 'vrate', 'vdepth', 'attack'], J: ['pitch', 'vdepth'], PA: ['timbre=0', 'timbre=1', 'timbre=2', 'timbre=3'], PB: PRESET_PADS, B: GEN_B },
+  tapechoir: { X: 'wobble', K: ['age'], F: ['attack', 'rel'], J: ['tape', 'age'], PA: ['tape=0', 'tape=1', 'tape=2'], PB: PRESET_PADS, B: GEN_B },
+  patchbay: { X: 'cutoff', K: ['reso', 'env', 'rate', 'cPitch', 'cFilt', 'cAmp'], F: ['a', 'r', 'ring', 'det2'], J: ['src', 'cutoff'], PA: ['wave1=0', 'wave1=1', 'wave1=2'], PB: ['wave2=0', 'wave2=1', 'wave2=2'], B: GEN_B },
+  five: { X: 'cutoff', K: ['reso', 'env', 'pm', 'bmod', 'bdet', 'drift'], F: ['a', 'd', 's', 'r'], J: ['int', 'cutoff'], PA: ['wA=0', 'wA=1', 'wB=0', 'wB=1'], PB: PRESET_PADS, B: GEN_B },
+  shimmer: { X: 'cutoff', K: ['reso', 'env', 'mix', 'sub', 'pwmD', 'pwmR'], F: ['a', 'd', 's', 'r'], J: ['chorus', 'hpf'], PA: ['chorus=0', 'chorus=1', 'chorus=2', 'chorus=3'], PB: ['hpf=0', 'hpf=1', 'hpf=2', 'hpf=3'], B: GEN_B },
 }
 const KOOG_LAYOUT: LayoutSpec = {
   X: 'cutoff', K: ['resonance', 'filterEnv', 'detune', 'glide', 'lfoRate', 'lfoDepth'], F: ['attack', 'decay', 'sustain', 'release'], J: ['bend', 'lfoDepth'],
-  PA: ['wave=sawtooth', 'wave=square', 'wave=triangle', 'wave=sine'], PB: ['oct=-1', 'oct=0', 'oct=1', 'oct=2'], B: ['@hold', '@panic', '@tap', '@lfoTarget', '@moog', '@lfoShape'],
+  PA: ['wave=sawtooth', 'wave=square', 'wave=triangle', 'wave=sine'], PB: ['oct=-1', 'oct=0', 'oct=1', 'oct=2'], B: ['@hold', '@panic', '@tap', '@lfoTarget', '@classic', '@lfoShape'],
 }
 
 const KOOG_STAGES: Stage[] = [

@@ -100,6 +100,8 @@ export function PianoStrip() {
   const layout = useMemo(() => buildLayout(range[0], range[1]), [range])
   const guideTargets = useGuide((g) => g.targets)
   const guideTone = useGuide((g) => g.tone)
+  const guideSoon = useGuide((g) => g.soon)
+  const soonSet = useMemo(() => new Set(guideSoon ?? []), [guideSoon])
   const peekNote = usePeekNote()
   const guideSet = useMemo(() => new Set(guideTargets), [guideTargets])
   const zMode = useZones((z) => z.mode)
@@ -174,7 +176,7 @@ export function PianoStrip() {
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
       </div>
       <div className="kb-opts">
-        <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing.">
+        <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing. While it is on, M plays the note B, so Shift+M flips the metronome; with it off, plain M flips the metronome.">
           <input type="checkbox" checked={keysOn} onChange={() => setTypingOn(!keysOn)} /> Keys play notes
         </label>
         <label className="kb-toggle">
@@ -186,7 +188,7 @@ export function PianoStrip() {
       </div>
       <div className="kb-strip">
         {layout.map((k, i) => (
-          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : null} peek={peekNote === k.note} zc={zoneBands.length ? ZONE_COLORS[zoneBands.find((b) => k.note >= b.lo && k.note <= b.hi)?.i ?? 0] : null} down={down} up={up} />
+          <Key key={k.note} k={k} held={held.has(k.note)} flash={flash.has(k.note)} status={status[i]} showName={names} caps={typing ? typingCaps(k.note, shift).join(' ') || null : null} guide={guideSet.has(k.note) ? guideTone : soonSet.has(k.note) ? 'soon' : null} peek={peekNote === k.note} zc={zoneBands.length ? ZONE_COLORS[zoneBands.find((b) => k.note >= b.lo && k.note <= b.hi)?.i ?? 0] : null} down={down} up={up} />
         ))}
       </div>
       {zoneBands.length > 0 && (

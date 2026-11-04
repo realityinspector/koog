@@ -647,6 +647,174 @@
    "beats": 52,
    "beatsPerBar": 3,
    "hook": "A waltz: ONE-two-three, ONE-two-three. Rhythm simplified so you can feel the swing."
+  },
+  {
+   "id": "overriver",
+   "title": "Over the River and Through the Wood",
+   "origin": "Words by Lydia Maria Child; traditional tune",
+   "year": "1844",
+   "key": "c-major",
+   "bpm": 100,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 65,
+   "beats": 64,
+   "beatsPerBar": 4,
+   "hook": "Off to grandmother's house in the sleigh. Rolling, bouncy rhythm: long-long-short."
+  },
+  {
+   "id": "gather",
+   "title": "We Gather Together",
+   "origin": "Dutch hymn \"Wilt heden nu treden\" (words 1597, English 1894)",
+   "year": "1597",
+   "key": "d-major",
+   "bpm": 92,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 46,
+   "beats": 49,
+   "beatsPerBar": 3,
+   "hook": "A calm hymn of thanks. Each line climbs, then settles back down."
+  },
+  {
+   "id": "thankful",
+   "title": "Come, Ye Thankful People, Come",
+   "origin": "Words by Henry Alford; tune by George Elvey",
+   "year": "1844",
+   "key": "f-major",
+   "bpm": 100,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 56,
+   "beats": 64,
+   "beatsPerBar": 4,
+   "hook": "The harvest-home hymn. Big, proud tune that leaps up and rolls home."
+  },
+  {
+   "id": "simplegifts",
+   "title": "Simple Gifts",
+   "origin": "Shaker song by Joseph Brackett",
+   "year": "1848",
+   "key": "g-major",
+   "bpm": 104,
+   "tier": "holiday",
+   "difficulty": 4,
+   "notes": 85,
+   "beats": 65,
+   "beatsPerBar": 4,
+   "hook": "Bows and turns. Same shape twice, then the \"turn, turn\" part."
+  },
+  {
+   "id": "silentnight",
+   "title": "Silent Night",
+   "origin": "Franz Gruber",
+   "year": "1818",
+   "key": "c-major",
+   "bpm": 66,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 46,
+   "beats": 72,
+   "beatsPerBar": 3,
+   "hook": "The lullaby. Long-short-long in threes, and a slow climb to the high notes."
+  },
+  {
+   "id": "joyworld",
+   "title": "Joy to the World",
+   "origin": "Words by Isaac Watts; tune \"Antioch\"",
+   "year": "1719",
+   "key": "c-major",
+   "bpm": 112,
+   "tier": "holiday",
+   "difficulty": 4,
+   "notes": 57,
+   "beats": 38,
+   "beatsPerBar": 4,
+   "hook": "A whole scale tumbling down from the high C. Then the four-note \"and heaven and nature sing\"."
+  },
+  {
+   "id": "christmastree",
+   "title": "O Christmas Tree",
+   "origin": "German folk song \"O Tannenbaum\"",
+   "year": "1824",
+   "key": "g-major",
+   "bpm": 96,
+   "tier": "holiday",
+   "difficulty": 4,
+   "notes": 46,
+   "beats": 36,
+   "beatsPerBar": 3,
+   "hook": "The tree song. Same line comes back at the end."
+  },
+  {
+   "id": "jollynick",
+   "title": "Jolly Old St. Nicholas",
+   "origin": "Words by Emily Huntington Miller; traditional tune",
+   "year": "1865",
+   "key": "g-major",
+   "bpm": 108,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 48,
+   "beats": 32,
+   "beatsPerBar": 4,
+   "hook": "Lean in close. Whispered verse, with a little tune that steps down and back up."
+  },
+  {
+   "id": "housetop",
+   "title": "Up on the Housetop",
+   "origin": "Benjamin Hanby",
+   "year": "1864",
+   "key": "g-major",
+   "bpm": 116,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 66,
+   "beats": 64,
+   "beatsPerBar": 4,
+   "hook": "Click, click, click. A bouncy verse and a \"Ho ho ho\" chorus."
+  },
+  {
+   "id": "firstnoel",
+   "title": "The First Noel",
+   "origin": "Traditional English carol",
+   "year": "1823",
+   "key": "c-major",
+   "bpm": 92,
+   "tier": "holiday",
+   "difficulty": 4,
+   "notes": 72,
+   "beats": 73,
+   "beatsPerBar": 3,
+   "hook": "The verse tune twice, then the big \"No-el, No-el\" chorus."
+  },
+  {
+   "id": "wenceslas",
+   "title": "Good King Wenceslas",
+   "origin": "Words by J. M. Neale; tune from 1582",
+   "year": "1853",
+   "key": "g-major",
+   "bpm": 104,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 53,
+   "beats": 68,
+   "beatsPerBar": 4,
+   "hook": "A story-song about snow and kindness. The tune repeats, then swoops up high."
+  },
+  {
+   "id": "awaymanger",
+   "title": "Away in a Manger",
+   "origin": "Words from the 1880s; tune by James R. Murray",
+   "year": "1887",
+   "key": "g-major",
+   "bpm": 72,
+   "tier": "holiday",
+   "difficulty": 3,
+   "notes": 44,
+   "beats": 49,
+   "beatsPerBar": 3,
+   "hook": "A sleepy lullaby that drifts down from the high D."
   }
  ],
  "challenges": [
@@ -759,6 +927,24 @@
    "title": "Runway Remix",
    "blurb": "Style a model through the eras of music, then play the era's piece on the beat so they strut the runway.",
    "skill": "Musical eras and style"
+  },
+  {
+   "id": "memory",
+   "title": "Phrase Match",
+   "blurb": "Flip cards to hear short tunes, find the twins, then play each tune back on the keys to win the pair.",
+   "skill": "Ear and memory for phrases"
+  },
+  {
+   "id": "feast",
+   "title": "Harvest Feast",
+   "blurb": "Learn a Thanksgiving song step by step, from hunt-and-peck to master. Every phrase you nail puts a dish on the table.",
+   "skill": "Memorize songs, one level at a time"
+  },
+  {
+   "id": "tree",
+   "title": "Light the Tree",
+   "blurb": "Learn a Christmas song step by step, from hunt-and-peck to master. Every phrase hangs an ornament, and master puts the star on top.",
+   "skill": "Memorize songs, one level at a time"
   },
   {
    "id": "bachdoom",
@@ -983,64 +1169,64 @@
  ],
  "emulators": [
   {
-   "id": "theremin",
-   "title": "Theremin",
-   "year": "1920",
-   "blurb": "Leon Theremin invented an instrument you play without touching it: your hand near one antenna changes the pitch, and your other hand near a second antenna changes the ..."
+   "id": "airhands",
+   "title": "Koog Air",
+   "year": "1920s style",
+   "blurb": "A hands-in-the-air instrument: slide across the pad and the pitch glides smoothly with no steps between notes."
   },
   {
-   "id": "ondes",
-   "title": "Ondes Martenot",
-   "year": "1928",
-   "blurb": "Maurice Martenot built this instrument so you could slide your finger on a ring and make a voice-like electronic note."
+   "id": "ribbon",
+   "title": "Koog Ribbon",
+   "year": "1920s style",
+   "blurb": "A ribbon-and-ring instrument: slide your finger to glide between notes, add finger wobble (vibrato), and pick one of four speaker colours."
   },
   {
-   "id": "hammond",
-   "title": "Tonewheel Organ",
-   "year": "1935",
-   "blurb": "Laurens Hammond made an organ without pipes: spinning metal wheels made tiny electric hums, and sliding drawbars mixed them together like a recipe."
+   "id": "wheelhouse",
+   "title": "Koog Wheelhouse",
+   "year": "1930s style",
+   "blurb": "A drawbar organ with no pipes: nine sliders mix harmonics together like a recipe, and a spinning-speaker cabinet makes the sound swirl."
   },
   {
-   "id": "mellotron",
-   "title": "Tape Keyboard",
-   "year": "1963",
-   "blurb": "Each key on a Mellotron pressed a strip of recorded tape against a spinning roller, so one keyboard could sound like a whole orchestra."
+   "id": "tapechoir",
+   "title": "Koog Tape Choir",
+   "year": "1960s style",
+   "blurb": "A tape-style keyboard: it imitates strings, flute and choir with tape wobble and age, and the tape runs out after about eight seconds, so players learn to let go of a ..."
   },
   {
-   "id": "moog",
-   "title": "Voltage-controlled modular / Minimoog-style",
-   "year": "1964 / 1970",
-   "blurb": "In 1964 Robert Moog showed that one voltage could steer another: oscillators, a filter and an envelope wired together made an instrument."
+   "id": "ladder",
+   "title": "Koog Ladder",
+   "year": "1960s-70s style",
+   "blurb": "A one-voice-at-a-time analog-style synth: three detunable oscillators feed a steep four-pole low-pass filter, and an envelope opens the filter on each note."
   },
   {
-   "id": "arp",
-   "title": "ARP 2600-style",
-   "year": "1971",
-   "blurb": "The 2600 was a \"semi-modular\" synth: it worked out of the box, but sliders and patch cables let you rewire it, so it was great for learning how sound is built."
+   "id": "patchbay",
+   "title": "Koog Patchbay",
+   "year": "1970s style",
+   "blurb": "A semi-modular style synth: it plays right away, but sliders and a patch bay let you rewire what controls the pitch, the filter and the loudness."
   },
   {
-   "id": "tb303",
-   "title": "TB-303-style bass",
-   "year": "1981",
-   "blurb": "This little silver box was made to play bass lines for guitarists to practise with, and it flopped."
+   "id": "squelch",
+   "title": "Koog Squelch",
+   "year": "1980s style",
+   "blurb": "A bass-line box: fill in the 16 steps, add Accent and Slide to some of them, then sweep Cutoff and Resonance while it plays for that squelchy, wobbling acid sound."
   },
   {
-   "id": "prophet",
-   "title": "Programmable polyphonic synth (Prophet-5 spirit)",
-   "year": "1978",
-   "blurb": "The Prophet-5 was the first synth that could play five notes at once AND remember your sounds with a tiny computer chip."
+   "id": "five",
+   "title": "Koog Five",
+   "year": "1970s style",
+   "blurb": "A five-voice programmable-style synth: five notes at once, two oscillators per note, a steep low-pass filter and a Cross-mod section where one oscillator wobbles the f..."
   },
   {
-   "id": "juno",
-   "title": "Chorus polysynth (Juno-style)",
-   "year": "1982",
-   "blurb": "The Juno was cheap, light and easy: one knob for each job, so you could make a good sound in seconds."
+   "id": "shimmer",
+   "title": "Koog Shimmer",
+   "year": "1980s style",
+   "blurb": "A chorus polysynth: one knob for each job, so you can make a good sound in seconds."
   },
   {
-   "id": "dx",
-   "title": "Digital FM synth (DX-style)",
-   "year": "1983",
-   "blurb": "FM synthesis makes one sound wave wobble the pitch of another, super fast, until it turns glassy, bell-like or bright."
+   "id": "bellfm",
+   "title": "Koog Bell FM",
+   "year": "1980s style",
+   "blurb": "A digital FM synth: one sound wave wobbles the pitch of another, super fast, until it turns glassy, bell-like or bright."
   }
  ],
  "visuals": [
@@ -1121,7 +1307,7 @@
    "label": "Organ"
   },
   {
-   "id": "moog",
+   "id": "ladder",
    "label": "Analog-style"
   },
   {

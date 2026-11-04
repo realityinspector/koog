@@ -24,7 +24,7 @@ export interface Voice {
   param?(key: string, value: number): void
   /** continuous playing surface (theremin / ribbon): x 0..1 = pitch across the field, y 0..1 = loudness. null = hands away */
   field?(x: number | null, y?: number): void
-  /** a 16-step bass pattern + running state (TB-303 style) */
+  /** a 16-step bass pattern + running state (acid bass style) */
   dispose(): void
 }
 export type Extra = 'field' | 'seq303' | 'tape'
@@ -35,6 +35,8 @@ export interface EmuSpec {
   /** CSS theme class for the faceplate */
   skin: string
   blurb: string
+  /** what real-world family of instruments this is inspired by (generic; the named history lives on the timeline) */
+  inspired: string
   /** one honest line when the emulation is only an approximation */
   note?: string
   ctls: Ctl[]

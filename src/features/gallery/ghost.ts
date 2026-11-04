@@ -5,6 +5,7 @@ import { useGuide } from '../../music/guide'
 import { useChallengeStore } from '../challenges/store'
 import { useLinkOut } from '../../links/bus'
 import { SONGS } from '../songs/songs'
+import { findSong } from './holiday'
 import { ladderOf } from '../../music/phraseEngine'
 import type { Perf } from './stops.data'
 
@@ -23,7 +24,14 @@ export function parsePhrase(s: string): Ev[] {
   })
 }
 
-export const everyNoteOff = (held: Set<number>) => { for (const n of held) playLocal(n, 0, false); held.clear(); releaseAllNotes() }
+/** True while the ghost itself is calling playLocal, so listeners can tell the gallery's notes from a child's. */
+let ghostCalls = 0
+export const inGhost = () => ghostCalls > 0
+const gp = (n: number, v: number, on: boolean) => { ghostCalls++; try { playLocal(n, v, on) } finally { ghostCalls-- } }
+/** Art Gallery mode: the gallery's own music ducks (plays softer) while a child plays over it. 1 = full, lower = ducked. */
+export const duck = { level: 1 }
+
+export const everyNoteOff = (held: Set<number>) => { ghostCalls++; try { for (const n of held) playLocal(n, 0, false); held.clear(); releaseAllNotes() } finally { ghostCalls-- } }
 
 /** one cancellable performance */
 export class Run {
@@ -34,8 +42,8 @@ export class Run {
   constructor(readonly deadline: number) {}
   sleep(ms: number) { return new Promise<void>((res) => { const t = window.setTimeout(() => { this.timers.delete(t); this.wake.delete(res); res() }, Math.max(0, ms)); this.timers.add(t); this.wake.add(res) }) }
   until(at: number) { return this.sleep(at - performance.now()) }
-  on(n: number, v: number) { if (this.dead) return; this.held.add(n); playLocal(n, Math.max(1, Math.min(100, Math.round(v))), true) }
-  off(n: number) { if (this.held.delete(n)) playLocal(n, 0, false) }
+  on(n: number, v: number) { if (this.dead) return; this.held.add(n); gp(n, Math.max(1, Math.min(100, Math.round(v * duck.level))), true) }
+  off(n: number) { if (this.held.delete(n)) gp(n, 0, false) }
   kill() {
     if (this.dead) return
     this.dead = true
@@ -186,7 +194,7 @@ export async function perform(run: Run, p: Perf, o: PerfOpts = {}): Promise<void
     return
   }
   if (p.k === 'song') {
-    const s = SONGS.find((x) => x.id === p.id); if (!s) return
+    const s = findSong(p.id); if (!s) return
     const sp = o.speed ?? 1
     const evs: Ev[] = s.notes.map((n) => ({ notes: n.note == null ? [] : [n.note], beats: n.beats }))
     const lead = o.lead ?? 0

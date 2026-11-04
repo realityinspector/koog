@@ -1,5 +1,5 @@
 // The instrument that app notes play through. Default: the Koog synth (null here). An emulator panel
-// (e.g. a theremin or a classic polysynth) registers itself while it's open, and on-screen keys, typed keys
+// (e.g. an antenna instrument or a classic polysynth) registers itself while it's open, and on-screen keys, typed keys
 // and (with 💻 Computer sound on) the MIDI keyboard then play IT instead.
 // STABLE API: setActiveInstrument(inst|null), getActiveInstrument(), onInstrumentChange(fn).
 export interface PlayableInstrument {

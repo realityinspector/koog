@@ -1,4 +1,4 @@
-// Theremin-style: one persistent near-sine oscillator, pitch glide, vibrato, and a slow-ish "volume antenna" attack.
+// Antenna-instrument-style: one persistent near-sine oscillator, pitch glide, vibrato, and a slow-ish "volume antenna" attack.
 // Plays through field(x,y) (hand position) or through ordinary notes (mono, last note wins).
 import { clamp, hz, vel01 } from './core'
 import type { EmuSpec } from './types'
@@ -6,9 +6,10 @@ import type { EmuSpec } from './types'
 const LO = 48, HI = 84
 
 export const theremin: EmuSpec = {
-  id: 'theremin', name: 'Theremin', year: '1920', skin: 'skin-theremin',
-  blurb: 'Leon Theremin invented an instrument you play without touching it: your hand near one antenna changes the pitch, and your other hand near a second antenna changes the volume. It was one of the very first electronic instruments, and its eerie, singing slide gave old science-fiction movies their spooky sound.',
-  songs: ['swan', 'gymnopedie', 'air', 'clairdelune', 'jesu'], songWhy: "Saint-Saens' The Swan suits the theremin's singing glide.",
+  id: 'airhands', name: 'Koog Air', year: '1920s style', skin: 'skin-airhands',
+  inspired: 'the very first electronic instruments from the 1920s, played by waving a hand near an antenna',
+  blurb: 'A hands-in-the-air instrument: slide across the pad and the pitch glides smoothly with no steps between notes. Up and down is loudness, left and right is pitch. Its eerie, singing slide is a classic spooky-movie sound.',
+  songs: ['swan', 'gymnopedie', 'air', 'clairdelune', 'jesu'], songWhy: 'The Swan suits a singing, gliding tone.',
   extra: 'field', fieldRange: [LO, HI],
   ctls: [
     { key: 'glide', label: 'Glide', min: 0, max: 1, def: 0.15, step: 0.01, group: 'Hand' },
@@ -21,6 +22,7 @@ export const theremin: EmuSpec = {
     { name: 'Spooky sweep', values: { glide: 0.6, attack: 0.3, vrate: 4.5, vdepth: 30, bright: 0.2 } },
     { name: 'Singing lady', values: { glide: 0.15, attack: 0.12, vrate: 5.8, vdepth: 22, bright: 0.4 } },
     { name: 'Steady beam', values: { glide: 0.03, attack: 0.05, vrate: 6, vdepth: 4, bright: 0.6 } },
+    { name: 'Koog glow', values: { glide: 0.35, attack: 0.18, vrate: 5, vdepth: 16, bright: 0.5 } },
   ],
   make({ ctx, out }, P) {
     const wave = ctx.createPeriodicWave(new Float32Array(4), new Float32Array([0, 1, 0.12, 0.04]))

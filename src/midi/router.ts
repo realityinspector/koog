@@ -13,6 +13,8 @@ interface RouterState {
   outputs: Map<string, { send: (b: number[]) => void }>
   /** legacy setDjSender override */
   override: ((b: number[]) => void) | null
+  /** cached listener arrays so emit() copies nothing per message (rebuilt when someone subscribes or unsubscribes) */
+  arr?: Map<Role, MidiListener[]>
 }
 const hot = import.meta.hot
 const st: RouterState = hot ? ((hot.data.router ??= { subs: new Map(), devices: [], outputs: new Map(), override: null }) as RouterState) : { subs: new Map(), devices: [], outputs: new Map(), override: null }
@@ -22,15 +24,16 @@ export function subscribe(role: Role, fn: MidiListener) {
   let set = st.subs.get(role)
   if (!set) st.subs.set(role, (set = new Set()))
   set.add(fn)
-  return () => void st.subs.get(role)?.delete(fn)
+  st.arr?.delete(role)
+  return () => { st.subs.get(role)?.delete(fn); st.arr?.delete(role) }
 }
 
 /** Deliver a message to every listener of `role` (a throwing listener never blocks the others). 'off' is ignored. */
 export function emit(role: Role, data: Uint8Array, t: number, deviceId: string) {
   if (role === 'off' || !data) return
-  const set = st.subs.get(role)
-  if (!set) return
-  for (const f of [...set]) { try { f(data, t, deviceId) } catch (e) { console.error('[midi:' + role + ']', e) } }
+  const arr = (st.arr ??= new Map()).get(role) ?? (st.subs.get(role) ? (st.arr.set(role, [...st.subs.get(role)!]), st.arr.get(role)!) : undefined)
+  if (!arr) return
+  for (let i = 0; i < arr.length; i++) { try { arr[i](data, t, deviceId) } catch (e) { console.error('[midi:' + role + ']', e) } }
 }
 
 /** connection.ts tells the router which devices are connected (with roles) and which output ports exist. */

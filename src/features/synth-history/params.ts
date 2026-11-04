@@ -6,7 +6,7 @@ export type Wave = 'sawtooth' | 'square' | 'triangle' | 'sine'
 export type LfoShape = 'sine' | 'triangle' | 'square'
 export type LfoTarget = 'none' | 'pitch' | 'filter' | 'amp'
 
-/** One "patch": the settings of a simple Moog-style subtractive synth voice. */
+/** One "patch": the settings of a simple classic subtractive synth voice. */
 export interface SynthParams {
   wave: Wave
   /** second oscillator detune in cents (0 = off/unison) */
@@ -43,8 +43,10 @@ export const DEFAULT_PARAMS: SynthParams = {
 export interface SynthEngine {
   readonly params: SynthParams
   setParams(p: Partial<SynthParams>): void
-  noteOn(note: number, velocity: number): void
-  noteOff(note: number): void
+  /** `when` (optional): AudioContext seconds to start the note at, so a scheduler can place it sample-accurately. Omitted = now. */
+  noteOn(note: number, velocity: number, when?: number): void
+  /** `when` (optional): AudioContext seconds to release at. Omitted = now. */
+  noteOff(note: number, when?: number): void
   panic(): void
   /** true once an AudioContext exists (created only on a user gesture) */
   readonly ready: boolean
