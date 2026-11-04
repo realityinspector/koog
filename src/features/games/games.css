@@ -51,3 +51,6 @@
 .gm-note { font-size: 13px; color: var(--k-ink-3); text-align: center; }
 @media (max-height: 760px) { .gm-card, .gm-card.gm-zombies, .gm-card.gm-bachdoom, .gm-card.gm-jiujitsu, .gm-card.gm-fashion { min-height: 190px; padding: 14px 16px; } .gm-menu { gap: 12px; } .gm-ic { width: 36px; height: 36px; font-size: 22px; } .gm-card b { font-size: 16px; } .gm-blurb { font-size: 13px; } }
 @media (prefers-reduced-motion: reduce) { .gm-card { transition: none } }
+
+/* the card grid never clips: when the cards are taller than the screen they start at the top and scroll (plain `center` pushed the first row out of reach) */
+.gm-menu { align-content: safe center; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }

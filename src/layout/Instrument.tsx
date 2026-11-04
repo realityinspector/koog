@@ -9,6 +9,7 @@ import koogLogo from '../assets/koog-logo.svg'
 import { Icon } from '../ui/Icon'
 import { useOnePop } from '../ui/onePop'
 import { consume, useLinkIn } from '../links/bus'
+import { GalleryButton } from '../features/gallery/GalleryButton'
 
 export type ModeDef = { id: string; icon: ReactNode; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
 
@@ -100,6 +101,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
           <header className="kg-strip">
             <span className="kg-badge" aria-label="KOOG, the Koding Synth"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">koding synth</span></span>
             <div className="kg-strip-mid">{strip}</div>
+            {!lean && !isEmbed() && <GalleryButton />}
             {!lean && !isWebDemo() && !isEmbed() && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
               <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>
             </button>}

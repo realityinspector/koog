@@ -18,6 +18,7 @@ import { useScreen } from '../../layout/screenStore'
 import { PhraseTrainer } from '../learn/PhraseTrainer'
 import { songProgress, usePhraseTick } from '../../music/phraseEngine'
 import { consume, linkNote, report, useLinkIn } from '../../links/bus'
+import { playLocal } from '../../music/localNotes'
 import './songs.css'
 
 type Mode = 'wait' | 'flow'
@@ -25,7 +26,8 @@ type Phase = 'ready' | 'playing' | 'listening' | 'done'
 interface N { midi: number; start: number; beats: number; st: 0 | 1 | 2; hitAt: number }
 interface Result { score: number; acc: number; stars: number; hits: number; total: number; best: boolean; lh?: { hits: number; total: number } }
 
-const PPB = 60 // pixels per beat
+// pixels per beat: tall lanes stretch a little so notes read big, short lanes squeeze so you still see ~5 beats ahead
+const ppbFor = (laneH: number) => Math.max(36, Math.min(72, laneH / 6))
 const LEAD = 2 // lead-in beats in flow mode
 const BEST_KEY = 'songs.best.v1' // saved per kid
 const BEAT_KEY = 'koog.songs.beat'
@@ -57,6 +59,8 @@ function buildLyrics(song: Song): { lines: Syl[][]; lineOf: number[] } | null {
   if (!lines[lines.length - 1].length) lines.pop()
   return { lines, lineOf }
 }
+// short, plain labels for the sheet level (the full hint is the tooltip)
+const LEVEL_SHORT: Record<string, string> = { single: 'Tune', easy: 'Chords', full: 'Both hands' }
 const hueOf = (m: number) => ((pcOf(m) * 7) % 12) * 30
 const isBlack = (m: number) => [1, 3, 6, 8, 10].includes(pcOf(m))
 
@@ -106,7 +110,14 @@ function layout(song: Song, W: number, CH: number, KH: number) {
     return (whites.indexOf(m - 1) + 1) * ww - bw / 2
   }
   const wOf = (m: number) => (isBlack(m) ? bw : ww)
-  return { lo, hi, whites, ww, bw, xOf, wOf, ch: CH, kh: KH }
+  // which key is under a point on the stage keyboard (black keys sit on top), or null above the keys
+  const keyAt = (x: number, y: number): number | null => {
+    if (y < CH || y > CH + KH) return null
+    if (y < CH + KH * 0.62) for (let m = lo; m <= hi; m++) if (isBlack(m) && x >= xOf(m) && x < xOf(m) + bw) return m
+    const w = whites[Math.floor(x / ww)]
+    return w ?? null
+  }
+  return { lo, hi, whites, ww, bw, xOf, wOf, keyAt, ch: CH, kh: KH, ppb: ppbFor(CH) }
 }
 
 export function SongsPanel() {
@@ -340,12 +351,32 @@ export function SongsPanel() {
     const resize = () => {
       W = cv.clientWidth || 600; dpr = window.devicePixelRatio || 1
       const H = Math.max(104, cv.clientHeight || 294)
-      const KH = Math.max(38, Math.min(96, Math.round(H * 0.24)))
+      // the stage keyboard is the only keyboard on this screen (the app keybed hides), so it stays big enough to tap
+      const KH = Math.max(44, Math.min(118, Math.round(H * 0.2)))
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr)
       lay = layout(song, W, H - KH, KH)
     }
     resize()
     const ro = new ResizeObserver(resize); ro.observe(cv)
+    // tap / click the stage keyboard to play (one note per pointer)
+    const held = new Map<number, number>()
+    const at = (e: PointerEvent) => { const r = cv.getBoundingClientRect(); return lay.keyAt(e.clientX - r.left, e.clientY - r.top) }
+    const down = (e: PointerEvent) => {
+      const m = at(e); if (m == null) return
+      e.preventDefault(); try { cv.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+      held.set(e.pointerId, m); playLocal(m, 100, true)
+    }
+    const move = (e: PointerEvent) => {
+      const was = held.get(e.pointerId); if (was == null) return
+      const m = at(e)
+      if (m === was) return
+      playLocal(was, 0, false)
+      if (m == null) { held.delete(e.pointerId); return }
+      held.set(e.pointerId, m); playLocal(m, 100, true)
+    }
+    const up = (e: PointerEvent) => { const was = held.get(e.pointerId); if (was == null) return; held.delete(e.pointerId); playLocal(was, 0, false) }
+    cv.addEventListener('pointerdown', down); cv.addEventListener('pointermove', move)
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up)
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame)
@@ -382,7 +413,12 @@ export function SongsPanel() {
       draw(ctx, game, lay, W, dpr, song, o)
     }
     raf = requestAnimationFrame(frame)
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); clearScore('songs') }
+    return () => {
+      cancelAnimationFrame(raf); ro.disconnect(); clearScore('songs')
+      cv.removeEventListener('pointerdown', down); cv.removeEventListener('pointermove', move)
+      cv.removeEventListener('pointerup', up); cv.removeEventListener('pointercancel', up)
+      for (const m of held.values()) playLocal(m, 0, false)
+    }
   }, [song, finish, learn])
 
   const bestFor = (id: string) => {
@@ -441,56 +477,53 @@ export function SongsPanel() {
         <div className="play">
           <div className="bar">
             <button className="btn-ghost" onClick={() => setSongId(null)}>← All songs</button>
-            <span className="seg">
-              <button className={mode === 'wait' ? 'on' : ''} onClick={() => setMode('wait')}>Wait</button>
-              <button className={mode === 'flow' ? 'on' : ''} onClick={() => setMode('flow')}>Flow</button>
+            <span className="seg" role="group" aria-label="How the song moves">
+              <button className={mode === 'wait' ? 'on' : ''} aria-pressed={mode === 'wait'} title="The notes wait for you" onClick={() => setMode('wait')}>Wait</button>
+              <button className={mode === 'flow' ? 'on' : ''} aria-pressed={mode === 'flow'} title="Keep going with the beat" onClick={() => setMode('flow')}>Flow</button>
             </span>
             <button className="btn-ghost" onClick={() => { reset(); setLearn(true) }} title="Learn it a few notes at a time">🧠 Learn it</button>
             <span className="seg" role="group" aria-label="Sheet level">
               {SHEET_LEVELS.map((l) => (
-                <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{l.icon}<span className="lv-t"> {l.label}</span></button>
+                <button key={l.id} className={level === l.id ? 'on' : ''} aria-pressed={level === l.id} title={l.hint} onClick={() => setSheetLevel(l.id)}>{LEVEL_SHORT[l.id] ?? l.label}</button>
               ))}
             </span>
             {mode === 'flow' && (
-              <label>Speed
+              <label title="How fast the notes fall">Speed
                 <input type="range" min={50} max={100} step={5} value={Math.round(speed * 100)} disabled={phase === 'playing'}
                   onChange={(e) => setSpeed(+e.target.value / 100)} /> {Math.round(speed * 100)}%
               </label>
             )}
             {mode === 'flow' && (
-              <button className={'btn-ghost' + (beatOn ? ' on' : '')} aria-pressed={beatOn} onClick={() => setBeat(!beatOn)}>🥁 Backing beat: {beatOn ? 'on' : 'off'}</button>
+              <button className={'btn-ghost' + (beatOn ? ' on' : '')} aria-pressed={beatOn} title="Play a drum beat along with the song" onClick={() => setBeat(!beatOn)}>🥁 Beat {beatOn ? 'on' : 'off'}</button>
             )}
-            {lyr && <button className={'btn-ghost' + (lyOn ? ' on' : '')} aria-pressed={lyOn} onClick={toggleLy}>🎤 Lyrics</button>}
-            <label><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Names</label>
+            {lyr && <button className={'btn-ghost' + (lyOn ? ' on' : '')} aria-pressed={lyOn} title="Show the words to sing" onClick={toggleLy}>🎤 Lyrics</button>}
+            <label title="Show note names on the notes and keys"><input type="checkbox" checked={names} onChange={(e) => setNames(e.target.checked)} /> Names</label>
             <span className="grow" />
-            <button className="btn-ghost" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? 'Stop' : 'Listen first'}</button>
+            <button className="btn-ghost" title="Hear the tune first" onClick={phase === 'listening' ? reset : listen}>{phase === 'listening' ? '■ Stop' : '👂 Listen'}</button>
             <button className="btn" onClick={start}>{phase === 'playing' ? 'Restart' : 'Play'}</button>
           </div>
+          {/* status row ABOVE the lane: title, coach message, score. Nothing sits on the falling notes. */}
+          <div className="sg-info">
+            <span className="pill ttl"><b>{song.title}</b> · {keyName(song.key)} · {song.bpm} bpm</span>
+            <span className="sg-coach" aria-live="polite">{!result && (phase === 'ready' ? (mode === 'wait' ? 'Press Play. The song waits for you.' : 'Press Play. Count-in, then follow the beat.') : ui.msg)}</span>
+            <span className="pill stats">
+              Score <b>{ui.score}</b> · Streak <b>{ui.combo}</b> · <b>{ui.hits}/{total}</b>
+              {liveAcc != null && <> · Acc <b>{liveAcc}%</b></>}
+              {curBest && <> · Best <b>{curBest.score}</b> ({Math.round(curBest.acc * 100)}%)</>}
+            </span>
+          </div>
+          {lyr && lyOn && (() => {
+            const cl = lyr.lineOf[Math.max(0, Math.min(lyIdx, lyr.lineOf.length - 1))] ?? 0
+            return (
+              <div className="sg-ly" aria-label="Lyrics">
+                {lyr.lines[cl].map((t) => (
+                  <span key={t.i} className={'sy' + (t.i < lyIdx ? ' sung' : t.i === lyIdx ? ' now' : '') + (t.join ? '' : ' we')}>{t.text}</span>
+                ))}
+              </div>
+            )
+          })()}
           <div className="stage">
-            <canvas ref={canvasRef} />
-            {lyr && lyOn && (() => {
-              const cl = lyr.lineOf[Math.max(0, Math.min(lyIdx, lyr.lineOf.length - 1))] ?? 0
-              const row = (line: Syl[]) => line.map((t) => (
-                <span key={t.i} className={'sy' + (t.i < lyIdx ? ' sung' : t.i === lyIdx ? ' now' : '') + (t.join ? '' : ' we')}>{t.text}</span>
-              ))
-              return (
-                <div className="ly" aria-label="Lyrics">
-                  <div className="ly-l cur">{row(lyr.lines[cl])}</div>
-                  {lyr.lines[cl + 1] && <div className="ly-l nxt">{row(lyr.lines[cl + 1])}</div>}
-                </div>
-              )
-            })()}
-            <div className="ov">
-              <span className="pill ttl"><b>{song.title}</b> · {keyName(song.key)} · {song.bpm} bpm</span>
-              <span className="pill stats">
-                Score <b>{ui.score}</b> · Streak <b>{ui.combo}</b> · <b>{ui.hits}/{total}</b>
-                {liveAcc != null && <> · Acc <b>{liveAcc}%</b></>}
-                {curBest && <> · Best <b>{curBest.score}</b> ({Math.round(curBest.acc * 100)}%)</>}
-              </span>
-            </div>
-            {(phase === 'ready' || ui.msg) && !result && (
-              <div className="hint"><span className="pill">{phase === 'ready' ? (mode === 'wait' ? 'Press Play. The song waits for you.' : 'Press Play. Count-in, then follow the beat.') : ui.msg}</span></div>
-            )}
+            <canvas ref={canvasRef} aria-label="Falling notes and keyboard. Tap the keys to play." />
             {result && (
               <div className="card">
                 <div className="stars">{'★'.repeat(result.stars)}{'☆'.repeat(3 - result.stars)}</div>
@@ -537,7 +570,7 @@ export function SongsPanel() {
 }
 
 function draw(ctx: CanvasRenderingContext2D, game: Game, lay: ReturnType<typeof layout>, W: number, dpr: number, song: Song, o: { mode: Mode; names: boolean }) {
-  const CH = lay.ch, KH = lay.kh
+  const CH = lay.ch, KH = lay.kh, PPB = lay.ppb
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, W, CH + KH)
   ctx.fillStyle = '#15161a'; ctx.fillRect(0, 0, W, CH + KH)

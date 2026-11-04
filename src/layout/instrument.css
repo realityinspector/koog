@@ -178,3 +178,24 @@ main.kg-app { max-width: none; margin: 0; }
 
 /* the KOOG wordmark (src/assets/koog-logo.svg): sunset-chrome letters, the O's are synth knobs */
 .kg-logo-img { display: block; height: 30px; width: auto; filter: drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
+
+/* A running game or a song's falling-notes stage needs the display AND a keyboard on screen together.
+   On short or narrow windows the default layout lets the page scroll (display 340px, keybed below the fold), so the kid
+   had to choose between seeing the game and seeing the keys. While one of those is up, fit the whole instrument to the window instead. */
+@media (min-width: 701px) and (max-height: 639px), (min-width: 701px) and (max-width: 1023px) {
+  html:has(.gm-stage, .kg-screen:not([hidden]) .sg .stage), body:has(.gm-stage, .kg-screen:not([hidden]) .sg .stage) { overflow: hidden; }
+  .kg-app:has(.gm-stage, .kg-screen:not([hidden]) .sg .stage) { height: 100dvh; min-height: 0; --kg-rail-h: 44px; }
+  .kg-app:has(.gm-stage, .kg-screen:not([hidden]) .sg .stage) .kg-chassis { height: 100%; }
+  .kg-app:has(.gm-stage, .kg-screen:not([hidden]) .sg .stage) .kg-bezel { min-height: 200px; }
+}
+/* short windows: a running game hides the mode rail (every game has its own Back / ✕, and Esc goes to PLAY) so the play area keeps the height */
+@media (min-width: 701px) and (max-height: 639px) {
+  .kg-panel:has(.gm-stage) { grid-template-rows: var(--kg-strip-h) minmax(0, 1fr) auto; }
+  .kg-panel:has(.gm-stage) > .kg-rail { display: none; }
+}
+/* narrower windows: the strip tightens so its buttons never paint over each other (the Gallery and Idea buttons go icon-only) */
+@media (min-width: 701px) and (max-width: 1099px) {
+  .kg-idea-t { display: none; }
+  .kg-app .kg-strip { gap: 5px; }
+  .kg-app .kg-strip-controls { gap: 4px; }
+}

@@ -74,11 +74,15 @@ export function ModesLauncher() {
       {open && (
         <div className="md-pop" role="dialog" aria-label="Modes">
           <div className="md-head">Modes <span>{count ? count + ' on' : 'all off'}</span></div>
+          {/* gallery entries first, so they are never scrolled out of reach on a short display */}
+          <div className="md-gal-row">
+            <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery' }}>▶ Guided tour <span>a self-playing tour of everything</span></button>
+            <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery/art' }}>🖼 Art Gallery mode <span>calm moving art, loops forever</span></button>
+          </div>
           <div className="md-sec">Play along <span>pick one</span></div>
           <div className="md-grid md-grid-3">{play.map(card)}</div>
           <div className="md-sec">Helpers</div>
           <div className="md-grid">{helpers.map(card)}</div>
-          <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery' }}>▶ Gallery <span>a self-playing tour of everything</span></button>
         </div>
       )}
     </div>

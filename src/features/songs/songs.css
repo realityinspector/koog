@@ -150,3 +150,36 @@
 .sg .pick-why { font-size: 13px; color: var(--k-ink-2); }
 @media (max-width: 1100px) { .sg .pick { flex-wrap: wrap; gap: 8px; } .sg .car { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .sg .card-s { transition: none; } }
+
+/* ---- Songs layout pass: the falling notes own the height ----
+   While a song is open (not Learn it): the screen title row and the app keybed step aside, so there is ONE keyboard
+   (the stage keyboard, zoomed to the song's range, tappable) and the lane gets nearly the whole display.
+   Lyrics and coach messages live in slim rows ABOVE the lane, never on it. */
+.kg-screen:has(.sg .stage) .kg-screen-head { display: none; }
+.kg-panel:has(.kg-screen:not([hidden]) .sg .stage) { grid-template-rows: var(--kg-strip-h) minmax(0, 1fr) auto; }
+.kg-panel:has(.kg-screen:not([hidden]) .sg .stage) > .kg-keybed { display: none; }
+.kg-screen-body:has(> .sg .play) { padding: 8px clamp(8px, 1.2vw, 16px) 8px; }
+.sg .play { gap: 6px; }
+.sg .play .bar { flex-wrap: wrap; row-gap: 4px; }
+.sg .play .seg button .lv-t { display: inline; }
+.sg .sg-info { flex: none; display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto); align-items: center; gap: 10px; min-height: 24px; }
+.sg .sg-info .pill { font-size: 12px; }
+.sg .sg-coach { text-align: center; color: var(--gold); font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sg .sg-ly { flex: none; min-height: 1.35em; padding: 2px 12px; border-radius: 12px; background: rgba(13, 10, 32, .62); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: clamp(18px, 3.2vh, 28px); line-height: 1.3; font-weight: 800; }
+.sg .sg-ly .sy.sung { color: #6fe3ff; }
+.sg .sg-ly .sy.now { color: var(--gold); transform: scale(1.1); text-shadow: 0 0 12px rgba(255, 215, 108, .65); }
+.sg .stage { min-height: 160px; }
+.sg .stage canvas { touch-action: none; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .sg .sg-ly .sy.now { transform: none; } }
+.sg .play .bar input[type=range] { width: 72px; }
+/* the first-run "Tap any key!" banner must not sit on the falling notes (playing any note dismisses it anyway) */
+body:has(.kg-screen:not([hidden]) .sg .stage) .tour-tap { display: none; }
+/* short displays (small window, or the sheet strip on): rows slim down and the lane shrinks instead of the screen scrolling */
+.kg-screen-body:has(> .sg .play) { overflow: hidden; }
+.sg .stage { min-height: 100px; }
+@media (max-height: 700px) {
+  .sg .sg-ly { font-size: 17px; padding: 0 10px; }
+  .sg .sg-info { min-height: 20px; }
+  .sg .play { gap: 4px; }
+}

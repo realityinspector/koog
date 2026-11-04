@@ -434,4 +434,11 @@ export const entries: Entry[] = [
     title: '🔁 A looper with one big button',
     body: 'The loop station had too many buttons and missed the first note if you played a tiny bit early. Now it works like a real looper pedal: one big round button. Tap to record, tap to loop it, tap to add a layer on top, double-tap to stop, hold to undo. Notes you play a hair before beat 1 still count, and every layer gets its own Mute and ✕. The foot pedal now drives that big button when the looper is open, and holds notes (sustain) everywhere else, like a real piano pedal. Designers call hiding the extra knobs behind an "Advanced" button "progressive disclosure", and the little grace window for early notes is called "pre-roll".',
   },
+  {
+    id: 61,
+    time: 'Night',
+    stage: 'ship',
+    title: '🎵 Songs you can actually see, and a Gallery button',
+    body: 'The SONGS screen was squished: the words sat right on top of the falling notes, and there were two keyboards fighting for room. Now the falling notes get almost the whole screen, the words are one karaoke line above them, and there is just one keyboard, lined up with the notes (you can click it too). The GAMES list also stopped hiding its top row, and games now fit the window with the keys still showing. And there is a new 🖼 Gallery button at the top: pick the guided tour, or Art Gallery mode. Designers call making the important thing big and moving everything else out of its way "visual hierarchy".',
+  },
 ]

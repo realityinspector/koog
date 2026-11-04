@@ -89,3 +89,19 @@ html[data-art] .kg-display:not([data-screen]) .viz:not(:fullscreen) { filter: sa
 
 /* while a gallery title card is up, hide the first-run "Tap any key!" banner that would show through it */
 body:has(.gl-card) .tour-tap { display: none !important; }
+
+/* 🖼 Gallery button in the top strip + its two-choice popover */
+.kg-gal { position: relative; flex: none; }
+.kg-gal-btn { height: 34px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 0 13px 0 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .11); background: rgba(255, 255, 255, .045); color: var(--k-ink-2, #cfcbea); font: inherit; font-size: 13px; font-weight: 600; transition: background .15s, border-color .15s, color .15s; }
+.kg-gal-btn:hover { background: rgba(255, 255, 255, .085); color: var(--k-ink, #fff); }
+.kg-gal-btn.on { color: var(--k-ink, #fff); border-color: var(--k-accent, #ffb43c); background: rgba(255, 180, 60, .08); }
+.kg-gal-btn:focus-visible { outline: 2px solid var(--k-accent, #ffb43c); outline-offset: 2px; }
+.kg-gal-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: 300px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; gap: 6px; padding: 8px;
+  border-radius: 14px; background: rgba(18, 15, 38, .97); border: 1px solid var(--k-line, rgba(255, 255, 255, .14)); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.kg-gal-pop button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 10px; cursor: pointer; font: inherit;
+  border: 1px solid var(--k-line, rgba(255, 255, 255, .12)); background: rgba(255, 255, 255, .04); color: var(--k-ink, #fff); }
+.kg-gal-pop button:hover, .kg-gal-pop button:focus-visible { border-color: var(--k-accent, #ffb43c); background: rgba(255, 180, 60, .08); outline: none; }
+.kg-gal-pop b { font-size: 14px; font-weight: 700; }
+.kg-gal-pop span { font-size: 12px; color: var(--k-ink-2, #cfcbea); line-height: 1.35; }
+@media (max-width: 1399px) { .kg-gal-t { display: none; } .kg-gal-btn { width: 34px; padding: 0; justify-content: center; } }
