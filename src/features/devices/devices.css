@@ -35,3 +35,5 @@
 .kg-pedal-led.on { background: var(--k-accent, #ffb43c); box-shadow: 0 0 6px rgba(255, 180, 60, .8); }
 .kg-pop .kg-pedal-setup, .kg-dev-pop .kg-pedal-setup { width: 100%; }
 @media (prefers-reduced-motion: reduce) { .kg-pedal-led { transition: none; } }
+.kg-pedal-job { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; font-weight: 600; }
+.kg-pedal-job select { flex: 1; min-width: 0; font: inherit; font-weight: 600; padding: 4px 6px; border-radius: 8px; }

@@ -66,6 +66,49 @@ select.lp-chip { padding: 2px 3px; font-weight: 700; letter-spacing: 0; }
 .lp-picwrap { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 15; padding: 8px; border-radius: 12px; background: #15161d; border: 2px solid var(--edge); box-shadow: 0 10px 24px rgba(0, 0, 0, .6); } .lp-pic { max-width: 520px; margin: 0 auto; } .lp-pic-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; } .lp-pic small { opacity: .7; }
 .lp-pic .dj-pic { display: block; width: 100%; height: auto; }
 
-/* inside the Boss LOOPS screen the pedal fills the whole screen area (no page scroll) */
-.bx-screen:has(> .lp:not(.lp-compact)) { height: 100%; min-height: 0; display: flex; flex-direction: column; }
-.bx-screen > .lp:not(.lp-compact) { flex: 1; height: auto; }
+/* inside the Boss LOOPS screen the looper fills the whole screen area (no page scroll) */
+.lp-host { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.lp-host > .lp { flex: 1; height: auto; }
+.bx-screen:has(> .lp-host) { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.bx-screen > .lp-host { flex: 1; }
+.lp-back { align-self: flex-start; flex: none; }
+
+/* ---------- the simple looper (lps-*): one big button, layers with mute + remove ---------- */
+.lps { gap: 10px; padding: 14px 16px; font-size: 14px; overflow: auto; scrollbar-width: thin; scrollbar-color: #3a3c48 transparent; }
+.lps-main { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; justify-content: center; }
+.lps-big { --c: #8d8aa8; flex: none; width: clamp(120px, 30vmin, 230px); aspect-ratio: 1; padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
+.lps-big svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lps-big .lps-track { fill: none; stroke: #0a0a0e; stroke-width: 8; }
+.lps-big .lps-arc { fill: none; stroke: var(--c); stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--c)); }
+.lps-big .lps-hold { fill: none; stroke: #fff; stroke-width: 3; opacity: .9; }
+.lps-big .lps-cap { fill: #2a2c37; stroke: var(--c); stroke-width: 3; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, .7)); }
+.lps-big:active .lps-cap { fill: #1c1d25; }
+.lps-big .lps-glyph { font-size: 24px; font-weight: 900; fill: var(--c); }
+.lps-big .lps-word { font: 900 7.5px ui-monospace, Menlo, monospace; letter-spacing: .1em; fill: #f2f0ff; }
+.lps-big:focus-visible { outline: 3px solid #ffd86c; outline-offset: 4px; }
+.bs-empty { --c: #d9d7ea; } .bs-count { --c: var(--led-red); } .bs-rec { --c: var(--led-red); } .bs-play { --c: var(--led-green); } .bs-over { --c: var(--led-amber); } .bs-stop { --c: #8d8aa8; }
+.bs-count .lps-cap, .bs-rec .lps-cap { fill: #3a1c22; } .bs-over .lps-cap { fill: #3a2c14; } .bs-play .lps-cap { fill: #15321f; }
+.bs-count .lps-glyph { animation: lp-blink 1s steps(2, jump-none) infinite; }
+.lps-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; flex: 1 1 280px; max-width: 520px; }
+.lps-status b { display: block; font: 900 24px ui-monospace, Menlo, monospace; letter-spacing: .08em; color: #fff; }
+.lps-status span { display: block; font-size: 15px; color: #cfcce6; margin-top: 2px; }
+.lps-rec .lps-status b, .lps-count .lps-status b { color: var(--led-red); } .lps-play .lps-status b { color: var(--led-green); } .lps-over .lps-status b { color: var(--led-amber); }
+.lps-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lps-btn, .lps-tog, .lps-adv, .lps-mute, .lps-x { font: inherit; font-weight: 800; color: #e8e6f6; cursor: pointer; border-radius: 10px; border: 2px solid var(--edge); background: linear-gradient(180deg, #2c2e3a, #1a1b22); box-shadow: 0 2px 0 #000; }
+.lps-btn { font-size: 15px; padding: 9px 16px; min-height: 44px; } .lps-btn:disabled, .lps-mute:disabled { opacity: .35; cursor: default; }
+.lps-btn.on { color: #10122a; background: linear-gradient(180deg, #ffe08a, #ffbf3c); border-color: #ffbf3c; }
+.lps-tog { font-size: 13px; padding: 6px 12px; min-height: 36px; } .lps-tog.on { border-color: #4dff9a; color: #eafff2; background: linear-gradient(180deg, #1d4a35, #0f2c1f); }
+.lps-bpm { font-size: 13px !important; color: #cfcce6 !important; } .lps-bpm input { width: 58px !important; font-size: 13px !important; padding: 5px 4px !important; }
+.lps-keys { margin: 0; font-size: 12.5px; color: #b9b6d2; } .lps-keys kbd { font: 700 11px ui-monospace, monospace; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--edge); background: #0d0e13; color: #fff; }
+.lps-layers { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 8px; flex: none; }
+.lps-none { color: #8d8aa8; font-size: 13px; padding: 8px 2px; }
+.lps-layer { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; border: 2px solid #2b2d38; background: linear-gradient(180deg, #1f2029, #14151b); min-width: 0; }
+.lps-layer b { white-space: nowrap; } .lps-inst { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #b9b6d2; }
+.lps-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--led-green); box-shadow: 0 0 6px var(--led-green); }
+.lps-layer.muted { opacity: .6; } .lps-layer.muted .lps-dot { background: #3a3d4d; box-shadow: none; }
+.lps-layer.live { border-color: var(--led-amber); } .lps-layer.live .lps-dot { background: var(--led-amber); box-shadow: 0 0 6px var(--led-amber); }
+.lps-mute { font-size: 12px; padding: 5px 9px; min-height: 34px; white-space: nowrap; } .lps-mute.on { color: #10122a; background: linear-gradient(180deg, #ffe08a, #ffbf3c); border-color: #ffbf3c; }
+.lps-x { width: 34px; height: 34px; padding: 0; font-size: 15px; flex: none; } .lps-x:hover { border-color: var(--led-red); color: var(--led-red); }
+.lps-adv { position: absolute; top: 10px; right: 12px; font-size: 12px; padding: 5px 12px; z-index: 2; }
+@media (max-width: 560px) { .lps { padding: 10px; } .lps-main { gap: 12px; } .lps-status b { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { .bs-count .lps-glyph { animation: none; } }

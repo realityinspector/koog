@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import './loopstation.css'
 import { ControllerPic } from '../dj/Controller'
-import { BPM_MAX, BPM_MIN, setBpm, setLink, tapTempo, useMaster } from '../../music/masterClock'
+import { setLink, tapTempo, useMaster } from '../../music/masterClock'
 import {
   INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
-  saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopAll, stopLayer, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
+  registerLooperView, saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
 } from './loopEngine'
+import { BpmField, ConfirmChip, SimpleLooper } from './SimpleLooper'
 import { GUIDE_PATS, setGuide, unlockGuide, useGuide, type GuidePat } from './guide'
 import { currentPage, loopInput, loopLabels, setControllerPage, useLoopPage, useLoopView } from './loopSurface'
 import { useSurface } from '../controller/surface'
@@ -46,7 +47,7 @@ function useRings(root: React.RefObject<HTMLElement | null>) {
   }, [root])
 }
 
-function RingButton({ i, l, mini }: { i: number; l: Layer; mini?: boolean }) {
+function RingButton({ i, l }: { i: number; l: Layer }) {
   const cls = stateClass(l)
   const down = (e: React.PointerEvent) => { e.preventDefault(); (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); buttonDown(i) }
   const up = () => buttonUp(i)
@@ -54,7 +55,7 @@ function RingButton({ i, l, mini }: { i: number; l: Layer; mini?: boolean }) {
   const ku = (e: React.KeyboardEvent) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); buttonUp(i) } }
   const what = l.pend ? `waiting to ${l.pend.to === 'over' ? 'dub' : l.pend.to}` : WORD[l.state].toLowerCase()
   return (
-    <button type="button" className={'lp-ring rs-' + cls + (mini ? ' mini' : '')} onPointerDown={down} onPointerUp={up} onPointerCancel={up} onKeyDown={kd} onKeyUp={ku}
+    <button type="button" className={'lp-ring rs-' + cls} onPointerDown={down} onPointerUp={up} onPointerCancel={up} onKeyDown={kd} onKeyUp={ku}
       aria-label={`Track ${i + 1}: ${what}. Tap: record, then play or dub. Double-tap: stop. Hold 2 seconds: undo. Hold while stopped: clear.`}
       title="Tap REC / PLAY / DUB  ·  double-tap STOP  ·  hold 2 s UNDO (again REDO)  ·  hold while stopped CLEAR">
       <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -62,8 +63,8 @@ function RingButton({ i, l, mini }: { i: number; l: Layer; mini?: boolean }) {
         <circle cx="50" cy="50" r="40" className="lp-arc" data-ring={i} strokeDasharray={CIRC} transform="rotate(-90 50 50)" />
         <circle cx="50" cy="50" r="33" className="lp-hold" data-hold={i} strokeDasharray={2 * Math.PI * 40} transform="rotate(-90 50 50)" />
         <circle cx="50" cy="50" r="28" className="lp-cap" />
-        <text x="50" y={mini ? 58 : 54} textAnchor="middle" className="lp-glyph">{mini ? i + 1 : ICON[l.state]}</text>
-        {!mini && <text x="50" y="68" textAnchor="middle" className="lp-word">{l.pend ? 'WAIT' : WORD[l.state]}</text>}
+        <text x="50" y="54" textAnchor="middle" className="lp-glyph">{ICON[l.state]}</text>
+        <text x="50" y="68" textAnchor="middle" className="lp-word">{l.pend ? 'WAIT' : WORD[l.state]}</text>
       </svg>
     </button>
   )
@@ -113,15 +114,6 @@ function EditBar({ i, l }: { i: number; l: Layer }) {
   )
 }
 
-/** tempo box: typing never changes the clock half-way ("1" would clamp to 40 and eat the next digit); Enter / blur commits, arrows commit at once */
-function BpmField({ bpm, disabled }: { bpm: number; disabled: boolean }) {
-  const [txt, setTxt] = useState<string | null>(null)
-  const commit = () => { if (txt != null) { const v = parseFloat(txt); if (v > 0) setBpm(v); setTxt(null) } }
-  return <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={txt ?? String(Math.round(bpm * 10) / 10)} disabled={disabled} aria-label="Tempo in beats per minute"
-    onChange={(e) => { const nat = (e.nativeEvent as InputEvent).inputType; if (nat === undefined || nat === 'insertReplacementText') { const v = parseFloat(e.target.value); if (v > 0) setBpm(v); setTxt(null) } else setTxt(e.target.value) }}
-    onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
-}
-
 /** the LCD: track, mode, bar.beat, bpm, settings */
 function Lcd() {
   const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following)
@@ -135,23 +127,6 @@ function Lcd() {
       <div className="l1"><span>TRACK {s.sel + 1}</span><b>{mode}</b><span>{pos}{info.bars ? ' / ' + (Math.round(info.bars * 10) / 10) + ' BARS' : ''}</span></div>
       <div className="l2"><span>{Math.round(bpm * 10) / 10} BPM{following ? ' DJ' : ''}</span><span>{s.recNext === 'play' ? 'REC>PLAY' : 'REC>DUB'}</span><span>{s.sync ? 'SYNC' : 'FREE'}</span><span>{s.measure ? 'MEASURE' : 'LIVE'}</span><span>{g.on ? 'GUIDE ' + g.pat.toUpperCase() : 'GUIDE OFF'}</span></div>
     </div>
-  )
-}
-
-/** Destructive action: first tap arms ("Sure? tap again"), second tap within 3 s does it. */
-function ConfirmChip({ label, onConfirm, disabled, title }: { label: string; onConfirm: () => void; disabled?: boolean; title?: string }) {
-  const [armed, setArmed] = useState(false)
-  const t = useRef<number | undefined>(undefined)
-  useEffect(() => () => window.clearTimeout(t.current), [])
-  useEffect(() => { if (disabled) setArmed(false) }, [disabled])
-  return (
-    <button type="button" className={'lp-chip' + (armed ? ' on' : '')} disabled={disabled} title={title} data-armed={armed || undefined}
-      onClick={() => {
-        window.clearTimeout(t.current)
-        if (armed) { setArmed(false); onConfirm(); return }
-        setArmed(true)
-        t.current = window.setTimeout(() => setArmed(false), 3000)
-      }}>{armed ? 'Sure? tap again' : label}</button>
   )
 }
 
@@ -195,7 +170,6 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
               <button type="button" className="lp-chip" onClick={() => { saveSession(slot); bump((n) => n + 1) }}>SAVE</button>
               <ConfirmChip label="LOAD" disabled={!all[slot]} title="Replaces the current session" onConfirm={() => loadSession(slot)} /></span>
             <button type="button" className="lp-chip" disabled={!s.layers.some((l) => l.takes.length)} onClick={() => downloadMidi(1)} title="Download as a Standard MIDI File">⬇ .MID</button>
-            <button type="button" className="lp-chip" onClick={() => stopAll()}>■ stop</button>
             <ConfirmChip label="CLEAR ALL" title="Clear every track" onConfirm={() => clearAll()} />
           </div>
         </details>
@@ -204,30 +178,32 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
   )
 }
 
-export function LoopStation({ compact }: { compact?: boolean }) {
+const VIEW_KEY = 'koog.loop.view'
+const loadView = () => { try { return localStorage.getItem(VIEW_KEY) === 'advanced' } catch { return false } }
+
+/** The loop station: the big one-button looper first; every power feature sits behind "Advanced". */
+export function LoopStation() {
+  const root = useRef<HTMLDivElement>(null)
+  const [adv, setAdvRaw] = useState(loadView)
+  const setAdv = (b: boolean) => { setAdvRaw(b); try { localStorage.setItem(VIEW_KEY, b ? 'advanced' : 'simple') } catch { /* ignore */ } }
+  useEffect(() => (root.current ? registerLooperView(root.current) : undefined), [])
+  return (
+    <div className="lp-host" ref={root}>
+      {adv ? <AdvancedLooper onSimple={() => setAdv(false)} /> : <SimpleLooper onAdvanced={() => setAdv(true)} />}
+    </div>
+  )
+}
+
+/** every track, every option (tracks 1-8, sync, measure, FX, save / load, export) */
+function AdvancedLooper({ onSimple }: { onSimple: () => void }) {
   const s = useLoop()
   const root = useRef<HTMLDivElement>(null)
   const [more, setMore] = useState(false), [pic, setPic] = useState(false)
   useRings(root)
-  const bpm = useMaster((m) => m.bpm), guideOn = useGuide((g) => g.on)
-
-  if (compact) {
-    return (
-      <div className="lp lp-compact" ref={root} role="group" aria-label="Loop station">
-        <div className="lp-crow">
-          <button type="button" className={'lp-all sm' + (s.running ? ' on' : '')} aria-pressed={s.running} onClick={() => { unlockGuide(); togglePlay() }} title="ALL START / STOP">{s.running ? '■' : '▶'}</button>
-          {s.layers.slice(0, 5).map((l, i) => <RingButton key={i} i={i} l={l} mini />)}
-        </div>
-        <div className="lp-crow">
-          <span className="lp-lcd sm"><b>{Math.round(bpm)}</b> BPM{s.countLeft > 0 ? ' · COUNT ' + s.countLeft : ''}</span>
-          <button type="button" className={'lp-chip' + (guideOn ? ' on' : '')} aria-pressed={guideOn} onClick={() => { unlockGuide(); setGuide({ on: !guideOn }) }} title="Rhythm guide">GUIDE</button>
-        </div>
-      </div>
-    )
-  }
   const shown = more ? s.layers : s.layers.slice(0, 5)
   return (
-    <div className="lp" ref={root} role="region" aria-label="Loop station" data-n={shown.length}>
+    <div className="lp" ref={root} role="region" aria-label="Loop station, advanced" data-n={shown.length}>
+      <button type="button" className="lp-chip big lp-back" onClick={onSimple} title="Back to the big loop button">◂ Simple looper</button>
       <Settings more={more} setMore={setMore} pic={pic} setPic={setPic} />
       <div className="lp-strips" style={{ ['--n' as string]: shown.length }}>
         {shown.map((l, i) => <Strip key={i} i={i} l={l} sel={i === s.sel} />)}

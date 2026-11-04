@@ -32,6 +32,7 @@ import { onProfileChange, pload, psave } from '../../profile/profile'
 import { clearScore, setScore } from '../../music/scoreStore'
 import { writeMidi, type MidiTrack } from './midiFile'
 import { playClick, unlockGuide, useGuide, guidePeak } from './guide'
+import { BIG_HOLD_MS, PRE_ROLL_MS, bigNext, capturePos, classifyPress, hasNear, postRollPos, preRollBeats, snapLoopLen, wrapNotes, type BigAction, type BigState } from './loopCore'
 
 export interface NoteEv { t: number; d: number; n: number; v: number }
 export interface AutoPt { t: number; v: number }
@@ -94,6 +95,14 @@ interface Eng {
   ownMaster: boolean; offs: (() => void)[]; paramSnap: Record<string, number>
   down: Record<number, { t: number; timer: number; fired: boolean; prev: LState; dbl: boolean }>
   lastDown: Record<number, number>; sid: number
+  /** the last couple of seconds of played notes (performance.now() ms), so a note played just before REC still counts */
+  hist: { n: number; on: boolean; v: number; t: number }[]
+  /** a take that was just closed: notes in the next POST_ROLL_MS wrap round into it */
+  post: { idx: number; take: Take; at: number; start: number; len: number; pend: Map<number, { note: NoteEv; abs: number }> } | null
+  /** the big button: the press in progress, the last press time (double-tap), the order layers were recorded in (undo) */
+  big: { down: { t: number; timer: number; fired: boolean; prev: BigState } | null; last: number | null; order: number[] }
+  /** mounted loop station panels (the pedal works the looper while one is on screen) */
+  views: Set<HTMLElement>
 }
 interface Hot { store?: ReturnType<typeof make>; E?: Eng }
 const hot = (import.meta.hot?.data ?? {}) as Hot
@@ -107,13 +116,13 @@ export const useLoop = hot.store ?? make()
 const E: Eng = hot.E ?? {
   layers: Array.from({ length: LAYERS }, newLayer), sel: 0, running: false, loopStart: 0, lenBeats: 0, sched: 0,
   rec: null, recIdx: -1, timers: new Set(), sounding: new Map(), pool: new Map(), applying: false, debug: { on: false, log: [] },
-  ownMaster: false, offs: [], paramSnap: {}, down: {}, lastDown: {}, sid: 0,
+  ownMaster: false, offs: [], paramSnap: {}, down: {}, lastDown: {}, sid: 0, hist: [], post: null, big: { down: null, last: null, order: [] }, views: new Set(),
 }
 // fields added after the first release (an HMR session keeps the old E object)
-E.down ??= {}; E.lastDown ??= {}; E.sid ??= 0
+E.down ??= {}; E.lastDown ??= {}; E.sid ??= 0; E.hist ??= []; E.post ??= null; E.big ??= { down: null, last: null, order: [] }; E.views ??= new Set()
 E.layers = E.layers.map((l) => ({ ...newLayer(), ...l }))
 { const st = useLoop.getState() as unknown as Record<string, unknown>; if (st.sync === undefined) useLoop.setState({ recNext: 'play', sync: true, measure: false }) }
-const LOOK_MS = 90, HOLD_MS = 2000, DOUBLE_MS = 340, PRE_ROLL = 0.15
+const LOOK_MS = 90, HOLD_MS = 2000, DOUBLE_MS = 340
 const mod = (x: number, n: number) => ((x % n) + n) % n
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 const S = () => useLoop.getState()
@@ -305,10 +314,13 @@ const defining = (L: Layer) => lenOf(L) <= 0
 function startRec(i: number, over: boolean) {
   closeRec(true)
   E.rec = { notes: [], auto: {}, pads: [], pend: new Map() }
-  E.recIdx = i
+  E.recIdx = i; E.post = null
   const L = E.layers[i]
   L.state = over ? 'over' : 'rec'; L.pend = null
   if (L.free && !L.ownLen) L.ownStart = Math.max(beatPos(), E.loopStart) // an unsynced track times itself from now
+  // pre-roll: notes you played a moment BEFORE pressing still belong to this take (a defining take snaps them onto beat 1)
+  const now = performance.now()
+  for (const h of E.hist) if (now - h.t <= PRE_ROLL_MS) recordEv(h, h.t)
   E.paramSnap = {}
   const p = getSynth().params as unknown as Record<string, number | string>
   for (const k of Object.keys(p)) if (typeof p[k] === 'number') E.paramSnap[k] = p[k] as number
@@ -325,18 +337,21 @@ function closeRec(quiet: boolean) {
     const st = startOf(L), el = abs - st
     if (!r.notes.length && !Object.keys(r.auto).length && !r.pads.length) { E.rec = null; E.recIdx = -1; L.state = 'empty'; abortTransportIfIdle(); if (!quiet) commit(); return }
     // a sloppy first take: with MEASURE on the loop snaps to whole bars, otherwise it is exactly as long as you played (to a 1/16 beat)
-    const maxB = 32
-    const len = S().measure ? clamp(Math.round(el / 4), 1, maxB / 4) * 4 : clamp(Math.round(el * 4) / 4, 1, maxB)
+    const len = snapLoopLen(el, S().measure || S().countIn > 0 || useGuide.getState().on)
     if (L.free) { L.ownLen = len; if (E.lenBeats <= 0) E.lenBeats = len } else { E.lenBeats = len; useLoop.setState({ lenBars: LEN_CHOICES.includes(len / 4) ? len / 4 : 0 }) }
   }
   const len = lenOf(L)
   // notes that landed past the end (you were a little late closing it) wrap to the start instead of vanishing
-  const notes = r.notes.map((n) => ({ ...n, t: n.t >= len ? n.t - len : n.t, d: Math.min(n.d, len) })).filter((n) => n.t >= 0 && n.t < len)
+  const notes = wrapNotes(r.notes, len)
   const auto: Record<string, AutoPt[]> = {}
   for (const [k, pts] of Object.entries(r.auto)) { const f = pts.filter((p) => p.t < len); if (f.length) auto[k] = f }
   const take: Take = { notes, auto, pads: r.pads.filter((p) => p.t < len) }
   const has = notes.length || Object.keys(take.auto).length || take.pads.length
-  if (has) { L.takes.push(take); L.redo = []; L.lastHold = null }
+  if (has) {
+    L.takes.push(take); L.redo = []; L.lastHold = null
+    E.big.order = [...E.big.order.filter((k) => k !== i), i]
+    E.post = { idx: i, take, at: now, start: startOf(L), len, pend: new Map() }
+  }
   const wasRec = L.state === 'rec'
   L.state = L.takes.length ? 'play' : 'empty'
   L.playFrom = abs; L.origin = startOf(L)
@@ -358,26 +373,42 @@ function quantise(pos: number, len: number): number {
   return q
 }
 function recPos(L: Layer, abs: number): number | null {
-  const p = abs - startOf(L)
-  if (p < -PRE_ROLL) return null // still counting in
-  const len = lenOf(L)
-  if (p < 0) return 0 // a hair early on the "1": it belongs to the downbeat, not to the count-in
-  return len > 0 ? mod(p, len) : p
+  // a hair early on the "1" (~300 ms, or the last count-in beat) belongs to the downbeat, not to the count-in
+  return capturePos(abs - startOf(L), lenOf(L), preRollBeats(msPerBeat(), S().countIn))
 }
 function onPlayed(e: { note: number; on: boolean; velocity: number }) {
+  const now = performance.now()
+  E.hist.push({ n: e.note, on: e.on, v: e.velocity, t: now })
+  while (E.hist.length > 64 || (E.hist.length && now - E.hist[0].t > 2000)) E.hist.shift()
+  if (!E.rec) { postRoll(e, now); return }
+  recordEv({ n: e.note, on: e.on, v: e.velocity }, now)
+}
+/** a note just after a take was closed wraps round into it (unless the loop already has that note right there) */
+function postRoll(e: { note: number; on: boolean; velocity: number }, now: number) {
+  const P = E.post; if (!P || !E.running) return
+  const abs = beatPos(now)
+  if (!e.on) { const h = P.pend.get(e.note); if (h) { h.note.d = clamp(abs - h.abs, 0.1, P.len); P.pend.delete(e.note) } return }
+  const pos = postRollPos(now - P.at, abs - P.start, P.len)
+  if (pos == null) { if (now - P.at > 1000) E.post = null; return }
+  const t = quantise(pos, P.len)
+  if (hasNear(P.take.notes, e.note, t, P.len)) return
+  const note: NoteEv = { t, d: 0.5, n: e.note, v: e.velocity || 90 }
+  P.take.notes.push(note); P.pend.set(e.note, { note, abs })
+}
+function recordEv(e: { n: number; on: boolean; v: number }, at: number) {
   const r = E.rec; if (!r || !E.running) return
   const L = E.layers[E.recIdx]; if (!L) return
-  const now = performance.now(), abs = beatPos(now)
+  const abs = beatPos(at)
   if (e.on) {
     const pos = recPos(L, abs); if (pos == null) return
-    const old = r.pend.get(e.note)
-    if (old) r.notes.push({ t: old.t, d: Math.max(0.1, abs - old.abs), n: e.note, v: old.v })
-    r.pend.set(e.note, { t: quantise(pos, lenOf(L)), abs, v: e.velocity || 90 })
-  } else {
-    const p = r.pend.get(e.note); if (!p) return
-    r.pend.delete(e.note)
-    r.notes.push({ t: p.t, d: Math.min(Math.max(0.1, abs - p.abs), lenOf(L) || 64), n: e.note, v: p.v })
+    const old = r.pend.get(e.n)
+    if (old) r.notes.push({ t: old.t, d: Math.max(0.1, abs - old.abs), n: e.n, v: old.v })
+    r.pend.set(e.n, { t: quantise(pos, lenOf(L)), abs: Math.max(abs, startOf(L)), v: e.v || 90 })
+    return
   }
+  const p = r.pend.get(e.n); if (!p) return
+  r.pend.delete(e.n)
+  r.notes.push({ t: p.t, d: Math.min(Math.max(0.1, abs - p.abs), lenOf(L) || 64), n: e.n, v: p.v })
 }
 function autoPoint(lane: string, val: number) {
   const r = E.rec; if (!r || !E.running || E.applying) return
@@ -512,6 +543,98 @@ export function buttonUp(i: number) {
 }
 /** one full click (tests and the compact row) */
 export function pressLayer(i: number) { buttonDown(i); buttonUp(i); E.lastDown[i] = 0 }
+
+// ---------- the BIG button (one looper, like a guitar loop pedal; the foot pedal uses it too) ----------
+// Each new layer goes on the next free track, so every layer has its own mute and remove. See loopCore.ts for the rules.
+export function bigState(): BigState {
+  if (E.recIdx >= 0 && E.rec) {
+    const L = E.layers[E.recIdx]
+    if (defining(L)) return E.running && beatPos() < startOf(L) ? 'count' : 'rec'
+    return 'over'
+  }
+  if (!E.layers.some((l) => l.takes.length)) return 'empty'
+  return E.running && E.layers.some((l) => active(l)) ? 'play' : 'stop'
+}
+/** the layers in the order they were recorded (tracks with something on them) */
+export function bigLayers(): number[] {
+  const has = (i: number) => E.layers[i].takes.length > 0 || E.recIdx === i
+  const seen = E.big.order.filter(has)
+  for (let i = 0; i < LAYERS; i++) if (has(i) && !seen.includes(i)) seen.push(i)
+  return seen
+}
+/** drop the take being recorded (nothing is kept) */
+function dropRec() {
+  const i = E.recIdx; if (i < 0) return
+  const L = E.layers[i]
+  E.rec = null; E.recIdx = -1; quietLayer(i)
+  if (L.state === 'rec' || L.state === 'over') L.state = L.takes.length ? 'play' : 'empty'
+  if (L.state === 'empty') abortTransportIfIdle()
+}
+function startLayer() {
+  let j = E.layers.findIndex((l) => l.state === 'empty' && !l.takes.length)
+  if (j < 0) j = bigLayers().pop() ?? LAYERS - 1 // all tracks used: the newest one takes another overdub
+  const L = E.layers[j]
+  if (L.state === 'empty') { if (!L.picked) L.inst = currentInstId(); L.patch = snapshotPatch(L.inst); L.free = false }
+  warm(L); E.sel = j
+  startRec(j, true)
+  commit()
+}
+function undoLastLayer() {
+  const i = bigLayers().filter((k) => E.layers[k].takes.length).pop()
+  if (i == null) { commit(); return }
+  if (E.layers[i].takes.length > 1) undo(i); else clearLayer(i)
+  E.big.order = E.big.order.filter((k) => E.layers[k].takes.length)
+}
+function doBig(a: BigAction) {
+  unlockLoopAudio()
+  switch (a) {
+    case 'record': {
+      const i = E.layers.findIndex((l) => l.state === 'empty')
+      E.big.order = []
+      tap(i < 0 ? 0 : i) // empty track: count in (if on), then record
+      return
+    }
+    case 'cancel': dropRec(); commit(); return
+    case 'close': case 'finish': closeRec(true); commit(); return
+    case 'overdub': startLayer(); return
+    case 'play': playAll(); return
+    case 'stop': stopAll(); return
+    case 'undo': undoLastLayer(); return
+    case 'clear': stopAll(); clearAll(); E.big.order = []; return
+    case 'none': return
+  }
+}
+/** the big button / pedal went down: tap, or the second tap of a double-tap; holding it on fires UNDO / CLEAR */
+export function bigDown() {
+  if (E.big.down) return
+  const now = performance.now(), prev = bigState()
+  const g = classifyPress(now, E.big.last)
+  E.big.last = g === 'double' ? null : now
+  if (g === 'double') { doBig(bigNext(prev, 'double')); return }
+  doBig(bigNext(prev, 'tap'))
+  const d = { t: now, timer: 0, fired: false, prev }
+  E.big.down = d
+  d.timer = window.setTimeout(() => {
+    d.fired = true; E.big.last = null
+    if (bigNext(prev, 'hold') === 'clear') doBig('clear')
+    else { if (prev === 'play') dropRec(); doBig('undo') } // the press started a layer: drop it, then undo the one before
+    useLoop.setState((s) => ({ rev: s.rev + 1 }))
+  }, BIG_HOLD_MS)
+}
+export function bigUp() { const d = E.big.down; if (!d) return; clearTimeout(d.timer); E.big.down = null }
+/** 0..1 while the big button is held (the ring fills up to UNDO / CLEAR) */
+export function bigHoldProgress(): number { const d = E.big.down; return d && !d.fired ? clamp((performance.now() - d.t) / BIG_HOLD_MS, 0, 1) : 0 }
+/** 0..1 through the loop (the big ring), -1 when nothing is running */
+export function bigProgress(): number {
+  if (!E.running) return -1
+  const len = E.lenBeats, p = beatPos() - E.loopStart
+  if (p < 0) return 0
+  if (len <= 0) return -2
+  return mod(p, len) / len
+}
+/** a loop station panel on screen (the pedal's "automatic" choice works the looper while one is visible) */
+export function registerLooperView(el: HTMLElement) { E.views.add(el); return () => { E.views.delete(el) } }
+export const isLooperOpen = () => [...E.views].some((el) => el.isConnected && el.getClientRects().length > 0)
 
 export function toggleMute(i: number) { E.layers[i].mute = !E.layers[i].mute; if (E.layers[i].mute) quietLayer(i); commit() }
 export function toggleSolo(i: number) { E.layers[i].solo = !E.layers[i].solo; for (let k = 0; k < LAYERS; k++) if (!audible(k)) quietLayer(k); commit() }

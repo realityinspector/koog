@@ -33,7 +33,7 @@ export function DevicesControl() {
   const surfaceOn = useSurface((s) => s.on)
   const cur = SOUNDS.find((s) => s.id === sound) ?? SOUNDS[0]
   const n = live.length
-  const pedalOn = usePedal((p) => !!p.code && p.action !== 'off')
+  const pedalOn = usePedal((p) => (!!p.code || p.midi) && p.action !== 'off')
   const pedalDown = usePedal((p) => p.down)
   return (
     <div className="kg-dev" ref={root}>

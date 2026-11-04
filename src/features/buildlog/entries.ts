@@ -427,4 +427,11 @@ export const entries: Entry[] = [
     title: '🕺 A dancer who feels the music',
     body: 'Someone asked: can the Vibes face make a little guy DANCE? Now it does. Tap 🕺 Dancer in VISUAL and a little dancer steps onto a stage with a spotlight. His face is the Vibes face, so he looks happy, sad, nervous or proud along with your music. And the mood picks his dance: happy music is bouncy, sad music is a slow sway, epic music is BIG moves with fists in the air, tense music makes his knees knock, calm music is gentle. Every note is a move: high notes wave an arm, low notes stomp, chords make him jump or spin, and a note outside the key makes him wobble. Play faster and he dances faster. End on the home note and he takes a bow. He is drawn from a few joints (hips, knees, elbows) that the music pulls like strings on a puppet. Animators call this "puppeteering".',
   },
+  {
+    id: 60,
+    time: 'Night',
+    stage: 'ship',
+    title: '🔁 A looper with one big button',
+    body: 'The loop station had too many buttons and missed the first note if you played a tiny bit early. Now it works like a real looper pedal: one big round button. Tap to record, tap to loop it, tap to add a layer on top, double-tap to stop, hold to undo. Notes you play a hair before beat 1 still count, and every layer gets its own Mute and ✕. The foot pedal now drives that big button when the looper is open, and holds notes (sustain) everywhere else, like a real piano pedal. Designers call hiding the extra knobs behind an "Advanced" button "progressive disclosure", and the little grace window for early notes is called "pre-roll".',
+  },
 ]

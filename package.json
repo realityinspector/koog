@@ -18,6 +18,7 @@
     "stop": "./scripts/stop.sh",
     "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts",
     "check:mentor": "npx --no-install tsx scripts/mentor-fixtures.ts",
+    "check:loops": "npx --no-install tsx scripts/loop-fixtures.ts",
     "deploy:fly": "./scripts/deploy-fly.sh"
   },
   "dependencies": {
