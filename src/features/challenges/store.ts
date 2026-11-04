@@ -54,10 +54,12 @@ function make() {
         const isBest = prev === undefined || f.score > prev
         const bests = isBest ? { ...get().bests, [bk]: f.score } : get().bests
         const badges = { ...get().badges }
-        const want: 1 | 2 = f.perfect ? 2 : 1
+        // a badge needs a real effort: at least half marks (or any score when there is no max); gold needs perfect
+        const earned = f.perfect || (f.max ? f.score >= f.max * 0.5 : f.score > 0)
+        const want: 0 | 1 | 2 = f.perfect ? 2 : earned ? 1 : 0
         const had = badges[a.def.id] ?? 0
         let newBadge: string | null = null
-        if (want > had) { badges[a.def.id] = want; newBadge = want === 2 ? `${a.def.badge} (gold)` : a.def.badge }
+        if (want > had) { badges[a.def.id] = want as 1 | 2; newBadge = want === 2 ? `${a.def.badge} (gold)` : a.def.badge }
         if (newBadge) celebrate({ kind: newBadge.includes('(gold)') ? 'gold' : 'badge', title: 'New badge: ' + newBadge, emoji: newBadge.includes('(gold)') ? '🥇' : '🏅' })
         else if (isBest && prev !== undefined) celebrate({ kind: 'best', title: 'New personal best!', emoji: '⭐' })
         save('challenges.bests', bests); save('challenges.badges', badges)

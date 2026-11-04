@@ -37,3 +37,8 @@
 .pt-ladder .rg { padding: 2px; font-size: 14px; } .pt-ladder .rg em { font-size: 10px; }
 .pt { gap: 6px; }
 @media (prefers-reduced-motion: reduce) { .pt-card, .pt-n .head { transition: none; } }
+/* short or narrow screens: keep every piece its own size and let the trainer scroll instead of piling the phrase on the rung tiles */
+.pt { overflow-y: auto; overflow-x: hidden; }
+.pt > * { flex-shrink: 0; }
+.pt-card { min-height: 150px; }
+.pt-notes { min-height: 84px; }

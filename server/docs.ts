@@ -117,6 +117,8 @@ Links are hash routes on ${APP_URL}:  ${APP_URL}#/<screen>[/<item>[/<mode>]][?<o
 - #/challenges/<challengeId>            one challenge
 - #/games/<gameId>                      zombies, jiujitsu, fashion, bachdoom; BachDoom takes ?level=<levelId>
 - #/beats/<beatId>   #/synth/<emulatorId>
+- Drum pads (pads and a step-grid beat maker) open from the devices menu in the top bar, or the DRUMS tab in Boss mode; they have no link of their own yet.
+- #/log   the build log;  #/boss/<studio|dj|loops|drums|synth|scenes>   grown-up Boss mode (loops = the loop station);  #/gallery[/<stopId>]   the self-playing tour
 - Options: key=<c-major|a-minor|...>  visual=<scene>  palette=<theme>  modes=<band|duo|mentor|mimic|vibes>  sheet=on  sound=<sound>  rung=1..7  phrase=n  level=<id>
 
 Ids: songs: ${OPTIONS.songs.slice(0, 12).join(', ')}, ... (use /api/activities?kind=song for all). Visuals: ${OPTIONS.visuals.join(', ')}. Palettes: ${OPTIONS.palettes.join(', ')}. Sounds: ${OPTIONS.sounds.join(', ')}.
@@ -128,6 +130,7 @@ To build a link yourself, call /api/link or the make_link tool: it validates ids
 - ${APP_URL}#/gallery     the self-playing tour of every feature
 - ${APP_URL}#/gallery/art     Art Gallery mode: full-screen moving art with calm music, loops forever
 - ${APP_URL}#/songs/ode/learn?rung=2     Learn "Ode to Joy" a few notes at a time
+- ${APP_URL}#/boss/loops     Boss mode loop station: one big button, tap to record and layer
 - ${APP_URL}#/games/bachdoom
 - ${APP_URL}#/challenges/echo
 - ${APP_URL}#/play?key=a-minor&modes=mentor,vibes     free play in A minor with the robot mentor and the mood face

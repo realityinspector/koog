@@ -447,7 +447,7 @@ function composite(label: string, makers: (() => Engine)[], bannerOf?: (i: numbe
   } as Engine
   function adv() {
     if (e.done || !cur.done) return
-    ratios.push(cur.done.score / (cur.done.max ?? 100)); i++
+    ratios.push(Math.min(1, cur.done.score / (cur.done.max ?? 40))); i++ // no max (Speed Run): 40 notes counts as full marks; never above 100%
     if (i >= makers.length) {
       const sc = Math.round((ratios.reduce((a, b) => a + b, 0) / ratios.length) * 100)
       e.done = { score: sc, max: 100, unit: 'pts', perfect: sc >= 95, headline: sc >= 85 ? 'Boss defeated.' : 'Boss beaten, rematch for a higher score.', detail: `${makers.length} tasks cleared.` }

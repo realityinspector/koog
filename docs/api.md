@@ -57,6 +57,9 @@ https://koog-demo.fly.dev/#/<screen>[/<item>[/<mode>]][?<options>]
 | `#/games/bachdoom?level=e1m1` | A game; `level` for BachDoom |
 | `#/beats/disco`, `#/synth/moog` | A groove, a synth emulator |
 | `#/play?key=a-minor&modes=mentor,vibes&visual=fireworks` | Free play with options |
+| `#/log` | The build log |
+| `#/boss/studio`, `#/boss/dj`, `#/boss/loops`, `#/boss/synth`, `#/boss/scenes` | Boss (grown-up) mode screens; `#/boss/loops` is the loop station |
+| `#/gallery`, `#/gallery/<stopId>`, `#/gallery/art` | The self-playing tour (title card first), the tour from one stop, Art Gallery mode |
 
 Options: `key` (`c-major`, `a-minor`, `f-sharp-major`, `auto`), `visual`, `palette`, `sound`, `modes` (`band`, `duo`, `mentor`, `mimic`, `vibes`), `sheet=on`, `rung`, `phrase`, `level`. Canonical form: lowercase, options in a fixed order, defaults left out. Build links with `toUrl()` or the `make_link` tool; never by hand.
 

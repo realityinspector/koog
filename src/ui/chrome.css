@@ -203,3 +203,7 @@
 .kg-link-note { position: fixed; z-index: 90; left: 50%; bottom: 88px; transform: translateX(-50%); max-width: min(480px, calc(100vw - 32px)); padding: 8px 16px; border-radius: 999px; background: rgba(20, 18, 40, .92); border: 1px solid var(--k-line-strong, rgba(255,255,255,.2)); color: var(--k-ink, #f4f2ff); font-size: 13px; font-weight: 600; pointer-events: none; animation: kg-link-note 4.5s ease both; }
 @keyframes kg-link-note { 0% { opacity: 0 } 8% { opacity: 1 } 85% { opacity: 1 } 100% { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .kg-link-note { animation: none; } }
+/* phones: the devices popover is a sheet across the screen (anchored to its chip it ran off the left edge) */
+@media (max-width: 700px) {
+  .kg-app .kg-dev-pop { position: fixed; top: 64px; left: 8px; right: 8px; width: auto; max-width: none; max-height: calc(100dvh - 80px); z-index: 80; }
+}

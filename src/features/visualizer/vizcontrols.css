@@ -44,3 +44,15 @@
   background: rgba(14, 10, 38, .85); border: 1px solid rgba(255,255,255,.3); animation: vb-toast 1.5s ease-out forwards; }
 @keyframes vb-toast { 0% { opacity: 0; transform: translateY(6px) } 12% { opacity: 1; transform: none } 80% { opacity: 1 } 100% { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .vb-toast { animation: none; } }
+
+/* Phones: the bar is wider than the little display, so it wraps inside it, and the pop-ups open across the display's
+   width (anchored to the bar, not to the chip that opened them) instead of running off the left edge. */
+@media (max-width: 560px) {
+  .kg-display .viz .viz-bar { left: 8px; right: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .viz .viz-bar .vb-scene, .viz .viz-bar .vb-style { position: static; }
+  .viz .viz-bar .vb-pop, .viz .viz-bar .vb-pop.vb-scenes { left: 0; right: 0; width: auto; }
+  .viz .viz-bar .vb-toast { display: none; }
+  .viz .viz-bar .vb-pop { max-height: 280px; overflow-y: auto; }
+  .viz .viz-bar .vb-grid { grid-template-columns: repeat(4, 1fr); }
+  .viz .viz-bar .vb-pop button.vb-tile { min-height: 48px; font-size: 11px; }
+}

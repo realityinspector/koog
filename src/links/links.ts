@@ -14,7 +14,7 @@
 //   #/beats[/<beatId>]                       the beat list, or one groove playing
 //   #/synth[/<emulatorId>]                   synth history, or one playable emulator open
 //   #/log                                    the build log
-//   #/boss/<studio|dj|loops|synth|scenes>    Boss (adult) mode screens
+//   #/boss/<studio|dj|loops|drums|synth|scenes>    Boss (adult) mode screens
 //   #/gallery[/<stopId>]                     the self-playing gallery tour (title card first; the click that starts it also unlocks audio)
 //   #/gallery/art                            Art Gallery mode: full screen, calm music, loops forever (title card first, same click rule)
 //
@@ -37,7 +37,7 @@ export const DEFAULT_ORIGIN = 'https://koog-demo.fly.dev/'
 // 'gallery' (added): the self-playing tour. #/gallery opens its title card, #/gallery/<stopId> starts at that stop (ids: src/features/gallery/stops.data.ts),
 // #/gallery/art opens Art Gallery mode's card (the item 'art' is reserved: no stop may use it; pieces: src/features/gallery/art.data.ts)
 export const SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery'] as const
-export const BOSS_SCREENS = ['studio', 'dj', 'loops', 'synth', 'scenes'] as const
+export const BOSS_SCREENS = ['studio', 'dj', 'loops', 'drums', 'synth', 'scenes'] as const
 export const SONG_MODES = ['wait', 'flow', 'learn'] as const
 export const HELPER_MODES = ['band', 'duo', 'mentor', 'mimic', 'vibes'] as const
 export const TONICS = ['c', 'c-sharp', 'd', 'd-sharp', 'e', 'f', 'f-sharp', 'g', 'g-sharp', 'a', 'a-sharp', 'b'] as const

@@ -38,3 +38,5 @@
 .md-gal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 6px; }
 .md-gal-row .md-gallery { margin-top: 0; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; color: var(--k-ink, #fff); }
 @media (max-width: 640px) { .md-gal-row { grid-template-columns: 1fr; } }
+/* phones: icon + dots only, so the button stops covering the Music Power meter */
+@media (max-width: 640px) { .md-btn b { display: none; } .md-wrap { top: 8px; right: 8px; } }

@@ -11,7 +11,7 @@ export interface SoundChoice { id: string; label: string; icon: string; emu?: st
 export const SOUNDS: SoundChoice[] = [
   { id: 'koog', label: 'Koog synth', icon: '🎹' },
   { id: 'organ', label: 'Organ', icon: '⛪', emu: 'hammond', preset: 'Smoky lounge' },
-  { id: 'moog', label: 'Moog-style', icon: '🎛️', emu: 'moog', preset: 'Carlos-style lead' },
+  { id: 'moog', label: 'Analog-style', icon: '🎛️', emu: 'moog', preset: 'Carlos-style lead' },
   { id: 'epiano', label: 'Electric piano (FM)', icon: '✨', emu: 'dx', preset: 'Glassy e-piano' },
   { id: 'bell', label: 'Bells (FM)', icon: '🔔', emu: 'dx', preset: 'Tubular bell' },
   { id: 'strings', label: 'Strings (tape)', icon: '🎻', emu: 'mellotron', preset: 'Dreamy strings' },

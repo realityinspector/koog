@@ -462,4 +462,11 @@ export const entries: Entry[] = [
     title: '🥁 Your DJ controller is now a drum machine',
     body: 'The 8 pads on the DJ controller can now play drums. Tap the 🥁 Drums button (or pick Drums for the controller in the plug icon) and the pads become kick, snare, two hi-hats, clap, two toms and a rim click. Hit one and you hear it right away, no waiting. Press PLAY to start a beat, press CUE (REC on screen) and whatever you tap gets added to the pattern, snapped to the nearest sixteenth of a beat. If you hit a hair early, it still lands on beat one. Hold a pad for a second to wipe that drum, hold PLAY to wipe everything. The jog wheel adds swing, the knobs change a drum\'s pitch and tone, and there are three kits and four starter beats if you want a head start. No controller? The same pads and a grid of steps are on the screen. Musicians call snapping notes to the grid "quantising", and the bouncy late-sixteenth feel is called "swing".',
   },
+  {
+    id: 65,
+    time: 'Night',
+    stage: 'test',
+    title: '🔍 A checkup for every button in Koog',
+    body: 'Six AI helpers each took one part of Koog and played it with pretend fingers, checking that every button really does its job: loops record and play back on the beat, songs finish with stars, challenges save your badges, every game can be won and lost, every picture moves when you play and every synth knob changes the sound. They fixed what they found. Now the first time you finish a song you get confetti, a challenge badge needs at least half marks (no more badges for zero!), the Advanced looper has an ✕ to remove a track, your picture style and colors stay after you close Koog, and the Songs, Learn, DJ and Visual screens fit on a phone. New in ✨ Modes: 🔁 Looper and 🥁 Drum pads, so you do not need Boss mode for them. The tour got five new stops too. Testers call this kind of check "end-to-end testing": you test the whole path a real player takes, not just one piece.',
+  },
 ]

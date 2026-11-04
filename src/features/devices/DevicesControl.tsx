@@ -59,7 +59,7 @@ export function DevicesControl() {
               </div>
             </div>
           ))}
-          {hasDj && <p className="kg-dev-hint">Quit Serato if it's open: it grabs the controller.</p>}
+          {hasDj && <p className="kg-dev-hint">Close any DJ software first: it grabs the controller.</p>}
           {live.length === 0 && (
             <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
           )}

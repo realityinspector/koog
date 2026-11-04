@@ -115,7 +115,7 @@ const koogParams = (): Param[] => [
   } },
   { id: '@lfoTarget', label: 'LFO goes to (pitch / cutoff / volume)', short: 'LFO>', kind: 'action', press: () => getSynth().setParams({ lfoTarget: LFO_TARGETS[(LFO_TARGETS.indexOf(sp().lfoTarget) + 1) % 4] }), lit: () => sp().lfoTarget !== 'none', text: () => sp().lfoTarget },
   { id: '@lfoShape', label: 'LFO shape', short: 'SHAPE', kind: 'action', press: () => getSynth().setParams({ lfoShape: LFO_SHAPES[(LFO_SHAPES.indexOf(sp().lfoShape) + 1) % 3] }), text: () => sp().lfoShape },
-  { id: '@moog', label: 'Reset to the Moog-style patch', short: 'MOOG', kind: 'action', press: () => { setHold(false); setOctave(0); getSynth().setParams(MOOG_PATCH) } },
+  { id: '@moog', label: 'Reset to the classic analog patch', short: 'MOOG', kind: 'action', press: () => { setHold(false); setOctave(0); getSynth().setParams(MOOG_PATCH) } },
 ]
 
 // ---------- emulators: params come straight from the EmuSpec controls ----------
@@ -230,7 +230,7 @@ const KOOG_STAGES: Stage[] = [
   { name: 'LFO', hint: 'the wobble', params: ['lfoRate', 'lfoDepth', '@lfoTarget'] },
 ]
 const KOOG: Topology = {
-  id: 'koog', name: 'Koog synth (Moog-style)', caption: 'Sound flows VCO (buzz) → VCF (filter) → VCA (volume) → OUT. The crossfader sweeps the filter cutoff.',
+  id: 'koog', name: 'Koog synth (classic analog)', caption: 'Sound flows VCO (buzz) → VCF (filter) → VCA (volume) → OUT. The crossfader sweeps the filter cutoff.',
   stages: KOOG_STAGES, params: koogParams(), layout: layoutOf(KOOG_LAYOUT),
 }
 

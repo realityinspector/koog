@@ -110,7 +110,7 @@ select.lp-chip { padding: 2px 3px; font-weight: 700; letter-spacing: 0; }
 .lps-mute { font-size: 12px; padding: 5px 9px; min-height: 34px; white-space: nowrap; } .lps-mute.on { color: #10122a; background: linear-gradient(180deg, #ffe08a, #ffbf3c); border-color: #ffbf3c; }
 .lps-x { width: 34px; height: 34px; padding: 0; font-size: 15px; flex: none; } .lps-x:hover { border-color: var(--led-red); color: var(--led-red); }
 .lps-adv { position: absolute; top: 10px; right: 12px; font-size: 12px; padding: 5px 12px; z-index: 2; }
-@media (max-width: 560px) { .lps { padding: 10px; } .lps-main { gap: 12px; } .lps-status b { font-size: 20px; } }
+@media (max-width: 560px) { .lps { padding: 10px; padding-top: 46px; } .lps-main { gap: 12px; } .lps-status b { font-size: 20px; } }
 @media (prefers-reduced-motion: reduce) { .bs-count .lps-glyph { animation: none; } }
 /* sound pickers: one per layer, plus the "Next layer sound" choice */
 select.lps-inst, .lps-next select { font: 600 12px system-ui, sans-serif; color: #e9e6ff; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .18); border-radius: 8px; padding: 4px 6px; max-width: 100%; cursor: pointer; }
@@ -131,3 +131,9 @@ select.lps-inst, .lps-next select { font: 600 12px system-ui, sans-serif; color:
   .lps-big { width: clamp(110px, 24vmin, 200px); }
   .lps-status span { font-size: 13px; }
 }
+
+.lp-rm { padding: 4px 9px; } .lp-rm:hover:not(:disabled) { border-color: var(--led-red); color: var(--led-red); }
+.lp-stoprow { display: flex; gap: 4px; align-items: center; justify-content: center; }
+/* kid-mode looper dock (✨ Modes > 🔁 Looper) */
+.lps-dock { padding-top: 44px; }
+.lps-dock-x { position: absolute; top: 8px; right: 10px; z-index: 2; }

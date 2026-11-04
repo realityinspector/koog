@@ -104,7 +104,7 @@ export function MySongs({ mine, setMine, onPick }: Props) {
 
   return (
     <>
-      <button className={'btn-ghost' + (busy ? ' rec-btn live' : '')} onClick={() => setSheet(busy ? 'rec' : 'list')}>{busy ? '● Recording' : `🎙️ My Songs (${mine.length})`}</button>
+      <button className={'btn-ghost' + (busy ? ' rec-btn live' : '')} title="Record your own tune on the keyboard, then play it back as a song" onClick={() => setSheet(busy ? 'rec' : 'list')}>{busy ? '● Recording' : `🎙️ My Songs (${mine.length})`}</button>
       {sheet !== 'none' && (
         <div className="ms-sheet" role="dialog" aria-label="My Songs">
           <div className="ms-head">

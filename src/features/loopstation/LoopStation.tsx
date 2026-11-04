@@ -3,7 +3,7 @@ import './loopstation.css'
 import { ControllerPic } from '../dj/Controller'
 import { setLink, tapTempo, useMaster } from '../../music/masterClock'
 import {
-  INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
+  INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, clearLayer, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
   registerLooperView, saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, timingInfo, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
 } from './loopEngine'
 import { BpmField, ConfirmChip, SimpleLooper } from './SimpleLooper'
@@ -86,7 +86,10 @@ function Strip({ i, l, sel }: { i: number; l: Layer; sel: boolean }) {
         <input className="lp-fader" type="range" min={0} max={1} step={0.01} value={l.vol} aria-label={`Track ${i + 1} level`} onChange={(e) => setLayerVol(i, Number(e.target.value))} />
         <div className="lp-btncol">
           <RingButton i={i} l={l} />
+          <div className="lp-stoprow">
           <button type="button" className="lp-stop" disabled={l.state === 'empty'} onClick={() => stopLayer(i)} title="Stop this track (follows its STOP mode)">■ STOP</button>
+            <button type="button" className="lp-stop lp-rm" disabled={l.state === 'empty' && !l.takes.length} onClick={() => clearLayer(i)} aria-label={`Remove track ${i + 1}`} title="Remove this track (erase what is on it)">✕</button>
+          </div>
         </div>
       </div>
     </section>

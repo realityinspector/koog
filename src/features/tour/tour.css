@@ -35,3 +35,9 @@
 .kg-strip .tour-replay { background: var(--k-surface-2); color: var(--k-ink-2); border-color: var(--k-line); position: static; flex: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
 
 .kg-strip .tour-replay b { font-size: 16px; font-weight: 800; }
+/* phones: the first-run "Tap any key" tip is a small strip just above the piano, not a card over the display */
+@media (max-width: 700px) {
+  .tour-tap { top: auto; bottom: 124px; gap: var(--k-s-2); padding: 4px 10px; border-radius: var(--k-r-md, 12px); }
+  .tour-tap b { font-size: var(--k-fs-md); }
+  .tour-tap .tour-btn { padding: 2px 8px; font-size: .8rem; }
+}

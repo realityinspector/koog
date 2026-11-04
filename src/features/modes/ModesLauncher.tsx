@@ -8,6 +8,9 @@ import { useVibes } from '../../music/vibes'
 import * as band from '../smartband/engine'
 import { Icon } from '../../ui/Icon'
 import { useOnePop } from '../../ui/onePop'
+import { setLoopsDock, useLoopsDock } from '../loopstation/LoopsDock'
+import { setControllerPage } from '../loopstation/loopSurface'
+import { useDrumPage } from '../drumpads/drumSurface'
 
 interface CardDef { id: string; icon: string; name: string; blurb: string; on: boolean; toggle: () => void }
 
@@ -26,6 +29,8 @@ export function ModesLauncher() {
   const bandOn = band.getState().on
   const mentor = useMentor((s) => s.on)
   const vibes = useVibes((s) => s.chip)
+  const looper = useLoopsDock((s) => s.open)
+  const drums = useDrumPage((s) => s.on)
 
   useEffect(() => {
     if (!open) return
@@ -52,7 +57,14 @@ export function ModesLauncher() {
     { id: 'mentor', icon: '🎓', name: 'Mentor', blurb: 'A synth robot in the front row that beeps for your moves and gives tips.', on: mentor, toggle: () => useMentor.getState().setOn(!mentor) },
     { id: 'vibes', icon: '😀', name: 'Vibes face', blurb: 'A little face that shows the mood of your music.', on: vibes, toggle: () => useVibes.getState().setChip(!vibes) },
   ]
-  const cards = [...play, ...helpers]
+  // the looper and the drum pads both dock over the display, so one at a time
+  const make: CardDef[] = [
+    { id: 'looper', icon: '🔁', name: 'Looper', blurb: 'Record a loop, then play on top of it. One big button: tap, tap, tap.', on: looper,
+      toggle: () => { if (!looper && drums) setControllerPage('dj'); setLoopsDock(!looper); setOpen(false) } },
+    { id: 'drums', icon: '🥁', name: 'Drum pads', blurb: 'Eight drum pads and a beat you build step by step. Works on a DJ controller too.', on: drums,
+      toggle: () => { if (!drums) setLoopsDock(false); setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
+  ]
+  const cards = [...play, ...make, ...helpers]
   const count = cards.filter((c) => c.on).length
   const card = (c: CardDef) => (
     <button key={c.id} className={'md-card' + (c.on ? ' on' : '')} aria-pressed={c.on} onClick={c.toggle}>
@@ -65,7 +77,7 @@ export function ModesLauncher() {
   return (
     <div className="md-wrap" ref={box} data-modes-launcher onPointerDown={(e) => e.stopPropagation()}>
       <button data-tour="modes" className={'md-btn' + (open ? ' open' : '') + (count ? ' has' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
-        title="Modes: DJ + Piano, Mimic, Mentor, Vibes and Band">
+        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Mentor and Vibes">
         <Icon name="spark" /><b>Modes</b>
         <span className="md-dots" aria-label={count + ' on'}>
           {cards.map((c) => <i key={c.id} className={c.on ? 'on' : ''} />)}
@@ -81,6 +93,8 @@ export function ModesLauncher() {
           </div>
           <div className="md-sec">Play along <span>pick one</span></div>
           <div className="md-grid md-grid-3">{play.map(card)}</div>
+          <div className="md-sec">Make music</div>
+          <div className="md-grid">{make.map(card)}</div>
           <div className="md-sec">Helpers</div>
           <div className="md-grid">{helpers.map(card)}</div>
         </div>

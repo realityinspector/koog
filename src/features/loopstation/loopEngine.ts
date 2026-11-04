@@ -725,10 +725,10 @@ export function clearLayer(i: number) {
   quietLayer(i)
   const keep = E.layers[i]
   E.layers[i] = { ...newLayer(), inst: keep.picked ? keep.inst : 'auto', picked: keep.picked, vol: keep.vol, mult: keep.mult }
-  if (!E.layers.some((l) => l.state !== 'empty')) { allQuiet(); abortTransportIfIdle() }
+  if (!E.layers.some((l) => l.state !== 'empty')) { E.big.last = null; allQuiet(); abortTransportIfIdle() }
   commit()
 }
-export function clearAll() { for (let i = 0; i < LAYERS; i++) E.layers[i] = newLayer(); E.rec = null; E.recIdx = -1; allQuiet(); abortTransportIfIdle(); E.lenBeats = S().lenBars * 4; commit() }
+export function clearAll() { E.big.last = null; for (let i = 0; i < LAYERS; i++) E.layers[i] = newLayer(); E.rec = null; E.recIdx = -1; allQuiet(); abortTransportIfIdle(); E.lenBeats = S().lenBars * 4; commit() }
 function undoTake(i: number) {
   const L = E.layers[i], was = L.state
   E.rec = null; E.recIdx = -1

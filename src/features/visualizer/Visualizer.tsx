@@ -23,11 +23,19 @@ export function Visualizer() {
     } catch { /* storage blocked: fine */ }
     return 'fireworks'
   })
-  const [emoji, setEmoji] = useState(false)
+  const [emoji, setEmoji] = useState(() => {
+    try { return localStorage.getItem('koog.viz.emoji') === '1' } catch { return false }
+  })
   const [sparkle, setSparkle] = useState(() => {
     try { return localStorage.getItem('koog.viz.sparkle') !== '0' } catch { return true }
   })
-  const [theme, setTheme] = useState<Theme>('rainbow')
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      const t = localStorage.getItem('koog.viz.theme')
+      if (t && THEMES.some((x) => x.id === t)) return t as Theme
+    } catch { /* storage blocked: fine */ }
+    return 'rainbow'
+  })
   // Links: set the visual and palette from a canonical link; report both so the address bar can follow
   const reqVisual = useLinkIn((s) => s.visual), reqPalette = useLinkIn((s) => s.palette)
   useEffect(() => {
@@ -86,8 +94,14 @@ export function Visualizer() {
     engine.current?.setMode(mode)
     try { localStorage.setItem('koog.viz.mode', mode) } catch { /* ignore */ }
   }, [mode])
-  useEffect(() => engine.current?.setEmoji(emoji), [emoji])
-  useEffect(() => engine.current?.setTheme(theme), [theme])
+  useEffect(() => {
+    engine.current?.setEmoji(emoji)
+    try { localStorage.setItem('koog.viz.emoji', emoji ? '1' : '0') } catch { /* ignore */ }
+  }, [emoji])
+  useEffect(() => {
+    engine.current?.setTheme(theme)
+    try { localStorage.setItem('koog.viz.theme', theme) } catch { /* ignore */ }
+  }, [theme])
   useEffect(() => {
     engine.current?.setSparkle(sparkle)
     try { localStorage.setItem('koog.viz.sparkle', sparkle ? '1' : '0') } catch { /* ignore */ }

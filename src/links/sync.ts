@@ -28,7 +28,7 @@ import { releaseAllNotes } from '../music/localNotes'
 void _c
 
 const KID_SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery']
-const BOSS_SCREENS = ['play', 'dj', 'loops', 'synth', 'scenes']
+const BOSS_SCREENS = ['play', 'dj', 'loops', 'drums', 'synth', 'scenes']
 
 // ---------- first key / click ----------
 let armed: Array<() => void> = []

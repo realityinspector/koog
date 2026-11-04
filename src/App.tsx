@@ -29,6 +29,7 @@ import { ControllerOverlay } from './features/controller/ControllerOverlay'
 import { ProStudio } from './features/pro/ProStudio'
 import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
 import { DrumsDock, DrumsScreen } from './features/drumpads/DrumPads'
+import { LoopsDock } from './features/loopstation/LoopsDock'
 import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
@@ -77,7 +78,7 @@ export function App() {
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <LinkNote />
       <Gallery />

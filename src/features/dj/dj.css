@@ -186,3 +186,15 @@
 
 /* the DUO chip sits over the display: hide it while any screen is open */
 .kg-display[data-screen] .dj-chip { display: none; }
+
+/* phones: the three-column strip does not fit, so stack it (middle controls first, then deck A, then deck B) and drop the jog rings and the HI / LOW sliders */
+@media (max-width: 640px) {
+  .dj-bar { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 6px; max-height: 70%; overflow-y: auto; }
+  .dj-mid { order: -1; width: auto; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 4px 8px; }
+  .dj-jog { display: none; }
+  .dj-B { flex-direction: row; }
+  .dj-B .dj-row { flex-direction: row; }
+  .dj-sls .dj-sl:nth-child(n+3) { display: none; }
+  .dj-btn { min-width: 24px; padding: 0 4px; } .dj-mode { min-width: 34px; } .dj-pad { min-width: 24px; }
+  .dj-status { flex-basis: 100%; }
+}

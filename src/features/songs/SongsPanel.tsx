@@ -233,6 +233,7 @@ export function SongsPanel() {
     const isBest = !prev || game.score > prev.score
     if (isBest) { b[k] = { score: game.score, acc }; saveBest(b); setBests(b) }
     if (isBest && prev) celebrate({ kind: 'best', title: 'New personal best: ' + song.title, emoji: '⭐' })
+    else if (!prev) celebrate(stars === 3 ? { kind: 'gold', title: 'Three stars: ' + song.title, emoji: '🌟' } : { kind: 'best', title: 'You played ' + song.title + '!', emoji: '🎵' })
     lhAdvance(lhRef.current, 0, true)
     const lh = lhRef.current.total ? { hits: lhRef.current.hits, total: lhRef.current.total } : undefined
     setResult({ score: game.score, acc, stars, hits: game.hits, total, best: isBest && !!prev, lh })
@@ -472,7 +473,7 @@ export function SongsPanel() {
   return (
     <section className="sg">
       {song && learn ? (
-        <PhraseTrainer key={song.id} song={song} start={learnStart} onClose={() => { setLearn(false); setLearnStart(undefined) }} />
+        <PhraseTrainer key={song.id + ':' + (learnStart?.phrase ?? 0) + ':' + (learnStart?.rung ?? 0)}song={song} start={learnStart} onClose={() => { setLearn(false); setLearnStart(undefined) }} />
       ) : song ? (
         <div className="play">
           <div className="bar">
