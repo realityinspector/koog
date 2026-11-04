@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useOnePop } from '../../ui/onePop'
 import './gallery.css'
+import { StoreButton, StoreHost } from '../appstore/AppStore'
+import { openStore } from '../appstore/storeState'
+import { STORE_NAME as storeName } from '../../kode/kore/brand'
 
 /** 🖼 Gallery in the top strip: a small chooser for the guided tour (#/gallery) and Art Gallery mode (#/gallery/art). */
 export function GalleryButton() {
@@ -17,7 +20,7 @@ export function GalleryButton() {
   }, [open])
   const go = (hash: string) => { setOpen(false); location.hash = hash }
   return (
-    <div className="kg-gal" ref={box}>
+    <><div className="kg-gal" ref={box}>
       <button className={'kg-gal-btn' + (open ? ' on' : '')} aria-expanded={open} aria-haspopup="menu" aria-label="Gallery" title="Gallery: a guided tour, calm Art Gallery mode, or the holiday galleries"
         onClick={() => setOpen((v) => !v)}>
         <span aria-hidden>🖼</span> <span className="kg-gal-t">Gallery</span>
@@ -33,11 +36,15 @@ export function GalleryButton() {
           <button role="menuitem" onClick={() => go('#/gallery/art/thanksgiving')}>
             <b>🍂 Thanksgiving Art Gallery</b><span>Falling leaves, golden lights, calm harvest tunes</span>
           </button>
+          <button role="menuitem" onClick={() => { setOpen(false); openStore() }}>
+            <b>🏪 {storeName}</b><span>Find Kode apps, open them, and earn coding powers</span>
+          </button>
           <button role="menuitem" onClick={() => go('#/gallery/art/christmas')}>
             <b>🎄 Christmas Art Gallery</b><span>Snow, string lights and old carols</span>
           </button>
         </div>
       )}
     </div>
+    <StoreButton /><StoreHost /></>
   )
 }

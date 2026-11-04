@@ -947,6 +947,12 @@
    "skill": "Memorize songs, one level at a time"
   },
   {
+   "id": "racer",
+   "title": "Koogalien Racer",
+   "blurb": "Hear a tune, play it back on the beat, and the car drives what you played: up turns right, down turns left, a wrong note goes off the road. Pick your vehicle by playing its note four times. Works with keys, drum pads or a DJ controller.",
+   "skill": "Phrase memory, steering by pitch, timing"
+  },
+  {
    "id": "bachdoom",
    "title": "BachDoom",
    "blurb": "Clashing-note demons invade the cathedral. Only real music can stop them. Final boss: Bach's Prelude in C.",

@@ -55,7 +55,7 @@ https://koog-demo.fly.dev/#/<screen>[/<item>[/<mode>]][?<options>]
 | `#/songs/ode/learn?rung=2` | A song in `wait`, `flow` or `learn` mode (`rung` 1-7 and `phrase` for learn) |
 | `#/challenges/echo` | A challenge |
 | `#/games/bachdoom?level=e1m1` | A game; `level` for BachDoom |
-| `#/beats/disco`, `#/synth/ladder` | A groove, a synth emulator |
+| `#/beats/disco`, `#/synth/ladder`, `#/synth/timeline` | A groove, a synth instrument, the history timeline |
 | `#/play?key=a-minor&modes=mentor,vibes&visual=fireworks` | Free play with options |
 | `#/log` | The build log |
 | `#/boss/studio`, `#/boss/dj`, `#/boss/loops`, `#/boss/synth`, `#/boss/scenes` | Boss (grown-up) mode screens; `#/boss/loops` is the loop station |

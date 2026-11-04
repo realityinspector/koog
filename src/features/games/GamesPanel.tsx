@@ -7,6 +7,8 @@ import { JiuJitsu } from './jiujitsu/JiuJitsu'
 import { Fashion } from './fashion/Fashion'
 import { MemoryGame } from './memory/MemoryGame'
 import { HolidayGame } from './holiday/HolidayGame'
+import { RacerGame } from './racer/RacerGame'
+import { TRACKS as RACER_TRACKS } from './racer/tracks'
 import { loadAll as holidayAll } from './holiday/data'
 import { loadSave as zSave } from './zombielanes/data'
 import { loadSave as jSave, BELTS } from './jiujitsu/data'
@@ -16,7 +18,7 @@ import { pload } from '../../profile/profile'
 import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 import './games.css'
 
-type GameId = 'zombies' | 'bachdoom' | 'jiujitsu' | 'fashion' | 'memory' | 'feast' | 'tree'
+type GameId = 'zombies' | 'bachdoom' | 'jiujitsu' | 'fashion' | 'memory' | 'feast' | 'tree' | 'racer'
 const GAMES: { id: GameId; icon: string; title: string; blurb: string; skill: string }[] = [
   { id: 'zombies', icon: '🧟', title: 'Zombie Lanes', blurb: 'Zombies march down the lanes toward your keys. Play the note on the zombie to blast it.', skill: 'Learn where every note lives' },
   { id: 'jiujitsu', icon: '🥋', title: 'Jiu-Jitsu Flow', blurb: 'Roll on the mats. Answer your partner\'s moves with the right notes, keep the flow, and earn your belts.', skill: 'Rhythm, call and response' },
@@ -24,6 +26,7 @@ const GAMES: { id: GameId; icon: string; title: string; blurb: string; skill: st
   { id: 'memory', icon: '🃏', title: 'Phrase Match', blurb: 'Flip cards to hear short tunes, find the twins, then play each tune back on the keys to win the pair.', skill: 'Ear and memory for phrases' },
   { id: 'feast', icon: '🦃', title: 'Harvest Feast', blurb: 'Learn a Thanksgiving song step by step, from hunt-and-peck to master. Every phrase you nail puts a dish on the table.', skill: 'Memorize songs, one level at a time' },
   { id: 'tree', icon: '🎄', title: 'Light the Tree', blurb: 'Learn a Christmas song step by step, from hunt-and-peck to master. Every phrase hangs an ornament, and master puts the star on top.', skill: 'Memorize songs, one level at a time' },
+  { id: 'racer', icon: '🏁', title: 'Koogalien Racer', blurb: 'Hear a tune, play it back on the beat, and the car drives what you played: up turns right, down turns left, a wrong note goes off the road. Pick your vehicle by playing its note four times. Works with keys, drum pads or a DJ controller.', skill: 'Phrase memory, steering by pitch, timing' },
   { id: 'bachdoom', icon: '💀', title: 'BachDoom', blurb: 'Clashing-note demons invade the cathedral. Only real music can stop them. Final boss: Bach\'s Prelude in C.', skill: 'Play real pieces, in time' },
 ]
 
@@ -49,9 +52,11 @@ function progress(): Record<GameId, Prog> {
     fashion: { played: f.looks.length > 0 || f.unlocked.length > 1 || Object.keys(f.best).length > 0, line: `${f.unlocked.length}/${ERAS.length} eras unlocked` },
     memory: { played: Object.keys(m.best ?? {}).length > 0, line: `${Object.keys(m.best ?? {}).length} best score${Object.keys(m.best ?? {}).length === 1 ? '' : 's'} saved` },
     feast: holidayLine('feast', hol), tree: holidayLine('tree', hol),
+    racer: { played: rcStars() > 0, line: `${rcStars()}/${RACER_TRACKS.length * 3} ★` },
     bachdoom: { played: Object.keys(b.best ?? {}).length > 0 || bLv > 1, line: `Level ${Math.min(bLv, LEVELS.length)}/${LEVELS.length} · ${bStars} ★` },
   }
 }
+const rcStars = () => Object.values(pload<{ stars?: Record<string, number> }>('racer', {})?.stars ?? {}).reduce((n, x) => n + (x || 0), 0)
 const dailyPick = (): GameId => GAMES[Math.floor(Date.now() / 864e5) % GAMES.length].id
 
 /** GAMES screen: pick a game. The game takes over the whole display while it runs. */
@@ -85,6 +90,7 @@ export function GamesPanel() {
   if (active === 'jiujitsu') return <div className="gm-stage"><JiuJitsu onExit={exit} /></div>
   if (active === 'memory') return <div className="gm-stage"><MemoryGame onExit={exit} /></div>
   if (active === 'fashion') return <div className="gm-stage"><Fashion onExit={exit} /></div>
+  if (active === 'racer') return <div className="gm-stage"><RacerGame onExit={exit} /></div>
   if (active === 'feast' || active === 'tree') return <div className="gm-stage"><HolidayGame kind={active} onExit={exit} /></div>
   const prog = progress(), daily = dailyPick()
   return (

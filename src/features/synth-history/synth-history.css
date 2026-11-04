@@ -88,3 +88,9 @@
 .sh-inst-text h3{margin:0;font-size:var(--k-fs-md,15px);font-weight:650}
 .sh-inst-text small{display:block;margin-top:2px;opacity:.75;line-height:1.3}
 .sh-inst .sh-play{flex:0 0 auto}
+.sh-tab{white-space:nowrap}
+.sh-card{flex-basis:176px}
+.sh-card h3{font-size:12.5px}
+.sh-play-tag{white-space:nowrap}
+@media (max-width:600px){.sh-tab{padding:0 var(--k-s-3,10px)}}
+.sh-tabs{flex-wrap:wrap}

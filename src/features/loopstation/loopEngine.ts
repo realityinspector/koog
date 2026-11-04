@@ -1031,6 +1031,13 @@ const GM: Record<string, number> = { koog: 81, 'sound:organ': 19, 'sound:ladder'
   'emu:hammond': 16, 'emu:mellotron': 48, 'emu:juno': 89, 'emu:prophet': 90, 'emu:dx': 4, 'emu:moog': 80, 'emu:arp': 81, 'emu:theremin': 54, 'emu:ondes': 19, 'emu:tb303': 38 }
 /** the loop as a Standard MIDI File (format 1): tempo track + one track per non-empty track (+ DJ pads on channel 10). Reverse / speed / transpose are baked in. */
 export function exportMidi(passes = 1): Uint8Array {
+  const { tracks, len } = exportTracks()
+  const pads = E.layers.flatMap((L) => L.takes.flatMap((t) => t.pads)).map((p) => ({ t: p.t, d: 0.1, n: 36 + (p.deck === 'B' ? 4 : 0) + p.n, v: 100 }))
+  if (pads.length) tracks.push({ name: 'DJ pads', channel: 9, notes: pads })
+  return writeMidi(tracks, useMaster.getState().bpm, len, passes)
+}
+/** the non-empty tracks as plain notes (beats, velocity 1..127, reverse / speed / transpose baked in) + the loop length: what MIDI and the code exports (Sonic Pi, Strudel) read */
+export function exportTracks(): { tracks: MidiTrack[]; len: number; bpm: number } {
   const len = E.lenBeats || 4
   const tracks: MidiTrack[] = []
   E.layers.forEach((L, i) => {
@@ -1043,9 +1050,7 @@ export function exportMidi(passes = 1): Uint8Array {
     }
     if (notes.length) tracks.push({ name: `Track ${i + 1} ${instLabel(L.inst).replace(/[^\x20-\x7e]/g, '').trim()}`, channel: i % 8, program: GM[L.inst] ?? 80, notes })
   })
-  const pads = E.layers.flatMap((L) => L.takes.flatMap((t) => t.pads)).map((p) => ({ t: p.t, d: 0.1, n: 36 + (p.deck === 'B' ? 4 : 0) + p.n, v: 100 }))
-  if (pads.length) tracks.push({ name: 'DJ pads', channel: 9, notes: pads })
-  return writeMidi(tracks, useMaster.getState().bpm, len, passes)
+  return { tracks, len, bpm: useMaster.getState().bpm }
 }
 export function downloadMidi(passes = 1) {
   const blob = new Blob([exportMidi(passes) as BlobPart], { type: 'audio/midi' })

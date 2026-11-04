@@ -12,6 +12,9 @@ import { setLoopsDock, useLoopsDock } from '../loopstation/LoopsDock'
 import { setControllerPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
 import { setBoardOpen } from '../pedalboard/boardOpen'
+import { setKodeDock, useKodeDock } from '../kode/kodeDock'
+import { openStore } from '../appstore/storeState'
+import { STORE_NAME as storeName } from '../../kode/kore/brand'
 
 interface CardDef { id: string; icon: string; name: string; blurb: string; on: boolean; toggle: () => void }
 
@@ -32,6 +35,7 @@ export function ModesLauncher() {
   const vibes = useVibes((s) => s.chip)
   const looper = useLoopsDock((s) => s.open)
   const drums = useDrumPage((s) => s.on)
+  const kode = useKodeDock((s) => s.open)
 
   useEffect(() => {
     if (!open) return
@@ -61,9 +65,11 @@ export function ModesLauncher() {
   // the looper and the drum pads both dock over the display, so one at a time
   const make: CardDef[] = [
     { id: 'looper', icon: '🔁', name: 'Looper', blurb: 'Record a loop, then play on top of it. One big button: tap, tap, tap.', on: looper,
-      toggle: () => { if (!looper && drums) setControllerPage('dj'); setLoopsDock(!looper); setOpen(false) } },
+      toggle: () => { if (!looper && drums) setControllerPage('dj'); if (!looper) setKodeDock(false); setLoopsDock(!looper); setOpen(false) } },
     { id: 'drums', icon: '🥁', name: 'Drum pads', blurb: 'Eight drum pads and a beat you build step by step. Works on a DJ controller too.', on: drums,
-      toggle: () => { if (!drums) setLoopsDock(false); setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
+      toggle: () => { if (!drums) { setLoopsDock(false); setKodeDock(false) } setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
+    { id: 'kode', icon: '🧑‍💻', name: 'Koog Kode', blurb: 'Code your music: type a pattern like notes "c e g e" and it plays. Or play something and Koog writes the code.', on: kode,
+      toggle: () => { if (!kode) { setLoopsDock(false); setControllerPage('dj') } setKodeDock(!kode); setOpen(false) } },
     { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: false, toggle: () => { setBoardOpen(true); setOpen(false) } },
   ]
   const cards = [...play, ...make, ...helpers]
@@ -79,7 +85,7 @@ export function ModesLauncher() {
   return (
     <div className="md-wrap" ref={box} data-modes-launcher onPointerDown={(e) => e.stopPropagation()}>
       <button data-tour="modes" className={'md-btn' + (open ? ' open' : '') + (count ? ' has' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
-        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Mentor and Vibes">
+        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Koog Kode, Mentor and Vibes">
         <Icon name="spark" /><b>Modes</b>
         <span className="md-dots" aria-label={count + ' on'}>
           {cards.map((c) => <i key={c.id} className={c.on ? 'on' : ''} />)}
@@ -93,6 +99,7 @@ export function ModesLauncher() {
             <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery' }}>▶ Guided tour <span>a self-playing tour of everything</span></button>
             <button className="md-gallery" onClick={() => { setOpen(false); location.hash = '#/gallery/art' }}>🖼 Art Gallery mode <span>calm moving art, loops forever</span></button>
           </div>
+          <button className="md-gallery" onClick={() => { setOpen(false); openStore() }}>🏪 {storeName} <span>find Kode apps and earn coding powers</span></button>
           <div className="md-sec">Play along <span>pick one</span></div>
           <div className="md-grid md-grid-3">{play.map(card)}</div>
           <div className="md-sec">Make music</div>

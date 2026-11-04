@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { LEVELS, bestKey, fmtTime, levelDef, type Level, type Phr } from './data'
-import { flip, replay, retry, start, stop, toMenu, useMemory } from './engine'
+import { flip, replay, retry, setKode, start, startBonus, stop, toMenu, useMemory } from './engine'
+import { KodePowerCard } from '../gamekode/KodePowerCard'
+import { varLine } from '../gamekode/kodeLogic'
 import './memory.css'
 
 const DIATONIC = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6]
@@ -55,6 +57,9 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
           <h2>🃏 Phrase Match</h2>
           <p>Flip cards to hear short tunes. Find two cards with the same tune, then <b>play it back</b> on the keys to win the pair.</p>
           <EarToggle />
+          <KodePowerCard game="memory" on={s.kode} onToggle={() => setKode(!s.kode)} status={s.kode && s.kodeWins ? `Expressions played: ${s.kodeWins}` : undefined}>
+            <p>Win a pair and its tune gets a name. After the table is clear, a bonus asks you to play an expression like <code className="gk-code">b a b</code>.</p>
+          </KodePowerCard>
           <div className="pm-levels">
             {LEVELS.map((l) => {
               const b = s.save.best[bestKey(l.id, s.ear)]
@@ -87,6 +92,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
         <span>{s.msg}</span>
         {s.stage === 'claim' && <button className="pm-btn" onClick={replay}>🔁 Hear it again</button>}
       </div>
+      {s.kode && s.vars.length > 0 && <VarStrip />}
       <div className="pm-grid" style={{ ['--c' as string]: def.cols, ['--r' as string]: def.rows }}>
         {s.cards.map((c, i) => {
           const ph = s.phrases[c.pair]
@@ -111,6 +117,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
           <h3>Table cleared!</h3>
           <Stars n={s.stars} />
           <p>{s.flips} flips · {s.misses} missed play-backs · {fmtTime(ms)}</p>
+          {s.kode && s.vars.length > 0 && <KodeBonus />}
           <p className="pm-bestline">{s.newBest ? 'New best for this level!' : bestNow ? `Best: ${bestNow.flips} flips in ${fmtTime(bestNow.ms)}` : ''}</p>
           <div className="pm-row">
             <button className="pm-btn go" onClick={retry}>Retry</button>
@@ -129,5 +136,28 @@ function EarToggle() {
     <button className={'pm-btn pm-ear-opt' + (ear ? ' on' : '')} aria-pressed={ear} onClick={() => useMemory.setState({ ear: !ear })}>
       {ear ? '👂 Ear only: ON' : '👂 Ear only: off'} <small>(no pictures on the cards)</small>
     </button>
+  )
+}
+
+/** Kode cards: the variables you have won so far, like a = "c e g" */
+function VarStrip() {
+  const vars = useMemory((s) => s.vars)
+  return (
+    <ul className="gk-list pm-vars" aria-label="Your variables" data-testid="vars">
+      {vars.map((v) => <li key={v.name}><code className="gk-code">{varLine(v)}</code></li>)}
+    </ul>
+  )
+}
+
+function KodeBonus() {
+  const vars = useMemory((s) => s.vars)
+  const bonus = useMemory((s) => s.bonus)
+  return (
+    <div className="pm-kode" data-testid="kode-bonus">
+      <VarStrip />
+      {bonus.state === 'off' && vars.length >= 2 && <button className="pm-btn go" onClick={startBonus}>🧑‍💻 Bonus: play an expression</button>}
+      {bonus.state === 'play' && <p>Play <code className="gk-code">{bonus.expr.join(' ')}</code> ({bonus.progress}/{bonus.want.length} notes)</p>}
+      {bonus.state === 'won' && <p>✅ You ran <code className="gk-code">{bonus.expr.join(' ')}</code>! <button className="pm-btn" onClick={startBonus}>Another</button></p>}
+    </div>
   )
 }

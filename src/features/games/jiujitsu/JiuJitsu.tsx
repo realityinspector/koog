@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useJudge } from '../../../music/judge'
+import { onJudge, useJudge } from '../../../music/judge'
+import { KodePowerCard } from '../gamekode/KodePowerCard'
+import { kload, ksave } from '../gamekode/kodeStore'
+import { castMatch, phraseText, pushRecent } from '../gamekode/kodeLogic'
 import { PhraseHud } from '../PhraseHud'
 import { Game } from './engine'
 import { BELTS, RUNGS, LAST_RUNG, loadSave, type Snapshot } from './data'
@@ -27,7 +30,7 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
     return () => { g.destroy(); gameRef.current = null }
   }, [])
   const g = () => gameRef.current
-  const playing = ['bow', 'call', 'echo', 'move', 'sub', 'flow'].includes(snap.phase)
+  const playing = ['bow', 'call', 'echo', 'move', 'sub', 'flow', 'drill'].includes(snap.phase)
   const flow = snap.phase === 'flow' || snap.phase === 'flowend'
   const beltName = BELTS[snap.belt].name
 
@@ -89,6 +92,7 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
               {snap.songs.length > 0 && <button className="bj-btn" onClick={() => g()?.startFlow()}>🌊 Flow roll</button>}
               <button className="bj-btn ghost" onClick={onExit}>Back</button>
             </div>
+            <ComboKode run={(steps, reps, name) => g()?.drill(steps, reps, name)} />
             {snap.songs.length > 0 && (
               <div className="bj-pick">
                 Flow song
@@ -157,5 +161,67 @@ function BoomMeter() {
       <div className="bj-boom-bar"><i style={{ width: charge * 100 + '%' }} /></div>
       <span>{full ? 'BOOM READY!' : 'BOOM'}</span>
     </div>
+  )
+}
+
+interface Combo { id: number; name: string; emoji: string; steps: number[]; sign: number[] }
+interface ComboSave { on: boolean; combos: Combo[] }
+const EMOJI = ['🥋', '🐍', '🌀', '🔥', '⭐']
+
+/** Kode power: save a chain of positions as a named combo (a function). Its call sign performs the chain; Drill x3 loops it. */
+function ComboKode({ run }: { run: (steps: number[], reps: number, name: string) => void }) {
+  const [k, setK] = useState<ComboSave>(() => ({ on: false, combos: [], ...kload<Partial<ComboSave>>('jiujitsu', {}) }))
+  const [draft, setDraft] = useState<number[]>([])
+  const [rec, setRec] = useState<number[] | null>(null)
+  const [note, setNote] = useState('')
+  const kr = useRef(k); kr.current = k
+  const recR = useRef(rec); recR.current = rec
+  const runR = useRef(run); runR.current = run
+  const buf = useRef<{ n: number; t: number }[]>([])
+  const save = (n: ComboSave) => { setK(n); kr.current = n; ksave('jiujitsu', n) }
+  useEffect(() => onJudge((e) => {
+    if (e.type !== 'note' || e.g.cluster != null || !kr.current.on) return
+    buf.current = pushRecent(buf.current, e.g.note, performance.now())
+    const r = recR.current
+    if (r) {
+      const next = [...r, e.g.note].slice(0, 3)
+      setRec(next); recR.current = next
+      return
+    }
+    const hit = castMatch(buf.current.map((x) => x.n), kr.current.combos.filter((c) => c.sign.length >= 3).map((c) => ({ ...c })))
+    if (hit) { buf.current = []; runR.current(hit.steps, 1, hit.name) }
+  }), [])
+  const saveCombo = () => {
+    if (draft.length < 2 || !rec || rec.length < 3) return
+    const id = Date.now()
+    const c: Combo = { id, name: `Combo ${k.combos.length + 1}`, emoji: EMOJI[k.combos.length % EMOJI.length], steps: draft, sign: rec }
+    save({ ...k, combos: [...k.combos, c].slice(-6) })
+    setDraft([]); setRec(null); setNote(`Saved ${c.emoji} ${c.name}. Play its call sign (${phraseText(c.sign)}) to run it.`)
+  }
+  return (
+    <KodePowerCard game="jiujitsu" on={k.on} onToggle={() => save({ ...k, on: !k.on })} status={k.on ? note || undefined : 'Off: the game plays exactly as before.'}>
+      <div className="gk-row" role="group" aria-label="Pick positions for the combo">
+        <span>Moves:</span>
+        {RUNGS.slice(0, 6).map((r, i) => <button key={r} className="gk-btn" disabled={draft.length >= 5} onClick={() => setDraft([...draft, i])}>{r}</button>)}
+        <button className="gk-btn" onClick={() => setDraft(draft.slice(0, -1))} aria-label="Remove the last move">⌫</button>
+      </div>
+      <div className="gk-row">
+        Chain: <code className="gk-code" data-testid="combo-draft">{draft.map((i) => RUNGS[i]).join(' → ') || 'pick two or more'}</code>
+        <button className="gk-btn" aria-pressed={!!rec} onClick={() => { setRec([]); recR.current = []; buf.current = [] }}>🎹 {rec ? `Play 3 notes (${rec.length}/3)` : 'Record call sign'}</button>
+        <button className="gk-btn go" disabled={draft.length < 2 || !rec || rec.length < 3} onClick={saveCombo}>Save combo</button>
+      </div>
+      <ul className="gk-list" aria-label="My combos">
+        {k.combos.map((c) => (
+          <li key={c.id}>
+            <span>{c.emoji} <b>{c.name}</b></span>
+            <code className="gk-code">{c.steps.map((i) => RUNGS[i]).join(' → ')}</code>
+            <span>call sign <code className="gk-code">{phraseText(c.sign)}</code></span>
+            <button className="gk-btn" onClick={() => run(c.steps, 1, c.name)}>▶ Run</button>
+            <button className="gk-btn" onClick={() => run(c.steps, 3, c.name)}>🔁 Drill ×3</button>
+            <button className="gk-btn" onClick={() => save({ ...k, combos: k.combos.filter((x) => x.id !== c.id) })} aria-label={`Delete ${c.name}`}>✕</button>
+          </li>
+        ))}
+      </ul>
+    </KodePowerCard>
   )
 }

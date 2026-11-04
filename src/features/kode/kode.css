@@ -1,0 +1,46 @@
+/* Koog Kode panel (kd-*). Dark like the drum pads; fits 1280x800 and a 390 px phone with no sideways page scroll. */
+.kd-dock { display: flex; flex-direction: column; }
+.kd { box-sizing: border-box; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; color: #e6e2ff; font-size: 12px; flex: 1 0 auto; }
+.kd * { box-sizing: border-box; }
+.kd-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.kd-head h3 { margin: 0; font-size: 15px; color: #ffd86c; letter-spacing: .04em; white-space: nowrap; }
+.kd-chip { flex: 1; min-width: 120px; opacity: .8; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kd-chip.on { color: #7dffb1; opacity: 1; }
+.kd-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kd-btn { font: inherit; font-size: 12px; font-weight: 800; color: #f4f2ff; cursor: pointer; padding: 6px 12px; min-height: 34px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .08); white-space: nowrap; }
+.kd-btn:hover:not(:disabled) { border-color: #ffd86c; }
+.kd-btn:disabled { opacity: .4; cursor: default; }
+.kd-btn.go { background: #2fbf71; border-color: #7dffb1; color: #06210f; font-size: 13px; padding: 6px 16px; }
+.kd-btn.stop { background: rgba(229, 72, 77, .25); border-color: #ff9a9a; }
+.kd-btn.hot { background: #e5484d; border-color: #ff9a9a; color: #fff; }
+.kd-btn.x { margin-left: auto; }
+.kd button:focus-visible, .kd summary:focus-visible, .kd textarea:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
+.kd-pop { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px; padding: 6px; border-radius: 12px; background: #17123a; border: 1px solid rgba(255, 216, 108, .5); }
+.kd-ex { font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; padding: 7px 9px; border-radius: 9px; color: #f4f2ff; background: rgba(255, 255, 255, .06); border: 1px solid transparent; }
+.kd-ex:hover, .kd-ex:focus-visible { border-color: #ffd86c; background: rgba(255, 216, 108, .1); }
+.kd-ex b { font-size: 12px; } .kd-ex em { font-style: normal; font-size: 11px; opacity: .75; line-height: 1.35; }
+
+/* the code box: a transparent textarea over a coloured copy of the same text */
+.kd-ed { position: relative; flex: 1 0 150px; border-radius: 12px; background: #0b0820; border: 1px solid rgba(255, 255, 255, .22); overflow: hidden; }
+.kd-ed:focus-within { border-color: #ffd86c; }
+.kd-hl, .kd-ta { position: absolute; inset: 0; margin: 0; padding: 10px 12px; border: 0; font: 13px/1.55 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0; white-space: pre; tab-size: 2; word-spacing: 0; }
+.kd-hl { overflow: hidden; pointer-events: none; color: #e6e2ff; }
+.kd-ta { overflow: auto; resize: none; background: transparent; color: transparent; caret-color: #ffd86c; outline: none; -webkit-text-fill-color: transparent; scrollbar-width: thin; }
+.kd-ta::selection { background: rgba(127, 227, 255, .35); -webkit-text-fill-color: transparent; }
+.kd-c { color: #7c76a8; font-style: italic; } .kd-k { color: #7fe3ff; font-weight: 700; } .kd-s { color: #ffd86c; } .kd-n { color: #ff9ad5; }
+.kd-hl .kd-on { background: #7dffb1; color: #06210f; border-radius: 3px; box-shadow: 0 0 0 1px #7dffb1; }
+.kd-hl .kd-err { text-decoration: underline wavy #ff6b6b; text-underline-offset: 3px; background: rgba(255, 107, 107, .22); border-radius: 3px; }
+.kd-msg { min-height: 18px; font-size: 12px; line-height: 1.4; opacity: .9; }
+.kd-msg.bad { color: #ffb4b4; opacity: 1; font-weight: 700; }
+.kd-more { opacity: .7; font-weight: 400; }
+.kd-why { font-size: 12px; color: #ffd86c; line-height: 1.4; }
+.kd-cheat summary { cursor: pointer; font-weight: 800; color: #7fe3ff; }
+.kd-cheat-body { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; line-height: 1.45; }
+.kd-cheat-body p { margin: 0; } .kd-cheat code { color: #ffd86c; background: rgba(255, 255, 255, .08); padding: 0 4px; border-radius: 4px; }
+@media (max-width: 560px) {
+  .kd { padding: 6px; gap: 6px; }
+  .kd-btn { padding: 5px 9px; }
+  .kd-ed { flex-basis: 120px; }
+  .kd-hl, .kd-ta { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .kd * { transition: none !important; animation: none !important; } }

@@ -1,0 +1,20 @@
+.mm { max-width: 640px; margin: 0 auto; padding: 16px; color: var(--fg, #eaeaf2); font: 15px/1.4 system-ui, sans-serif; box-sizing: border-box; }
+.mm h2 { margin: 0 0 4px; }
+.mm-sub, .mm-sign { margin: 4px 0 8px; opacity: .8; font-size: 13px; }
+.mm-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 12px; margin: 10px 0; list-style: none; }
+.mm-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+.mm-in { flex: 1; min-width: 120px; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.25); color: inherit; font: inherit; }
+.mm-btn { padding: 8px 12px; min-height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: inherit; font: inherit; cursor: pointer; }
+.mm-btn.on { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.mm-btn:disabled { opacity: .4; cursor: default; }
+.mm-go { background: #16a34a; border-color: #16a34a; color: #fff; }
+.mm-del { background: #dc2626; border-color: #dc2626; color: #fff; }
+.mm-emojis { display: flex; flex-wrap: wrap; gap: 4px; }
+.mm-e { width: 40px; height: 40px; font-size: 20px; border-radius: 8px; border: 1px solid transparent; background: rgba(255,255,255,.08); cursor: pointer; }
+.mm-e.on { border-color: #3b82f6; background: rgba(59,130,246,.3); }
+.mm-big { font-size: 28px; }
+.mm-list { padding: 0; margin: 0; }
+.mm-empty { opacity: .7; padding: 12px 0; list-style: none; }
+.mm-msg, .mm-undo { margin: 6px 0; }
+.mm-free { display: block; margin: 8px 0; }
+@media (max-width: 480px) { .mm { padding: 12px; } }

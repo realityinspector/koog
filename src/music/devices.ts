@@ -42,11 +42,14 @@ export const emitLoop = (data: Uint8Array, t: number, id: string) => emit('loop'
 /** raw MIDI from any device whose role is 'drums' (the controller's pads play the drum machine; src/features/drumpads) */
 export const onDrumsMessage = (fn: DjListener) => subscribe('drums', fn)
 export const emitDrums = (data: Uint8Array, t: number, id: string) => emit('drums', data, t, id)
+/** raw MIDI from any device whose role is 'gamepads' (the controller's pads play notes into the games; src/features/padplay) */
+export const onGamepadsMessage = (fn: DjListener) => subscribe('gamepads', fn)
+export const emitGamepads = (data: Uint8Array, t: number, id: string) => emit('gamepads', data, t, id)
 /** raw MIDI from any device whose role is 'dj' */
 export const onDjMessage = (fn: DjListener) => subscribe('dj', fn)
 export const emitDj = (data: Uint8Array, t: number, id: string) => emit('dj', data, t, id)
 /** LEDs etc.: send raw bytes to the DJ-style controller's output (dj, surface, loop or drums role; no-op if none) */
-export const sendToDj = (bytes: number[]) => void send(['dj', 'surface', 'loop', 'drums'], bytes)
+export const sendToDj = (bytes: number[]) => void send(['dj', 'surface', 'loop', 'drums', 'gamepads'], bytes)
 /** legacy: override the DJ output sender (null = look the output up by role) */
 export const setDjSender = (fn: ((b: number[]) => void) | null) => setSenderOverride(fn)
 

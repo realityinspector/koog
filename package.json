@@ -19,7 +19,13 @@
     "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts",
     "check:mentor": "npx --no-install tsx scripts/mentor-fixtures.ts",
     "check:loops": "npx --no-install tsx scripts/loop-fixtures.ts",
+    "check:export": "npx --no-install tsx scripts/export-fixtures.ts",
     "check:drums": "npx --no-install tsx scripts/drum-fixtures.ts",
+    "check:racer": "npx --no-install tsx scripts/racer-fixtures.ts",
+    "check:perf": "node scripts/perf-sweep.mjs --quick",
+    "check:kode": "npx --no-install tsx scripts/kode-fixtures.ts",
+    "check:choreo": "npx --no-install tsx scripts/choreo-fixtures.ts",
+    "check:eggs": "npx --no-install tsx scripts/egg-fixtures.ts",
     "deploy:fly": "./scripts/deploy-fly.sh"
   },
   "dependencies": {

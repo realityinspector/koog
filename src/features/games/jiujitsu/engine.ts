@@ -7,6 +7,8 @@ import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
 import { GameLh } from '../../songs/gameLh'
 import { noteName } from '../../../music/theory'
 import { getSynth } from '../../synth-history/engine'
+import { markConcept } from '../gamekode/kodeStore'
+import { drillSchedule } from '../gamekode/kodeLogic'
 import {
   BELTS, RUNGS, STEPS, LAST_RUNG, LESSONS, TECHNIQUES, level, makePhrase, flowSongs, FLOW_IDS, loadSave, writeSave,
   type Phase, type Phrase, type Save, type Snapshot,
@@ -110,6 +112,8 @@ export class Game {
   private wobble = 0
   private pulse = 0
   private call = -1
+  /** dev/test log of the Kode power combo: every position performed, with its repeat number */
+  drillLog: { rung: number; rep: number; step: number }[] = []
 
   constructor(canvas: HTMLCanvasElement, root: HTMLElement, onSnap: (s: Snapshot) => void) {
     this.canvas = canvas; this.root = root; this.onSnap = onSnap
@@ -158,6 +162,7 @@ export class Game {
       get chain() { return self.chain },
       setSongProb(p: number | null) { self.songProb = p },
       get brung() { return self.brung },
+      get drillLog() { return self.drillLog },
       get pp() { return self.pp },
       get partner() { return self.partner },
       get slips() { return self.slips },
@@ -191,6 +196,35 @@ export class Game {
     this.save = loadSave()
     this.trainBelt = Math.min(this.trainBelt, this.save.belt)
     this.cur = RUNG_POSE[0]; this.anim = null
+    this.emit()
+  }
+
+  /** Kode power: perform a saved combo (a function). `reps` > 1 is a drill: the same chain again (a loop). */
+  drill(steps: number[], reps: number, name: string) {
+    if (this.phase !== 'menu' || !steps.length) return
+    this.reset()
+    this.phase = 'drill'; this.points = 0; this.partner = 0; this.rung = 0
+    this.cur = RUNG_POSE[0]; this.anim = null
+    this.drillLog = []
+    const sched = drillSchedule(steps, reps, 1.1)
+    this.banner = `Combo "${name}"${reps > 1 ? ` ×${reps}` : ''}`
+    this.tip = 'Your combo is a function: one name, many moves.'
+    markConcept('jiujitsu', 'function')
+    sched.forEach((tk) => this.later(tk.at + 0.4, () => {
+      const from = this.rung, to = tk.rung
+      const up = to === from + 1
+      if (up) { this.points += STEPS[from]?.pts ?? 0 }
+      this.rung = to
+      this.moveTo(RUNG_POSE[to], up ? (VIA[from] ?? []) : [], 0.9)
+      this.drillLog.push({ rung: to, rep: tk.rep, step: tk.step })
+      this.banner = `${name}${reps > 1 ? ` · round ${tk.rep + 1} of ${reps}` : ''}: ${RUNGS[to]}`
+      this.pop(RUNGS[to], 'k', '#9ff5da', 0.9)
+      if (tk.rep > 0 && tk.step === 0) markConcept('jiujitsu', 'loop')
+      this.emit()
+    }))
+    const end = (sched[sched.length - 1]?.at ?? 0) + 1.8
+    this.later(end, () => { this.burst(0.5, 1, this.rm ? 12 : 50); this.banner = 'Combo complete. Bow!' ; this.emit() })
+    this.later(end + 1.4, () => { this.phase = 'menu'; this.cur = RUNG_POSE[0]; this.anim = null; this.rung = 0; this.emit() })
     this.emit()
   }
 

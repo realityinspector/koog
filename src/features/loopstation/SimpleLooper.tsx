@@ -5,6 +5,8 @@ import { INSTRUMENTS, bigDown, canUndoClear, setMetronomeOn, undoClear, bigHoldP
 import { setGuide, unlockGuide, useGuide } from './guide'
 import { LOOP_STYLES, pedalJob, setLoopStyle, usePedal, type LoopStyle } from '../pedal/pedal'
 import { hideClearToast, useClearToast } from './clearToast'
+import { CodeMenu } from '../codeexport/CodeMenu'
+import { loopCode } from '../codeexport/sources'
 
 // The simple looper: ONE big button (also the foot pedal, and Space), like a guitar loop pedal.
 //   tap: record -> tap: loop it -> tap: add a layer -> tap: finish the layer    press twice: stop    hold 2 s: undo / redo (stopped: clear)
@@ -166,6 +168,7 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
             <button type="button" className="lps-btn" disabled={!any} onClick={() => bigUndo()} title="Take away the newest layer (or hold the big button 2 s)">↶ Undo</button>
             <button type="button" className="lps-btn" disabled={!canBigRedo()} onClick={() => bigRedo()} title="Bring back what Undo took away (or hold the big button 2 s again)">↷ Redo</button>
             <ConfirmChip className="lps-btn" label="🗑 Clear all" disabled={!any && st === 'empty'} onConfirm={() => { stopAll(); clearAll() }} />
+            <CodeMenu build={loopCode} disabled={!any} what="loop" />
           </div>
           <div className="lps-row lps-opts">
             <button type="button" className={'lps-tog' + (s.countIn > 0 ? ' on' : '')} aria-pressed={s.countIn > 0} onClick={() => setOpt('countIn', s.countIn > 0 ? 0 : 1)}

@@ -30,6 +30,7 @@ import { ProStudio } from './features/pro/ProStudio'
 import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
 import { DrumsDock, DrumsScreen } from './features/drumpads/DrumPads'
 import { LoopsDock } from './features/loopstation/LoopsDock'
+import { KodeDock } from './features/kode/KodePanel'
 import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
 import { PedalboardDock } from './features/pedalboard/Pedalboard'
@@ -39,6 +40,8 @@ import { startLinks } from './links/sync'
 import { LinkNote } from './links/LinkNote'
 import { GlobalClearedToast } from './features/loopstation/GlobalClearedToast'
 import { Gallery } from './features/gallery/Gallery'
+import { BossStoreEntry } from './features/appstore/AppStore'
+import { PerfHud } from './features/perfmon/PerfHud'
 import './music/judge'
 import './ui/chrome.css'
 
@@ -75,15 +78,18 @@ export function App() {
         <WhoIsPlaying />
         <LinkNote /><GlobalClearedToast />
         <Gallery />
+        <BossStoreEntry />
+        <PerfHud />
       </ErrorBoundary>
     )
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><KodeDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <LinkNote /><GlobalClearedToast />
       <Gallery />
+      <PerfHud />
       <Tour />
     </ErrorBoundary>
   )

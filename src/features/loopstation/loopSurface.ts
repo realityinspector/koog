@@ -214,7 +214,7 @@ function apply() {
   else { ledsDark(); resyncLeds() }
   ensureTimer()
 }
-const isCtl = (r: string) => r === 'dj' || r === 'surface' || r === 'loop' || r === 'drums'
+const isCtl = (r: string) => r === 'dj' || r === 'surface' || r === 'loop' || r === 'drums' || r === 'gamepads'
 export const currentPage = (surfaceOn: boolean, loopOn: boolean, drumsOn = false): Page => (drumsOn ? 'drums' : loopOn ? 'loop' : surfaceOn ? 'synth' : 'dj')
 /** switch every connected DJ controller (or the on-screen picture, with no hardware) to a page. The pages are mutually exclusive. */
 export function setControllerPage(p: Page) {

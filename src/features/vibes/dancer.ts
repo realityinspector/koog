@@ -17,6 +17,9 @@ import type { Scene, SceneFactory, SceneReact } from '../visualizer/scenes'
 import { MOODS, useVibes, type MoodId } from '../../music/vibes'
 import { FaceAnimator } from './face'
 import { useDancerName } from './dancerName'
+import { createRecognizer, eggInfo, type EggId } from './eggs'
+import { createEggFx, SAY } from './eggDraw'
+import { eggDebug, foundEgg } from './eggStore'
 
 const TAU = Math.PI * 2
 const PI = Math.PI
@@ -172,6 +175,39 @@ export const createDancer: SceneFactory = (reduced): Scene => {
   let bowMove: Move | null = null, bowT = -1e6
   let base: DOMMatrix | null = null
   let skCur = 1
+  // ---- easter eggs (src/features/vibes/eggs.ts recognises the tunes, eggDraw.ts paints the costumes)
+  const rec = createRecognizer()
+  const eggFx = createEggFx(reduced)
+  let eggEnd = 0, eggBeat = -1e6, eggLeg = 0
+  const headS = { x: 400, y: 200, r: 30 }
+  function endEgg() { eggFx.stop(); eggDebug.active = null; eggDebug.k = -1 }
+  function startEgg(id: EggId) {
+    const now = lastNow || performance.now()
+    eggFx.start(id, now); eggEnd = now + eggFx.dur; eggBeat = now; eggLeg = 0
+    eggDebug.active = id; eggDebug.fired.push(id); if (eggDebug.fired.length > 40) eggDebug.fired.shift()
+    const fresh = foundEgg(id)
+    const nm = useDancerName.getState().name
+    say(id === 'birthday' && nm ? `Happy birthday, ${nm}!` : SAY[id], true, true)
+    eggSayUntil = now + 1500
+    void fresh
+    if (id === 'sleigh' || id === 'surf') { const d = roomDir(px > 0 ? -1 : 1, id === 'sleigh' ? 7 : 5); dashTo(d, id === 'sleigh' ? 7 : 5, id === 'sleigh' ? 2600 : 2200, true, 'lin'); faceHold(d, 2400) }
+    if (id === 'pie' || id === 'present' || id === 'birthday' || id === 'wig' || id === 'pilgrim' || id === 'shave') { faceHold(0, 1500); goDepth(0.05, eggFx.dur) }
+    if (id === 'clock') goDepth(0.1, eggFx.dur)
+  }
+  /** per-frame behaviour that needs the rig: hops, travel, spins, chimes */
+  function eggBehave(now: number) {
+    const id = eggFx.id
+    if (!id) return
+    const t = now - eggFx.t0
+    switch (id) {
+      case 'pogo': if (now - eggBeat > 520) { eggBeat = now; jump(1.5, 460) } break
+      case 'antlers': if (now - eggBeat > 640) { eggBeat = now; jump(1.0, 520) } break
+      case 'dizzy': spin(false); break
+      case 'clock': if (t > 1500 * (eggLeg + 1) && eggLeg < 3) { eggLeg++; say('BONG!', true, true) } break
+      case 'sleigh': case 'surf': if (t > 2800 && eggLeg === 0) { eggLeg = 1; const d = roomDir(px > 0 ? -1 : 1, id === 'sleigh' ? 7 : 5); dashTo(d, id === 'sleigh' ? 7 : 5, 2400, true, 'lin'); faceHold(d, 2400) } break
+      default: break
+    }
+  }
 
   const kf = () => (SPEED[kind] < 0.8 ? 1.5 : 1)
   function add(dur: number, att: number, rel: number, note: number, mask: PK[], f: (u: number, q: Pose) => void, speed = true) {
@@ -180,7 +216,9 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     if (moves.length > 5) moves.shift()
     lastMoveT = lastNow
   }
-  function say(txt: string, force = false) {
+  let eggSayUntil = -1e6
+  function say(txt: string, force = false, egg = false) {
+    if (!egg && lastNow < eggSayUntil) return // an egg's line stays up for a moment
     if (!force && lastNow - lastBubble < 1800) return
     bubble = { txt, t0: lastNow }; lastBubble = lastNow
   }
@@ -578,6 +616,17 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     if (rot) { ctx.translate(hipX, hipY); ctx.rotate(rot); ctx.translate(-hipX, -hipY) }
     ctx.translate(hipX, 0); ctx.scale(sx, 1); ctx.translate(-hipX, 0)
     ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    const EA = eggFx.A
+    if (eggFx.id) {
+      EA.u = u; EA.hipX = hipX; EA.hipY = hipY; EA.floorY = floorY; EA.sx = sx; EA.tn = tn; EA.lean = p.lean; EA.jh = jh
+      if (eggFx.fish(ctx, now)) {
+        ctx.restore()
+        const [fhx, fhy] = map(EA.headX, EA.headY)
+        return { hx: fhx, hy: fhy, R: 1.1 * u * skCur }
+      }
+      eggFx.back(ctx)
+    }
+    let fyAcc = 0
     const cl = Math.cos(p.lean * 0.5), sl = Math.sin(p.lean * 0.5)
     const L1 = 2.3 * u, L2 = 2.25 * u
     // legs (2-bone IK: the hip is placed by the dance, each foot is planted where it last stepped)
@@ -608,7 +657,9 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       ctx.fillStyle = `hsl(${(shirtHue + 40) % 360},80%,55%)`
       ctx.beginPath(); ctx.ellipse(shx, shy + 0.2 * u, 0.62 * u, 0.12 * u, s * 0.08, 0, TAU); ctx.fill()
       feetScr[sx < 0 ? 1 - i : i] = map(shx, shy + 0.3 * u)
+      fyAcc += fy
     }
+    EA.fyAvg = fyAcc / 2
     // torso
     const ux = Math.sin(p.lean), uy = -Math.cos(p.lean) // up
     const rx = Math.cos(p.lean), ry = Math.sin(p.lean) // right
@@ -624,6 +675,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     ctx.closePath(); ctx.fill(); ctx.stroke()
     // shirt
     const P = (a: number, b: number): [number, number] => [hipX + rx * a * u + ux * b * u * (tl / (2.9 * u)), hipY + ry * a * u + uy * b * u * (tl / (2.9 * u))]
+    EA.ux = ux; EA.uy = uy; EA.rx = rx; EA.ry = ry; EA.tls = tl / (2.9 * u)
     const pts = { hl: P(-0.95, 0.35), hr: P(0.95, 0.35), sr: P(1.2, 2.75), sl: P(-1.2, 2.75), top: P(0, 3.05), br: P(1.25, 1.5), bl: P(-1.25, 1.5) }
     ctx.fillStyle = shirt
     ctx.beginPath()
@@ -641,6 +693,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     ctx.font = `800 ${Math.round(1.25 * u)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     ctx.fillText('♪', 0, 0)
     ctx.restore()
+    if (eggFx.id) { EA.nx = nx; EA.ny = ny; eggFx.body(ctx); ctx.lineCap = 'round'; ctx.lineJoin = 'round' }
     // neck
     const hux = Math.sin(p.lean + p.tilt), huy = -Math.cos(p.lean + p.tilt)
     ctx.strokeStyle = ink; ctx.lineWidth = 0.75 * u
@@ -671,10 +724,12 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       ctx.fillStyle = skin; ctx.strokeStyle = ink; ctx.lineWidth = 0.12 * u
       ctx.beginPath(); ctx.arc(hx, hy, 0.42 * u, 0, TAU); ctx.fill(); ctx.stroke()
       hands[(s < 0) === (sx >= 0) ? 0 : 1] = map(hx, hy)
+      if (s < 0) { EA.lhx = hx; EA.lhy = hy } else { EA.rhx = hx; EA.rhy = hy }
     }
     // head: the Vibes face, with hair. When he turns, the face slides a little toward where he is going (a 3/4 view).
     const R = 1.5 * u
     const hcx = nx + hux * (0.35 * u + R), hcy = ny + huy * (0.35 * u + R) + p.nod * 0.3 * u + p.bow * 0.9 * u
+    if (eggFx.id) { EA.R = R; EA.headX = hcx; EA.headY = hcy; eggFx.front(ctx) }
     ctx.save()
     ctx.translate(hcx, hcy); ctx.rotate(p.lean + p.tilt)
     const hair = 'hsl(24,48%,24%)'
@@ -703,8 +758,10 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     // cowlick
     ctx.strokeStyle = hair; ctx.lineWidth = 0.22 * u
     ctx.beginPath(); ctx.moveTo(R * 0.05, -R * 1.0); ctx.quadraticCurveTo(R * 0.15, -R * 1.42, R * 0.45, -R * 1.3); ctx.stroke()
+    if (eggFx.id && sx >= 0) eggFx.head(ctx)
     const [hx, hy] = map(0, 0), [tx] = map(R, 0)
     ctx.restore()
+    if (eggFx.id) eggFx.top(ctx)
     ctx.restore()
     return { hx, hy, R: Math.abs(tx - hx) || R }
   }
@@ -821,6 +878,9 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     noteOn(note, x, v, k, hue, _name, g) {
       held.add(note)
       everActive = true
+      if (eggFx.id === 'sleepy' && v >= 0.6) { eggFx.dur = performance.now() - eggFx.t0 + 450; eggEnd = eggFx.t0 + eggFx.dur; say('Huh? Oh!', true) }
+      const hit = rec.onset(performance.now(), note, v)
+      if (hit) startEgg(hit)
       const now = lastNow
       // tempo: the gap between notes sets his beat (folded into a danceable range)
       const ioi = now - lastOn
@@ -898,7 +958,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       chordMove(Math.max(0.5, lastVel))
     },
     clear() {
-      moves = []; held.clear(); glyphs.length = 0; puffs.length = 0; tiles.clear(); bubble = null
+      moves = []; held.clear(); glyphs.length = 0; puffs.length = 0; tiles.clear(); bubble = null; endEgg(); rec.reset()
       energy = 0; jumpT0 = -1e6; spinT0 = -1e6
       dash = null; cart = null; tgtX = 0; glideUntil = -1e6; bigUntil = -1e6; curName = ''; runN = 0
     },
@@ -945,6 +1005,10 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       lastNow = now
       const st = useVibes.getState()
       if (st.activity > 0.05) everActive = true
+      if (eggFx.id && now >= eggEnd) endEgg()
+      if (eggFx.id) { eggFx.A.t = Math.max(0, (now - eggFx.t0) / 1000); eggFx.A.k = Math.max(0, (now - eggFx.t0) / eggFx.dur); eggDebug.k = eggFx.A.k }
+      eggBehave(now)
+      eggFx.tick(now, dt)
       if (st.mood !== shownMood) {
         shownMood = st.mood
         face.setMood(st.mood)
@@ -987,6 +1051,13 @@ export const createDancer: SceneFactory = (reduced): Scene => {
         m.f(u, tmpQ)
         for (const key of m.mask) p[key] = lerp(p[key], tmpQ[key], wgt)
       }
+      if (eggFx.id) {
+        // the egg's own pose, blended in and out over the moves
+        Object.assign(tmpQ, p)
+        eggFx.pose(tmpQ, now)
+        const ew = sm((now - eggFx.t0) / 300) * sm((eggEnd - now) / 350)
+        for (const key of KEYS) p[key] = lerp(p[key], tmpQ[key], ew)
+      }
       // jump (with a little squat before take-off) and spin
       let jh = 0
       const ju = (now - jumpT0) / jumpDur
@@ -1011,6 +1082,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       stepFeet(now, jh > 0.15)
 
       ctx.save()
+      if (eggFx.id === 'quake') ctx.translate(eggFx.shake(now), 0)
       base = ctx.getTransform().inverse(); ctxRef = ctx
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'
       const sk = 1 - 0.22 * depth // further back = smaller...
@@ -1041,10 +1113,13 @@ export const createDancer: SceneFactory = (reduced): Scene => {
         ctx.fillStyle = `rgba(230,225,255,${0.35 * (1 - q)})`
         for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(puffs[i].x + s * (0.4 + q * 1.1) * U * sk, puffs[i].y - q * 0.4 * U, (0.2 + q * 0.35) * U * sk, 0, TAU); ctx.fill() }
       }
+      if (eggFx.id) { const S = eggFx.S; S.X = X; S.gy = gy; S.sk = sk; S.U = U; S.w = w; S.h = h; S.hx = headS.x; S.hy = headS.y; S.hr = headS.r; eggFx.behind(ctx, now) }
       ctx.save()
       ctx.translate(X, gy); ctx.scale(sk, sk); ctx.translate(-w / 2, -floorY)
       const head = drawGuy(ctx, now, cur, jh, sx, rot)
       ctx.restore()
+      headS.x = head.hx; headS.y = head.hy; headS.r = head.R
+      eggFx.over(ctx, now)
       // tell the page where his head is, so the mentor's pills and captions can sit on the other side (~5 times a second)
       if (now - pubT > 200) {
         pubT = now

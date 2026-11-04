@@ -1,0 +1,19 @@
+.gk-card { text-align: left; margin: 10px auto 0; max-width: 560px; padding: 10px 12px; border-radius: 12px; background: rgba(20, 16, 44, 0.78); border: 1.5px dashed #6fe3c1; color: #e9fff8; font-size: 14px; }
+.gk-card.on { border-style: solid; }
+.gk-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gk-tog { min-width: 52px; min-height: 36px; padding: 4px 12px; border-radius: 18px; border: 1.5px solid #6fe3c1; background: transparent; color: #6fe3c1; font-weight: 700; cursor: pointer; }
+.gk-tog[aria-pressed='true'] { background: #6fe3c1; color: #0d2a22; }
+.gk-kid { margin: 6px 0; line-height: 1.35; }
+.gk-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.gk-tags i { font-style: normal; font-size: 12px; padding: 1px 8px; border-radius: 10px; background: #123c33; color: #9ff5da; }
+.gk-status { margin: 6px 0 0; color: #ffe27a; font-weight: 600; }
+.gk-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.gk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gk-btn { min-height: 36px; padding: 4px 10px; border-radius: 8px; border: 1.5px solid #6fe3c1; background: #0e2d27; color: #e9fff8; font-weight: 600; cursor: pointer; }
+.gk-btn[aria-pressed='true'], .gk-btn.go { background: #6fe3c1; color: #0d2a22; }
+.gk-btn:disabled { opacity: 0.45; cursor: default; }
+.gk-code { font-family: ui-monospace, Menlo, monospace; background: #0a1a17; padding: 2px 8px; border-radius: 6px; color: #b9ffe9; }
+.gk-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.gk-list li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gk-hud { position: absolute; z-index: 5; left: 50%; transform: translateX(-50%); bottom: 96px; padding: 4px 12px; border-radius: 14px; background: rgba(10, 26, 23, 0.85); color: #b9ffe9; font-weight: 700; font-size: 14px; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .gk-card * { transition: none !important; animation: none !important; } }

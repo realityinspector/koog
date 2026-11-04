@@ -132,7 +132,7 @@ function syncRoles() { roleCache.clear(); for (const d of useDevices.getState().
 function applyDevices(access: MIDIAccess) {
   const devs = useDevices.getState().devices
   const pianos = devs.filter((d) => d.connected && d.role === 'piano')
-  const djs = devs.filter((d) => d.connected && (d.role === 'dj' || d.role === 'surface' || d.role === 'loop' || d.role === 'drums')) // a synth control surface is still a DJ-style controller: LEDs and output
+  const djs = devs.filter((d) => d.connected && (d.role === 'dj' || d.role === 'surface' || d.role === 'loop' || d.role === 'drums' || d.role === 'gamepads')) // a synth control surface is still a DJ-style controller: LEDs and output
   const outs = [...access.outputs.values()].filter((p) => p.state === 'connected')
   for (const id of [...heldBy.keys()]) { if (!pianos.some((d) => d.id === id)) flushHeld(id) } // role changed away from piano, or unplugged, mid-note
   const cur = useAppStore.getState()

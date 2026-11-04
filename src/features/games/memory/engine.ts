@@ -5,6 +5,8 @@ import { onNote } from '../../../music/notes'
 import { demo, stopAll } from '../../../music/phraseEngine'
 import { clearGuide, setGuide } from '../../../music/guide'
 import { pload, psave } from '../../../profile/profile'
+import { kload, ksave, markConcept } from '../gamekode/kodeStore'
+import { exprNotes, makeExpr, noteOk, varName, type KVar } from '../gamekode/kodeLogic'
 import { bestKey, fmtTime, isBetter, levelDef, pickPhrases, shuffle, starsFor, type Best, type Level, type MemSave, type Phr } from './data'
 
 export interface Card { id: number; pair: number; up: boolean; done: boolean }
@@ -20,13 +22,20 @@ export interface MState {
   msg: string
   stars: number; newBest: boolean
   save: MemSave
+  /** Kode cards (opt-in): each won pair becomes a named variable; a bonus round plays an expression of them */
+  kode: boolean; vars: KVar[]
+  bonus: { state: 'off' | 'play' | 'won'; expr: string[]; want: number[]; progress: number; misses: number }
+  kodeWins: number
 }
+const noBonus = (): MState['bonus'] => ({ state: 'off', expr: [], want: [], progress: 0, misses: 0 })
+const kodeSave = () => kload<{ on?: boolean; wins?: number }>('memory', {})
 const emptySave = (): MemSave => ({ best: {}, plays: 0 })
 const loadSave = (): MemSave => { const s = pload<MemSave>('memory', emptySave()) ?? emptySave(); return { best: s.best ?? {}, plays: s.plays ?? 0 } }
 
 const initial = (): MState => ({
   phase: 'menu', level: 'easy', ear: false, cards: [], phrases: [], picks: [], stage: 'idle',
   flips: 0, misses: 0, matched: 0, startedAt: 0, endedAt: 0, progress: 0, msg: '', stars: 0, newBest: false, save: loadSave(),
+  kode: !!kodeSave().on, vars: [], bonus: noBonus(), kodeWins: kodeSave().wins ?? 0,
 })
 export const useMemory: ReturnType<typeof make> = (import.meta.hot?.data.memStore as ReturnType<typeof make> | undefined) ?? make()
 function make() { return create<MState>()(() => initial()) }
@@ -60,7 +69,14 @@ function claim() {
   const cards = s.cards.map((c, i) => (s.picks.includes(i) ? { ...c, done: true } : c))
   const matched = s.matched + 1
   clearGuide()
-  if (matched < s.phrases.length) { set({ cards, matched, picks: [], stage: 'idle', progress: 0, msg: 'Pair won! Flip two more cards.' }); return }
+  let vars = s.vars
+  if (s.kode) {
+    const ph = s.phrases[s.cards[s.picks[0]].pair]
+    vars = [...s.vars, { name: varName(s.vars.length), notes: ph.notes.map((n) => n.note) }]
+    markConcept('memory', 'variable')
+  }
+  if (matched < s.phrases.length) { set({ cards, matched, vars, picks: [], stage: 'idle', progress: 0, msg: s.kode ? `Pair won! It is now ${vars[vars.length - 1].name}. Flip two more cards.` : 'Pair won! Flip two more cards.' }); return }
+  set({ vars })
   finish(cards, matched)
 }
 
@@ -80,8 +96,35 @@ function finish(cards: Card[], matched: number) {
   set({ cards, matched, picks: [], stage: 'idle', phase: 'done', endedAt, stars, newBest, save, msg: `All pairs! ${s.flips} flips in ${fmtTime(ms)}.` })
 }
 
+function bonusKey(e: { note: number }) {
+  const s = get()
+  const b = s.bonus
+  const want = b.want[b.progress]
+  if (noteOk(want, e.note, s.level === 'easy')) {
+    const progress = b.progress + 1
+    if (progress >= b.want.length) {
+      const wins = s.kodeWins + 1
+      ksave('memory', { on: true, wins })
+      markConcept('memory', 'sequence')
+      set({ kodeWins: wins, bonus: { ...b, progress, state: 'won' }, msg: `You ran ${b.expr.join(' ')}! An expression is variables in order.` })
+    } else set({ bonus: { ...b, progress } })
+  } else set({ bonus: { ...b, progress: 0, misses: b.misses + 1 }, msg: 'Not quite. Start the expression again.' })
+}
+
+/** Kode cards bonus round: play an expression made from the variables, like b a b */
+export function startBonus() {
+  const s = get()
+  if (!s.kode || s.vars.length < 2) return
+  const expr = makeExpr(s.vars)
+  const want = exprNotes(s.vars, expr)
+  attach()
+  set({ bonus: { state: 'play', expr, want, progress: 0, misses: 0 }, msg: `Bonus: play ${expr.join(' ')} on the keys.` })
+}
+export function setKode(on: boolean) { ksave('memory', { on, wins: get().kodeWins }); set({ kode: on }) }
+
 function onKey(e: { note: number; on: boolean; velocity: number }) {
   const s = get()
+  if (s.phase === 'done' && s.bonus.state === 'play' && e.on && e.velocity > 0) { bonusKey(e); return }
   if (s.phase !== 'play' || s.stage !== 'claim' || !e.on || e.velocity <= 0) return
   const ph = s.phrases[s.cards[s.picks[0]]?.pair]
   if (!ph) return
@@ -109,7 +152,7 @@ export function start(level: Level, ear: boolean) {
   const cards: Card[] = shuffle(Array.from({ length: pairs * 2 }, (_, i) => ({ id: i, pair: i % pairs, up: false, done: false }))).map((c, i) => ({ ...c, id: i }))
   attach()
   void def
-  set({ phase: 'play', level, ear, cards, phrases, picks: [], stage: 'idle', flips: 0, misses: 0, matched: 0, startedAt: 0, endedAt: 0, progress: 0, stars: 0, newBest: false, msg: 'Flip a card to hear its tune.', save: loadSave() })
+  set({ phase: 'play', level, ear, cards, phrases, picks: [], stage: 'idle', flips: 0, misses: 0, matched: 0, startedAt: 0, endedAt: 0, progress: 0, stars: 0, newBest: false, msg: 'Flip a card to hear its tune.', save: loadSave(), vars: [], bonus: noBonus() })
 }
 
 export function flip(i: number) {
@@ -148,7 +191,7 @@ export function replay() {
 }
 
 export function stop() { run.token++; clearTimers(); run.off?.(); run.off = null; try { stopAll() } catch { /* ignore */ } clearGuide() }
-export function toMenu() { stop(); set({ ...initial(), phase: 'menu' }) }
+export function toMenu() { stop(); set({ ...initial(), phase: 'menu', kode: get().kode, kodeWins: get().kodeWins }) }
 export function retry() { const s = get(); start(s.level, s.ear) }
 
 if (import.meta.hot) {

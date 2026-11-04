@@ -3,6 +3,9 @@ import { useJudge } from '../../../music/judge'
 import { PhraseHud } from '../PhraseHud'
 import { Game } from './engine'
 import { LEVELS, MAX_LIVES, bossPieces, loadSave, type Mode, type Snapshot } from './data'
+import { KodePowerCard } from '../gamekode/KodePowerCard'
+import { kload, ksave } from '../gamekode/kodeStore'
+import { expandPattern } from '../gamekode/kodeLogic'
 import './zombielanes.css'
 
 const bossTitle = (id: string) => bossPieces().find((p) => p.id === id)?.title ?? 'a tune'
@@ -64,6 +67,7 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
                 {bossPieces().map((p) => <option key={p.id} value={p.id}>{p.id === 'ode' ? 'Ode to Joy (default)' : p.title}</option>)}
               </select>
             </label>
+            <TurretKode />
             {snap.save.best[snap.mode] > 0 && <div className="zl-best">🏆 Best score: {snap.save.best[snap.mode].toLocaleString()}</div>}
             <div className="zl-row">
               <button className="zl-btn go" onClick={() => g()?.start(snap.mode, wave)}>▶ Start</button>
@@ -196,5 +200,30 @@ function BoomMeter() {
       <div className="zl-boom-bar"><i style={{ width: charge * 100 + '%' }} /></div>
       <span>{full ? 'BOOM READY!' : 'BOOM'}</span>
     </div>
+  )
+}
+
+interface TurretSave { on: boolean; pattern: number[]; repeat: number; event: boolean }
+const TURRET_DEFAULT: TurretSave = { on: false, pattern: [1, 3, 2, 4], repeat: 2, event: false }
+
+/** Kode power: program a helper turret. Pick lanes in order (a sequence), say how many times to repeat (a loop), add an event rule. */
+function TurretKode() {
+  const [p, setP] = useState<TurretSave>(() => ({ ...TURRET_DEFAULT, ...kload<Partial<TurretSave>>('zombielanes', {}) }))
+  const upd = (n: Partial<TurretSave>) => { const next = { ...p, ...n }; setP(next); ksave('zombielanes', next) }
+  const steps = expandPattern(p.pattern, p.repeat)
+  return (
+    <KodePowerCard game="zombielanes" on={p.on} onToggle={() => upd({ on: !p.on })} status={p.on ? undefined : 'Off: the game plays exactly as before.'}>
+      <div className="gk-row" role="group" aria-label="Add a lane to the turret pattern">
+        <span>Lanes (left to right):</span>
+        {[1, 2, 3, 4].map((l) => <button key={l} className="gk-btn" disabled={p.pattern.length >= 6} onClick={() => upd({ pattern: [...p.pattern, l] })} aria-label={`Add lane ${l}`}>{l}</button>)}
+        <button className="gk-btn" onClick={() => upd({ pattern: p.pattern.slice(0, -1) })} aria-label="Remove the last lane">⌫</button>
+      </div>
+      <div className="gk-row" role="group" aria-label="Repeat">
+        <span>Repeat:</span>
+        {[1, 2, 3, 4].map((n) => <button key={n} className="gk-btn" aria-pressed={p.repeat === n} onClick={() => upd({ repeat: n })}>×{n}</button>)}
+      </div>
+      <label className="gk-row"><input type="checkbox" checked={p.event} onChange={(e) => upd({ event: e.target.checked })} /> Event rule: <i>when a zombie reaches the line, fire that lane</i> (3 shots a wave)</label>
+      <div className="gk-row">Your program: <code className="gk-code" data-testid="turret-prog">repeat {p.repeat} {'{ fire ' + p.pattern.join(' ') + ' }'}</code> = {steps.join(' ') || 'nothing yet'}</div>
+    </KodePowerCard>
   )
 }

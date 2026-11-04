@@ -44,3 +44,7 @@
 @media (max-width: 600px) { .pm-levels { grid-template-columns: 1fr; } .pm-level { padding: 8px; } .pm-menu { gap: 8px; } .pm-menu h2 { font-size: 22px; } .pm-title { font-size: 14px; } }
 @media (prefers-reduced-motion: reduce) { .pm-in { transition: none; } .pm-confetti i { animation: none; top: 6%; } }
 .gm-card.gm-memory { --cat: #f0a030; }
+
+/* Kode cards (opt-in variables) */
+.pm-vars { padding: 4px 12px; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+.pm-kode { margin: 6px 0; }

@@ -14,6 +14,8 @@ import {
 } from './drumEngine'
 import { drumInput, drumLabels, hintFor, useDrumPage, useDrumView, voicePad } from './drumSurface'
 import { drumsOpen } from './pedalKick'
+import { CodeMenu } from '../codeexport/CodeMenu'
+import { drumCode } from '../codeexport/sources'
 
 // The drum machine panel: 8 big pads (2 rows of 4, like the controller), a 16-step grid, and the basics (PLAY, REC, tempo, swing, kit).
 // Pads on screen use the same input path as the controller's pads (drumInput), so hold-to-clear and note repeat work the same.
@@ -173,6 +175,7 @@ function Opts() {
       </div>
       <div className="dp-opts">
         <span className="dp-grp" role="group" aria-label="Starter beats">Start with {STARTERS.map((s) => <Chip key={s.id} onClick={() => { unlockDrums(); loadStarter(s.id) }} title={`${s.name}, ${s.bpm} bpm`}>{s.name}</Chip>)}</span>
+        <CodeMenu build={drumCode} what="beat" />
       </div>
       <details className="dp-more">
         <summary>Shape the {VOICES[D.lastVoice].label.toLowerCase()} sound</summary>

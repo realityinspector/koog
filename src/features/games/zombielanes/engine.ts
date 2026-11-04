@@ -9,6 +9,8 @@ import { setScore, setScorePos, clearScore } from '../../../music/scoreStore'
 import { GameLh } from '../../songs/gameLh'
 import { RUNGS, type Phrase, type Rung } from '../../../music/phrases'
 import { RULES, clampRung, easier, levelOf, masteryOf, rungIx, songPhrases, startAttempt, recordRung, stopPhrase, demo as singPhrase, wrongNote, ord, pcName, lhFor, scoreIdxs, phraseSongId, type AttemptHandle } from '../phraseKit'
+import { kload, markConcept } from '../gamekode/kodeStore'
+import { EVENT_P, EVENT_SHOTS, expandPattern, turretLane, turretSecs, TURRET_LANES, type TurretProg } from '../gamekode/kodeLogic'
 import { buildLayout, noteHue } from '../../keyboard/layout'
 import { Sprites, SKINS, EXTRAS, ZH, ZFEET, KH, KFEET, SIGN_Y, KSIGN_Y, CONFETTI_FRAMES } from './sprites'
 import { renderBackground, renderVignette, type Lane } from './background'
@@ -114,6 +116,10 @@ export class Game {
   private cg: Conga | null = null
   private coach: Snapshot['coach'] = null
   private coachUntil = 0
+  /** Kode power (opt-in): a helper turret runs a lane program while you play. Loop + sequence + event. */
+  private tur: { prog: TurretProg; steps: number[]; i: number; next: number; evShots: number; evAt: number } | null = null
+  /** dev/test log of every turret shot: which lane, why, and when (game clock) */
+  turLog: { lane: number; src: 'seq' | 'event'; hit: boolean; t: number }[] = []
 
   // effects
   private particles: Particle[] = []
@@ -222,6 +228,14 @@ export class Game {
     if (this.congaRun) { this.beginConga(); return }
     this.spawnLeft = lv.count
     this.spawnTimer = 0.7
+    this.tur = null
+    const kp = kload<{ on?: boolean; pattern?: number[]; repeat?: number; event?: boolean }>('zombielanes', {})
+    if (kp.on && !lv.boss && Array.isArray(kp.pattern) && kp.pattern.length) {
+      const prog: TurretProg = { pattern: kp.pattern.filter((n) => n >= 1 && n <= TURRET_LANES).slice(0, 6), repeat: kp.repeat ?? 1, event: !!kp.event }
+      const steps = expandPattern(prog.pattern, prog.repeat)
+      this.tur = { prog, steps, i: 0, next: this.clock + turretSecs, evShots: EVENT_SHOTS, evAt: this.clock + 2 }
+      this.turLog = []
+    }
     if (lv.boss) {
       const bp = bossPiece(this.save.boss)
       const melody = bp.melody
@@ -239,7 +253,7 @@ export class Game {
   private resetField() {
     clearScore('zombielanes')
     if (this.cg) { this.cg.att?.cancel(); stopPhrase() }
-    this.cg = null; this.coach = null
+    this.cg = null; this.coach = null; this.tur = null
     this.zombies = []; this.boss = null; this.spawned = 0; this.spawnLeft = 0; this.bag = []; this.chordIx = 0
     this.ending = false; this.later = null; this.recent = []; this.pending = []
     this.particles = []; this.pops = []; this.beams = []; this.dying = []; this.rings = []; this.press.clear()
@@ -931,6 +945,7 @@ export class Game {
           z.age += dt; z.walk += dt * 5.2; z.p += speed
           if (z.p >= 1) this.eat(z)
         }
+        if (!this.ending) this.turretTick()
         if (!this.ending && this.spawnLeft <= 0 && this.zombies.length === 0 && this.spawned > 0) this.waveClear()
       }
       if (this.cg) this.congaGuide(); else this.updateGuide()
@@ -962,6 +977,63 @@ export class Game {
     }
     for (let i = this.rings.length - 1; i >= 0; i--) { this.rings[i].age += dt; if (this.rings[i].age >= this.rings[i].max) this.rings.splice(i, 1) }
     for (const [n, t] of this.press) if (this.clock - t > 0.4) this.press.delete(n)
+  }
+
+  // ---------------- Kode power: the turret program ----------------
+  private turretTick() {
+    const t = this.tur
+    if (!t) return
+    if (t.i < t.steps.length && this.clock >= t.next) {
+      const lane = t.steps[t.i]
+      if (t.i === 0) markConcept('zombielanes', 'sequence')
+      if (t.i >= t.prog.pattern.length && t.prog.repeat > 1) markConcept('zombielanes', 'loop')
+      t.i++; t.next += turretSecs
+      this.turretFire(lane, 'seq')
+    }
+    if (t.prog.event && t.evShots > 0 && this.clock >= t.evAt) {
+      // EVENT rule: when a zombie reaches the line, fire that lane
+      let z: Zombie | null = null
+      for (const q of this.zombies) if (q.kind === 'note' && q.p >= EVENT_P && (!z || q.p > z.p)) z = q
+      if (z) {
+        t.evShots--; t.evAt = this.clock + 1
+        markConcept('zombielanes', 'event')
+        this.turretFire(turretLane(this.zombieCenter(z).x, this.w), 'event')
+      }
+    }
+  }
+  private turretFire(lane: number, src: 'seq' | 'event') {
+    let z: Zombie | null = null
+    for (const q of this.zombies) if (q.kind === 'note' && turretLane(this.zombieCenter(q).x, this.w) === lane && (!z || q.p > z.p)) z = q
+    this.turLog.push({ lane, src, hit: !!z, t: Math.round(this.clock * 100) / 100 })
+    if (!z) { this.pop('turret ' + lane + ' ...', this.w * (lane - 0.5) / TURRET_LANES, this.h - 60, '#9ff5da', 16, 0.7); return }
+    const c = this.zombieCenter(z)
+    const kl = this.laneFor(z.note)
+    if (kl) this.addBeam(kl, c.y, false, c.x, false)
+    this.zombies.splice(this.zombies.indexOf(z), 1)
+    this.dying.push({ z, age: 0, big: false, x: c.x, y: c.y })
+    this.score += 50
+    this.pop(src === 'event' ? 'EVENT! +50' : 'TURRET +50', c.x, c.top + 6, '#9ff5da', 22)
+    this.emit()
+  }
+  private drawTurret() {
+    const t = this.tur, ctx = this.ctx
+    if (!t) return
+    const y = this.h - 26
+    ctx.save()
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 15px system-ui, sans-serif'
+    const nextLane = t.i < t.steps.length ? t.steps[t.i] : 0
+    for (let l = 1; l <= TURRET_LANES; l++) {
+      const x = (this.w * (l - 0.5)) / TURRET_LANES
+      ctx.fillStyle = l === nextLane ? '#9ff5da' : 'rgba(20,50,44,.85)'
+      ctx.strokeStyle = '#9ff5da'; ctx.lineWidth = 2
+      ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+      ctx.fillStyle = l === nextLane ? '#0d2a22' : '#9ff5da'
+      ctx.fillText(String(l), x, y + 1)
+    }
+    const left = t.steps.slice(t.i).join(' ')
+    ctx.font = '700 13px ui-monospace, Menlo, monospace'; ctx.fillStyle = 'rgba(159,245,218,.95)'
+    ctx.fillText(left ? 'turret: ' + left : 'turret program finished', this.w / 2, y - 26)
+    ctx.restore()
   }
 
   // ---------------- effects spawners ----------------
@@ -1072,6 +1144,7 @@ export class Game {
 
     // conga strike line
     if (this.cg && this.phase === 'play') this.drawStrikeLine()
+    if (this.tur && this.phase === 'play' && !this.boss) this.drawTurret()
     // zombies, far ones first
     const zs = this.cg ? this.cg.zs : this.zombies
     zs.sort((a, b) => a.p - b.p)

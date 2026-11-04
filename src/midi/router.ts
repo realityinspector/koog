@@ -2,7 +2,7 @@
 // role calls subscribe(role, ...). send(role, bytes) goes the other way, to the output of a connected device
 // with that role. src/music/devices.ts keeps the old onDjMessage/emitDj/sendToDj names as thin wrappers.
 // Long-lived state is kept in import.meta.hot.data so editing this file never drops subscribers.
-export type Role = 'piano' | 'dj' | 'surface' | 'loop' | 'drums' | 'off'
+export type Role = 'piano' | 'dj' | 'surface' | 'loop' | 'drums' | 'gamepads' | 'off'
 export type MidiListener = (data: Uint8Array, timeStamp: number, deviceId: string) => void
 export interface PortInfo { name: string; role: Role; connected: boolean }
 

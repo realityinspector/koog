@@ -4,7 +4,7 @@ import { SONGS, type Song } from '../../songs/songs'
 import { pload, psave } from '../../../profile/profile'
 import type { Rung } from '../../../music/phrases'
 
-export type Phase = 'menu' | 'bow' | 'call' | 'echo' | 'move' | 'sub' | 'lesson' | 'promo' | 'flow' | 'flowend'
+export type Phase = 'menu' | 'bow' | 'call' | 'echo' | 'move' | 'sub' | 'lesson' | 'promo' | 'flow' | 'flowend' | 'drill'
 
 export const BELTS = [
   { id: 'white', name: 'White', color: '#f4f4f0' },

@@ -116,7 +116,7 @@ Links are hash routes on ${APP_URL}:  ${APP_URL}#/<screen>[/<item>[/<mode>]][?<o
 - #/songs/<songId>/<wait|flow|learn>    one song; learn = the phrase ladder (listen, follow, echo, memory, in time, no sheet, both hands)
 - #/challenges/<challengeId>            one challenge
 - #/games/<gameId>                      zombies, jiujitsu, fashion, bachdoom; BachDoom takes ?level=<levelId>
-- #/beats/<beatId>   #/synth/<emulatorId>
+- #/beats/<beatId>   #/synth/<emulatorId>   #/synth/timeline
 - Drum pads (pads and a step-grid beat maker) open from the devices menu in the top bar, or the DRUMS tab in Boss mode; they have no link of their own yet.
 - #/log   the build log;  #/boss/<studio|dj|loops|drums|synth|scenes>   grown-up Boss mode (loops = the loop station);  #/gallery[/<stopId>]   the self-playing tour
 - Options: key=<c-major|a-minor|...>  visual=<scene>  palette=<theme>  modes=<band|duo|mentor|mimic|vibes>  sheet=on  sound=<sound>  rung=1..7  phrase=n  level=<id>

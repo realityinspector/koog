@@ -15,6 +15,8 @@
 //   #/synth[/<emulatorId>]                   the instruments rack, or one playable emulator open
 //   #/synth/timeline                         the year-by-year history of electronic music
 //   #/log                                    the build log
+//   #/apps[/<appId>|/mine|/badges]           the Koog Store: Kode apps to open, my apps, my coding powers (an overlay; the music screen stays as it was)
+//   #/kode                                   Koog Kode: type a pattern and it plays (docked over PLAY; the music screen stays 'play')
 //   #/boss/<studio|dj|loops|drums|synth|scenes>    Boss (adult) mode screens
 //   #/gallery[/<stopId>]                     the self-playing gallery tour (title card first; the click that starts it also unlocks audio)
 //   #/gallery/art                            Art Gallery mode: full screen, calm music, loops forever (title card first, same click rule)
@@ -39,7 +41,8 @@ export const DEFAULT_ORIGIN = 'https://koog-demo.fly.dev/'
 
 // 'gallery' (added): the self-playing tour. #/gallery opens its title card, #/gallery/<stopId> starts at that stop (ids: src/features/gallery/stops.data.ts),
 // #/gallery/art opens Art Gallery mode's card (the item 'art' is reserved: no stop may use it; pieces: src/features/gallery/art.data.ts)
-export const SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery'] as const
+// 'apps' (added): the Koog Store, a full-screen overlay. #/apps = the shelves, #/apps/<appId> = one app, #/apps/mine = my apps, #/apps/badges = my coding powers (ids: src/kode/kore registry)
+export const SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery', 'kode', 'apps'] as const
 export const BOSS_SCREENS = ['studio', 'dj', 'loops', 'drums', 'synth', 'scenes'] as const
 export const SONG_MODES = ['wait', 'flow', 'learn'] as const
 export const HELPER_MODES = ['band', 'duo', 'mentor', 'mimic', 'vibes'] as const

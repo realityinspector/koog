@@ -24,10 +24,11 @@ import { useChallengeStore } from '../features/challenges/store'
 import { isEmbed } from '../web/webDemo'
 import { panicAll } from '../music/panic'
 import { releaseAllNotes } from '../music/localNotes'
+import { setKodeDock, useKodeDock } from '../features/kode/kodeDock'
 
 void _c
 
-const KID_SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery']
+const KID_SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery', 'kode']
 const BOSS_SCREENS = ['play', 'dj', 'loops', 'drums', 'synth', 'scenes']
 
 // ---------- first key / click ----------
@@ -52,7 +53,7 @@ const isBoss = () => useProfile.getState().mode === 'dad'
 /** Everything about the current moment that a link can say. Leaves out what cannot be read back reliably. */
 export function readState(): KoogState {
   const boss = isBoss()
-  const sc = useScreen.getState().screen
+  const sc = useScreen.getState().screen === 'play' && useKodeDock.getState().open && !boss ? 'kode' : useScreen.getState().screen
   const out = useLinkOut.getState()
   const st: KoogState = { screen: (boss ? (BOSS_SCREENS.includes(sc) ? sc : 'play') : (KID_SCREENS.includes(sc) ? sc : 'play')) as Screen | BossScreen }
   if (boss) st.mode = 'boss'
@@ -106,7 +107,7 @@ let applying = false
 let forceReplace = false
 let timer = 0
 function writeNow() {
-  if (applying || galleryHash !== null) return
+  if (applying || galleryHash !== null || location.hash.startsWith('#/apps')) return // the Store overlay owns #/apps
   const want = toHash(readState())
   const cur = location.hash
   if (want === cur) return
@@ -181,7 +182,8 @@ function applyState(st: KoogState, problems: string[], opts: ApplyOpts = {}) {
     if (st.visual) useLinkIn.setState({ visual: st.visual })
     if (st.palette) useLinkIn.setState({ palette: st.palette })
   }
-  useLinkIn.setState({ screen: st.screen })
+  useLinkIn.setState({ screen: st.screen === 'kode' ? 'play' : st.screen })
+  if (!boss) setKodeDock(st.screen === 'kode')
   if (!boss) whenScreen(st.screen, token, () => {
     switch (st.screen) {
       case 'songs': useLinkIn.setState({ song: { id: st.item ?? null, mode: st.songMode, phrase: st.phrase, rung: st.rung } }); break
@@ -210,6 +212,7 @@ function applyHash() {
   const h = location.hash
   if (!h || h === '#') return applyState({ screen: 'play' }, [])
   const { state, problems } = parseHash(h)
+  if (state?.screen === 'apps' && !state.mode) return // the Store (src/features/appstore) handles it
   if (state?.screen === 'gallery' && !state.mode) { galleryHooks.open?.(state.item === 'art' && state.sub ? 'art/' + state.sub : state.item); return }
   if (state) applyState(state, problems)
 }
@@ -242,7 +245,7 @@ export function startLinks(): () => void {
   const offs: Array<() => void> = []
   const watch = (sub: (f: () => void) => unknown) => { const off = sub(schedule); if (typeof off === 'function') offs.push(off as () => void) }
   watch((f) => useScreen.subscribe(f)); watch((f) => useProfile.subscribe(f)); watch((f) => useHarmonyStore.subscribe(f))
-  watch((f) => useSheet.subscribe(f)); watch((f) => useSound.subscribe(f)); watch((f) => useDuoOpen.subscribe(f))
+  watch((f) => useSheet.subscribe(f)); watch((f) => useSound.subscribe(f)); watch((f) => useKodeDock.subscribe(f)); watch((f) => useDuoOpen.subscribe(f))
   watch((f) => useMentor.subscribe(f)); watch((f) => useVibes.subscribe(f)); watch((f) => useChallengeStore.subscribe(f))
   watch((f) => useLinkOut.subscribe(f)); watch(mimic.subscribe); watch(band.subscribe); watch(beats.subscribe)
   const onHash = () => {

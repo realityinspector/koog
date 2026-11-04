@@ -76,6 +76,7 @@ const GAME_META: Record<string, { concepts: ConceptId[]; age: number; level: num
   memory: { concepts: ['memorizing', 'ear-training', 'phrases-cadences'], age: 6, level: 2 },
   feast: { concepts: ['memorizing', 'notes', 'phrases-cadences'], age: 6, level: 2 },
   tree: { concepts: ['memorizing', 'notes', 'phrases-cadences'], age: 6, level: 2 },
+  racer: { concepts: ['memorizing', 'phrases-cadences', 'rhythm-pulse', 'ear-training'], age: 6, level: 3 },
   bachdoom: { concepts: ['memorizing', 'phrases-cadences', 'rhythm-pulse'], age: 8, level: 4 },
 }
 const EMU_META: Record<string, { concepts: ConceptId[]; blurb: string }> = {
@@ -194,7 +195,11 @@ function playActivities(): Activity[] {
       link: U({ screen: 'play', modes: [h as 'mentor'] }),
     } satisfies Activity
   })
-  return [free, sheet, ...visuals, ...helpers]
+  const kode: Activity = {
+    id: 'play-kode', kind: 'play', title: 'Koog Kode (code your music)', blurb: 'Type a tiny pattern like notes "c e g e" and it plays; edit it while it plays. Or play something and Koog writes the code for it.',
+    concepts: ['rhythm-pulse', 'notes'], ages: [9, 99], minutes: 10, level: 3, needsKeyboard: false, link: U({ screen: 'kode' }),
+  }
+  return [free, sheet, kode, ...visuals, ...helpers]
 }
 
 const activities: Activity[] = [...playActivities(), ...challengeActivities(), ...songActivities(), ...beatActivities(), ...gameActivities(), ...synthActivities()]
@@ -239,7 +244,7 @@ const concepts: Concept[] = [
     parent: 'Loud and soft, and knowing when each fits. In Koog a forearm slam fizzles until about 16 good notes charge the BOOM meter, then the same slam is a giant finale, so children learn noise has a time and place. Touch-sensitive keyboards show the difference best.',
     kid: 'Soft notes whisper and loud notes thunder. Play nicely to charge the BOOM meter, then let it rip.' },
   { id: 'style-history', title: 'Style and music history', link: L('synth-ladder'), examples: ['synth-ladder', 'synth-airhands', 'helper-mimic'],
-    parent: 'Mimic answers a phrase in styles such as Baroque, ragtime and blues, and the Synth screen is a timeline of electronic instruments from 1920 to 1983, each playable as a synthesized emulation and linked to a classical piece.',
+    parent: 'Mimic answers a phrase in styles such as Baroque, ragtime and blues, and the Synth screen has ten playable synthesized instruments, each linked to a classical piece, plus a year-by-year timeline of electronic music (#/synth/timeline).',
     kid: 'Music sounds different in every era. Hear your tune in a new style, or play the strange instruments people invented long ago.' },
   { id: 'ear-training', title: 'Ear training', link: L('challenge-majmin'), examples: ['challenge-majmin', 'challenge-echo', 'challenge-interval'],
     parent: 'Hearing what a sound is. Major or Minor asks the child to tell a happy chord from a moody one, Echo Me plays a melody that grows each round for the child to copy, and Interval Jumper asks for leaps of a given size.',
@@ -296,7 +301,8 @@ export function validateState(st: KoogState): string[] {
   const lists: Record<string, string[] | undefined> = { songs: OPTIONS.songs, challenges: OPTIONS.challenges, games: OPTIONS.games, beats: OPTIONS.beats, synth: OPTIONS.synths }
   if (st.item && st.mode !== 'boss') {
     const list = lists[st.screen]
-    if (!list) p.push(`The ${st.screen} screen does not take an item`)
+    if (!list && st.screen === 'apps') { /* registry ids: checked by the Kore */ }
+    else if (!list) p.push(`The ${st.screen} screen does not take an item`)
     else oneOf(st.item, list, st.screen === 'synth' ? 'synth' : st.screen.replace(/s$/, ''))
   }
   if (st.songMode && !(SONG_MODES as readonly string[]).includes(st.songMode)) p.push(`Unknown song mode "${st.songMode}"`)

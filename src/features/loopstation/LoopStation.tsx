@@ -10,6 +10,8 @@ import { BpmField, ConfirmChip, SimpleLooper } from './SimpleLooper'
 import { GUIDE_PATS, setGuide, unlockGuide, useGuide, type GuidePat } from './guide'
 import { currentPage, loopInput, loopLabels, setControllerPage, useLoopPage, useLoopView } from './loopSurface'
 import { useSurface } from '../controller/surface'
+import { CodeMenu } from '../codeexport/CodeMenu'
+import { loopCode } from '../codeexport/sources'
 
 // A loop-pedal style panel: track strips with one big REC/PLAY/DUB button each (coloured ring), a fader, STOP, and an LCD.
 const CIRC = 2 * Math.PI * 40
@@ -179,6 +181,7 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
               <button type="button" className="lp-chip" onClick={() => { saveSession(slot); bump((n) => n + 1) }}>SAVE</button>
               <ConfirmChip label="LOAD" disabled={!all[slot]} title="Replaces the current session" onConfirm={() => loadSession(slot)} /></span>
             <button type="button" className="lp-chip" disabled={!s.layers.some((l) => l.takes.length)} onClick={() => downloadMidi(1)} title="Download as a Standard MIDI File">⬇ .MID</button>
+            <CodeMenu build={loopCode} disabled={!s.layers.some((l) => l.takes.length)} what="loop" />
             <ConfirmChip label="CLEAR ALL" title="Clear every track" onConfirm={() => clearAll()} />
           </div>
         </details>
