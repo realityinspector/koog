@@ -420,4 +420,11 @@ export const entries: Entry[] = [
     title: '🖼️ Art Gallery mode, an honest Mentor, and composer spotting',
     body: 'Art Gallery mode turns Koog into a moving painting for a TV or a classroom projector: full screen, no buttons, the pictures drift slowly while Koog plays calm old songs all the way through, and a little museum label fades in to say what you are looking at. It loops forever, and any key hands the keys back to you. The Mentor also got more honest. It used to cheer for almost everything; now, if you mash keys, hammer one note, rush, or land on a note that does not fit, it says so and tells you how to fix it ("That was mashing, not music yet. Pick three notes and make a pattern."). Good coaches do both: praise what works, name what does not. And it can now spot composers. Play Ode to Joy and it says "That\'s Beethoven!", with the year and a fact. Play running patterns like Bach, or slow spacey chords like Satie, and it notices that style too. Musicians call that "style": the fingerprints a composer leaves on their music.',
   },
+  {
+    id: 59,
+    time: 'Afternoon',
+    stage: 'ship',
+    title: '🕺 A dancer who feels the music',
+    body: 'Someone asked: can the Vibes face make a little guy DANCE? Now it does. Tap 🕺 Dancer in VISUAL and a little dancer steps onto a stage with a spotlight. His face is the Vibes face, so he looks happy, sad, nervous or proud along with your music. And the mood picks his dance: happy music is bouncy, sad music is a slow sway, epic music is BIG moves with fists in the air, tense music makes his knees knock, calm music is gentle. Every note is a move: high notes wave an arm, low notes stomp, chords make him jump or spin, and a note outside the key makes him wobble. Play faster and he dances faster. End on the home note and he takes a bow. He is drawn from a few joints (hips, knees, elbows) that the music pulls like strings on a puppet. Animators call this "puppeteering".',
+  },
 ]

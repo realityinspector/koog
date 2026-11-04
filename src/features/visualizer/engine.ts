@@ -13,8 +13,9 @@ import { createConfetti } from './confetti'
 import { createMail } from './mail'
 import { createZombies } from './zombies'
 import { createVibes } from '../vibes/vibesScene'
+import { createDancer } from '../vibes/dancer'
 
-export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost' | 'mail' | 'confetti' | 'zombie' | 'vibes'
+export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost' | 'mail' | 'confetti' | 'zombie' | 'vibes' | 'dancer'
 
 // Background themes (request #7: "brighter and more fun"). Colours drift slowly, never flash.
 export type Theme = 'rainbow' | 'candy' | 'ocean' | 'sunset' | 'night' | 'galaxy'
@@ -292,7 +293,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   const ghosts = createGhosts(reduced)
   const sparkles = createSparkles(reduced)
   // plug-in scenes (requests #17, #18): each one owns its own drawing; see scenes.ts
-  const scenes: Partial<Record<Mode, Scene>> = { mail: createMail(reduced), confetti: createConfetti(reduced), zombie: createZombies(reduced), vibes: createVibes(reduced) }
+  const scenes: Partial<Record<Mode, Scene>> = { mail: createMail(reduced), confetti: createConfetti(reduced), zombie: createZombies(reduced), vibes: createVibes(reduced), dancer: createDancer(reduced) }
   const sceneList = Object.values(scenes) as Scene[]
   let lastSceneChord = 0
   let streak = 0
@@ -953,7 +954,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       held.set(note, { x, y: h, hue, velocity: v, kind })
       bars.push({ note, x, top: h, bottom: h, hue: kind === 'spicy' ? spicyHue : kind === 'tonic' ? 45 : hue, kind, held: true, width: Math.max(8, (w / Math.max(12, hi - lo + 1)) * 0.7), alpha: 0.5 + v * 0.5, ...tag })
     }
-    if (mode !== 'mail' && mode !== 'zombie' && mode !== 'vibes') labels.push({ text: PC_NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue, nt: note })
+    if (mode !== 'mail' && mode !== 'zombie' && mode !== 'vibes' && mode !== 'dancer') labels.push({ text: PC_NAMES[note % 12] + (Math.floor(note / 12) - 1) + (kind === 'tonic' ? ' ★' : ''), x, y: (held.get(note)?.y ?? h) - 18, life: 0, hue: kind === 'spicy' ? 270 : hue, nt: note })
     if (labels.length > 24) labels.shift()
     if (sparkleOn && mode !== 'ghost' && !scenes[mode]?.ownBackdrop) sparkles.burst(x, held.get(note)?.y ?? h - 40, v)
     emojiFor(note, v, kind)

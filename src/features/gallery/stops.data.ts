@@ -61,6 +61,7 @@ export const STOPS: Stop[] = [
   scene('play-mail', 'Mail', 'mail', 'galaxy', 'Each note pops out of an envelope with its letter name on it.', 'Note names, A to G.', SLOW),
   scene('play-confetti', 'Confetti', 'confetti', 'rainbow', 'A party for every note, in gentle bursts.', 'Playing in key sounds like a party.', SCALE),
   scene('play-zombies', 'Zombies', 'zombie', 'night', 'Friendly zombies shuffle in and wobble to your notes.', 'Rhythm: notes spaced evenly feel like a walk.', PENT),
+  scene('play-dancer', 'Dancer', 'dancer', 'candy', 'A little dancer moves to the mood: happy music is bouncy, sad music is a slow sway, chords make big moves.', 'Music has moods, and you can dance them.', ARP),
   { id: 'play-spicy', room: 'Play', title: 'In key or spicy', seconds: 10, state: play('fireworks', 'rainbow'),
     perf: { k: 'notes', seq: 'C4:.5 E4 G4 E4 C5:1 F#4:.5 G4:1 R:.5 D4:.5 F4 A4 F4 D5:1 G#4:.5 A4:1 R:1', bpm: 90, vel: 70, loop: true, gap: 2 },
     says: 'Notes that belong to the key burst gold. A note from outside the key goes "spicy".', learns: 'What a key is, and how an odd note makes tension.' },

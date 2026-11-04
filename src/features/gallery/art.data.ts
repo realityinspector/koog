@@ -47,6 +47,7 @@ export const PIECES: Piece[] = [
   scene('art-fire', 'Fire', 'fire', 'sunset', 'grace', 'Steady playing keeps the little flames alive.'),
   scene('art-confetti', 'Confetti', 'confetti', 'rainbow', 'oldmac', 'A small party for every note, in gentle bursts.'),
   scene('art-zombies', 'Zombies', 'zombie', 'night', 'saints', 'Friendly zombies shuffle in and sway to the beat.'),
+  scene('art-dancer', 'Dancer', 'dancer', 'candy', 'oldmac', 'A little dancer feels the mood: bright tunes make him bounce, and a cadence makes him bow.'),
   scene('art-sheet', 'Sheet music', 'rise', 'galaxy', 'minuet', 'The staff writes down every note, as it is played.', { sheet: true }),
 
   // ---------------------------------------------------------------- Feel: music has moods, and friends

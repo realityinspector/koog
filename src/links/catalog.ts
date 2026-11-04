@@ -180,8 +180,8 @@ function playActivities(): Activity[] {
   const visuals: Activity[] = D.visuals.map((r) => {
     const id = s(r.id)
     return {
-      id: 'visual-' + id, kind: 'visual', title: 'Free play: ' + s(r.label), blurb: id === 'vibes' ? 'Chords turn into a face that shows the mood.' : `Play and watch the ${s(r.label).toLowerCase()} react to every note.`,
-      concepts: id === 'vibes' ? ['mood-emotion', 'chords'] : ['keys-scales', 'notes'], ages: [4, 99], minutes: 4, level: 1, needsKeyboard: false, link: U({ screen: 'play', visual: id }),
+      id: 'visual-' + id, kind: 'visual', title: 'Free play: ' + s(r.label), blurb: id === 'vibes' ? 'Chords turn into a face that shows the mood.' : id === 'dancer' ? 'A little dancer moves to the mood of your music: happy is bouncy, sad is a slow sway.' : `Play and watch the ${s(r.label).toLowerCase()} react to every note.`,
+      concepts: id === 'vibes' ? ['mood-emotion', 'chords'] : id === 'dancer' ? ['mood-emotion', 'rhythm-pulse'] : ['keys-scales', 'notes'], ages: [4, 99], minutes: 4, level: 1, needsKeyboard: false, link: U({ screen: 'play', visual: id }),
     } satisfies Activity
   })
   const helpers: Activity[] = D.helpers.filter((h) => !UNLISTED_HELPERS.includes(h)).map((h) => {

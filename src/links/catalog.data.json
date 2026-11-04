@@ -1079,6 +1079,10 @@
   {
    "id": "vibes",
    "label": "Vibes"
+  },
+  {
+   "id": "dancer",
+   "label": "Dancer"
   }
  ],
  "palettes": [

@@ -15,6 +15,7 @@ export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'confetti', icon: '🎉', label: 'Confetti' },
   { id: 'zombie', icon: '🧟', label: 'Zombies' },
   { id: 'vibes', icon: '😀', label: 'Vibes' },
+  { id: 'dancer', icon: '🕺', label: 'Dancer' },
 ]
 
 const SWATCH: Record<Theme, string> = {
