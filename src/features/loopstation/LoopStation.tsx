@@ -4,7 +4,7 @@ import { ControllerPic } from '../dj/Controller'
 import { setLink, tapTempo, useMaster } from '../../music/masterClock'
 import {
   INSTRUMENTS, LEN_CHOICES, buttonDown, buttonUp, canFilter, clearAll, downloadMidi, holdProgress, instLabel, layerProgress, lcdInfo, listSessions, loadSession,
-  registerLooperView, saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
+  registerLooperView, saveSession, select, setLayerInst, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, stopLayer, timingInfo, toggleMute, toggleSolo, togglePlay, useLoop, type Layer,
 } from './loopEngine'
 import { BpmField, ConfirmChip, SimpleLooper } from './SimpleLooper'
 import { GUIDE_PATS, setGuide, unlockGuide, useGuide, type GuidePat } from './guide'
@@ -119,13 +119,13 @@ function Lcd() {
   const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following)
   const [, tick] = useState(0)
   useEffect(() => { const h = window.setInterval(() => tick((n) => n + 1), 100); return () => clearInterval(h) }, [])
-  const L = s.layers[s.sel], info = lcdInfo()
+  const L = s.layers[s.sel], info = lcdInfo(), ti = timingInfo()
   const mode = L.pend ? 'WAIT' : WORD[L.state]
   const pos = info.running ? (info.counting ? `COUNT ${info.count}` : `${String(info.bar).padStart(2, '0')}.${info.beat}`) : '--.-'
   return (
     <div className="lp-lcd" role="status" aria-live="off">
-      <div className="l1"><span>TRACK {s.sel + 1}</span><b>{mode}</b><span>{pos}{info.bars ? ' / ' + (Math.round(info.bars * 10) / 10) + ' BARS' : ''}</span></div>
-      <div className="l2"><span>{Math.round(bpm * 10) / 10} BPM{following ? ' DJ' : ''}</span><span>{s.recNext === 'play' ? 'REC>PLAY' : 'REC>DUB'}</span><span>{s.sync ? 'SYNC' : 'FREE'}</span><span>{s.measure ? 'MEASURE' : 'LIVE'}</span><span>{g.on ? 'GUIDE ' + g.pat.toUpperCase() : 'GUIDE OFF'}</span></div>
+      <div className="l1"><span>TRACK {s.sel + 1}</span><b>{mode}</b><span>{pos}{info.bars ? ' / ' + (Math.round(info.bars * 10) / 10) + ' BARS' : ''}</span>{ti.len ? <span>{ti.len.toUpperCase()}</span> : null}</div>
+      <div className="l2"><span>{Math.round(bpm * 10) / 10} BPM{following ? ' DJ' : ''}</span><span>{s.recNext === 'play' ? 'REC>PLAY' : 'REC>DUB'}</span><span>{s.sync ? 'SYNC' : 'FREE'}</span><span>{s.measure ? 'MEASURE' : 'LIVE'}</span><span>{g.on ? 'GUIDE ' + g.pat.toUpperCase() : 'GUIDE OFF'}</span><span>{s.metro ? 'METRO' : ''}</span><span>{ti.mode === 'free' ? 'TEMPO FOLLOWS LOOP' : 'BAR SNAP'}</span></div>
     </div>
   )
 }
@@ -138,14 +138,15 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
   const s = useLoop(), g = useGuide(), bpm = useMaster((m) => m.bpm), following = useMaster((m) => m.following), link = useMaster((m) => m.link)
   const [slot, setSlot] = useState('1'), [, bump] = useState(0)
   const all = listSessions()
+  const ti = timingInfo(), tempoTitle = following ? 'The DJ decks set the tempo' : ti.tempoLocked ? 'Clear to change tempo' : 'Beats per minute'
   return (
     <>
       <div className="lp-top">
         <Lcd />
         <button type="button" className={'lp-all' + (s.running ? ' on' : '')} aria-pressed={s.running} onClick={() => { unlockGuide(); togglePlay() }} title="ALL START / STOP">{s.running ? '■ ALL STOP' : '▶ ALL START'}</button>
         <span className="lp-grp"><b>BPM</b>
-          <BpmField bpm={bpm} disabled={following} />
-          <button type="button" className="lp-chip" onClick={() => tapTempo()} title="Tap tempo">TAP</button></span>
+          <BpmField bpm={bpm} disabled={following || ti.tempoLocked} title={tempoTitle} />
+          <button type="button" className="lp-chip" disabled={following || ti.tempoLocked} onClick={() => tapTempo()} title={ti.tempoLocked ? 'Clear to change tempo' : 'Tap tempo'}>TAP</button></span>
       </div>
       <div className="lp-set">
         <span className="lp-grp"><b>REC →</b>
@@ -155,10 +156,13 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
         <Seg on={s.measure} onClick={() => setOpt('measure', !s.measure)} title="MEASURE: REC / DUB / PLAY wait for the next bar line (the ring blinks while waiting)">MEASURE</Seg>
         <span className="lp-grp"><Seg on={g.on} onClick={() => { unlockGuide(); setGuide({ on: !g.on }) }} title="Rhythm guide: a light drum pattern on the loop's tempo">GUIDE</Seg>
           <select aria-label="Guide pattern" value={g.pat} onChange={(e) => setGuide({ pat: e.target.value as GuidePat })}>{GUIDE_PATS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></span>
+        <Seg on={s.metro} onClick={() => { unlockGuide(); setOpt('metro', !s.metro) }} title="Metronome: a soft click every beat, accent on beat 1, while the looper runs (not recorded)">🔔 METRO</Seg>
+        <small className="lp-timing" data-timing={ti.mode}>{ti.words}</small>
         <Seg on={more} onClick={() => setMore(!more)} title="Show tracks 6 to 8">{more ? '◂ 1-5' : '6-8 ▸'}</Seg>
         <details className="lp-more"><summary title="More settings: quantise, bars, save / load, export">⋯ MORE</summary>
           <div className="lp-more-body">
             <label>Count-in <select value={s.countIn} onChange={(e) => setOpt('countIn', Number(e.target.value))}>{[0, 1, 2].map((n) => <option key={n} value={n}>{n} bar{n === 1 ? '' : 's'}</option>)}</select></label>
+            <label title="Metronome level (under the guide's own safety cap)">Metronome <input type="range" min={0} max={1} step={0.01} value={s.metroVol} aria-label="Metronome volume" onChange={(e) => setOpt('metroVol', Number(e.target.value))} /></label>
             <label title="Loop main volume (under every engine's own safety cap)">Main <input type="range" min={0} max={1} step={0.01} value={s.master} aria-label="Loop main volume" onChange={(e) => setOpt('master', Number(e.target.value))} /></label>
             <label>Quantise <select value={s.quant} onChange={(e) => setOpt('quant', Number(e.target.value))}>{QUANTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
             <label>Bars <select value={s.lenBars} onChange={(e) => setLenBars(Number(e.target.value))}><option value={0}>auto</option>{LEN_CHOICES.map((n) => <option key={n} value={n}>{n}</option>)}</select></label>

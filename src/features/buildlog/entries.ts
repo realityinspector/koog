@@ -441,4 +441,11 @@ export const entries: Entry[] = [
     title: '🎵 Songs you can actually see, and a Gallery button',
     body: 'The SONGS screen was squished: the words sat right on top of the falling notes, and there were two keyboards fighting for room. Now the falling notes get almost the whole screen, the words are one karaoke line above them, and there is just one keyboard, lined up with the notes (you can click it too). The GAMES list also stopped hiding its top row, and games now fit the window with the keys still showing. And there is a new 🖼 Gallery button at the top: pick the guided tour, or Art Gallery mode. Designers call making the important thing big and moving everything else out of its way "visual hierarchy".',
   },
+  {
+    id: 62,
+    time: 'Night',
+    stage: 'ship',
+    title: '🔔 A looper that keeps time like a real pedal, with a metronome',
+    body: 'The looper now works like the classic guitar looper pedals. Tap to record, tap to loop, tap to add a layer. Press twice fast to stop. Hold for 2 seconds to undo, and hold again to bring it back. With the beat or the new 🔔 metronome on, loops snap to whole bars, so they always land on beat 1. With everything off, the loop is exactly as long as you played, and Koog works out the tempo from it, so turning the beat on later still lines up. Each layer can be a different instrument too: pick "Next layer sound" and stack a bass, a piano and an organ. Musicians call staying exactly in time "being locked to the grid".',
+  },
 ]

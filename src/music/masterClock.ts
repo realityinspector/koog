@@ -15,7 +15,7 @@ import { bpm as beatsBpm, getState as beatsState, setBpmAdj, subscribe as beatsS
 
 export interface ClockBeat { n: number; beat: number; bar: number; bpm: number; time: number }
 type BeatFn = (b: ClockBeat) => void
-interface Anchor { t0: number; b0: number; bpm: number; running: boolean; nextBeat: number; taps: number[] }
+interface Anchor { t0: number; b0: number; bpm: number; running: boolean; nextBeat: number; taps: number[]; epoch?: number }
 interface Hot { store?: ReturnType<typeof make>; a?: Anchor; beat?: Set<BeatFn>; bar?: Set<BeatFn>; tick?: Set<(now: number) => void>; timer?: number; offBeats?: () => void }
 const hot = (import.meta.hot?.data ?? {}) as Hot
 
@@ -36,6 +36,9 @@ export const msPerBeat = () => 60000 / A.bpm
 export const beatPos = (t = now()) => (A.running ? A.b0 + (t - A.t0) / msPerBeat() : A.b0)
 export const timeOfBeat = (b: number) => A.t0 + (b - A.b0) * msPerBeat()
 export const isRunning = () => A.running
+/** bumps whenever the grid JUMPS (start, resetPhase, realign): schedulers that keep their own beat pointer resync on a change */
+export const clockEpoch = () => A.epoch ?? 0
+const bump = () => { A.epoch = (A.epoch ?? 0) + 1 }
 export const getBpm = () => A.bpm
 export const onBeat = (fn: BeatFn) => { beatFns.add(fn); return () => { beatFns.delete(fn) } }
 export const onBar = (fn: BeatFn) => { barFns.add(fn); return () => { barFns.delete(fn) } }
@@ -84,7 +87,7 @@ function tick(full = false) {
 
 export function startMaster() {
   if (A.running) return
-  A.running = true; A.t0 = now(); A.b0 = 0; A.nextBeat = 0
+  A.running = true; A.t0 = now(); A.b0 = 0; A.nextBeat = 0; bump()
   useMaster.setState({ running: true })
   tick(true) // join the DJ grid straight away (a whole-beat shift is fine before anything plays)
   if (!timer) timer = window.setInterval(() => tick(), 20)
@@ -99,7 +102,20 @@ export function stopMaster() {
 /** put beat 0 at this very moment (a free-running master only: with the DJ playing the grid belongs to the DJ) */
 export function resetPhase() {
   if (!A.running || useMaster.getState().following) return
-  A.t0 = now(); A.b0 = 0; A.nextBeat = 0
+  A.t0 = now(); A.b0 = 0; A.nextBeat = 0; bump()
+}
+/**
+ * Re-anchor the grid: beat `beat` sounds(/sounded) at performance.now() time `atMs`, at exactly `bpm` (not rounded, so a loop of
+ * n bars stays n bars). The looper uses it in free time: the tempo is worked out from the first loop, and the loop start becomes a downbeat.
+ * Ignored while following the DJ (the grid is his).
+ */
+export function realign(bpm: number, atMs: number, beat: number) {
+  if (!A.running || useMaster.getState().following) return false
+  A.bpm = clampBpm(bpm); A.t0 = atMs; A.b0 = beat
+  A.nextBeat = Math.ceil(beatPos(now()) - 1e-6); bump()
+  useMaster.setState({ bpm: Math.round(A.bpm * 10) / 10 })
+  pushToBeats()
+  return true
 }
 /** tap tempo: average of the last few gaps; a pause over 2 s starts a fresh count */
 export function tapTempo(at = now()) {

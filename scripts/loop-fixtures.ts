@@ -2,7 +2,8 @@
 // Pure functions only (src/features/loopstation/loopCore.ts), no audio or DOM.
 //   npx --no-install tsx scripts/loop-fixtures.ts        (exit 1 on any failure)
 import {
-  BIG_DOUBLE_MS, POST_ROLL_MS, PRE_ROLL_MS, bigAfter, bigNext, capturePos, classifyPress, hasNear, postRollPos, preRollBeats, snapLoopLen, wrapNotes,
+  BIG_DOUBLE_MS, BIG_HOLD_MS, POST_ROLL_MS, PRE_ROLL_MS, TIMING_WORDS, bigAfter, bigNext, capturePos, classifyPress, deriveFreeTempo, hasNear, holdChoice, lockedStartBeat,
+  loopLenLabel, postRollPos, preRollBeats, snapLoopLen, timingMode, wrapNotes,
   type BigState, type Gesture,
 } from '../src/features/loopstation/loopCore'
 
@@ -42,12 +43,75 @@ eq('a repeat of the first note is not doubled', hasNear(take, 60, 7.9, 8), true)
 eq('a different note is kept', hasNear(take, 62, 0.1, 8), false)
 
 // ---- loop length ----
-eq('free: exactly what you played (to 1/16)', snapLoopLen(5.3, false), 5.25)
-eq('free: at least one beat', snapLoopLen(0.2, false), 1)
+eq('unsynced: exactly what you played (no rounding)', snapLoopLen(5.3, false), 5.3)
+eq('unsynced: at least a quarter beat', snapLoopLen(0.1, false), 0.25)
 eq('click on: whole bars (a bit late)', snapLoopLen(8.6, true), 8)
 eq('click on: whole bars (a bit early)', snapLoopLen(7.4, true), 8)
 eq('click on: never shorter than a bar', snapLoopLen(1.2, true), 4)
 eq('never longer than 32 beats', snapLoopLen(90, false), 32)
+// nearest whole bar (half way rounds up)
+eq('bars: 3.7 beats -> 1 bar', snapLoopLen(3.7, true), 4)
+eq('bars: 5.9 beats (1.475 bars) -> 1 bar', snapLoopLen(5.9, true), 4)
+eq('bars: 6.1 beats (1.525 bars) -> 2 bars', snapLoopLen(6.1, true), 8)
+eq('bars: exactly 1.5 bars rounds up', snapLoopLen(6, true), 8)
+eq('bars: stopped on beat 4 of bar 2 -> 2 bars', snapLoopLen(7.1, true), 8)
+eq('bars: stopped just after beat 1 of bar 3 -> 2 bars', snapLoopLen(8.3, true), 8)
+eq('bars: 3 bars allowed', snapLoopLen(11.6, true), 12)
+eq('bars: at most 8 bars', snapLoopLen(40, true), 32)
+
+// ---- the two timing modes ----
+eq('all off: free', timingMode({ metronome: false, beat: false, countIn: 0 }), 'free')
+eq('metronome on: locked', timingMode({ metronome: true, beat: false, countIn: 0 }), 'locked')
+eq('beat on: locked', timingMode({ metronome: false, beat: true, countIn: 0 }), 'locked')
+eq('count-in on: locked', timingMode({ metronome: false, beat: false, countIn: 1 }), 'locked')
+eq('DJ owns the grid: locked', timingMode({ metronome: false, beat: false, countIn: 0, following: true }), 'locked')
+eq('mode words (no brand names)', /roland|boss/i.test(Object.values(TIMING_WORDS).join(' ')), false)
+
+// ---- free time: the tempo follows the loop ----
+const bpmFor = (beats: number, ms: number) => (beats * 60000) / ms
+const ft = (ms: number, cur: number) => { const r = deriveFreeTempo(ms, cur); return [r.beats, Math.round(r.bpm * 10) / 10] }
+eq('3.1 s at 120 -> 2 bars, 154.8 BPM (77.4 is further from 120)', ft(3100, 120), [8, 154.8])
+eq('1.9 s at 120 -> 1 bar, 126.3 BPM', ft(1900, 120), [4, 126.3])
+eq('2.0 s at 120 -> 1 bar, exactly 120', ft(2000, 120), [4, 120])
+eq('4.0 s at 120 -> 2 bars, 120', ft(4000, 120), [8, 120])
+eq('8.0 s at 100 -> 4 bars, 120 (2 bars at 60 is further)', ft(8000, 100), [16, 120])
+eq('8.0 s at 70 -> 2 bars, 60', ft(8000, 70), [8, 60])
+eq('3.1 s at 80 -> 1 bar, 77.4', ft(3100, 80), [4, 77.4])
+eq('16 s at 120 -> 8 bars, 120', ft(16000, 120), [32, 120])
+eq('1.0 s (too short for a bar in 60..180) -> 2 beats, 120', ft(1000, 120), [2, 120])
+eq('0.3 s -> 1 beat, 200', ft(300, 120), [1, 200])
+eq('0.1 s is treated as the 0.25 s minimum -> 1 beat, 240', ft(100, 120), [1, 240])
+eq('60 s (longer than 8 bars at 60) -> 8 bars, slowest the clock goes', ft(60000, 120), [32, 40])
+// the loop is exactly n bars at the derived tempo (no rounding left to drift)
+for (const ms of [1500, 1900, 2345, 3100, 5000, 7777, 12000]) {
+  const r = deriveFreeTempo(ms, 110)
+  eq(`free ${ms} ms: n bars at the new tempo last exactly ${ms} ms`, Math.abs((r.beats * 60000) / r.bpm - ms) < 1e-6, true)
+  eq(`free ${ms} ms: whole bars`, r.beats % 4, 0)
+  eq(`free ${ms} ms: tempo inside 60..180`, r.bpm >= 60 && r.bpm <= 180, true)
+}
+eq('bpmFor sanity', bpmFor(4, 2000), 120)
+// 100 cycles of a free loop scheduled from the loop start stay on the grid (absolute, not incremental)
+{
+  const r = deriveFreeTempo(3100, 120), mspb = 60000 / r.bpm
+  let worst = 0
+  for (let k = 0; k <= 100; k++) { const loopMs = k * 3100, beatMs = k * r.beats * mspb; worst = Math.max(worst, Math.abs(loopMs - beatMs)) }
+  eq('free loop vs beat grid after 100 cycles: < 0.001 ms apart', worst < 1e-3, true)
+}
+
+// ---- locked start when the beat is already playing ----
+eq('beat playing, press mid-bar: start on the next bar line', lockedStartBeat(13.2, 0), 16)
+eq('a press just after a bar line keeps that bar', lockedStartBeat(16.1, 0), 16)
+eq('count-in after the next bar line', lockedStartBeat(13.2, 1, 0), 20)
+
+// ---- loop length label ----
+eq('label: 2 bars at 120', loopLenLabel(8, 120), '2 bars · 4.0 s')
+eq('label: 1 bar at 126.3', loopLenLabel(4, 126.3), '1 bar · 1.9 s')
+eq('label: 2 beats', loopLenLabel(2, 120), '2 beats · 1.0 s')
+eq('label: nothing yet', loopLenLabel(0, 120), '')
+
+// ---- classic pedal gesture timings ----
+eq('hold is 2 s', BIG_HOLD_MS, 2000)
+eq('press twice within 1 s', BIG_DOUBLE_MS, 1000)
 
 // ---- double-tap timing ----
 eq('first press is a tap', classifyPress(1000, null), 'tap')
@@ -74,6 +138,21 @@ eq('playing: undoing the only layer empties it', run(['hold'], 'play', 0), ['und
 eq('tap during the count-in cancels', run(['tap'], 'count'), ['cancel>empty'])
 eq('double on an empty looper does nothing', run(['double'], 'empty'), ['none>empty'])
 eq('recording: double stops', run(['double'], 'rec'), ['stop>stop'])
+
+// ---- hold = undo, hold again = redo ----
+eq('first hold undoes', holdChoice(null, 0), 'undo')
+eq('hold after an undo redoes', holdChoice('undo', 1), 'redo')
+eq('hold after a redo undoes again', holdChoice('redo', 0), 'undo')
+eq('nothing to redo: undo', holdChoice('undo', 0), 'undo')
+{ // a little model of the layer stack: undo moves the newest layer to the redo stack, redo brings it back
+  let layers = ['bass', 'piano'], redo: string[] = [], last: 'undo' | 'redo' | null = null
+  const hold = () => { const c = holdChoice(last, redo.length); if (c === 'redo') { layers.push(redo.pop()!) } else if (layers.length) { redo.push(layers.pop()!) } last = c }
+  hold(); eq('hold: piano undone', layers, ['bass'])
+  hold(); eq('hold again: piano back', layers, ['bass', 'piano'])
+  hold(); eq('third hold: undone again', layers, ['bass'])
+  layers = [...layers, 'synth']; redo = []; last = null // recording something new forgets the redo
+  hold(); eq('after a new layer, a hold undoes it', layers, ['bass'])
+}
 
 console.log(`${fails ? 'FAILED' : 'ok'}: ${passes} passed, ${fails} failed`)
 if (fails) process.exit(1)

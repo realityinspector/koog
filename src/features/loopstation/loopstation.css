@@ -112,3 +112,22 @@ select.lp-chip { padding: 2px 3px; font-weight: 700; letter-spacing: 0; }
 .lps-adv { position: absolute; top: 10px; right: 12px; font-size: 12px; padding: 5px 12px; z-index: 2; }
 @media (max-width: 560px) { .lps { padding: 10px; } .lps-main { gap: 12px; } .lps-status b { font-size: 20px; } }
 @media (prefers-reduced-motion: reduce) { .bs-count .lps-glyph { animation: none; } }
+/* sound pickers: one per layer, plus the "Next layer sound" choice */
+select.lps-inst, .lps-next select { font: 600 12px system-ui, sans-serif; color: #e9e6ff; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .18); border-radius: 8px; padding: 4px 6px; max-width: 100%; cursor: pointer; }
+.lps-next { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cfcbea; }
+.lps-next select { font-size: 13px; padding: 6px 8px; }
+/* timing: the mode line, the loop length under the big ring, the tempo lock hint */
+.lps-ringcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.lps-len { font: 700 14px system-ui, sans-serif; color: #e9e6ff; letter-spacing: .02em; min-height: 1.2em; text-align: center; }
+.lps-timing { margin: 0; font-size: 13px; color: #cfcbea; }
+.lps-timing-locked { color: #bfe8ff; }
+.lps-bpm-hint { margin-left: 6px; font-size: 11px; color: #a9a4cf; }
+.lp-timing { font-size: 11px; opacity: .8; align-self: center; }
+/* laptop-height windows: tighten so the layer rows stay in view (the status hint already says the gestures) */
+@media (max-height: 900px) {
+  .lps { gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+  .lps-side { gap: 7px; }
+  .lps-keys { display: none; }
+  .lps-big { width: clamp(110px, 24vmin, 200px); }
+  .lps-status span { font-size: 13px; }
+}

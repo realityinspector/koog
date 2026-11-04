@@ -10,6 +10,14 @@
 // REC / DUB / PLAY wait for the next bar line (the ring blinks "waiting"). Per track: one-shot, reverse, half/double speed,
 // start/stop mode (now / end of loop / fade), FX (filter sweep, stutter roll, transpose).
 //
+// TIMING (like a classic looper pedal; rules in loopCore.ts):
+//   FREE time (metronome, beat and count-in off): the first loop is exactly as long as you played; on closing it the master tempo is
+//     worked out so the loop is exactly 1/2/4/8 bars and the grid is re-anchored so the loop start is a downbeat (realign).
+//   LOCKED (metronome, beat or count-in on): recording starts on beat 1 and the first loop snaps to the nearest whole bar.
+//   Overdubs / undo / redo never change the loop length; the tempo field is locked while a loop exists (clear to change it).
+//   Everything is scheduled from absolute beat positions (loop start + k * length), so nothing drifts cycle by cycle.
+//   METRONOME (S().metro): guide.ts clicks every beat, accent on the loop's beat 1, while the looper runs (count-in included); never recorded.
+//
 // Replay: the master clock's 20 ms tick schedules everything in the next 90 ms with setTimeout at the exact performance.now() target.
 // The instruments take no start time, so this is timer-accurate (about 1-2 ms), not sample-accurate.
 // Instruments per track: 'koog' (the shared Koog synth), 'sound:<id>' / 'emu:<id>' (a private emulator engine from a refcounted pool,
@@ -27,12 +35,15 @@ import { getEmu } from '../synth-history/emu'
 import { liveEngines, onEmuSet } from '../synth-history/emu/bus'
 import { SOUNDS } from '../devices/soundChoice'
 import { dispatch, onPad } from '../dj/engine'
-import { beatPos, getBpm, isRunning, msPerBeat, onBeat, onTick, resetPhase, setBpm, startMaster, stopMaster, timeOfBeat, useMaster } from '../../music/masterClock'
+import { beatPos, getBpm, isRunning, msPerBeat, onBeat, onTick, realign, resetPhase, setBpm, startMaster, stopMaster, timeOfBeat, useMaster } from '../../music/masterClock'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { clearScore, setScore } from '../../music/scoreStore'
 import { writeMidi, type MidiTrack } from './midiFile'
-import { playClick, unlockGuide, useGuide, guidePeak } from './guide'
-import { BIG_HOLD_MS, PRE_ROLL_MS, bigNext, capturePos, classifyPress, hasNear, postRollPos, preRollBeats, snapLoopLen, wrapNotes, type BigAction, type BigState } from './loopCore'
+import { playClick, setMetronome, unlockGuide, useGuide, guidePeak } from './guide'
+import {
+  BIG_HOLD_MS, FREE_MIN_MS, PRE_ROLL_MS, TIMING_WORDS, bigNext, capturePos, classifyPress, deriveFreeTempo, hasNear, holdChoice, lockedStartBeat, loopLenLabel, postRollPos, preRollBeats,
+  snapLoopLen, timingMode, wrapNotes, type BigAction, type BigState, type TimingMode,
+} from './loopCore'
 
 export interface NoteEv { t: number; d: number; n: number; v: number }
 export interface AutoPt { t: number; v: number }
@@ -80,6 +91,8 @@ interface LoopState {
   /** MEASURE: REC / DUB / PLAY / STOP wait for the next bar line */
   measure: boolean
   master: number; xf: number; countLeft: number; rev: number
+  /** METRONOME: a soft click every beat while the looper runs (accent on beat 1), and its own level 0..1 */
+  metro: boolean; metroVol: number
 }
 const newLayer = (): Layer => ({
   inst: 'auto', vol: 1, mute: false, solo: false, state: 'empty', takes: [], redo: [], transpose: 0, gate: 1, nudge: 0,
@@ -100,7 +113,12 @@ interface Eng {
   /** a take that was just closed: notes in the next POST_ROLL_MS wrap round into it */
   post: { idx: number; take: Take; at: number; start: number; len: number; pend: Map<number, { note: NoteEv; abs: number }> } | null
   /** the big button: the press in progress, the last press time (double-tap), the order layers were recorded in (undo) */
-  big: { down: { t: number; timer: number; fired: boolean; prev: BigState } | null; last: number | null; order: number[] }
+  big: { down: { t: number; timer: number; fired: boolean; prev: BigState } | null; last: number | null; order: number[]
+    /** the sound the next layer records with ('auto' = whatever sound is playing now) */
+    next: string
+    /** undone layers, newest last (hold again to redo); `take` = one overdub inside a layer, else the whole layer */
+    redo: { i: number; layer?: Layer; len?: number; bpm?: number }[]
+    lastHold: 'undo' | 'redo' | null }
   /** mounted loop station panels (the pedal works the looper while one is on screen) */
   views: Set<HTMLElement>
 }
@@ -110,18 +128,19 @@ function make() {
   return create<LoopState>()(() => ({
     layers: Array.from({ length: LAYERS }, newLayer), sel: 0, running: false, lenBeats: 0, lenBars: 0,
     countIn: 1, quant: 0, recPads: false, sheet: false, recNext: 'play', sync: true, measure: false, master: 1, xf: 0.5, countLeft: 0, rev: 0,
+    metro: false, metroVol: 0.5,
   }))
 }
 export const useLoop = hot.store ?? make()
 const E: Eng = hot.E ?? {
   layers: Array.from({ length: LAYERS }, newLayer), sel: 0, running: false, loopStart: 0, lenBeats: 0, sched: 0,
   rec: null, recIdx: -1, timers: new Set(), sounding: new Map(), pool: new Map(), applying: false, debug: { on: false, log: [] },
-  ownMaster: false, offs: [], paramSnap: {}, down: {}, lastDown: {}, sid: 0, hist: [], post: null, big: { down: null, last: null, order: [] }, views: new Set(),
+  ownMaster: false, offs: [], paramSnap: {}, down: {}, lastDown: {}, sid: 0, hist: [], post: null, big: { down: null, last: null, order: [], next: 'auto', redo: [], lastHold: null }, views: new Set(),
 }
 // fields added after the first release (an HMR session keeps the old E object)
-E.down ??= {}; E.lastDown ??= {}; E.sid ??= 0; E.hist ??= []; E.post ??= null; E.big ??= { down: null, last: null, order: [] }; E.views ??= new Set()
+E.down ??= {}; E.lastDown ??= {}; E.sid ??= 0; E.hist ??= []; E.post ??= null; E.big ??= { down: null, last: null, order: [], next: 'auto', redo: [], lastHold: null }; E.big.next ??= 'auto'; E.big.redo ??= []; E.big.lastHold ??= null; E.views ??= new Set()
 E.layers = E.layers.map((l) => ({ ...newLayer(), ...l }))
-{ const st = useLoop.getState() as unknown as Record<string, unknown>; if (st.sync === undefined) useLoop.setState({ recNext: 'play', sync: true, measure: false }) }
+{ const st = useLoop.getState() as unknown as Record<string, unknown>; if (st.sync === undefined) useLoop.setState({ recNext: 'play', sync: true, measure: false }); if (st.metro === undefined) useLoop.setState({ metro: false, metroVol: 0.5 }) }
 const LOOK_MS = 90, HOLD_MS = 2000, DOUBLE_MS = 340
 const mod = (x: number, n: number) => ((x % n) + n) % n
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -131,7 +150,7 @@ function commit() {
   useLoop.setState((s) => ({ layers: E.layers.map((l) => ({ ...l })), sel: E.sel, running: E.running, lenBeats: E.lenBeats, rev: s.rev + 1 }))
   gcPool(); publish()
 }
-type OptKey = 'countIn' | 'quant' | 'recPads' | 'sheet' | 'master' | 'xf' | 'recNext' | 'sync' | 'measure'
+type OptKey = 'countIn' | 'quant' | 'recPads' | 'sheet' | 'master' | 'xf' | 'recNext' | 'sync' | 'measure' | 'metro' | 'metroVol'
 export const setOpt = <K extends OptKey>(k: K, v: LoopState[K]) => { useLoop.setState({ [k]: v } as Partial<LoopState>); if (k === 'sheet') publish() }
 export const setDebug = (on: boolean) => { E.debug.on = on; if (on) E.debug.log.length = 0 }
 export const debugLog = () => E.debug.log
@@ -220,7 +239,21 @@ function gcPool() {
   for (const [k, p] of [...E.pool]) if (!used.has(k)) { try { p.eng.allOff(); p.eng.dispose() } catch { /* ignore */ } E.pool.delete(k) }
 }
 /** wake the audio of every instrument the tracks use (call from a click / key / pad press) */
-export function unlockLoopAudio() { if (useGuide.getState().on || S().countIn > 0) unlockGuide(); for (const l of E.layers) if (l.state !== 'empty' || l.takes.length) warm(l) }
+export function unlockLoopAudio() { if (useGuide.getState().on || S().countIn > 0 || S().metro) unlockGuide(); for (const l of E.layers) if (l.state !== 'empty' || l.takes.length) warm(l) }
+
+// ---------- timing mode ----------
+/** FREE (tempo follows the loop) or LOCKED (loops snap to whole bars), from the current switches */
+export function curTiming(): TimingMode {
+  const s = S()
+  return timingMode({ metronome: s.metro, beat: useGuide.getState().on, countIn: s.countIn, measure: s.measure, following: useMaster.getState().following })
+}
+/** the tempo stays put while a loop exists (or one is being recorded): clear to change it */
+export const tempoLocked = () => E.recIdx >= 0 || E.layers.some((l) => l.takes.length > 0)
+/** for the screen: the timing line and the loop length ("2 bars · 4.0 s") */
+export function timingInfo() {
+  const mode = curTiming()
+  return { mode, words: TIMING_WORDS[mode], len: E.lenBeats > 0 && E.layers.some((l) => l.takes.length) ? loopLenLabel(E.lenBeats, getBpm()) : '', tempoLocked: tempoLocked() }
+}
 
 // ---------- geometry: every track has a grid start + length ----------
 const lenOf = (L: Layer) => (L.free ? L.ownLen : E.lenBeats > 0 ? E.lenBeats * L.mult : 0)
@@ -271,8 +304,10 @@ function ensureTransport(countBars: number) {
   const fresh = !isRunning()
   if (fresh) { startMaster(); E.ownMaster = true }
   const follow = useMaster.getState().following
-  if (!follow) { resetPhase(); E.loopStart = countBars * 4 } // beat 0 is right now: the first take starts when you press
-  else E.loopStart = Math.ceil((beatPos() + 0.02) / 4) * 4 + countBars * 4 // the DJ owns the grid: wait for his bar line
+  if (follow) E.loopStart = Math.ceil((beatPos() + 0.02) / 4) * 4 + countBars * 4 // the DJ owns the grid: wait for his bar line
+  // the beat is already playing (someone else runs the clock): never jump it, start on its next bar line (a press just after one keeps it)
+  else if (!fresh && useGuide.getState().on) E.loopStart = lockedStartBeat(beatPos(), countBars, countBars > 0 ? 0 : 0.25)
+  else { resetPhase(); E.loopStart = countBars * 4 } // beat 0 (a downbeat) is right now: the first take starts when you press
   E.sched = beatPos()
   E.running = true
   useLoop.setState({ countLeft: countBars })
@@ -329,16 +364,19 @@ function startRec(i: number, over: boolean) {
 function closeRec(quiet: boolean) {
   const r = E.rec, i = E.recIdx
   if (!r || i < 0) return
-  const now = performance.now(), abs = beatPos(now)
+  const now = performance.now()
+  let abs = beatPos(now)
   for (const [n, p] of r.pend) r.notes.push({ t: p.t, d: Math.max(0.1, abs - p.abs), n, v: p.v })
   r.pend.clear()
   const L = E.layers[i]
   if (defining(L)) {
     const st = startOf(L), el = abs - st
     if (!r.notes.length && !Object.keys(r.auto).length && !r.pads.length) { E.rec = null; E.recIdx = -1; L.state = 'empty'; abortTransportIfIdle(); if (!quiet) commit(); return }
-    // a sloppy first take: with MEASURE on the loop snaps to whole bars, otherwise it is exactly as long as you played (to a 1/16 beat)
-    const len = snapLoopLen(el, S().measure || S().countIn > 0 || useGuide.getState().on)
-    if (L.free) { L.ownLen = len; if (E.lenBeats <= 0) E.lenBeats = len } else { E.lenBeats = len; useLoop.setState({ lenBars: LEN_CHOICES.includes(len / 4) ? len / 4 : 0 }) }
+    // LOCKED: the nearest whole bar. FREE: exactly what you played, and the tempo follows the loop (see freeClose).
+    const locked = curTiming() === 'locked'
+    let len = snapLoopLen(el, locked)
+    if (!locked && !L.free) { const got = freeClose(r, st, now); if (got) { len = got; abs = beatPos(now) } else len = snapLoopLen(el, true) }
+    if (L.free) { L.ownLen = len; if (E.lenBeats <= 0) E.lenBeats = len } else E.lenBeats = len // (the Bars preset stays as the person set it: a cleared looper starts fresh, its next loop sets its own length)
   }
   const len = lenOf(L)
   // notes that landed past the end (you were a little late closing it) wrap to the start instead of vanishing
@@ -349,6 +387,7 @@ function closeRec(quiet: boolean) {
   const has = notes.length || Object.keys(take.auto).length || take.pads.length
   if (has) {
     L.takes.push(take); L.redo = []; L.lastHold = null
+    E.big.redo = []; E.big.lastHold = null // something new was recorded: nothing left to redo (like the pedal)
     E.big.order = [...E.big.order.filter((k) => k !== i), i]
     E.post = { idx: i, take, at: now, start: startOf(L), len, pend: new Map() }
   }
@@ -358,6 +397,22 @@ function closeRec(quiet: boolean) {
   if (wasRec) L.sched = abs // a freshly recorded take starts sounding from now (what you just played is in the past)
   E.rec = null; E.recIdx = -1
   if (!L.takes.length) abortTransportIfIdle()
+}
+/**
+ * FREE time, closing the first loop: the tempo that makes it exactly n bars (deriveFreeTempo), the grid re-anchored so beat `st` (a
+ * downbeat) is the moment recording began, and the take's notes moved from the old beats to the new ones (same moments in time).
+ * Returns the new loop length in beats, or 0 when the grid cannot move (it belongs to the DJ).
+ */
+function freeClose(r: Rec, st: number, now: number): number {
+  const startMs = timeOfBeat(st), ms = Math.max(FREE_MIN_MS, now - startMs)
+  const old = getBpm(), { beats, bpm } = deriveFreeTempo(ms, old)
+  if (!realign(bpm, startMs, st)) return 0
+  const k = getBpm() / old
+  for (const x of r.notes) { x.t *= k; x.d *= k }
+  for (const pts of Object.values(r.auto)) for (const p of pts) p.t *= k
+  for (const p of r.pads) p.t *= k
+  E.sched = beatPos(now)
+  return beats
 }
 function abortTransportIfIdle() {
   if (E.layers.some((l) => l.state !== 'empty')) return
@@ -574,33 +629,55 @@ function startLayer() {
   let j = E.layers.findIndex((l) => l.state === 'empty' && !l.takes.length)
   if (j < 0) j = bigLayers().pop() ?? LAYERS - 1 // all tracks used: the newest one takes another overdub
   const L = E.layers[j]
-  if (L.state === 'empty') { if (!L.picked) L.inst = currentInstId(); L.patch = snapshotPatch(L.inst); L.free = false }
+  if (L.state === 'empty') { applyNext(L); if (!L.picked) L.inst = currentInstId(); L.patch = snapshotPatch(L.inst); L.free = false }
   warm(L); E.sel = j
   startRec(j, true)
   commit()
 }
+/** the "Next layer" sound picker: the next empty layer records with this sound */
+function applyNext(L: Layer) { const n = E.big.next; if (n && n !== 'auto') { L.inst = n; L.picked = true; L.patch = undefined } }
+export function setNextSound(inst: string) { E.big.next = inst; commit() }
+export const nextSound = () => E.big.next
+/** the on-screen Undo / Redo buttons (same stack as holding the big button) */
+export function bigUndo() { undoLastLayer(); E.big.lastHold = 'undo' }
+export function bigRedo() { redoLastLayer(); E.big.lastHold = 'redo' }
+export const canBigRedo = () => E.big.redo.length > 0
 function undoLastLayer() {
   const i = bigLayers().filter((k) => E.layers[k].takes.length).pop()
   if (i == null) { commit(); return }
-  if (E.layers[i].takes.length > 1) undo(i); else clearLayer(i)
+  if (E.layers[i].takes.length > 1) { undo(i); E.big.redo.push({ i }) }
+  else { const L = E.layers[i]; E.big.redo.push({ i, layer: { ...L, takes: [...L.takes], redo: [] }, len: E.lenBeats, bpm: getBpm() }); clearLayer(i) }
   E.big.order = E.big.order.filter((k) => E.layers[k].takes.length)
+}
+/** bring back the newest undone layer (or overdub) */
+function redoLastLayer() {
+  const r = E.big.redo.pop(); if (!r) { commit(); return }
+  if (!r.layer) { redo(r.i); return }
+  const cur = E.layers[r.i]; if (cur.takes.length) { commit(); return } // that slot was reused: nothing to bring back
+  // undoing the only layer emptied the looper: bring its length (and tempo) back with it, so the loop is exactly as it was
+  if (!E.layers.some((l) => l.takes.length) && r.len) { E.lenBeats = r.len; if (r.bpm && Math.abs(r.bpm - getBpm()) > 0.01 && !useMaster.getState().following) setBpm(r.bpm) }
+  E.layers[r.i] = { ...r.layer, state: E.running ? 'play' : 'stop', pend: null, fade: null, sched: 0 }
+  warm(E.layers[r.i])
+  if (!E.big.order.includes(r.i)) E.big.order.push(r.i)
+  commit()
 }
 function doBig(a: BigAction) {
   unlockLoopAudio()
   switch (a) {
     case 'record': {
       const i = E.layers.findIndex((l) => l.state === 'empty')
-      E.big.order = []
+      E.big.order = []; E.big.redo = []; E.big.lastHold = null
+      if (i >= 0) applyNext(E.layers[i])
       tap(i < 0 ? 0 : i) // empty track: count in (if on), then record
       return
     }
     case 'cancel': dropRec(); commit(); return
     case 'close': case 'finish': closeRec(true); commit(); return
-    case 'overdub': startLayer(); return
+    case 'overdub': startLayer(); return // (redo is only forgotten once the new layer is actually recorded: a hold right away still redoes)
     case 'play': playAll(); return
     case 'stop': stopAll(); return
     case 'undo': undoLastLayer(); return
-    case 'clear': stopAll(); clearAll(); E.big.order = []; return
+    case 'clear': stopAll(); clearAll(); E.big.order = []; E.big.redo = []; E.big.lastHold = null; return
     case 'none': return
   }
 }
@@ -617,7 +694,12 @@ export function bigDown() {
   d.timer = window.setTimeout(() => {
     d.fired = true; E.big.last = null
     if (bigNext(prev, 'hold') === 'clear') doBig('clear')
-    else { if (prev === 'play') dropRec(); doBig('undo') } // the press started a layer: drop it, then undo the one before
+    else {
+      if (prev === 'play') dropRec() // the press started a layer: drop it first
+      // classic looper: hold = undo, hold again = redo (until something new is recorded)
+      if (holdChoice(E.big.lastHold, E.big.redo.length) === 'redo') { redoLastLayer(); E.big.lastHold = 'redo' }
+      else { doBig('undo'); E.big.lastHold = 'undo' }
+    }
     useLoop.setState((s) => ({ rev: s.rev + 1 }))
   }, BIG_HOLD_MS)
 }
@@ -788,7 +870,7 @@ function onClockBeat(b: { n: number; beat: number }) {
   const counting = b.n < E.loopStart
   if (counting) useLoop.setState({ countLeft: Math.max(0, Math.ceil((E.loopStart - b.n) / 4)) })
   else if (S().countLeft) useLoop.setState({ countLeft: 0 })
-  if (counting && !useGuide.getState().on) playClick(b.beat === 0)
+  if (counting && !useGuide.getState().on && !S().metro) playClick(b.beat === 0) // the metronome (or the beat) counts in by itself
 }
 
 // ---------- sheet music (optional) ----------
@@ -874,6 +956,7 @@ function init() {
     onPad((p) => { if (E.rec && !E.applying && S().recPads && E.running) { const L = E.layers[E.recIdx]; const pos = L ? recPos(L, beatPos()) : null; if (pos != null) E.rec.pads.push({ t: pos, deck: p.deck, n: p.n }) } }),
     onTick((now) => schedule(now)),
     onBeat((b) => onClockBeat(b)),
+    (() => { setMetronome(() => (E.running && S().metro ? { start: E.loopStart, vol: S().metroVol } : null)); return () => setMetronome(null) })(),
     // somebody else stopped the master clock (the Boss transport): the loop cannot keep time without it, so stop cleanly (no stuck notes)
     useMaster.subscribe((s) => {
       if (!s.running && E.running) {

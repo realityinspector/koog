@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { BPM_MAX, BPM_MIN, setBpm, useMaster } from '../../music/masterClock'
 import { BIG_WORDS, type BigState } from './loopCore'
-import { bigDown, bigHoldProgress, bigLayers, bigProgress, bigState, bigUp, clearAll, clearLayer, instLabel, setOpt, stopAll, toggleMute, undo, useLoop } from './loopEngine'
+import { INSTRUMENTS, bigDown, bigHoldProgress, bigLayers, bigProgress, bigRedo, bigState, bigUndo, bigUp, canBigRedo, clearAll, clearLayer, instLabel, nextSound, setLayerInst, setNextSound, setOpt, stopAll, timingInfo, toggleMute, useLoop } from './loopEngine'
 import { setGuide, unlockGuide, useGuide } from './guide'
 import { pedalJob, usePedal } from '../pedal/pedal'
 
 // The simple looper: ONE big button (also the foot pedal, and Space), like a guitar loop pedal.
-//   tap: record -> tap: loop it -> tap: add a layer -> tap: finish the layer    double-tap: stop    hold 1 s: undo (stopped: clear)
+//   tap: record -> tap: loop it -> tap: add a layer -> tap: finish the layer    press twice: stop    hold 2 s: undo / redo (stopped: clear)
+// One line says how it keeps time (free: the tempo follows your loop / locked: loops snap to whole bars); the ring says how long the loop is.
 // Every layer gets its own Mute and ✕. Everything else is behind "Advanced".
 const R = 44, CIRC = 2 * Math.PI * R
 const GLYPH: Record<BigState, string> = { empty: '●', count: '●', rec: '●', play: '▶', over: '+', stop: '■' }
 
 /** tempo box: typing never changes the clock half-way ("1" would clamp to 40 and eat the next digit); Enter / blur commits, arrows commit at once */
-export function BpmField({ bpm, disabled }: { bpm: number; disabled: boolean }) {
+export function BpmField({ bpm, disabled, title }: { bpm: number; disabled: boolean; title?: string }) {
   const [txt, setTxt] = useState<string | null>(null)
   const commit = () => { if (txt != null) { const v = parseFloat(txt); if (v > 0) setBpm(v); setTxt(null) } }
-  return <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={txt ?? String(Math.round(bpm * 10) / 10)} disabled={disabled} aria-label="Tempo in beats per minute"
+  return <input type="number" min={BPM_MIN} max={BPM_MAX} step={1} value={txt ?? String(Math.round(bpm * 10) / 10)} disabled={disabled} title={title} aria-label="Tempo in beats per minute"
     onChange={(e) => { const nat = (e.nativeEvent as InputEvent).inputType; if (nat === undefined || nat === 'insertReplacementText') { const v = parseFloat(e.target.value); if (v > 0) setBpm(v); setTxt(null) } else setTxt(e.target.value) }}
     onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
 }
@@ -111,10 +112,15 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
   const layers = bigLayers()
   const any = layers.some((i) => s.layers[i].takes.length)
   const job = pedalJob(pedal.action), pedalHere = (pedal.code || pedal.midi) && job === 'loop'
+  const ti = timingInfo()
+  const tempoTitle = following ? 'The DJ decks set the tempo' : ti.tempoLocked ? 'Clear to change tempo' : 'Beats per minute'
   return (
     <div className={'lp lps lps-' + st} ref={root} role="region" aria-label="Loop station">
       <div className="lps-main">
-        <BigButton st={st} count={s.countLeft} />
+        <div className="lps-ringcol">
+          <BigButton st={st} count={s.countLeft} />
+          <div className="lps-len" aria-label="Loop length">{ti.len || (st === 'rec' ? 'recording…' : '\u00a0')}</div>
+        </div>
         <div className="lps-side">
           <div className="lps-status" role="status" aria-live="polite">
             <b>{st === 'count' ? `GET READY… ${s.countLeft || ''}` : w.word}</b>
@@ -122,16 +128,28 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
           </div>
           <div className="lps-row">
             <button type="button" className="lps-btn" disabled={st === 'empty' || st === 'stop'} onClick={() => stopAll()}>■ Stop</button>
-            <button type="button" className="lps-btn" disabled={!any} onClick={() => { const i = layers.filter((k) => s.layers[k].takes.length).pop(); if (i == null) return; if (s.layers[i].takes.length > 1) undo(i); else clearLayer(i) }} title="Remove the newest layer">↶ Undo</button>
+            <button type="button" className="lps-btn" disabled={!any} onClick={() => bigUndo()} title="Take away the newest layer (or hold the big button 2 s)">↶ Undo</button>
+            <button type="button" className="lps-btn" disabled={!canBigRedo()} onClick={() => bigRedo()} title="Bring back what Undo took away (or hold the big button 2 s again)">↷ Redo</button>
             <ConfirmChip className="lps-btn" label="🗑 Clear all" disabled={!any && st === 'empty'} onConfirm={() => { stopAll(); clearAll() }} />
           </div>
           <div className="lps-row lps-opts">
             <button type="button" className={'lps-tog' + (s.countIn > 0 ? ' on' : '')} aria-pressed={s.countIn > 0} onClick={() => setOpt('countIn', s.countIn > 0 ? 0 : 1)}
               title="Four clicks before recording starts, and the loop snaps to whole bars">🥁 Count-in {s.countIn > 0 ? 'on' : 'off'}</button>
             <button type="button" className={'lps-tog' + (guideOn ? ' on' : '')} aria-pressed={guideOn} onClick={() => { unlockGuide(); setGuide({ on: !guideOn }) }} title="A soft drum beat to play along with">🎵 Beat {guideOn ? 'on' : 'off'}</button>
-            <label className="lps-bpm">Tempo <BpmField bpm={bpm} disabled={following} /></label>
+            <button type="button" className={'lps-tog' + (s.metro ? ' on' : '')} aria-pressed={s.metro} onClick={() => { unlockGuide(); setOpt('metro', !s.metro) }}
+              title="A soft click on every beat (louder on beat 1) while you loop. It is not recorded.">🔔 Metronome {s.metro ? 'on' : 'off'}</button>
+            <label className="lps-bpm" title={tempoTitle}>Tempo <BpmField bpm={bpm} disabled={following || ti.tempoLocked} title={tempoTitle} />{ti.tempoLocked && !following ? <small className="lps-bpm-hint">clear to change tempo</small> : null}</label>
           </div>
-          <p className="lps-keys"><kbd>Space</kbd>{pedalHere ? <> or the <b>foot pedal</b></> : null} = the big button · double-tap = stop · hold = undo</p>
+          <p className={'lps-timing lps-timing-' + ti.mode} data-timing={ti.mode}>{ti.mode === 'free' ? '〰️' : '📏'} {ti.words}</p>
+          <div className="lps-row lps-opts">
+            {/* many instruments in one loop: each new layer can be a different sound */}
+            <label className="lps-next" title="The sound your next layer records with. Stack a bass, then piano, then a synth!">Next layer sound{' '}
+              <select value={nextSound()} onChange={(e) => setNextSound(e.target.value)} aria-label="Next layer sound">
+                {INSTRUMENTS().filter((x) => x !== 'follow').map((x) => <option key={x} value={x}>{instLabel(x)}</option>)}
+              </select>
+            </label>
+          </div>
+          <p className="lps-keys"><kbd>Space</kbd>{pedalHere ? <> or the <b>foot pedal</b></> : null} = the big button · press twice = stop · hold 2 s = undo / redo (stopped: clear)</p>
         </div>
       </div>
       <ol className="lps-layers" aria-label="Layers">
@@ -142,7 +160,12 @@ export function SimpleLooper({ onAdvanced }: { onAdvanced: () => void }) {
             <li key={i} className={'lps-layer' + (L.mute ? ' muted' : '') + (live ? ' live' : '')}>
               <span className="lps-dot" aria-hidden />
               <b>Layer {k + 1}</b>
-              <span className="lps-inst">{live ? 'recording…' : instLabel(L.inst)}</span>
+              {live ? <span className="lps-inst">recording…</span> : (
+                <select className="lps-inst" value={L.inst} aria-label={`Layer ${k + 1} sound`} title="Change this layer's instrument" onChange={(e) => setLayerInst(i, e.target.value)}>
+                  {INSTRUMENTS().map((x) => <option key={x} value={x}>{instLabel(x)}</option>)}
+                  {!INSTRUMENTS().includes(L.inst) && <option value={L.inst}>{instLabel(L.inst)}</option>}
+                </select>
+              )}
               <button type="button" className={'lps-mute' + (L.mute ? ' on' : '')} aria-pressed={L.mute} onClick={() => toggleMute(i)} disabled={live} title={L.mute ? 'Unmute this layer' : 'Mute this layer'}>{L.mute ? '🔇 Muted' : '🔊 Mute'}</button>
               <button type="button" className="lps-x" onClick={() => clearLayer(i)} aria-label={`Remove layer ${k + 1}`} title="Remove this layer">✕</button>
             </li>
