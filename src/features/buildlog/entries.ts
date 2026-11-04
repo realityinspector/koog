@@ -413,4 +413,11 @@ export const entries: Entry[] = [
     title: '🔗 Links to everything, an AI helper, and a self-playing gallery',
     body: 'Three big ones. 1: every place in Koog now has its own web address. A song in Learn mode on step 2? It has a link. A game, a challenge, a key, the robot mentor switched on? Links. The address bar changes as you move around, and a little link button copies it, so a grown-up can send you straight to the right spot. Engineers call these "deep links", and making sure each spot has exactly ONE address is called "canonical". 2: grown-ups can now ask an AI chatbot "my kid is 8, loves zombies, we have 15 minutes" and it asks Koog\'s new helper server for a plan, with links that open Koog in exactly the right place. The helper remembers nothing about you: it only knows Koog\'s songs and games. That connection is called an API, and the plug that AIs use is called MCP. 3: the GALLERY. Press one button and Koog gives a tour of every single feature by itself, like a museum: a "ghost pianist" plays real songs, beats every challenge and plays the games, while a little card explains each stop. Press any key and it hands the keyboard to you. And the ghost never touches your stars or high scores.',
   },
+  {
+    id: 58,
+    time: 'Evening',
+    stage: 'ship',
+    title: '🖼️ Art Gallery mode, an honest Mentor, and composer spotting',
+    body: 'Art Gallery mode turns Koog into a moving painting for a TV or a classroom projector: full screen, no buttons, the pictures drift slowly while Koog plays calm old songs all the way through, and a little museum label fades in to say what you are looking at. It loops forever, and any key hands the keys back to you. The Mentor also got more honest. It used to cheer for almost everything; now, if you mash keys, hammer one note, rush, or land on a note that does not fit, it says so and tells you how to fix it ("That was mashing, not music yet. Pick three notes and make a pattern."). Good coaches do both: praise what works, name what does not. And it can now spot composers. Play Ode to Joy and it says "That\'s Beethoven!", with the year and a fact. Play running patterns like Bach, or slow spacey chords like Satie, and it notices that style too. Musicians call that "style": the fingerprints a composer leaves on their music.',
+  },
 ]

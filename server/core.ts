@@ -185,6 +185,7 @@ export function getStarted(input: StartInput) {
     first_time_setup: setupNote(input.has_usb_keyboard),
     // a hands-free tour of every feature: good for a first look together, or for a parent to preview Koog
     gallery: { link: toUrl({ screen: 'gallery' }), minutes: 18, what: 'A self-playing gallery: Koog tours every feature by itself with pleasant music. Click "Start the gallery" once; press any key to take over.' },
+    art_gallery: { link: toUrl({ screen: 'gallery', item: 'art' }), minutes: 10, what: 'Art Gallery mode: a full-screen, slow, looping piece of moving art with calm public-domain music, for a TV or projector. Click once to start; any key hands the keys back.' },
     note_for_the_ai: 'Read the plan to the parent in your own words, give them the links as plain URLs, and offer the kid_says lines to read aloud. Do not promise results; Koog is a practice companion, not a teacher.',
   }
 }

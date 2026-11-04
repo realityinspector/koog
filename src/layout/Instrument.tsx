@@ -98,7 +98,7 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
         <div className="kg-cheek kg-cheek-l" aria-hidden />
         <div className="kg-panel">
           <header className="kg-strip">
-            <span className="kg-badge" aria-label="Koog smart synthesizer"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">smart synth</span></span>
+            <span className="kg-badge" aria-label="KOOG, the Koding Synth"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">koding synth</span></span>
             <div className="kg-strip-mid">{strip}</div>
             {!lean && !isWebDemo() && !isEmbed() && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
               <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>

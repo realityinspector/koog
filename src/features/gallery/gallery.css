@@ -28,3 +28,64 @@
 .gl-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .08); }
 .gl-line i { display: block; height: 100%; background: var(--k-accent, #ffb43c); opacity: .8; transition: width .6s ease; }
 .gl-root[data-sheet] .gl-label { bottom: 150px; }
+
+/* ---------- the "Art Gallery mode" button on the tour's title card ---------- */
+.gl-art-btn { display: block; margin: 0 auto 12px; padding: 9px 22px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(255, 255, 255, .04); color: var(--k-ink, #fff); font-size: 14px; font-weight: 600; cursor: pointer; }
+.gl-art-btn span { display: block; font-size: 11px; font-weight: 400; color: var(--k-ink-3, #9a95bf); margin-top: 2px; }
+.gl-art-btn:hover { background: rgba(255, 255, 255, .09); }
+.gl-art-card h2 { font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif; font-weight: 400; font-size: 32px; letter-spacing: .01em; }
+.gl-art-card .gl-fine { margin: 0 0 12px; }
+.gl-art-card .gl-link { display: block; margin: 4px auto 0; }
+
+/* ---------- Art Gallery mode: the display is the whole screen, the app's chrome steps aside ----------
+   Photosensitivity: everything here moves by slow opacity fades (>= 1.6 s) or a slow camera drift; nothing flashes.
+   Reduced motion: the runner skips the camera (crossfades only) and the fades get slower. */
+html[data-art], html[data-art] body { background: #04030a; overflow: hidden; }
+html[data-art] .kg-display { position: fixed !important; inset: 0 !important; z-index: 60; border-radius: 0; box-shadow: none; transform-origin: 50% 50%; will-change: transform; }
+html[data-art] .kg-display .kg-overlay, html[data-art] .kg-display .viz-bar, html[data-art] .kg-display .viz-hint, html[data-art] .kg-glass,
+html[data-art] .kg-screen-head, html[data-art] .vibes-ov, html[data-art] .vibes-chip, html[data-art] .pd, html[data-art] .kg-link-note, html[data-art] .pf-who-card,
+html[data-art] .tour-block, html[data-art] .tour-spot, html[data-art] .tour-card, html[data-art] .tour-tap, html[data-art] .tour-replay,
+html[data-art] .sg .play > .bar, html[data-art] .sg .stage .ov, html[data-art] .sg .stage .hint, html[data-art] .sg .stage .card { display: none !important; }
+html[data-art] .kg-display[data-screen] .viz:not(:fullscreen) { filter: blur(10px) brightness(.35); }
+html[data-art][data-idle], html[data-art][data-idle] * { cursor: none !important; }
+
+.gl-art { position: fixed; inset: 0; z-index: 70; border-radius: 0; --gl-fade: 1.7s; color: #f5f1e8; }
+@media (prefers-reduced-motion: reduce) { .gl-art { --gl-fade: 2.2s; } }
+.gl-art .gl-veil { background: #04030a; transition: opacity var(--gl-fade) ease-in-out; }
+.gl-art .gl-veil.on { opacity: 1; }
+/* a soft vignette and a still film grain: quiet frame, never animated */
+.gl-art-vignette { position: absolute; inset: 0; background:
+  radial-gradient(ellipse 120% 95% at 50% 45%, transparent 52%, rgba(3, 2, 10, .55) 100%),
+  linear-gradient(to top, rgba(3, 2, 10, .62), rgba(3, 2, 10, 0) 34%); }
+.gl-art-grain { position: absolute; inset: 0; opacity: .07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* the wall label: fades in, stays a while, fades out, so most of the time it is just the picture */
+.gl-wall { position: absolute; left: clamp(20px, 5.5vw, 110px); bottom: clamp(34px, 8vh, 110px); max-width: min(560px, calc(100% - 40px)); margin: 0;
+  opacity: 0; animation: gl-wall calc(var(--gl-hold, 14s) + 4.4s) ease-in-out 1.2s both; text-shadow: 0 1px 18px rgba(0, 0, 0, .65), 0 0 2px rgba(0, 0, 0, .4); }
+@keyframes gl-wall { 0% { opacity: 0; transform: translateY(6px); } 12% { opacity: 1; transform: none; } 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: none; } }
+@media (prefers-reduced-motion: reduce) { @keyframes gl-wall { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } } }
+.gl-wall-room { font: 600 11px/1 system-ui, -apple-system, 'Segoe UI', sans-serif; letter-spacing: .34em; text-transform: uppercase; color: rgba(245, 225, 190, .78); margin-bottom: 14px; }
+.gl-wall-room::after { content: ''; display: block; width: 28px; height: 1px; margin-top: 12px; background: rgba(245, 225, 190, .55); }
+.gl-wall h3 { margin: 0 0 10px; font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.4vw, 58px); line-height: 1.04; letter-spacing: .005em; color: #fbf7ef; }
+.gl-wall p { margin: 0; font: 400 clamp(15px, 1.15vw, 20px)/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: rgba(250, 246, 238, .86); max-width: 34em; }
+.gl-wall .gl-wall-credit { margin-top: 12px; font-family: 'Iowan Old Style', Palatino, Georgia, serif; font-style: italic; font-size: clamp(13px, .95vw, 16px); color: rgba(245, 225, 190, .72); }
+
+/* a hairline that fills across the piece */
+.gl-art-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, .06); }
+.gl-art-line i { display: block; height: 100%; width: 100%; transform-origin: 0 50%; background: linear-gradient(90deg, rgba(245, 225, 190, .15), rgba(245, 225, 190, .6)); animation: gl-line linear both; }
+@keyframes gl-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.gl-art[data-phase='paused'] .gl-art-line i { animation-play-state: paused; }
+
+.gl-art-paused { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-family: 'Iowan Old Style', Palatino, Georgia, serif; font-size: clamp(28px, 3vw, 46px); color: #fbf7ef; text-shadow: 0 2px 30px rgba(0, 0, 0, .7); animation: gl-in 1.2s ease both; }
+.gl-art-paused span { display: block; margin-top: 10px; font: 400 14px/1.4 system-ui, -apple-system, sans-serif; letter-spacing: .04em; color: rgba(250, 246, 238, .72); }
+@keyframes gl-in { from { opacity: 0; } to { opacity: 1; } }
+/* a quiet hint, only while the pointer is awake */
+.gl-art-hint { position: absolute; top: 18px; right: 22px; font: 500 11px/1 system-ui, -apple-system, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(250, 246, 238, .5); opacity: 1; transition: opacity 1s ease; }
+html[data-idle] .gl-art-hint { opacity: 0; }
+@media (max-width: 560px) { .gl-art-hint { display: none; } .gl-wall-room { margin-bottom: 10px; } }
+/* a touch calmer than play mode: slightly deeper colours on the big screen */
+html[data-art] .kg-display:not([data-screen]) .viz:not(:fullscreen) { filter: saturate(.88) brightness(.86); }
+.gl-art[data-sheet] .gl-wall { bottom: calc(clamp(34px, 8vh, 110px) + 70px); }
+
+/* while a gallery title card is up, hide the first-run "Tap any key!" banner that would show through it */
+body:has(.gl-card) .tour-tap { display: none !important; }

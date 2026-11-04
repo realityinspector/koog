@@ -7,6 +7,8 @@ import { findAllusion, type AllusionIndex, type Played, type Allusion } from '..
 import { detectChord } from '../../music/chords'
 import { PC_NAMES, SCALES, pc, type Key } from '../../music/theory'
 import { describe, type Desc, type MoveKind } from './lines'
+import { pieceOf } from './composers'
+import { albertiBass, bachRun, beethovenPunch, chopinSweep, debussyColour, endsMidRun, hammeredRun, isBanging, isMashing, joplinRag, satieSpace, velocityReal, wobble, wrongLanding, type Ev } from './detect'
 
 export interface Ctx {
   key(): Key
@@ -17,7 +19,17 @@ export interface Ctx {
 export interface Move extends Desc { kind: MoveKind; topic: string; t: number; data: Record<string, string | number> }
 
 const CHORD_WIN = 70, PHRASE_PAUSE = 650, CONT_GAP = 1600
-const COOL: Partial<Record<MoveKind, number>> = { sequence: 5000, inversion: 8000, retrograde: 8000, motif: 8000, arpeggio: 8000, 'walking-bass': 15000, crescendo: 10000, decrescendo: 10000, range: 40000, space: 40000, modulation: 20000, 'rhythm-motif': 12000, tension: 8000, cluster: 6000, progression: 8000 }
+// cooldowns per kind (ms). Trivial praise (repetition, plain home cadence, range, flow) is rare on purpose: praise
+// should mean something. Critiques repeat sooner than before so real problems get named.
+const COOL: Partial<Record<MoveKind, number>> = {
+  sequence: 6000, inversion: 8000, retrograde: 8000, motif: 12000, arpeggio: 10000, 'walking-bass': 15000, crescendo: 12000, decrescendo: 12000,
+  range: 90000, space: 40000, modulation: 20000, 'rhythm-motif': 15000, tension: 10000, cluster: 15000, progression: 8000,
+  repetition: 25000, cadence: 30000, flow: 60000, variation: 10000,
+  'c-nohome': 20000, 'c-rushing': 25000, 'c-wobbly': 25000, 'c-wandering': 25000, 'c-stuck': 30000,
+  'c-mashing': 15000, 'c-banging': 40000, 'c-hammered': 30000, 'c-nospace': 45000, 'c-abrupt': 25000, 'c-wrongnote': 20000,
+}
+/** composer style moves are a treat: each at most every 2 min, any of them at most every 45 s */
+const STYLE_COOL = 120000, STYLE_ANY = 45000
 const iv = (ns: number[]) => ns.slice(1).map((n, i) => n - ns[i])
 const sgn = Math.sign
 const neg = (a: number[]) => a.map((x) => -x)
@@ -68,7 +80,12 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
     const lastAt: Partial<Record<string, number>> = {}
   let lastNow = 0
   let jam0 = -1
-
+  let evs: Ev[] = [] // every settled onset group (all notes, both hands), newest last
+  let velHist: number[] = []
+  let clusterTs: number[] = []
+  let chordEvs: number[][] = []; let chordNames: { name: string; t: number }[] = []
+  let runStart = -1 // start of the current stretch with no breath (gap >= 450 ms)
+  let lastStyle = -1e9
   function fire(kind: MoveKind, t: number, data: Move['data'] = {}, topicSuffix = '', cool = COOL[kind] ?? 0) {
     const key = kind + topicSuffix
     if (cool && lastAt[key] != null && t - (lastAt[key] as number) < cool) return
@@ -90,19 +107,42 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
   }
   function resolve(t: number) { fire('tension', t) }
 
+  function styleFire(kind: MoveKind, t: number, data: Move['data'] = {}) {
+    if (t - lastStyle < STYLE_ANY) return
+    const before = lastAt[kind]
+    fire(kind, t, data, '', STYLE_COOL)
+    if (lastAt[kind] !== before) lastStyle = t
+  }
+
   function settle(g: { t0: number; notes: number[]; vel: number }) {
     const ns = g.notes, pcs = new Set(ns.map(pc))
+    evs.push({ t: g.t0, notes: [...ns].sort((a, b) => a - b), vels: ns.map(() => g.vel) }); if (evs.length > 48) evs.shift()
+    velHist.push(g.vel); if (velHist.length > 60) velHist.shift()
+    if (isMashing(evs, g.t0)) { fire('c-mashing', g.t0); evs = [] }
+    else if (isBanging(velHist)) fire('c-banging', g.t0)
+    if (joplinRag(evs)) styleFire('style-joplin', g.t0)
+    else if (albertiBass(evs)) styleFire('style-mozart', g.t0)
+    else if (chopinSweep(evs, g.t0)) styleFire('style-chopin', g.t0)
     const sorted = [...new Set(ns)].sort((a, b) => a - b)
     let close = 0
     for (let i = 1; i < sorted.length; i++) if (sorted[i] - sorted[i - 1] <= 2) close++
-    if ((ns.length >= 4 && close >= 3) || ns.length >= 7) { fire('cluster', g.t0, { boom: 0 }); phrase = { notes: [], times: [], vels: [] }; return }
+    if ((ns.length >= 4 && close >= 3) || ns.length >= 7) {
+      // one cluster is a gesture; three in a few seconds is just slamming
+      clusterTs = [...clusterTs.filter((x) => g.t0 - x < 8000), g.t0]
+      if (clusterTs.length >= 3) { fire('c-mashing', g.t0, { how: 'slam' }); clusterTs = [] } else fire('cluster', g.t0, { boom: 0 })
+      phrase = { notes: [], times: [], vels: [] }; return
+    }
     if (pcs.size >= 3 && ns.length >= 3) { onChord(ns, g.t0); return }
     melody(ns[0], g.vel, g.t0)
   }
 
   // ---- chords and progressions ----
   function onChord(ns: number[], t: number) {
-    const c = parseChord(detectChord(ns))
+    const name = detectChord(ns)
+    chordEvs.push([...ns]); if (chordEvs.length > 6) chordEvs.shift()
+    if (name) { chordNames.push({ name, t }); chordNames = chordNames.filter((x) => t - x.t < 20000) }
+    if (debussyColour([], chordEvs)) { styleFire('style-debussy', t, { how: 'parallel' }); chordEvs = [] }
+    const c = parseChord(name)
     if (!c) return
     const prev = chords[chords.length - 1]
     if (prev && t - prev.t > 6000) chords = []
@@ -129,6 +169,7 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
       if (spaces.length >= 2) fire('space', t)
     }
     if (jam0 < 0 || gap > 30000) { jam0 = t; home = [] }
+    if (gap >= 450 || runStart < 0) runStart = t
     lastMelT = t
     mel.push({ note, t, vel }); if (mel.length > 64) mel.shift()
     phrase.notes.push(note); phrase.times.push(t); phrase.vels.push(vel)
@@ -154,13 +195,33 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
     relations(ns, n, t)
     arpeggio(r, t); walking(r, t); dynamics(r, t); rhythmMotif(r, ns, t)
     range(t); modulation(t)
+    critiquesLive(t); styles(t)
+  }
+
+  // ---- honest, live critiques (don't wait for the phrase to end) ----
+  function critiquesLive(t: number) {
+    const ns = mel.map((x) => x.note), h = hammeredRun(ns)
+    if (h >= 9 && mel[mel.length - 1].t - mel[mel.length - h].t < 9000) fire('c-hammered', t, { n: h, note: PC_NAMES[pc(ns[ns.length - 1])] })
+    if (runStart >= 0 && t - runStart >= 10000 && mel.filter((x) => x.t >= runStart).length >= 30) { fire('c-nospace', t); runStart = t }
+  }
+  // ---- composer signature moves ----
+  function styles(t: number) {
+    const vr = velocityReal(velHist)
+    if (bachRun(mel)) styleFire('style-bach', t)
+    else if (debussyColour(mel, [])) styleFire('style-debussy', t, { how: 'wholetone' })
+    else if (beethovenPunch(mel, vr)) styleFire('style-beethoven', t)
+    else if (satieSpace(mel, chordNames.map((x) => x.name), vr)) styleFire('style-satie', t)
   }
 
   function quote(a: Allusion, t: number) {
     if (a.source.kind === 'phrase') {
       // your own learned phrase: only worth saying when it is moved or placed inside new material
       fire('quote', t, { title: a.source.title, key: a.keyName ?? '', learned: 1, n: a.length, miss: a.mismatches }, a.source.id, 25000)
-    } else fire('quote', t, { title: a.source.title, key: a.keyName ?? '', learned: 0, n: a.length, miss: a.mismatches }, a.source.id, 25000)
+    } else {
+      const p = pieceOf(a.source.id)
+      const who: Record<string, string> = p ? { who: p.who ?? '', piece: p.piece, year: p.year, fact: p.fact, trad: p.trad ?? '' } : {}
+      fire('quote', t, { title: a.source.title, key: a.keyName ?? '', learned: 0, n: a.length, miss: a.mismatches, ...who }, a.source.id, 25000)
+    }
   }
 
   // sequence / inversion / retrograde / exact motif: compare the newest figure with an earlier one in the same run
@@ -221,8 +282,9 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
     }
   }
   function range(t: number) {
-    const os = octs.map((x) => x.o)
-    if (new Set(os).size >= 3 && Math.max(...os) - Math.min(...os) >= 2) fire('range', t)
+    // a real register idea, not one stray note: 3+ octaves, and both extremes visited at least twice
+    const os = octs.map((x) => x.o), lo = Math.min(...os), hi = Math.max(...os)
+    if (new Set(os).size >= 3 && hi - lo >= 2 && os.filter((o) => o === lo).length >= 2 && os.filter((o) => o === hi).length >= 2) fire('range', t)
   }
   // The home key set narrows as notes arrive (it keeps only major keys that every recent window fits). When the newest 8 notes
   // fit a different, well-pinned key and none of the old ones, three notes in a row, that is a modulation.
@@ -255,7 +317,14 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
     const keyN = home + (key.scale === 'minor' ? ' minor' : ' major')
     const n = p.notes.length, last = p.notes[n - 1], relLast = pc(last - tonic), relPrev = n > 1 ? pc(p.notes[n - 2] - tonic) : -1
     const t = tEnd
-    let praised = false
+    // how clean was it? A sloppy phrase gets its critique, not a pat on the back for "repeating" or "calling back" the mess.
+    const out = p.notes.filter((x) => !SCALES[key.scale].includes(pc(x - tonic))).length
+    const io = p.times.slice(1).map((x, i) => x - p.times[i])
+    const avg = (x: number[]) => x.reduce((q, w) => q + w, 0) / x.length
+    const rushing = n >= 6 && avg(io.slice(-3)) < avg(io.slice(0, 3)) * 0.8 && avg(io.slice(0, 3)) > 150
+    const wob = n >= 7 && (wobble(p.times) > 0.15 || (ctx.meters != null && ctx.meters().rhythm < 0.4))
+    const wrong = wrongLanding(p.notes, p.times, key)
+    const sloppy = rushing || wob || (n >= 6 && out / n >= 0.3) || !!wrong
 
     // cadences: chords first (V->I, V->vi, ends on V), else the melody's last two notes
     const cs = chords.filter((c) => c.t >= p.times[0] - 2500 && c.t <= tEnd + 500)
@@ -268,54 +337,49 @@ export function createListener(ctx: Ctx, emit: (m: Move) => void) {
     if (!cad && n >= 4) {
       if (relLast === 0 && (relPrev === 11 || relPrev === 2)) cad = 'cadence-authentic'
       else if (relLast === 7 && n >= 5 && (relPrev === 5 || relPrev === 9 || relPrev === 4)) cad = 'cadence-half'
-      else if (relLast === 0) cad = 'cadence'
+      else if (relLast === 0 && n >= 6 && p.notes.every((x) => SCALES[key.scale].includes(pc(x - tonic)))) cad = 'cadence' // plain "came home": only for a clean, in-key phrase
     }
-    if (cad) { fire(cad, t, { home, key: keyN }); praised = true }
+    if (cad) fire(cad, t, { home, key: keyN })
 
     // repetition / variation / call and response against the previous phrase
-    if (prev && prev.notes.length >= 3 && n >= 3 && p.times[0] - prev.times[prev.times.length - 1] <= 4000) {
+    if (!sloppy && prev && prev.notes.length >= 3 && n >= 3 && p.times[0] - prev.times[prev.times.length - 1] <= 4000) {
       const i1 = iv(prev.notes), i2 = iv(p.notes), m = Math.min(i1.length, i2.length)
       let same = 0
       for (let i = 0; i < m; i++) if (sgn(i1[i]) === sgn(i2[i])) same++
       const sim = m ? same / m : 0
       const exact = eq(i1, i2)
       const prevEnd = pc(prev.notes[prev.notes.length - 1] - tonic)
-      if (exact) {
+      if (exact && new Set(p.notes).size < 3) { /* repeating a two-note doorbell is not an idea */ }
+      else if (exact) {
         const d = p.notes[0] - prev.notes[0]
         if (d !== 0 && Math.abs(d) <= 5) fire('sequence', t, { dir: d > 0 ? 'up' : 'down', by: Math.abs(d) })
         else fire('repetition', t)
-        praised = true
-      } else if (sim >= 0.6 && relLast === 0 && prevEnd !== 0) { fire('call-response', t); praised = true }
-      else if (sim >= 0.6 && Math.abs(i1.length - i2.length) <= 1) { fire('variation', t); praised = true }
+      } else if (sim >= 0.6 && relLast === 0 && prevEnd !== 0) fire('call-response', t)
+      else if (sim >= 0.6 && Math.abs(i1.length - i2.length) <= 1) fire('variation', t)
     }
 
     // call-back to an idea from an earlier part of the jam (older than the last two phrases)
-    if (n >= 5 && phrases.length >= 4) {
+    if (!sloppy && n >= 5 && phrases.length >= 4) {
       const grams = new Map<string, number>()
       for (let i = 0; i + 4 <= n; i++) { const g = iv(p.notes.slice(i, i + 4)); if (interesting(g)) grams.set(g.join(), i) }
       outer: for (let j = 0; j < phrases.length - 2; j++) {
         const o = phrases[j]
         if (p.times[0] - o.times[o.times.length - 1] < 8000) continue
-        for (let i = 0; i + 4 <= o.notes.length; i++) if (grams.has(iv(o.notes.slice(i, i + 4)).join())) { fire('callback', t, { ago: mmss(o.times[i] - jam0) }); praised = true; break outer }
+        for (let i = 0; i + 4 <= o.notes.length; i++) if (grams.has(iv(o.notes.slice(i, i + 4)).join())) { fire('callback', t, { ago: mmss(o.times[i] - jam0) }); break outer }
       }
     }
-    if (n >= 12) { fire('flow', t, {}, '', 30000); praised = true }
-
-    // kind critiques (only when something is actually improvable; the Mentor decides how often to say them)
-    if (n >= 5 && !praised && relLast !== 0 && relLast !== 7) fire('c-nohome', t, { home }, '', 30000)
-    if (n >= 7) {
-      const io = p.times.slice(1).map((x, i) => x - p.times[i]), a = io.slice(0, 3), b = io.slice(-3)
-      const avg = (x: number[]) => x.reduce((q, w) => q + w, 0) / x.length
-      if (avg(b) < avg(a) * 0.72) fire('c-rushing', t, {}, '', 40000)
-      else if (ctx.meters && ctx.meters().rhythm < 0.45) fire('c-wobbly', t, {}, '', 40000)
-    }
-    if (n >= 6) {
-      const out = p.notes.filter((x) => !SCALES[key.scale].includes(pc(x - tonic))).length
-      if (out / n >= 0.4) fire('c-wandering', t, { key: keyN }, '', 40000)
-      if (new Set(p.notes).size <= 2) fire('c-stuck', t, {}, '', 40000)
-    }
+    // long flowing line: only when it was actually clean
+    if (n >= 16 && !sloppy) fire('flow', t)
+    // honest critiques: name what's wrong and how to fix it (the Mentor store balances them against praise)
+    if (wrong && out / n < 0.3) fire('c-wrongnote', t, wrong)
+    else if (n >= 6 && !cad && endsMidRun(p.notes, key)) fire('c-abrupt', t, { home })
+    else if (n >= 5 && !cad && relLast !== 0 && relLast !== 7) fire('c-nohome', t, { home })
+    if (rushing) fire('c-rushing', t)
+    else if (wob) fire('c-wobbly', t)
+    if (n >= 6 && out / n >= 0.3) fire('c-wandering', t, { key: keyN })
+    if (n >= 6 && new Set(p.notes).size <= 2 && hammeredRun(p.notes) < 9) fire('c-stuck', t)
   }
 
-  return { push, advance, resolve, reset() { mel = []; phrases = []; chords = []; group = null; phrase = { notes: [], times: [], vels: [] }; spaces = []; octs = []; home = []; homeNotes = []; for (const k in lastAt) delete lastAt[k] } }
+  return { push, advance, resolve, reset() { mel = []; phrases = []; chords = []; group = null; phrase = { notes: [], times: [], vels: [] }; spaces = []; octs = []; home = []; homeNotes = []; evs = []; velHist = []; clusterTs = []; chordEvs = []; chordNames = []; runStart = -1; lastStyle = -1e9; for (const k in lastAt) delete lastAt[k] } }
 }
 export type Listener = ReturnType<typeof createListener>

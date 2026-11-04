@@ -1,7 +1,8 @@
 // Mentor mode: "the greatest audience member ever". Listens (listen.ts), decides what is worth saying, and speaks
 // through the shared coach bus (src/coach/coachBus.ts, source 'mentor'). The persona (Mentor.tsx) just draws this state.
 // - labels: small floating tags in the visualizer area for every recognised move
-// - speech: the best pending move, at most one bubble every 4-6 s, praise first, <= 1 critique per 3 praises
+// - speech: the best pending move, at most one bubble every 4-6 s. Honest: real problems compete with praise on
+//   score (select.ts), no same praise twice in a row, no praise that contradicts a critique just said
 // - highlights reel: top 3 moments after 10 s of quiet (or on demand)
 // - memory: per kid (pload/psave 'mentor.v1') so it can praise growth ("first cadence today")
 // Non-component module: state in import.meta.hot.data, self-accepting (docs/DEVELOPING.md).
@@ -19,6 +20,7 @@ import { onProfileChange, pload, psave } from '../../profile/profile'
 import { markSeen, seenCount, say, useCoach } from '../../coach/coachBus'
 import { createListener, type Listener, type Move } from './listen'
 import type { MoveKind } from './lines'
+import { choose, contradicts, type SelState } from './select'
 
 export type Mood = 'idle' | 'applaud' | 'lean' | 'gasp' | 'nod' | 'think'
 export interface FloatLabel { id: number; text: string; kind: MoveKind }
@@ -39,6 +41,7 @@ const hot = (import.meta.hot?.data ?? {}) as { store?: ReturnType<typeof make>; 
 interface W {
   L: Listener | null; jam: { move: Move; at: number }[]; jamStart: number; lastNote: number
   pending: { m: Move; at: number; tries?: number }[]; nextAt: number; praiseSince: number; recent: string[]
+  lastPraise?: { kind: MoveKind; topic: string } | null; lastCrit?: { kind: MoveKind; at: number } | null; critStreak?: number
   labelId: number; labelAt: Record<string, number>; mem: Mem | null; timer: ReturnType<typeof setInterval> | null
   index: AllusionIndex | null; indexTick: number; songSrc: AllusionSource[] | null; moodTimer: ReturnType<typeof setTimeout> | null
 }
@@ -106,10 +109,12 @@ const REEL: Partial<Record<MoveKind, string>> = {
   'cadence-half': 'you left a half cadence hanging', 'cadence-deceptive': 'you pulled a deceptive cadence', cadence: 'you came home', progression: 'you played a chord progression', modulation: 'you changed key',
   crescendo: 'you built a crescendo', decrescendo: 'you faded away', range: 'you used the whole keyboard', space: 'you left space', tension: 'you made tension and release', cluster: 'you hit a tone cluster',
   arpeggio: 'you rolled an arpeggio', 'walking-bass': 'you walked a bass line', callback: 'you brought an idea back', flow: 'you kept a long line going', steady: 'you kept a steady beat',
+  'style-bach': 'you played a running figure like Bach', 'style-satie': 'you made slow, spacious music like Satie', 'style-beethoven': 'you hit a Beethoven-style punch',
+  'style-mozart': 'you played an Alberti bass like Mozart', 'style-chopin': 'you swept the left hand like Chopin', 'style-debussy': 'you found a Debussy color', 'style-joplin': 'you played ragtime like Joplin',
 }
 const NOUN: Partial<Record<MoveKind, string>> = { sequence: 'sequence', inversion: 'inversion', retrograde: 'retrograde', 'call-response': 'call and response', variation: 'variation', 'rhythm-motif': 'rhythm motif', 'cadence-authentic': 'cadence', 'cadence-half': 'half cadence', 'cadence-deceptive': 'deceptive cadence', cadence: 'cadence', progression: 'chord progression', modulation: 'key change', crescendo: 'crescendo', range: 'wide range', space: 'rest', arpeggio: 'arpeggio', 'walking-bass': 'walking bass', callback: 'callback', motif: 'motif', tension: 'tension and release', cluster: 'tone cluster' }
 const mmss = (ms: number) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') }
-const reelText = (m: Move) => m.kind === 'quote' ? `you quoted ${m.data.title}${m.data.key ? ' in ' + m.data.key : ''}!` : (REEL[m.kind] ?? m.label) + (m.kind === 'progression' ? ` (${m.data.name})` : m.kind === 'modulation' ? ` to ${m.data.to}` : '')
+const reelText = (m: Move) => m.kind === 'quote' ? `you quoted ${m.data.who ? m.data.who + (String(m.data.who).endsWith('s') ? '\' ' : '\'s ') : ''}${m.data.title}${m.data.key ? ' in ' + m.data.key : ''}!` : (REEL[m.kind] ?? m.label) + (m.kind === 'progression' ? ` (${m.data.name})` : m.kind === 'modulation' ? ` to ${m.data.to}` : '')
 
 function setMood(m: Mood) {
   useMentor.setState((s) => ({ mood: m, moodN: s.moodN + 1 }))
@@ -143,11 +148,17 @@ function pump() {
   W.pending = W.pending.filter((p) => now - p.at < 9000)
   if (now < W.nextAt || !W.pending.length || !active()) return
   const mm = mem()
-  const praise = W.pending.filter((p) => !p.m.critique), crit = W.pending.filter((p) => p.m.critique)
-  const rank = (p: { m: Move }) => p.m.score + (mm.counts[p.m.kind] ? (mm.today.includes(p.m.kind) ? 0 : 1.5) : 3) + (W.recent.includes(p.m.kind) ? -2 : 0)
-  let pick: { m: Move; at: number; tries?: number } | undefined
-  if (praise.length) pick = praise.sort((a, b) => rank(b) - rank(a))[0]
-  else if (crit.length && W.praiseSince >= 3) pick = crit[0]
+  const lc = W.lastCrit ?? null
+  const st: SelState = {
+    everSeen: (k) => !!mm.counts[k], seenToday: (k) => mm.today.includes(k),
+    recentKinds: W.recent.filter((x): x is MoveKind => !x.includes(' ')) as MoveKind[],
+    lastPraise: W.lastPraise ?? null, lastCritique: lc,
+    critStreak: lc && now - lc.at > 20000 ? 0 : (W.critStreak ?? 0),
+  }
+  // praise that contradicts the critique we just said is dropped, not delayed
+  W.pending = W.pending.filter((p) => !contradicts(p.m, st, now))
+  const i = choose(W.pending.map((p) => p.m), st, now)
+  const pick = i >= 0 ? W.pending[i] : undefined
   if (!pick) return
   const m = pick.m, tech = S().tech
   const firstEver = !m.critique && !mm.counts[m.kind], firstToday = !m.critique && !firstEver && !mm.today.includes(m.kind)
@@ -159,7 +170,7 @@ function pump() {
     if (firstEver && noun) text = `First time I've seen you use ${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}! ${text}`
     else if (firstToday && noun) text = `First ${noun} today. ${text}`
   }
-  const id = say({ source: 'mentor', topic: m.topic, text, priority: m.kind === 'quote' || m.kind === 'modulation' ? 2 : 1, ms: 4200, tone: m.critique ? 'tip' : 'praise' })
+  const id = say({ source: 'mentor', topic: m.topic, text, priority: m.kind === 'quote' || m.kind === 'modulation' || m.kind.startsWith('style-') ? 2 : 1, ms: m.kind === 'quote' && m.data.fact ? 5600 : 4200, tone: m.critique ? 'tip' : 'praise' })
   if (!id) { // the bus said no (something more important is showing, or a repeat): retry soon, give up after a few tries
     pick.tries = (pick.tries ?? 0) + 1
     if (pick.tries >= 4) W.pending = W.pending.filter((p) => p !== pick)
@@ -169,7 +180,10 @@ function pump() {
   W.pending = W.pending.filter((p) => p !== pick)
   W.nextAt = now + 4000 + Math.random() * 2000
   W.recent = [...W.recent.slice(-9), text, m.kind]
-  if (m.critique) { W.praiseSince = 0; setMood('think') } else { W.praiseSince++; markSeen(m.topic); setMood(m.mood) }
+  if (m.critique) {
+    W.praiseSince = 0; W.critStreak = st.critStreak + 1; W.lastCrit = { kind: m.kind, at: now }; setMood('think')
+    W.pending = W.pending.filter((p) => !contradicts(p.m, { ...st, lastCritique: W.lastCrit ?? null }, now))
+  } else { W.praiseSince++; W.critStreak = 0; W.lastPraise = { kind: m.kind, topic: m.topic }; markSeen(m.topic); setMood(m.mood) }
   if (!m.critique) { mm.counts[m.kind] = (mm.counts[m.kind] ?? 0) + 1; if (!mm.today.includes(m.kind)) mm.today.push(m.kind); saveMem() }
 }
 

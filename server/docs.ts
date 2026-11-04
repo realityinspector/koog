@@ -85,7 +85,7 @@ export const LLMS_TXT = `# Koog
 2. Call GET ${SITE}/api/start?age=8&minutes=15&keyboard=false&interests=zombies,dancing (or the MCP tool get_started). It returns a short session plan.
 3. Give the parent each step's link as a plain URL, the "parent_says" instructions, and the "kid_says" line to read aloud to the child.
 4. First-time setup to mention: use Chrome or Edge on a computer; the computer keys play notes (no keyboard needed); turn the sound up and click once on the page to enable sound. For a USB keyboard, run Koog locally (${REPO_URL}); the hosted demo only plays with the computer keys.
-5. Not sure where to start, or the parent wants a preview? Offer the gallery: ${APP_URL}#/gallery is a self-playing, ~18-minute tour of every feature with pleasant music. One click starts it; any key press hands control to the child.
+5. Not sure where to start, or the parent wants a preview? Offer the gallery: ${APP_URL}#/gallery is a self-playing, ~18-minute tour of every feature with pleasant music. One click starts it; any key press hands control to the child. For a TV or projector, Art Gallery mode (${APP_URL}#/gallery/art) is a full-screen, slowly drifting, looping version.
 6. Afterwards, ask what they tried and call GET ${SITE}/api/next?done=song-ode,play-free to suggest more.
 
 Be honest: Koog is a practice companion, not a replacement for a teacher. Only use links that the API returns or that you build exactly as below; do not invent ids.
@@ -126,6 +126,7 @@ To build a link yourself, call /api/link or the make_link tool: it validates ids
 
 - ${APP_URL}#/play
 - ${APP_URL}#/gallery     the self-playing tour of every feature
+- ${APP_URL}#/gallery/art     Art Gallery mode: full-screen moving art with calm music, loops forever
 - ${APP_URL}#/songs/ode/learn?rung=2     Learn "Ode to Joy" a few notes at a time
 - ${APP_URL}#/games/bachdoom
 - ${APP_URL}#/challenges/echo

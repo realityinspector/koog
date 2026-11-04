@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="KOOG, smart synth">
-  <title>KOOG: smart synth</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="KOOG, the Koding Synth">
+  <title>KOOG: the Koding Synth</title>
   <defs><linearGradient id="kgBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1430"/><stop offset="1" stop-color="#2b1a40"/></linearGradient>
   <radialGradient id="kgGlow" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#ff6f61" stop-opacity=".22"/><stop offset="1" stop-color="#ff6f61" stop-opacity="0"/></radialGradient></defs>
   <rect width="960" height="300" rx="22" fill="url(#kgBg)"/>
@@ -47,5 +47,5 @@
     <path d="M60 148H404" stroke="#b44cff" stroke-opacity=".9"/>
   </g>
 </g>
-  <text x="480" y="258" text-anchor="middle" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" font-weight="800" letter-spacing="9" fill="#d9d2ff">SMART SYNTH · FOR YOUNG MUSICIANS</text>
+  <text x="480" y="258" text-anchor="middle" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" font-weight="800" letter-spacing="9" fill="#d9d2ff">THE KODING SYNTH · FOR KIDS</text>
 </svg>

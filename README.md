@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/images/koog-banner.svg" alt="KOOG logo: sunset-chrome letters where both O's are synth knobs, above the words Smart synth for young musicians" width="760"></p>
+<p align="center"><img src="docs/images/koog-banner.svg" alt="KOOG logo: sunset-chrome letters where both O's are synth knobs, above the words The Koding Synth for Kids" width="760"></p>
 
 # Koog
 
@@ -9,7 +9,7 @@
 
 ### ▶ Try it now: **[koog-demo.fly.dev](https://koog-demo.fly.dev)**
 
-No install, no sign-up. Plays with the computer keyboard in Chrome or Edge. The **[teacher demo](https://koog-demo.fly.dev/teacher/)** shows a class what Koog does, live, and the **[gallery](https://koog-demo.fly.dev/#/gallery)** is a self-playing, ~18-minute tour of every feature with music. For USB keyboards and pedals, [run it on your own computer](#setting-it-up).
+No install, no sign-up. Plays with the computer keyboard in Chrome or Edge. The **[teacher demo](https://koog-demo.fly.dev/teacher/)** shows a class what Koog does, live, and the **[gallery](https://koog-demo.fly.dev/#/gallery)** is a self-playing, ~18-minute tour of every feature with music. **[Art Gallery mode](https://koog-demo.fly.dev/#/gallery/art)** turns it into full-screen moving art for a TV or projector. For USB keyboards and pedals, [run it on your own computer](#setting-it-up).
 
 **Koog is a free, open-source piano and synthesizer app that listens to a child play and turns what it hears into music lessons.** When a student ends a phrase on the home note, Koog says *"Cadence!"* and the fireworks bloom. When they repeat a pattern, it says *"Motif!"* Free play becomes music literacy, and nobody has to stop and lecture.
 
