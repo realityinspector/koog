@@ -1567,6 +1567,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     },
     setMode(m) {
       mode = m
+      try { document.documentElement.dataset.visual = m } catch { /* no DOM */ } // lets CSS keep captions clear of a scene's main character
       held.clear()
       timers.length = 0
       fountains.length = 0

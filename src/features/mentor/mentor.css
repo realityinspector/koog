@@ -74,3 +74,12 @@
 .mn-tech .mn-off { left: auto; right: 62px; bottom: calc(var(--stack-h, 0px) + 54px); }
 .mn-tech .mn-bubble { left: auto; right: 70px; bottom: calc(var(--stack-h, 0px) + 14px); border-radius: 14px 14px 4px 14px; }
 .mn-tech .mn-reel { left: auto; right: 10px; bottom: calc(var(--stack-h, 0px) + 70px); }
+
+/* Dancer visual: the guy stands centre stage, so move-name pills and coach captions go to the right-hand side, clear of his face */
+html[data-visual='dancer'] .kg-display:not([data-screen]) .mn-labels { left: auto; right: 16px; top: calc(var(--cap-top, 112px) + 64px); align-items: flex-end; width: min(36%, 340px); }
+html[data-visual='dancer'] .kg-display:not([data-screen]) .coach { left: auto; right: 16px; transform: none; max-width: min(36%, 360px); text-align: left; animation: coach-side-in .25s ease-out; }
+@keyframes coach-side-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { html[data-visual='dancer'] .coach { animation: none; } }
+/* milestone banners ("First cadence!") rise to the top while the dancer is on stage, instead of covering him */
+html[data-visual='dancer'] body:has(.kg-display:not([data-screen])) .kc-toast-wrap { align-items: flex-start; padding-top: 13vh; }
+html[data-visual='dancer'] body:has(.kg-display:not([data-screen])) .kc-toast { padding: 14px 26px; font-size: clamp(18px, 3.2vw, 28px); }

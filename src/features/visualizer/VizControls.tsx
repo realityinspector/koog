@@ -4,6 +4,7 @@ import { useVibes } from '../../music/vibes'
 import './vizcontrols.css'
 import { Icon } from '../../ui/Icon'
 import { useOnePop } from '../../ui/onePop'
+import { DancerName } from '../vibes/NameChip'
 
 export const VISUALS: { id: Mode; icon: string; label: string }[] = [
   { id: 'fireworks', icon: '🎆', label: 'Fireworks' },
@@ -95,6 +96,7 @@ export function VizControls(p: Props) {
         )}
         {toast && <div className="vb-toast" key={toast.n} role="status">{toast.icon} {toast.label}</div>}
       </div>
+      {p.mode === 'dancer' && <DancerName />}
       <div className="vb-style" ref={box}>
         <button className={'vb-chip vb-icon' + (open ? ' on' : '')} title="Style" aria-label="Style" aria-expanded={open} onClick={() => { setOpen((o) => !o); setSceneOpen(false) }}><Icon name="palette" /></button>
         {open && (

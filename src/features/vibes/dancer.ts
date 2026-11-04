@@ -9,6 +9,7 @@
 import type { Scene, SceneFactory, SceneReact } from '../visualizer/scenes'
 import { MOODS, useVibes, type MoodId } from '../../music/vibes'
 import { FaceAnimator } from './face'
+import { useDancerName } from './dancerName'
 
 const TAU = Math.PI * 2
 const PI = Math.PI
@@ -649,17 +650,20 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       const def = MOODS[st.mood]
       const fs = Math.round(Math.max(13, Math.min(20, U * 0.6)))
       ctx.font = `800 ${fs}px system-ui, sans-serif`
-      const label = `${def.emoji}  ${def.label} = ${WORD[kind]}`
+      const who = useDancerName.getState().name
+      const label = `${who ? who + ' · ' : ''}${def.emoji}  ${def.label} = ${WORD[kind]}`
       const tw = ctx.measureText(label).width + fs * 2
       const ly = Math.min(h - 18, floorY + 1.35 * U)
       ctx.fillStyle = 'rgba(10,8,30,0.55)'
-      rr(ctx, cx - tw / 2, ly - fs * 0.95, tw, fs * 1.9, fs * 0.95); ctx.fill()
+      // keep the label clear of the visual bar's buttons in the bottom-right corner
+      const lx = Math.max(tw / 2 + 12, Math.min(cx, w * 0.58 - tw / 2))
+      rr(ctx, lx - tw / 2, ly - fs * 0.95, tw, fs * 1.9, fs * 0.95); ctx.fill()
       ctx.fillStyle = `hsl(${def.hue},90%,86%)`
-      ctx.fillText(label, cx, ly + 1)
+      ctx.fillText(label, lx, ly + 1)
       if (!everActive) {
         ctx.fillStyle = 'rgba(240,236,255,0.85)'
         ctx.font = `600 ${Math.max(12, fs - 3)}px system-ui, sans-serif`
-        ctx.fillText("Play some notes and I'll dance! Chords = big moves.", cx, ly + fs * 1.7)
+        ctx.fillText(who ? `I'm ${who}! Play some notes and I'll dance.` : "Play some notes and I'll dance! Chords = big moves.", lx, ly + fs * 1.7)
       }
       ctx.restore()
     },
