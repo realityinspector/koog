@@ -4,8 +4,15 @@
 // each note or chord triggers a move, how fast you play sets his tempo, and a cadence makes him bow.
 // The body is a tiny rig: hips, torso, head, 2-bone arms (joint angles) and 2-bone legs (solved with IK so the feet stay
 // planted). Poses are blended: a looping "groove" per style, cross-faded when the mood changes, plus short "moves" on top.
+// He travels around the stage (kid request: "he has to move around the area"): the pitch pulls him (low notes = stage
+// left, high notes = stage right, like the keyboard), a running scale walks him that way, chords and BOOM launch a
+// travelling move (leap, slide, knee slide, cartwheel). Feet step for real while he walks (they only slide on slide moves).
+// There is a little depth too: further back = smaller and higher. He drifts back to the middle when nothing plays.
+// Named moves (moonwalk, grapevine, robot, ...) are picked by mood, register, tempo, loudness and chord vs note, and the
+// same one never plays twice in a row. His head x is published as --dancer-x (and data-dancer-side) so the mentor's
+// pills and captions can hop to the other side of the stage, clear of his face.
 // Photosensitivity: nothing flashes; the wall hue eases over seconds and floor tiles glow softly in one small spot.
-// Reduced motion: half-size moves, no spins, no shaking, small jumps.
+// Reduced motion: half-size moves and travel, slower walking, no spins or cartwheels, no shaking, small jumps.
 import type { Scene, SceneFactory, SceneReact } from '../visualizer/scenes'
 import { MOODS, useVibes, type MoodId } from '../../music/vibes'
 import { FaceAnimator } from './face'
@@ -32,6 +39,8 @@ const MOOD_KIND: Record<MoodId, Kind> = {
 }
 const WORD: Record<Kind, string> = { bouncy: 'bouncy dancing', sway: 'slow swaying', epic: 'BIG moves', jitter: 'jittery dancing', gentle: 'gentle dancing', groovy: 'disco moves', goofy: 'wiggly dancing', spooky: 'creepy tiptoes' }
 const SPEED: Record<Kind, number> = { bouncy: 1, sway: 0.5, epic: 1, jitter: 1.15, gentle: 0.6, groovy: 1, goofy: 1, spooky: 0.55 }
+/** how far back on the stage each style likes to dance (0 = front edge, 1 = back wall) */
+const DEPTH: Record<Kind, number> = { bouncy: 0.2, sway: 0.5, epic: 0.05, jitter: 0.3, gentle: 0.4, groovy: 0.25, goofy: 0.2, spooky: 0.55 }
 const CHEER: Record<Kind, string[]> = {
   bouncy: ['Woo!', 'Yay!', 'Hop!'], sway: ['Aww…', 'Sigh…'], epic: ['YEAH!', 'POWER!'], jitter: ['Eek!', 'Yikes!'],
   gentle: ['Ahh…', 'Nice…'], groovy: ['Groovy!', 'Oh yeah!'], goofy: ['Wheee!', 'Boing!'], spooky: ['Ooo…', 'Boo!'],
@@ -40,6 +49,7 @@ const CHEER: Record<Kind, string[]> = {
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k
 const sm = (x: number) => { const t = x <= 0 ? 0 : x >= 1 ? 1 : x; return t * t * (3 - 2 * t) }
 const pos = (v: number) => (v > 0 ? v : 0)
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v)
 
 type Groove = (p: Pose, ph: number, t: number, a: number, shake: number) => void
 const GROOVES: Record<Kind, Groove> = {
@@ -106,10 +116,16 @@ const GROOVES: Record<Kind, Groove> = {
 interface Move { t0: number; dur: number; att: number; rel: number; note: number; off: number; mask: PK[]; f: (u: number, q: Pose) => void }
 interface Glyph { x: number; y: number; t0: number; hue: number; ch: string; sway: number }
 interface Puff { x: number; y: number; t0: number }
+interface Step { from: number; to: number; t0: number; dur: number; lift: number }
+type Ev = 'run' | 'chord' | 'flav' | 'boom'
+type Reg = 'high' | 'mid' | 'low'
+/** a named move: which styles it suits, which musical events can start it, and the register it likes */
+interface Def { kinds: Kind[]; ev: Ev[]; reg?: Reg[]; tempo?: 'fast' | 'slow'; big?: boolean; go: (dir: number, v: number) => boolean }
 
 const arm = (s: number): [PK, PK] => (s < 0 ? ['la1', 'la2'] : ['ra1', 'ra2'])
 const foot = (s: number): [PK, PK] => (s < 0 ? ['lfx', 'lfy'] : ['rfx', 'rfy'])
 const ARMS: PK[] = ['la1', 'la2', 'ra1', 'ra2']
+const FEET: PK[] = ['lfx', 'lfy', 'rfx', 'rfy']
 
 export const createDancer: SceneFactory = (reduced): Scene => {
   let w = 800, h = 500, U = 25, floorTop = 340, floorY = 400
@@ -118,7 +134,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
   const shakeK = reduced ? 0 : 1
   let lastNow = 0
   let kind: Kind = 'gentle', prevKind: Kind = 'gentle', mixT0 = -1e6, shownMood: MoodId = 'calm'
-  let ph = 0, period = 1000, nudge = 0, lastOn = -1e6, energy = 0
+  let ph = 0, period = 1000, nudge = 0, lastOn = -1e6, energy = 0, lastVel = 0.6
   let moves: Move[] = []
   let lastMoveT = -1e6, stepSide = 1
   let jumpT0 = -1e6, jumpDur = 600, jumpH = 0
@@ -133,14 +149,33 @@ export const createDancer: SceneFactory = (reduced): Scene => {
   const puffs: Puff[] = []
   const tiles = new Map<number, { g: number; hue: number }>()
   const hands: [number, number][] = [[0, 0], [0, 0]]
+  const feetScr: [number, number][] = [[0, 0], [0, 0]]
   const cur: Pose = { ...REST }
   const tmpA: Pose = { ...REST }, tmpB: Pose = { ...REST }, tmpQ: Pose = { ...REST }
   let curtains: HTMLCanvasElement | null = null
   const COLS = 12, ROWS = 4
+  // ---- where he is on the stage (stage x in body units from the centre, depth 0 front .. 1 back)
+  let px = 0, pv = 0, tgtX = 0, maxX = 8
+  let depth = DEPTH.gentle, holdD = 0, holdDUntil = -1e6
+  let turn = 0, faceDir = 0, faceUntil = -1e6
+  let dash: { from: number; to: number; t0: number; dur: number; ease: 'sm' | 'out' | 'lin' } | null = null
+  let glideUntil = -1e6
+  let cart: { t0: number; dur: number; dir: number } | null = null
+  let lastCart = -1e6
+  const fa = [0, 0] // where each foot is planted (stage x)
+  const fst: (Step | null)[] = [null, null]
+  const flift = [0, 0]
+  // ---- named moves
+  let curName = '', nameT = -1e6, nameUntil = -1e6, lastName = '', lastName2 = '', bigUntil = -1e6, notesSince = 0
+  let runDir = 0, runN = 0, prevNote = -1, prevNoteT = -1e6
+  let pubT = -1e6, pubSide = ''
+  let bowMove: Move | null = null, bowT = -1e6
+  let base: DOMMatrix | null = null
+  let skCur = 1
 
+  const kf = () => (SPEED[kind] < 0.8 ? 1.5 : 1)
   function add(dur: number, att: number, rel: number, note: number, mask: PK[], f: (u: number, q: Pose) => void, speed = true) {
-    const sp = speed ? SPEED[kind] : 1
-    const k = sp < 0.8 ? 1.5 : 1
+    const k = speed ? kf() : 1
     moves.push({ t0: lastNow, dur: dur * k, att: att * k, rel: rel * k, note, off: 0, mask, f })
     if (moves.length > 5) moves.shift()
     lastMoveT = lastNow
@@ -150,19 +185,299 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     bubble = { txt, t0: lastNow }; lastBubble = lastNow
   }
   const cheer = () => { const c = CHEER[kind]; say(c[Math.floor(Math.random() * c.length)]) }
+  const scrX = () => w / 2 + px * U
   function jump(H: number, dur = 600) {
     if (lastNow - jumpT0 < jumpDur) return
-    jumpT0 = lastNow; jumpDur = dur; jumpH = H * (reduced ? 0.35 : 1)
+    // under the readouts (top-left) he keeps his jumps low so his face never hides behind them
+    const under = scrX() < w * 0.45 ? 0.6 : 1
+    jumpT0 = lastNow; jumpDur = dur; jumpH = H * (reduced ? 0.35 : 1) * under
   }
-  function spin() {
+  function spin(arms = true) {
     if (reduced || lastNow - lastSpin < 2200) return false
     spinT0 = lastNow; lastSpin = lastNow
-    add(spinDur, 120, 250, -1, ARMS, (_u, q) => { q.la1 = 1.45; q.la2 = 0.2; q.ra1 = 1.45; q.ra2 = 0.2 }, false)
+    if (arms) add(spinDur, 120, 250, -1, ARMS, (_u, q) => { q.la1 = 1.45; q.la2 = 0.2; q.ra1 = 1.45; q.ra2 = 0.2 }, false)
     return true
   }
   function armsV(dur = 700, wide = 0.25) {
     add(dur, 120, 300, -1, [...ARMS, 'lfx', 'rfx'], (_u, q) => { q.la1 = 2.6; q.la2 = 0.15; q.ra1 = 2.6; q.ra2 = 0.15; q.lfx = wide; q.rfx = wide })
   }
+
+  // ---- travel helpers
+  /** the direction to travel `dist` that stays on stage (turns him around at the curtains) */
+  function roomDir(dir: number, dist: number) {
+    const d = dir < 0 ? -1 : 1, dd = dist * (reduced ? 0.6 : 1)
+    if (Math.abs(px + d * dd) <= maxX) return d
+    return Math.abs(px - d * dd) <= maxX || maxX - d * px < maxX + d * px ? -d : d
+  }
+  function dashTo(d: number, dist: number, D: number, glide: boolean, ease: 'sm' | 'out' | 'lin' = 'sm') {
+    // stretch the move (up to 1.8x) when the music is pulling him further that way
+    const far = Math.sign(tgtX - px) === d ? clamp(Math.abs(tgtX - px), dist, dist * 1.8) : dist
+    const to = clamp(px + d * far * (reduced ? 0.6 : 1), -maxX, maxX)
+    dash = { from: px, to, t0: lastNow, dur: D * (reduced ? 1.25 : 1), ease }
+    // keep a target the music already pulled further the same way (a long run keeps walking him), else stay where he lands
+    if (!(Math.sign(tgtX - px) === d && Math.abs(tgtX - px) > Math.abs(to - px))) tgtX = to
+    if (glide) glideUntil = lastNow + D
+  }
+  const faceHold = (dir: number, D: number) => { faceDir = dir; faceUntil = lastNow + D }
+  const goDepth = (d: number, ms = 2600) => { holdD = d; holdDUntil = lastNow + ms }
+  /** add a named move (blends from the current pose; f gets k = 0..1 through the move) */
+  function mv(name: string, dur: number, mask: PK[], f: (k: number, u: number, q: Pose) => void, att = 150, rel = 300) {
+    const D = dur * kf()
+    add(dur, att, rel, -1, mask, (u, q) => f(Math.min(1, u / D), u, q))
+    curName = name; nameT = lastNow; nameUntil = lastNow + D + 700; bigUntil = lastNow + D * 0.85
+    if (name !== lastName) { lastName2 = lastName; lastName = name }
+    notesSince = 0
+    return D
+  }
+
+  // ---- the move book
+  const MOVES: Record<string, Def> = {
+    moonwalk: { kinds: ['groovy', 'goofy', 'spooky'], ev: ['run', 'flav'], reg: ['low', 'mid'], go(dir) {
+      const d = roomDir(dir, 3.2)
+      const D = mv('moonwalk', 1500, [...FEET, 'lean', 'nod', 'y', ...ARMS], (_k, u, q) => {
+        const s = Math.sin(u * 0.0115)
+        q.lfy = 0.5 * pos(s); q.rfy = 0.5 * pos(-s); q.lfx = 0; q.rfx = 0 // heel up, toe slides back
+        q.lean = -d * 0.07; q.nod = 0.15; q.y = -0.25
+        q.la1 = 0.45 + 0.25 * s; q.la2 = -1.3; q.ra1 = 0.45 - 0.25 * s; q.ra2 = -1.3
+      })
+      dashTo(d, 3.2, D, true, 'lin'); faceHold(-d, D) // he faces one way and glides the other
+      return true
+    } },
+    grapevine: { kinds: ['bouncy', 'gentle', 'sway', 'groovy'], ev: ['run'], go(dir) {
+      const d = roomDir(dir, 3)
+      const trail: PK = d > 0 ? 'lfx' : 'rfx'
+      const D = mv('grapevine', 1300, ['lfx', 'rfx', 'lean', 'tilt', 'y', ...ARMS], (k, _u, q) => {
+        const c = Math.sin(k * PI * 3)
+        q[trail] = -0.95 * pos(c) // the back foot crosses behind
+        q.lean = d * 0.06; q.tilt = d * 0.08; q.y = -0.3 - 0.2 * Math.abs(c)
+        q.la1 = 1.2 + 0.3 * c; q.la2 = 0.4; q.ra1 = 1.2 - 0.3 * c; q.ra2 = 0.4
+        if (k > 0.78) { const e = sm((k - 0.78) / 0.15); q.la1 = lerp(q.la1, 1.0, e); q.la2 = lerp(0.4, -1.95, e); q.ra1 = lerp(q.ra1, 1.0, e); q.ra2 = lerp(0.4, -1.95, e) } // clap!
+      })
+      dashTo(d, 3, D, false); faceHold(0, D)
+      return true
+    } },
+    'running man': { kinds: ['bouncy', 'epic', 'jitter', 'goofy'], ev: ['run', 'flav'], reg: ['low'], tempo: 'fast', go(dir) {
+      const d = roomDir(dir, 1.8)
+      const D = mv('running man', 1400, [...FEET, 'knee', 'y', ...ARMS, 'nod', 'lean'], (_k, u, q) => {
+        const s = Math.sin(u * 0.0125), c = Math.abs(Math.cos(u * 0.0125))
+        q.lfy = 1.1 * pos(s) ** 1.5; q.rfy = 1.1 * pos(-s) ** 1.5; q.lfx = 0.05; q.rfx = 0.05; q.knee = 1
+        q.y = -0.35 - 0.25 * c
+        q.la1 = 0.7 + 0.6 * s; q.la2 = -1.6; q.ra1 = 0.7 - 0.6 * s; q.ra2 = -1.6; q.nod = 0.2; q.lean = d * 0.05
+      })
+      dashTo(d, 1.8, D, true, 'lin')
+      return true
+    } },
+    robot: { kinds: ['spooky', 'jitter', 'goofy'], ev: ['chord', 'flav'], reg: ['mid', 'low'], go() {
+      // stiff, stepped poses: arm out with the forearm up, swap, hands forward, one arm up
+      const R = [[1.57, 1.57, 1.57, -1.57, 0.15], [1.57, -1.57, 1.57, 1.57, -0.15], [0.45, -1.9, 0.45, -1.9, 0], [2.95, 0, 0.25, 0, 0.12]]
+      mv('robot', 1800, [...ARMS, 'tilt', 'lean', 'x', 'y', 'knee', 'nod'], (_k, u, q) => {
+        const step = 300, i = Math.floor(u / step), e = sm((u - i * step) / 80)
+        const A = R[(i + 3) % 4], B = R[i % 4]
+        q.la1 = lerp(A[0], B[0], e); q.la2 = lerp(A[1], B[1], e); q.ra1 = lerp(A[2], B[2], e); q.ra2 = lerp(A[3], B[3], e)
+        q.tilt = lerp(A[4], B[4], e); q.lean = 0; q.x = 0; q.y = -0.2 - 0.12 * (i % 2); q.knee = 0.3; q.nod = 0
+      }, 100, 250)
+      if (Math.random() < 0.5) say('Beep boop!')
+      return true
+    } },
+    sprinkler: { kinds: ['goofy', 'bouncy'], ev: ['chord', 'flav'], reg: ['high', 'mid'], go(dir) {
+      const d = dir < 0 ? -1 : 1
+      const [a1, a2] = arm(d), [o1, o2] = arm(-d)
+      mv('sprinkler', 1800, [...ARMS, 'x', 'tilt', 'y'], (k, _u, q) => {
+        q[o1] = 2.55; q[o2] = -2.25 // hand behind the head
+        const c = (k * 2) % 1
+        let a: number
+        if (c < 0.75) { const t = c / 0.15, i = Math.floor(t); a = 1.0 + 0.26 * (i + sm((t - i) / 0.4)) } // tick, tick, tick...
+        else a = lerp(1.0 + 0.26 * 5, 1.0, sm((c - 0.75) / 0.2)) // ...and sweep back
+        q[a1] = a; q[a2] = 0.05; q.tilt = d * 0.1; q.x = -d * 0.15; q.y = -0.3
+      })
+      return true
+    } },
+    'arm swing': { kinds: ['goofy', 'bouncy', 'groovy'], ev: ['chord', 'flav'], reg: ['mid'], tempo: 'fast', go() {
+      mv('arm swing', 1600, [...ARMS, 'x', 'lean', 'y', 'lfy', 'rfy'], (_k, u, q) => {
+        const s = Math.sin(u * 0.0118)
+        q.la1 = 0.35 + 0.75 * s; q.ra1 = 0.35 - 0.75 * s; q.la2 = 0.1; q.ra2 = 0.1 // both arms swing the same way...
+        q.x = 0.45 * s * calm; q.lean = -0.1 * s; q.y = -0.3 - 0.2 * Math.abs(s) // ...hips go the other way
+        q.lfy = 0.25 * pos(s); q.rfy = 0.25 * pos(-s)
+      })
+      return true
+    } },
+    twirl: { kinds: ['gentle', 'sway', 'groovy'], ev: ['flav', 'chord'], reg: ['high'], tempo: 'slow', go(dir) {
+      const d = roomDir(dir, 1.2)
+      const [a1, a2] = arm(d), [o1, o2] = arm(-d)
+      const D = mv('twirl', 1200, [...ARMS, 'y', 'tilt', 'lfy', 'rfy'], (k, _u, q) => {
+        q[a1] = 2.75; q[a2] = 0.8; q[o1] = 1.3; q[o2] = 0.3 // one arm curved over the head
+        q.y = 0.2; q.tilt = d * 0.12; q.lfy = 0.15 * Math.sin(k * PI); q.rfy = 0.1 * Math.sin(k * PI)
+      }, 250, 350)
+      spin(false); dashTo(d, 1.2, D, true)
+      return true
+    } },
+    'knee slide': { kinds: ['epic', 'groovy'], ev: ['chord', 'boom'], big: true, go(dir) {
+      const d = roomDir(dir, 3.6)
+      const D = mv('knee slide', 1300, [...ARMS, 'y', 'lean', ...FEET, 'knee', 'nod', 'tilt'], (k, _u, q) => {
+        const dn = sm(k / 0.2) * (1 - sm((k - 0.8) / 0.2))
+        q.y = -1.9 * dn - 0.2; q.lean = -d * 0.28 * dn; q.nod = -0.25 * dn; q.tilt = -d * 0.1 * dn
+        q.la1 = lerp(0.6, 2.6, dn); q.ra1 = lerp(0.6, 2.6, dn); q.la2 = 0.15; q.ra2 = 0.15
+        q.lfx = 0.55; q.rfx = 0.55; q.lfy = 0; q.rfy = 0; q.knee = 1
+      }, 120, 300)
+      dashTo(d, 3.6, D, true, 'out'); goDepth(0)
+      say('Slide!')
+      return true
+    } },
+    shimmy: { kinds: ['groovy', 'bouncy', 'jitter'], ev: ['flav', 'chord'], reg: ['mid'], tempo: 'fast', go() {
+      const f = reduced ? 0.015 : 0.035
+      mv('shimmy', 1400, ['lean', 'tilt', ...ARMS, 'y', 'x', 'nod'], (k, u, q) => {
+        const s = Math.sin(u * f)
+        q.lean = 0.07 * s * calm; q.tilt = -0.06 * s; q.y = -0.55 - 0.25 * Math.sin(k * PI); q.nod = 0.1 // shoulders shake, going down low
+        q.la1 = 0.9 + 0.12 * s; q.la2 = 0.7; q.ra1 = 0.9 - 0.12 * s; q.ra2 = 0.7
+        q.x = 0.35 * Math.sin(k * TAU) * calm
+      })
+      return true
+    } },
+    'hip sway': { kinds: ['sway', 'gentle', 'groovy'], ev: ['flav', 'chord'], reg: ['mid', 'low'], tempo: 'slow', go() {
+      mv('hip sway', 2000, ['x', 'lean', 'tilt', ...ARMS, 'y', 'lfy', 'rfy'], (k, _u, q) => {
+        const s = Math.sin(k * TAU * 1.5)
+        q.x = 0.9 * s * calm; q.lean = -0.14 * s; q.tilt = 0.12 * s; q.y = -0.3
+        q.la1 = 1.0 + 0.35 * s; q.la2 = 0.7 - 0.3 * s; q.ra1 = 1.0 - 0.35 * s; q.ra2 = 0.7 + 0.3 * s
+        q.lfy = 0.18 * pos(-s); q.rfy = 0.18 * pos(s)
+      }, 400, 500)
+      goDepth(0.55)
+      return true
+    } },
+    'clap & cheer': { kinds: ['bouncy', 'epic', 'gentle'], ev: ['chord', 'flav'], reg: ['high'], go() {
+      // (his head is bigger than his reach, so the claps happen in front of his tummy, then both arms shoot up)
+      mv('clap & cheer', 1400, [...ARMS, 'y', 'nod', 'lfy', 'rfy'], (k, _u, q) => {
+        const c = k < 0.6 ? pos(Math.sin((k / 0.6) * PI * 3)) : 0 // three claps...
+        const up = sm((k - 0.6) / 0.15) // ...then a cheer
+        q.la1 = lerp(lerp(0.9, 0.42, c), 2.6, up); q.ra1 = lerp(lerp(0.9, 0.42, c), 2.6, up)
+        q.la2 = lerp(lerp(-0.9, -1.95, c), 0.1, up); q.ra2 = lerp(lerp(-0.9, -1.95, c), 0.1, up)
+        q.y = -0.3 - 0.2 * c + 0.3 * up; q.nod = 0.15 * c - 0.2 * up; q.lfy = 0.25 * up; q.rfy = 0.25 * up
+      })
+      return true
+    } },
+    'disco point': { kinds: ['groovy', 'epic'], ev: ['flav', 'chord'], reg: ['high'], go(dir) {
+      const d = dir < 0 ? -1 : 1
+      const [a1, a2] = arm(d), [o1, o2] = arm(-d)
+      mv('disco point', 1500, [...ARMS, 'x', 'lean', 'tilt', 'y'], (k, _u, q) => {
+        const c = 0.5 - 0.5 * Math.cos(k * TAU * 2) // up to the sky, then down across the body, twice
+        q[a1] = lerp(2.65, -0.35, c); q[a2] = 0; q[o1] = 0.8; q[o2] = -1.9
+        q.x = d * 0.4 * (1 - 2 * c) * calm; q.lean = -d * 0.12 * (1 - 2 * c); q.tilt = d * 0.1; q.y = -0.3 - 0.3 * c
+      })
+      return true
+    } },
+    'kick-ball-change': { kinds: ['bouncy', 'gentle', 'goofy'], ev: ['flav'], reg: ['low', 'mid'], go(dir) {
+      const d = dir < 0 ? -1 : 1
+      const [fx, fy] = foot(d), [, oy] = foot(-d)
+      mv('kick-ball-change', 1100, [...FEET, 'y', 'lean', ...ARMS], (k, _u, q) => {
+        const kick = Math.sin(Math.min(1, k / 0.4) * PI)
+        const ball = k > 0.4 && k < 0.7 ? Math.sin(((k - 0.4) / 0.3) * PI) : 0
+        const ch = k > 0.7 ? Math.sin(((k - 0.7) / 0.3) * PI) : 0
+        q[fx] = 0.15 + 0.9 * kick; q[fy] = 1.2 * kick; q[oy] = 0.35 * ball
+        q.y = -0.2 - 0.3 * ball - 0.35 * ch; q.lean = -d * 0.12 * kick
+        q.la1 = 1.0; q.la2 = 0.9; q.ra1 = 1.0; q.ra2 = 0.9
+      }, 90, 220)
+      return true
+    } },
+    cartwheel: { kinds: ['epic', 'bouncy'], ev: ['boom', 'chord'], big: true, go(dir, v) {
+      if (reduced || lastNow - lastCart < 9000 || v < 0.75) return false
+      const d = roomDir(dir, 4.2)
+      const D = mv('cartwheel', 1150, [...ARMS, ...FEET, 'y', 'lean', 'tilt', 'nod', 'knee', 'x'], (_k, _u, q) => {
+        q.la1 = 2.6; q.ra1 = 2.6; q.la2 = 0; q.ra2 = 0; q.lfx = 1.1; q.rfx = 1.1; q.lfy = 0; q.rfy = 0
+        q.y = 0; q.x = 0; q.lean = 0; q.tilt = 0; q.nod = 0; q.knee = 1
+      }, 120, 220)
+      cart = { t0: lastNow, dur: D, dir: d }; lastCart = lastNow
+      dashTo(d, 4.2, D, true, 'lin'); goDepth(0.1)
+      say('Wheee!', true)
+      return true
+    } },
+    'heel click': { kinds: ['bouncy', 'epic', 'goofy'], ev: ['flav', 'chord'], reg: ['high'], go(dir, v) {
+      if (v < 0.65) return false
+      const d = roomDir(dir, 1.4)
+      const [a1, a2] = arm(d), [o1, o2] = arm(-d)
+      const D = mv('heel click', 900, [...FEET, 'lean', ...ARMS, 'nod'], (k, _u, q) => {
+        const air = Math.sin(Math.min(1, k / 0.85) * PI)
+        q.lfx = lerp(0.1, -0.85, air); q.rfx = lerp(0.1, -0.85, air); q.lfy = 0.35 * air; q.rfy = 0.35 * air // heels together in the air
+        q.lean = d * 0.18 * air; q.nod = -0.15 * air
+        q[a1] = lerp(0.6, 2.8, air); q[a2] = 0.1; q[o1] = lerp(0.6, 1.5, air); q[o2] = 0.3
+      }, 90, 200)
+      jump(1.5, D * 0.9); dashTo(d, 1.4, D, true)
+      return true
+    } },
+    'arm wave': { kinds: ['groovy', 'gentle', 'sway', 'spooky'], ev: ['flav', 'chord'], reg: ['high', 'mid'], tempo: 'slow', go(dir) {
+      const d = dir < 0 ? -1 : 1
+      const [s1, s2] = arm(-d), [t1, t2] = arm(d) // the wave starts in one hand and rolls out of the other
+      mv('arm wave', 1600, [...ARMS, 'tilt', 'y'], (k, _u, q) => {
+        const wv = k * 6 - 0.5
+        const b = (i: number) => { const z = wv - i; return z > -1 && z < 1 ? 0.5 + 0.5 * Math.cos(z * PI) : 0 }
+        q[s1] = 1.5 + 0.35 * b(1); q[s2] = 0.85 * b(0)
+        q.tilt = d * 0.22 * (b(2) - 0.5 * b(1)); q.y = -0.2 + 0.2 * b(2)
+        q[t1] = 1.5 + 0.35 * b(3); q[t2] = 0.85 * b(4)
+      }, 250, 350)
+      return true
+    } },
+    leap: { kinds: ['epic', 'bouncy', 'goofy'], ev: ['chord', 'boom'], big: true, go(dir) {
+      const d = roomDir(dir, 3.6)
+      const [fx, fy] = foot(d), [ox, oy] = foot(-d)
+      const D = mv('leap', 820, [...ARMS, ...FEET, 'lean', 'nod'], (k, _u, q) => {
+        const air = Math.sin(k * PI)
+        q[fx] = 0.9 * air; q[ox] = 0.9 * air; q[fy] = 0.2 * air; q[oy] = 0.7 * air // split legs
+        q.la1 = lerp(0.6, 2.5, air); q.ra1 = lerp(0.6, 2.5, air); q.la2 = 0.1; q.ra2 = 0.1
+        q.lean = d * 0.15 * air; q.nod = -0.2 * air
+      }, 80, 200)
+      jump(1.7, D); dashTo(d, 3.6, D, true); goDepth(0)
+      return true
+    } },
+    slide: { kinds: ['sway', 'gentle', 'groovy', 'spooky'], ev: ['chord', 'run', 'boom'], go(dir) {
+      const d = roomDir(dir, 3)
+      const [fx] = foot(d)
+      const D = mv('slide', 1100, [...ARMS, 'lean', 'tilt', 'lfx', 'rfx', 'y'], (k, _u, q) => {
+        const e = Math.sin(k * PI)
+        q.la1 = lerp(0.4, 1.45, e); q.ra1 = lerp(0.4, 1.45, e); q.la2 = 0.15; q.ra2 = 0.15
+        q.lean = d * 0.14 * e; q.tilt = -d * 0.1 * e; q[fx] = 0.6 * e; q.y = -0.45 * e
+      })
+      dashTo(d, 3, D, true, 'out')
+      return true
+    } },
+    skip: { kinds: ['bouncy', 'goofy', 'gentle'], ev: ['run'], go(dir) {
+      const d = roomDir(dir, 3.2)
+      const D = mv('skip', 1300, ['y', 'lfy', 'rfy', ...ARMS, 'nod', 'lean'], (k, _u, q) => {
+        const s = Math.sin(k * PI * 4)
+        q.y = 0.3 * Math.abs(s) - 0.2; q.lfy = 0.8 * pos(s); q.rfy = 0.8 * pos(-s)
+        q.la1 = 0.7 + 0.9 * pos(-s); q.ra1 = 0.7 + 0.9 * pos(s); q.la2 = 0.3; q.ra2 = 0.3; q.lean = d * 0.06; q.nod = -0.1
+      })
+      dashTo(d, 3.2, D, false)
+      return true
+    } },
+    creep: { kinds: ['spooky', 'jitter'], ev: ['run', 'chord'], go(dir) {
+      const d = roomDir(dir, 2.6)
+      const D = mv('creep', 1700, ['y', 'lfy', 'rfy', ...ARMS, 'nod', 'lean', 'knee'], (k, _u, q) => {
+        const s = Math.sin(k * PI * 3)
+        q.lfy = 0.85 * pos(s) ** 1.3; q.rfy = 0.85 * pos(-s) ** 1.3; q.y = 0.1 - 0.25 * Math.abs(Math.cos(k * PI * 3)); q.knee = 1 // big tiptoe steps
+        q.la1 = 1.95; q.la2 = -1.4 + 0.2 * s; q.ra1 = 1.95; q.ra2 = -1.4 - 0.2 * s; q.nod = 0.45; q.lean = d * 0.1
+      })
+      dashTo(d, 2.6, D, false); goDepth(0.6)
+      return true
+    } },
+  }
+  const MOVE_LIST = Object.entries(MOVES)
+
+  /** pick a move for this musical moment: suits the style, register, tempo and loudness, never the same one twice in a row */
+  function choose(ev: Ev, dir: number, v: number, reg?: Reg) {
+    const fast = period < 520, slow = period > 800
+    const fits = (strict: boolean) => MOVE_LIST.filter(([n, d]) => d.ev.includes(ev) && (!strict || d.kinds.includes(kind)) &&
+      (!reg || !d.reg || d.reg.includes(reg)) && n !== lastName && (n !== lastName2 || !strict))
+    let c = fits(true)
+    if (c.length < 2) c = c.concat(fits(false).filter((x) => !c.includes(x)).slice(0, 3 - c.length))
+    for (let tries = 0; tries < 4 && c.length; tries++) {
+      const wt = c.map(([, d]) => 1 + (d.kinds.includes(kind) ? 2 : 0) + ((d.tempo === 'fast' && fast) || (d.tempo === 'slow' && slow) ? 1.5 : 0) + (d.big && v > 0.75 ? 2 : 0))
+      let r = Math.random() * wt.reduce((a, b) => a + b, 0), i = 0
+      while (i < c.length - 1 && r > wt[i]) { r -= wt[i]; i++ }
+      if (c[i][1].go(dir, v)) return true
+      c.splice(i, 1)
+    }
+    return false
+  }
+  /** big travelling moves head for the open side of the stage */
+  const openDir = () => (px > maxX * 0.3 ? -1 : px < -maxX * 0.3 ? 1 : Math.random() < 0.5 ? -1 : 1)
 
   // ---- one note -> one move, chosen by the dance style
   function noteMove(note: number, side: number, v: number, spicy: boolean) {
@@ -208,7 +523,8 @@ export const createDancer: SceneFactory = (reduced): Scene => {
         q[fx] = 0.15
         q.y += k > 0.45 ? -0.5 * Math.sin(Math.min(1, (k - 0.45) / 0.55) * PI) * amp : 0.1
       })
-      puffs.push({ x: w / 2 + side * 0.95 * U, y: floorY, t0: lastNow + 460 * 0.47 })
+      const [sx, sy] = feetScr[side < 0 ? 0 : 1]
+      puffs.push({ x: sx || w / 2 + side * 0.95 * U, y: sy || floorY, t0: lastNow + 460 * 0.47 })
       if (puffs.length > 8) puffs.shift()
       return
     }
@@ -225,6 +541,10 @@ export const createDancer: SceneFactory = (reduced): Scene => {
   }
 
   function chordMove(v: number) {
+    // a chord that has the home note in it also ends a phrase: the chord is the bigger moment, so it takes over from the bow
+    if (lastNow - bowT < 350 && bowMove) { moves = moves.filter((m) => m !== bowMove); bowMove = null; bigUntil = -1e6; curName = '' }
+    goDepth(Math.max(0, DEPTH[kind] - 0.25), 2000) // chords bring him forward
+    if (lastNow >= bigUntil - 150 && Math.random() < 0.8 && choose('chord', openDir(), v)) { cheer(); return }
     switch (kind) {
       case 'bouncy': if (!spin()) { armsV(); jump(0.9, 560) } break
       case 'epic': armsV(750, 0.55); jump(1.8 * (0.6 + v * 0.5), 640); break
@@ -238,8 +558,14 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     cheer()
   }
 
-  // ---- the rig: solve joints, then paint
-  function drawGuy(ctx: CanvasRenderingContext2D, now: number, p: Pose, jh: number, sx: number) {
+  // ---- the rig: solve joints, then paint. Drawn in his own frame (centre stage, front row); the caller places it.
+  const map = (x: number, y: number): [number, number] => {
+    if (!base) return [x, y]
+    const m = base.multiply(ctxRef!.getTransform()), p = m.transformPoint(new DOMPoint(x, y))
+    return [p.x, p.y]
+  }
+  let ctxRef: CanvasRenderingContext2D | null = null
+  function drawGuy(ctx: CanvasRenderingContext2D, now: number, p: Pose, jh: number, sx: number, rot: number) {
     const u = U, cx = w / 2
     const hipX = cx + p.x * u, hipY = floorY - (4.45 + p.y + jh) * u
     const f = face.cur
@@ -247,37 +573,41 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     const ink = '#241634'
     const shirt = `hsl(${shirtHue},72%,56%)`, shirtD = `hsl(${shirtHue},60%,40%)`
     const pants = 'hsl(228,36%,30%)'
+    const tn = clamp(turn, -1, 1), ta = Math.abs(tn)
     ctx.save()
+    if (rot) { ctx.translate(hipX, hipY); ctx.rotate(rot); ctx.translate(-hipX, -hipY) }
     ctx.translate(hipX, 0); ctx.scale(sx, 1); ctx.translate(-hipX, 0)
     ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     const cl = Math.cos(p.lean * 0.5), sl = Math.sin(p.lean * 0.5)
     const L1 = 2.3 * u, L2 = 2.25 * u
-    // legs (2-bone IK: the hip is placed by the dance, the foot is planted on the floor)
+    // legs (2-bone IK: the hip is placed by the dance, each foot is planted where it last stepped)
     for (const s of [-1, 1]) {
+      const i = s < 0 ? 0 : 1
       const hx = hipX + s * 0.55 * u * cl, hy = hipY + s * 0.55 * u * sl
-      const fdx = s < 0 ? p.lfx : p.rfx, lift = s < 0 ? p.lfy : p.rfy
-      let fx = cx + p.x * u * 0.25 + s * (0.8 + fdx) * u, fy = floorY - (0.3 + lift + jh * 1.25) * u
+      const fdx = s < 0 ? p.lfx : p.rfx, lift = (s < 0 ? p.lfy : p.rfy) + flift[i]
+      let fx = cx + ((fa[i] - px) * u) / skCur + p.x * u * 0.25 + s * (0.8 + fdx) * u, fy = floorY - (0.3 + lift + jh * 1.25) * u
       let dx = fx - hx, dy = fy - hy
       let d = Math.hypot(dx, dy)
       const reach = (L1 + L2) * 0.999
       if (d > reach) { fx = hx + (dx / d) * reach; fy = hy + (dy / d) * reach; dx = fx - hx; dy = fy - hy; d = reach }
       d = Math.max(d, 0.3 * u)
-      const base = Math.atan2(dy, dx)
+      const bs = Math.atan2(dy, dx)
       const ca = Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d)))
       const a = Math.acos(ca)
-      const out = s < 0 ? base + a : base - a, inn = s < 0 ? base - a : base + a
+      const out = s < 0 ? bs + a : bs - a, inn = s < 0 ? bs - a : bs + a
       const kk = (p.knee + 1) / 2
       const kx = lerp(hx + Math.cos(inn) * L1, hx + Math.cos(out) * L1, kk), ky = lerp(hy + Math.sin(inn) * L1, hy + Math.sin(out) * L1, kk)
       ctx.strokeStyle = ink; ctx.lineWidth = 1.15 * u
       ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke()
       ctx.strokeStyle = pants; ctx.lineWidth = 0.92 * u
       ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke()
-      // sneaker
-      const shx = fx + s * 0.3 * u, shy = fy + 0.12 * u
+      // sneaker: toes point outward when he faces you, both point the way he is heading when he turns
+      const shx = fx + (s * 0.3 * (1 - ta) + tn * sx * 0.42) * u, shy = fy + 0.12 * u
       ctx.fillStyle = '#fbf8ff'; ctx.strokeStyle = ink; ctx.lineWidth = 0.13 * u
       ctx.beginPath(); ctx.ellipse(shx, shy, 0.7 * u, 0.38 * u, s * 0.08, 0, TAU); ctx.fill(); ctx.stroke()
       ctx.fillStyle = `hsl(${(shirtHue + 40) % 360},80%,55%)`
       ctx.beginPath(); ctx.ellipse(shx, shy + 0.2 * u, 0.62 * u, 0.12 * u, s * 0.08, 0, TAU); ctx.fill()
+      feetScr[sx < 0 ? 1 - i : i] = map(shx, shy + 0.3 * u)
     }
     // torso
     const ux = Math.sin(p.lean), uy = -Math.cos(p.lean) // up
@@ -302,10 +632,10 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     ctx.quadraticCurveTo(...pts.top, ...pts.sl)
     ctx.quadraticCurveTo(...pts.bl, ...pts.hl)
     ctx.closePath(); ctx.fill(); ctx.stroke()
-    // hem stripe + a music note on the chest
+    // hem stripe + a music note on the chest (slides toward the way he faces)
     ctx.strokeStyle = shirtD; ctx.lineWidth = 0.22 * u
     ctx.beginPath(); ctx.moveTo(...P(-0.9, 0.62)); ctx.lineTo(...P(0.9, 0.62)); ctx.stroke()
-    const [mx, my] = P(0.05, 1.7)
+    const [mx, my] = P(0.05 + tn * sx * 0.35, 1.7)
     ctx.save(); ctx.translate(mx, my); ctx.rotate(p.lean)
     ctx.fillStyle = 'rgba(255,255,255,0.92)'
     ctx.font = `800 ${Math.round(1.25 * u)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
@@ -340,16 +670,19 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       ctx.beginPath(); ctx.moveTo(shx, shy); ctx.lineTo(vx, vy); ctx.stroke()
       ctx.fillStyle = skin; ctx.strokeStyle = ink; ctx.lineWidth = 0.12 * u
       ctx.beginPath(); ctx.arc(hx, hy, 0.42 * u, 0, TAU); ctx.fill(); ctx.stroke()
-      hands[s < 0 ? 0 : 1] = [hipX + (hx - hipX) * sx, hy]
+      hands[(s < 0) === (sx >= 0) ? 0 : 1] = map(hx, hy)
     }
-    // head: the Vibes face, with hair
+    // head: the Vibes face, with hair. When he turns, the face slides a little toward where he is going (a 3/4 view).
     const R = 1.5 * u
     const hcx = nx + hux * (0.35 * u + R), hcy = ny + huy * (0.35 * u + R) + p.nod * 0.3 * u + p.bow * 0.9 * u
     ctx.save()
     ctx.translate(hcx, hcy); ctx.rotate(p.lean + p.tilt)
     const hair = 'hsl(24,48%,24%)'
     if (sx >= 0) {
+      ctx.save(); ctx.translate(tn * 0.1 * R, 0); ctx.scale(1 - 0.08 * ta, 1)
       face.draw(ctx, 0, 0, R, now, { pulse, bob: 0, shake: kind === 'jitter' && !reduced ? 0.006 : 0 })
+      ctx.restore()
+      ctx.translate(tn * 0.05 * R, 0)
       ctx.fillStyle = hair; ctx.strokeStyle = ink; ctx.lineWidth = 0.1 * u
       ctx.beginPath()
       ctx.arc(0, 0, R * 1.05, PI + 0.5, -0.5)
@@ -370,9 +703,10 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     // cowlick
     ctx.strokeStyle = hair; ctx.lineWidth = 0.22 * u
     ctx.beginPath(); ctx.moveTo(R * 0.05, -R * 1.0); ctx.quadraticCurveTo(R * 0.15, -R * 1.42, R * 0.45, -R * 1.3); ctx.stroke()
+    const [hx, hy] = map(0, 0), [tx] = map(R, 0)
     ctx.restore()
     ctx.restore()
-    return { hx: hipX + (hcx - hipX) * sx, hy: hcy, R }
+    return { hx, hy, R: Math.abs(tx - hx) || R }
   }
 
   function buildCurtains(): HTMLCanvasElement {
@@ -423,12 +757,65 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     return Math.max(0, Math.min(COLS - 1, Math.floor(((x - xb0) / (w * 1.6)) * COLS)))
   }
 
+  /** move him along the stage: a dash (travelling move) or a soft spring toward where the music pulls him */
+  function travel(now: number, dt: number) {
+    const ds = Math.max(0.001, dt / 1000)
+    if (dash) {
+      const q = Math.min(1, (now - dash.t0) / dash.dur)
+      const e = dash.ease === 'lin' ? sm(q * 1.15 - 0.075) * 0.3 + q * 0.7 : dash.ease === 'out' ? 1 - (1 - q) ** 2.2 : sm(q)
+      const nx = lerp(dash.from, dash.to, e)
+      pv = (nx - px) / ds; px = nx
+      if (q >= 1) dash = null
+    } else {
+      if (now - lastOn > 2500) tgtX *= Math.exp(-dt / 4500) // nothing playing: wander back to the middle
+      const om = reduced ? 1.6 : 2.8, vmax = reduced ? 2.5 : 7
+      pv += (om * om * (tgtX - px) - 2 * om * pv) * ds
+      pv = clamp(pv, -vmax, vmax)
+      px += pv * ds
+    }
+    if (px > maxX || px < -maxX) { px = clamp(px, -maxX, maxX); pv = 0 }
+    // depth: the style's favourite spot, unless a move asked for front/back; never far back under the readouts (top-left)
+    let dT = now < holdDUntil ? holdD : DEPTH[kind]
+    if (scrX() < w * 0.45) dT = Math.min(dT, 0.1)
+    depth += (dT - depth) * (1 - Math.exp(-dt / (reduced ? 2400 : 1500)))
+    // facing: a move may hold a direction, otherwise he looks where he is going, and back at you when still
+    const ft = now < faceUntil ? faceDir : Math.abs(pv) > 0.7 ? Math.sign(pv) : 0
+    turn += (ft - turn) * (1 - Math.exp(-dt / 170))
+  }
+  /** feet: planted until the body gets too far from them, then a real step (they only slide on slide moves or in the air) */
+  function stepFeet(now: number, air: boolean) {
+    const glide = now < glideUntil || air || cart !== null
+    for (let i = 0; i < 2; i++) {
+      const st = fst[i]
+      if (glide) { fa[i] = lerp(fa[i], px, 0.5); fst[i] = null; flift[i] = 0; continue }
+      if (st) {
+        const k = (now - st.t0) / st.dur
+        if (k >= 1) { fa[i] = st.to; fst[i] = null; flift[i] = 0 }
+        else { fa[i] = lerp(st.from, st.to, sm(k)); flift[i] = st.lift * Math.sin(PI * k) }
+      }
+    }
+    if (glide) return
+    const sp = Math.abs(pv)
+    const d0 = Math.abs(fa[0] - px), d1 = Math.abs(fa[1] - px)
+    const i = d0 >= d1 ? 0 : 1, di = Math.max(d0, d1)
+    const thr = sp > 0.4 ? 0.45 : 0.16
+    if (!fst[i] && di > thr && (!fst[1 - i] || sp > 5)) {
+      const to = px + clamp(pv * 0.2, -1.2, 1.2)
+      const dur = clamp(300 - sp * 20, 160, 300) * (reduced ? 1.3 : 1)
+      fst[i] = { from: fa[i], to, t0: now, dur, lift: Math.min(0.7, 0.2 + Math.abs(to - fa[i]) * 0.35) }
+    }
+  }
+
   return {
     ownBackdrop: true,
     resize(nw, nh) {
       w = nw; h = nh
       U = Math.max(12, Math.min(h * 0.052, w * 0.06))
       floorTop = h * 0.72; floorY = h * 0.85
+      // stay between the curtains, arms and all
+      const cw = Math.max(36, w * 0.085)
+      maxX = Math.max(0, (w / 2 - cw - 4.4 * U) / U) * (reduced ? 0.5 : 1)
+      px = clamp(px, -maxX, maxX); tgtX = clamp(tgtX, -maxX, maxX)
       curtains = null
     },
     noteOn(note, x, v, k, hue, _name, g) {
@@ -445,13 +832,32 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       }
       if (ioi > 60) nudge += -(ph - Math.round(ph)) * 0.35 // lean the beat toward this note
       lastOn = now
+      lastVel = v
       energy = Math.min(1, energy + 0.16 + v * 0.14)
       pulse = Math.min(0.06, pulse + 0.015 + v * 0.02)
       const c = colFor(x), r = Math.random() < 0.5 ? ROWS - 1 : ROWS - 2
       tiles.set(r * COLS + c, { g: 1, hue })
       if (g?.cluster) return
+      // the pitch pulls him across the stage like the keyboard: low = stage left, high = stage right
+      const pull = clamp((note - 66) / 18, -1, 1) * maxX
+      tgtX = clamp(lerp(tgtX, pull, 0.4), -maxX, maxX)
+      // a running scale (3+ steps the same way) walks him that way
+      const iv = note - prevNote
+      if (prevNote >= 0 && now - prevNoteT < 700 && Math.abs(iv) >= 1 && Math.abs(iv) <= 4) {
+        const d = Math.sign(iv)
+        if (d === runDir) runN++; else { runDir = d; runN = 1 }
+      } else runN = 0
+      prevNote = note; prevNoteT = now
+      notesSince++
       const side = x < w / 2 ? -1 : 1
-      if (now - lastMoveT > 90) noteMove(note, side, v, k === 'spicy')
+      if (runN >= 3) {
+        tgtX = clamp(tgtX + runDir * 0.8, -maxX, maxX)
+        if (now >= bigUntil - 150) { choose('run', runDir, v) }
+      } else if (now >= bigUntil && now - nameT > 1800 && notesSince >= 4 && energy > 0.35) {
+        // every few notes, a named move that fits what is being played
+        choose('flav', side, v, note >= 72 ? 'high' : note <= 55 ? 'low' : 'mid')
+      }
+      if (now >= bigUntil && now - lastMoveT > 90) noteMove(note, side, v, k === 'spicy')
       if (glyphs.length < 22) {
         const [hx, hy] = hands[side < 0 ? 0 : 1]
         glyphs.push({ x: hx || w / 2, y: hy || h / 2, t0: now, hue, ch: Math.random() < 0.5 ? '♪' : '♫', sway: Math.random() * 6 })
@@ -461,9 +867,12 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       if (ev.type === 'cadence') {
         moves = []
         add(1500, 300, 450, -1, [...ARMS, 'bow', 'nod', 'y'], (_u, q) => { q.bow = 1; q.nod = 0.9; q.y -= 0.3; q.la1 = -0.45; q.la2 = -1.0; q.ra1 = 1.15; q.ra2 = 0.25 }, false)
+        bowMove = moves[moves.length - 1]; bowT = lastNow
+        curName = 'bow'; nameT = lastNow; nameUntil = lastNow + 2000; bigUntil = lastNow + 1200; faceHold(0, 1500)
         say('Ta-da!', true)
       } else if (ev.type === 'boom') {
-        armsV(750, 0.85); jump(2.2, 680)
+        goDepth(0, 2500)
+        if (!choose('boom', openDir(), 1)) { armsV(750, 0.85); jump(2.2, 680) }
         say('BOOM!', true)
       } else if (ev.type === 'fizzle') {
         add(900, 100, 320, -1, ['lean', 'x', ...ARMS], (u, q) => {
@@ -476,7 +885,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
         add(700, 150, 300, -1, [...ARMS, 'nod'], (_u, q) => { q.la1 = 0.75; q.ra1 = 0.75; q.la2 = 1.3; q.ra2 = 1.3; q.nod = -0.2 }, false)
         if (Math.random() < 0.4) say('Phew!')
       } else if (ev.type === 'motif') {
-        if (!spin()) armsV(600)
+        if (spin()) { curName = 'spin'; nameT = lastNow; nameUntil = lastNow + 1500 } else armsV(600)
         say('Again!')
       }
     },
@@ -486,11 +895,12 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     },
     chord(xs) {
       void xs
-      chordMove(0.7)
+      chordMove(Math.max(0.5, lastVel))
     },
     clear() {
       moves = []; held.clear(); glyphs.length = 0; puffs.length = 0; tiles.clear(); bubble = null
       energy = 0; jumpT0 = -1e6; spinT0 = -1e6
+      dash = null; cart = null; tgtX = 0; glideUntil = -1e6; bigUntil = -1e6; curName = ''; runN = 0
     },
     drawBackdrop(ctx, now) {
       if (!w || !h) return
@@ -559,6 +969,9 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       Object.assign(tmpB, REST); GROOVES[kind](tmpB, ph, now, amp, shakeK)
       const p = tmpA
       for (const key of KEYS) p[key] = lerp(tmpA[key], tmpB[key], mix)
+      // while he walks, the groove's own hip sway calms down so his feet can keep up
+      const walk = Math.min(1, Math.abs(pv) / 3)
+      p.x *= 1 - 0.6 * walk
       for (let i = moves.length - 1; i >= 0; i--) {
         const m = moves[i]
         let end = m.t0 + m.dur
@@ -584,37 +997,65 @@ export const createDancer: SceneFactory = (reduced): Scene => {
       let sx = 1
       const su = (now - spinT0) / spinDur
       if (su >= 0 && su < 1) { sx = Math.cos(TAU * sm(su)); if (Math.abs(sx) < 0.12) sx = sx < 0 ? -0.12 : 0.12 }
+      // cartwheel: the whole rig rolls over, lifted so his hands clear the floor
+      let rot = 0
+      if (cart) {
+        const cu = (now - cart.t0) / cart.dur
+        if (cu >= 1) cart = null
+        else { rot = cart.dir * TAU * sm(cu); jh += 1.5 * Math.sin(PI * cu) }
+      }
       // light low-pass so nothing ever pops
       const lp = 1 - Math.exp(-dt / 40)
       for (const key of KEYS) cur[key] = lerp(cur[key], p[key], lp)
+      travel(now, dt)
+      stepFeet(now, jh > 0.15)
 
       ctx.save()
+      base = ctx.getTransform().inverse(); ctxRef = ctx
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'
-      const cx = w / 2
-      // spotlight cone + pool
+      const sk = 1 - 0.22 * depth // further back = smaller...
+      skCur = sk
+      const gy = floorY - depth * (floorY - floorTop) * 0.7 // ...and higher up the floor
+      const X = scrX()
+      // spotlight cone + pool: they follow him across the stage
       const beat = reduced ? 0 : 0.04 * (0.5 + 0.5 * Math.cos(ph * TAU)) * energy
-      const cone = ctx.createLinearGradient(0, 0, 0, floorY)
+      const ctop = w / 2 + (X - w / 2) * 0.35
+      const cone = ctx.createLinearGradient(0, 0, 0, gy)
       cone.addColorStop(0, 'hsla(48,100%,88%,0.16)'); cone.addColorStop(1, 'hsla(48,100%,88%,0.05)')
       ctx.fillStyle = cone
-      ctx.beginPath(); ctx.moveTo(cx - 0.9 * U, 0); ctx.lineTo(cx + 0.9 * U, 0); ctx.lineTo(cx + 4.6 * U, floorY); ctx.lineTo(cx - 4.6 * U, floorY); ctx.closePath(); ctx.fill()
-      ctx.save(); ctx.translate(cx, floorY); ctx.scale(1, 0.24)
+      ctx.beginPath(); ctx.moveTo(ctop - 0.9 * U, 0); ctx.lineTo(ctop + 0.9 * U, 0); ctx.lineTo(X + 4.6 * U * sk, gy); ctx.lineTo(X - 4.6 * U * sk, gy); ctx.closePath(); ctx.fill()
+      ctx.save(); ctx.translate(X, gy); ctx.scale(sk, 0.24 * sk)
       const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 4.8 * U)
       pool.addColorStop(0, `hsla(48,100%,86%,${0.32 + beat})`); pool.addColorStop(1, 'hsla(48,100%,86%,0)')
       ctx.fillStyle = pool; ctx.beginPath(); ctx.arc(0, 0, 4.8 * U, 0, TAU); ctx.fill()
       ctx.restore()
-      // soft shadow (smaller when he is in the air)
+      // soft shadow (smaller when he is in the air, and when he is further back)
       const sh = 1 - Math.min(0.5, jh * 0.18)
       ctx.fillStyle = `rgba(10,4,20,${0.42 * sh})`
-      ctx.beginPath(); ctx.ellipse(cx + cur.x * U * 0.6, floorY + 0.25 * U, 2.1 * U * sh, 0.42 * U * sh, 0, 0, TAU); ctx.fill()
+      ctx.beginPath(); ctx.ellipse(X + cur.x * U * 0.6 * sk, gy + 0.25 * U * sk, 2.1 * U * sh * sk, 0.42 * U * sh * sk, 0, 0, TAU); ctx.fill()
       // stomp dust
       for (let i = puffs.length - 1; i >= 0; i--) {
         const q = (now - puffs[i].t0) / 600
         if (q < 0) continue
         if (q >= 1) { puffs.splice(i, 1); continue }
         ctx.fillStyle = `rgba(230,225,255,${0.35 * (1 - q)})`
-        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(puffs[i].x + s * (0.4 + q * 1.1) * U, puffs[i].y - q * 0.4 * U, (0.2 + q * 0.35) * U, 0, TAU); ctx.fill() }
+        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(puffs[i].x + s * (0.4 + q * 1.1) * U * sk, puffs[i].y - q * 0.4 * U, (0.2 + q * 0.35) * U * sk, 0, TAU); ctx.fill() }
       }
-      const head = drawGuy(ctx, now, cur, jh, sx)
+      ctx.save()
+      ctx.translate(X, gy); ctx.scale(sk, sk); ctx.translate(-w / 2, -floorY)
+      const head = drawGuy(ctx, now, cur, jh, sx, rot)
+      ctx.restore()
+      // tell the page where his head is, so the mentor's pills and captions can sit on the other side (~5 times a second)
+      if (now - pubT > 200) {
+        pubT = now
+        const fx = head.hx / Math.max(1, w)
+        const side = fx > 0.58 ? 'right' : fx < 0.5 ? 'centre' : pubSide || 'centre'
+        try {
+          const de = document.documentElement
+          de.style.setProperty('--dancer-x', fx.toFixed(3))
+          if (side !== pubSide) { pubSide = side; if (side === 'right') de.dataset.dancerSide = 'right'; else delete de.dataset.dancerSide }
+        } catch { /* no DOM */ }
+      }
       // floating notes from his hands
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
       ctx.font = `800 ${Math.round(U * 0.9)}px system-ui, sans-serif`
@@ -628,32 +1069,35 @@ export const createDancer: SceneFactory = (reduced): Scene => {
         ctx.fillText(gq.ch, gq.x + Math.sin(q * 5 + gq.sway) * U * 0.5 * calm, gq.y - q * 3.2 * U)
       }
       ctx.globalAlpha = 1
-      // speech bubble
+      // speech bubble (on whichever side of his head has more room)
       if (bubble) {
         const q = (now - bubble.t0) / 1400
         if (q >= 1) bubble = null
         else {
           const a = q < 0.12 ? q / 0.12 : q > 0.75 ? 1 - (q - 0.75) / 0.25 : 1
-          const bx = head.hx + head.R * 1.55, by = head.hy - head.R * 1.25 - q * 0.4 * U
+          const bs = head.hx > w * 0.6 ? -1 : 1
+          const bx = head.hx + bs * head.R * 1.55, by = head.hy - head.R * 1.25 - q * 0.4 * U
           ctx.globalAlpha = a
           ctx.font = `800 ${Math.round(Math.max(13, U * 0.62))}px system-ui, sans-serif`
           const tw = ctx.measureText(bubble.txt).width + U * 0.9, th = U * 1.05
           ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#241634'; ctx.lineWidth = 2
           rr(ctx, bx - tw / 2, by - th / 2, tw, th, th / 2); ctx.fill(); ctx.stroke()
-          ctx.beginPath(); ctx.moveTo(bx - tw * 0.3, by + th / 2 - 1); ctx.lineTo(bx - tw * 0.42, by + th / 2 + U * 0.4); ctx.lineTo(bx - tw * 0.12, by + th / 2 - 1); ctx.fill()
+          ctx.beginPath(); ctx.moveTo(bx - bs * tw * 0.3, by + th / 2 - 1); ctx.lineTo(bx - bs * tw * 0.42, by + th / 2 + U * 0.4); ctx.lineTo(bx - bs * tw * 0.12, by + th / 2 - 1); ctx.fill()
           ctx.fillStyle = '#241634'
           ctx.fillText(bubble.txt, bx, by + 1)
           ctx.globalAlpha = 1
         }
       }
-      // caption: the mood and the dance it makes
+      // caption: the mood and the dance it makes (or the move he is doing right now)
       const def = MOODS[st.mood]
       const fs = Math.round(Math.max(13, Math.min(20, U * 0.6)))
       ctx.font = `800 ${fs}px system-ui, sans-serif`
       const who = useDancerName.getState().name
-      const label = `${who ? who + ' · ' : ''}${def.emoji}  ${def.label} = ${WORD[kind]}`
+      const what = curName && now < nameUntil ? curName : WORD[kind]
+      const label = `${who ? who + ' · ' : ''}${def.emoji}  ${def.label} = ${what}`
       const tw = ctx.measureText(label).width + fs * 2
       const ly = Math.min(h - 18, floorY + 1.35 * U)
+      const cx = w / 2
       ctx.fillStyle = 'rgba(10,8,30,0.55)'
       // keep the label clear of the visual bar's buttons in the bottom-right corner
       const lx = Math.max(tw / 2 + 12, Math.min(cx, w * 0.58 - tw / 2))

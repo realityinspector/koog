@@ -448,4 +448,11 @@ export const entries: Entry[] = [
     title: '🔔 A looper that keeps time like a real pedal, with a metronome',
     body: 'The looper now works like the classic guitar looper pedals. Tap to record, tap to loop, tap to add a layer. Press twice fast to stop. Hold for 2 seconds to undo, and hold again to bring it back. With the beat or the new 🔔 metronome on, loops snap to whole bars, so they always land on beat 1. With everything off, the loop is exactly as long as you played, and Koog works out the tempo from it, so turning the beat on later still lines up. Each layer can be a different instrument too: pick "Next layer sound" and stack a bass, a piano and an organ. Musicians call staying exactly in time "being locked to the grid".',
   },
+  {
+    id: 63,
+    time: 'Night',
+    stage: 'ship',
+    title: '🕺 Ziggy learns 20 new moves and dances all over the stage',
+    body: 'The dancer was stuck in the middle. Now he travels: low notes pull him to the left, high notes to the right, just like the keyboard, and a fast run up or down the keys sends him moonwalking, skipping or sliding across the stage. He learned 20 new moves, from the robot and the running man to a twirl, a knee slide and (for big loud chords) a cartwheel, and he never does the same move twice in a row. The label under him tells you which move it is. Animators call making feet stay on the floor while the body moves "foot planting".',
+  },
 ]
