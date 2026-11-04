@@ -2,6 +2,7 @@
 // no I/O, no state, nothing stored. Erasable TypeScript only (Node runs this file directly).
 import { CATALOG, CURRICULUM, KINDS, CONCEPT_IDS, OPTIONS, findActivity, findAmbiguous, findConcept, validateState, type Activity, type Concept } from '../src/links/catalog.ts'
 import { DEFAULT_ORIGIN, SCREENS, SONG_MODES, parseHash, slugToKey, toUrl, type KoogState, type HelperMode, type Screen, type SongMode } from '../src/links/links.ts'
+import { z } from 'zod'
 
 export const REPO_URL = 'https://github.com/realityinspector/koog'
 export const APP_URL = DEFAULT_ORIGIN
@@ -33,6 +34,20 @@ export function cleanBool(v: unknown): boolean | undefined {
   if (['1', 'true', 'yes', 'y'].includes(t)) return true
   if (['0', 'false', 'no', 'n'].includes(t)) return false
   throw new BadInput('expected true or false')
+}
+/** A bounded number from a query string (undefined when absent); anything else is a 400. */
+export function cleanNum(v: string | null, name: string, lo: number, hi: number): number | undefined {
+  if (v === null || v === '') return undefined
+  const n = Number(v)
+  if (!Number.isFinite(n) || n < lo || n > hi) throw new BadInput(`${name} must be a number from ${lo} to ${hi}`)
+  return n
+}
+/** A path id from the URL: decoded safely and length-capped (ids are short slugs). */
+export function cleanId(raw: string): string {
+  let id: string
+  try { id = decodeURIComponent(raw) } catch { throw new BadInput('Bad id') }
+  if (id.length > 80) throw new BadInput('id is too long')
+  return id
 }
 export function cleanList(v: unknown, max = 12): string[] {
   const arr = Array.isArray(v) ? v : typeof v === 'string' ? v.split(',') : []
@@ -234,6 +249,23 @@ export function makeLink(i: LinkInput) {
   const back = parseHash(url)
   problems.push(...back.problems)
   return { ok: problems.length === 0, url, problems, hint: problems.length ? 'Fix the problems and call again. The url may not open what you intended until they are gone.' : 'Canonical Koog link. Give it to the parent as plain text.' }
+}
+
+/** Bounded schema for make_link arguments, shared by the MCP tool and both forms of /api/link. */
+export const LINK_SHAPE = {
+  screen: z.string().max(20).optional().describe('play (default), songs, challenges, games, beats, synth, log'),
+  item: z.string().max(64).optional(), song_mode: z.string().max(10).optional(),
+  rung: z.number().int().min(1).max(7).optional(), phrase: z.number().int().min(1).max(99).optional(), level: z.string().max(20).optional(),
+  key: z.string().max(20).optional(), visual: z.string().max(30).optional(), palette: z.string().max(30).optional(), sound: z.string().max(30).optional(),
+  modes: z.array(z.string().max(10)).max(5).optional(), sheet: z.boolean().optional(),
+}
+// REST also accepts modes as a comma list ("mentor,vibes")
+const REST_LINK = z.object({ ...LINK_SHAPE, modes: z.union([LINK_SHAPE.modes, z.string().max(60)]).optional() })
+/** Validate untrusted /api/link input (query or JSON body); never echoes the values back. */
+export function checkLink(input: unknown): LinkInput {
+  const r = REST_LINK.safeParse(input)
+  if (!r.success) throw new BadInput('Bad link input: ' + r.error.issues.slice(0, 3).map((i) => `${i.path.join('.') || 'body'}: ${i.message}`).join('; '))
+  return r.data
 }
 export function linkFromQuery(q: URLSearchParams): LinkInput {
   const n = (k: string) => (q.get(k) ? Number(q.get(k)) : undefined)

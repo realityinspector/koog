@@ -5,13 +5,15 @@ import { createServer } from 'node:http'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpServer } from './mcp.ts'
-import { BadInput, catalogJson, cleanAge, cleanBool, cleanList, cleanMinutes, getActivity, getConcept, getStarted, linkFromQuery, listActivities, listConcepts, makeLink, nextSteps, APP_URL, REPO_URL } from './core.ts'
+import { BadInput, catalogJson, checkLink, cleanAge, cleanBool, cleanId, cleanList, cleanMinutes, cleanNum, getActivity, getConcept, getStarted, linkFromQuery, listActivities, listConcepts, makeLink, nextSteps, APP_URL, REPO_URL } from './core.ts'
 import { LLMS_TXT, OPENAPI, SITE } from './docs.ts'
 import { CATALOG } from '../src/links/catalog.ts'
 
 const PORT = Number(process.env.PORT ?? 8787)
 const HOST = process.env.HOST ?? '127.0.0.1'
 const MAX_BODY = 64 * 1024
+const MAX_URL = 2048 // path + query; every real call is far shorter
+const MAX_BATCH = 10 // JSON-RPC batch entries per MCP POST
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +22,8 @@ const CORS = {
   'Access-Control-Expose-Headers': 'Mcp-Session-Id',
   'Access-Control-Max-Age': '86400',
 }
-const BASE = { ...CORS, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' }
+// JSON and text only: nothing here should ever run as a page or be framed
+const BASE = { ...CORS, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'" }
 
 function send(res: ServerResponse, status: number, body: unknown, type = 'application/json; charset=utf-8', cache = 'no-store') {
   const out = typeof body === 'string' ? body : JSON.stringify(body)
@@ -44,7 +47,10 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('error', reject)
   })
 }
+class WrongType extends Error {}
 async function readJson(req: IncomingMessage): Promise<unknown> {
+  // checked before reading, so a form post or upload is refused without buffering it
+  if (!/^application\/json\s*(;|$)/i.test(req.headers['content-type'] ?? '')) throw new WrongType()
   const raw = await readBody(req)
   if (!raw.trim()) return undefined
   try { return JSON.parse(raw) } catch { throw new BadInput('Body must be valid JSON') }
@@ -81,21 +87,21 @@ async function rest(req: IncomingMessage, res: ServerResponse, path: string, q: 
     return send(res, 200, out, undefined, cache)
   }
   if (path === '/api/activities') {
-    const num = (k: string) => { const v = q.get(k); if (v === null || v === '') return undefined; const n = Number(v); if (!Number.isFinite(n)) throw new BadInput(`${k} must be a number`); return n }
-    return send(res, 200, listActivities({ kind: q.get('kind') ?? undefined, concept: q.get('concept') ?? undefined, age: num('age'), max_minutes: num('max_minutes'), limit: num('limit'), offset: num('offset') }), undefined, cache)
+    const num = (k: string, hi: number) => cleanNum(q.get(k), k, 0, hi)
+    return send(res, 200, listActivities({ kind: q.get('kind') ?? undefined, concept: q.get('concept') ?? undefined, age: num('age', 120), max_minutes: num('max_minutes', 600), limit: num('limit', 1000), offset: num('offset', 10000) }), undefined, cache)
   }
   let m = /^\/api\/activities\/([^/]+)$/.exec(path)
-  if (m) return send(res, 200, getActivity(decodeURIComponent(m[1])), undefined, cache)
+  if (m) return send(res, 200, getActivity(cleanId(m[1])), undefined, cache)
   if (path === '/api/concepts') return send(res, 200, listConcepts(), undefined, cache)
   m = /^\/api\/concepts\/([^/]+)$/.exec(path)
-  if (m) return send(res, 200, getConcept(decodeURIComponent(m[1])), undefined, cache)
+  if (m) return send(res, 200, getConcept(cleanId(m[1])), undefined, cache)
   if (path === '/api/link') {
     if (post) {
       const body = await readJson(req)
       if (body === null || typeof body !== 'object' || Array.isArray(body)) throw new BadInput('Send a JSON object, e.g. {"screen":"songs","item":"ode","song_mode":"learn"}')
-      return send(res, 200, makeLink(body as Record<string, never>))
+      return send(res, 200, makeLink(checkLink(body)))
     }
-    return send(res, 200, makeLink(linkFromQuery(q)))
+    return send(res, 200, makeLink(checkLink(linkFromQuery(q))))
   }
   if (path === '/api/next') return send(res, 200, nextSteps(cleanList(q.get('done'), 60), cleanAge(q.get('age'))), undefined, cache)
   return fail(res, 404, 'Not found. GET /api lists the endpoints.')
@@ -109,7 +115,15 @@ async function mcp(req: IncomingMessage, res: ServerResponse) {
     res.setHeader('Allow', 'POST')
     return send(res, 405, { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed. This server is stateless: POST JSON-RPC to /mcp.' }, id: null })
   }
-  const body = await readJson(req)
+  const rpcError = (status: number, code: number, message: string) => send(res, status, { jsonrpc: '2.0', error: { code, message }, id: null })
+  let body: unknown
+  try { body = await readJson(req) } catch (e) {
+    if (e instanceof BadInput) return rpcError(400, -32700, 'Parse error: body must be valid JSON')
+    if (e instanceof WrongType) return rpcError(415, -32000, 'Content-Type must be application/json')
+    throw e
+  }
+  if (body === undefined) return rpcError(400, -32600, 'Invalid request: empty body')
+  if (Array.isArray(body) && (body.length === 0 || body.length > MAX_BATCH)) return rpcError(400, -32600, `Invalid request: batches hold 1 to ${MAX_BATCH} messages`)
   const server = createMcpServer()
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
   res.on('close', () => { void transport.close(); void server.close() })
@@ -121,8 +135,9 @@ async function mcp(req: IncomingMessage, res: ServerResponse) {
 
 // ---------- routing ----------
 
-const http = createServer(async (req, res) => {
+const http = createServer({ maxHeaderSize: 8 * 1024, connectionsCheckingInterval: 2_000 }, async (req, res) => {
   try {
+    if ((req.url ?? '').length > MAX_URL) return fail(res, 414, 'URL too long')
     const url = new URL(req.url ?? '/', 'http://localhost')
     const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname
     if (req.method === 'OPTIONS') { res.writeHead(204, BASE); return res.end() }
@@ -134,7 +149,8 @@ const http = createServer(async (req, res) => {
     if (path === '/api' || path.startsWith('/api/')) return await rest(req, res, path, url.searchParams)
     return fail(res, 404, 'Not found')
   } catch (e) {
-    if (res.headersSent) { res.end(); return }
+    if (res.headersSent || req.destroyed) { res.end(); return } // e.g. the client hung up mid-body: nothing to answer
+    if (e instanceof WrongType) return fail(res, 415, 'Content-Type must be application/json')
     if (e instanceof TooLarge) { res.setHeader('Connection', 'close'); res.on('finish', () => req.destroy()); return fail(res, 413, 'Body too large (64 KB max)') }
     if (e instanceof BadInput) return fail(res, 400, e.message)
     console.error('request failed:', e instanceof Error ? e.message : 'unknown error') // never the URL or body
@@ -145,6 +161,12 @@ http.requestTimeout = 15_000
 http.headersTimeout = 10_000
 http.keepAliveTimeout = 5_000
 http.maxHeadersCount = 50
+http.timeout = 20_000 // idle socket
+http.maxRequestsPerSocket = 200
 
 http.listen(PORT, HOST, () => console.log(`Koog API and MCP server listening on ${HOST}:${PORT}`))
+// Last-resort guards: one line, never request data. An uncaught exception may leave state broken, so exit and let
+// the entrypoint stop the machine (Fly restarts it); a stray rejected promise is logged and the server keeps going.
+process.on('uncaughtException', (e) => { console.error('fatal:', e instanceof Error ? e.message : 'unknown error'); process.exit(1) })
+process.on('unhandledRejection', (e) => { console.error('unhandled rejection:', e instanceof Error ? e.message : 'unknown error') })
 for (const sig of ['SIGTERM', 'SIGINT'] as const) process.on(sig, () => { http.close(); setTimeout(() => process.exit(0), 500).unref() })

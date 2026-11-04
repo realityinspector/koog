@@ -2,7 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { CONCEPT_IDS, KINDS } from '../src/links/catalog.ts'
-import { BadInput, catalogJson, getActivity, getConcept, getStarted, listActivities, makeLink, nextSteps, cleanList } from './core.ts'
+import { BadInput, LINK_SHAPE, catalogJson, getActivity, getConcept, getStarted, listActivities, makeLink, nextSteps, cleanList } from './core.ts'
 
 const RO = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
 const text = (x: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(x, null, 1) }] })
@@ -46,10 +46,10 @@ export function createMcpServer(): McpServer {
     inputSchema: {
       kind: z.enum(KINDS).optional().describe('Filter by kind of activity'),
       concept: z.enum(CONCEPT_IDS).optional().describe('Filter by the music concept it teaches'),
-      age: z.number().optional().describe('Only activities suitable for this age'),
-      max_minutes: z.number().optional().describe('Only activities that take at most this long'),
-      limit: z.number().min(1).max(50).optional().describe('Page size'),
-      offset: z.number().min(0).optional().describe('Skip this many results'),
+      age: z.number().min(0).max(120).optional().describe('Only activities suitable for this age'),
+      max_minutes: z.number().min(0).max(600).optional().describe('Only activities that take at most this long'),
+      limit: z.number().int().min(1).max(50).optional().describe('Page size'),
+      offset: z.number().int().min(0).max(10000).optional().describe('Skip this many results'),
     },
     annotations: RO,
   }, (a) => run(() => listActivities(a)))
@@ -76,13 +76,7 @@ export function createMcpServer(): McpServer {
       'screen is one of play, songs, challenges, games, beats, synth, log. item is a song, challenge, game, beat or synth id from list_activities (without the kind prefix, e.g. "ode"). ' +
       'song_mode is wait, flow or learn; rung (1-7) and phrase only work with learn. level is a BachDoom level id (e.g. "e1m1") with screen games and item bachdoom. ' +
       'key is like c-major, a-minor, f-sharp-major or auto. modes are any of band, duo, mentor, mimic, vibes. Never invent ids.',
-    inputSchema: {
-      screen: z.string().max(20).optional().describe('play (default), songs, challenges, games, beats, synth, log'),
-      item: z.string().max(64).optional(), song_mode: z.string().max(10).optional(),
-      rung: z.number().int().min(1).max(7).optional(), phrase: z.number().int().min(1).max(99).optional(), level: z.string().max(20).optional(),
-      key: z.string().max(20).optional(), visual: z.string().max(30).optional(), palette: z.string().max(30).optional(), sound: z.string().max(30).optional(),
-      modes: z.array(z.string().max(10)).max(5).optional(), sheet: z.boolean().optional(),
-    },
+    inputSchema: LINK_SHAPE,
     annotations: RO,
   }, (a) => run(() => makeLink(a)))
 
@@ -91,7 +85,7 @@ export function createMcpServer(): McpServer {
     description: 'Given the activity ids a child has already done, suggests up to three next things, following a simple beginner curriculum (free play, notes, a first song, rhythm, chords, reading, games, history). Ask the parent what they tried, or pass ids from an earlier get_started plan.',
     inputSchema: {
       done_activity_ids: z.array(z.string().max(80)).max(60).describe('Activity ids already done'),
-      age: z.number().optional().describe('Child age in years'),
+      age: z.number().min(2).max(120).optional().describe('Child age in years'),
     },
     annotations: RO,
   }, (a) => run(() => nextSteps(a.done_activity_ids, a.age)))
@@ -99,7 +93,7 @@ export function createMcpServer(): McpServer {
   server.registerPrompt('get_my_kid_started', {
     title: 'Get my kid started with Koog',
     description: 'Walks a parent through a first Koog session for their child.',
-    argsSchema: { age: z.string().optional().describe('Child age'), minutes: z.string().optional().describe('Minutes available'), interests: z.string().optional().describe('What the child likes') },
+    argsSchema: { age: z.string().max(20).optional().describe('Child age'), minutes: z.string().max(20).optional().describe('Minutes available'), interests: z.string().max(300).optional().describe('What the child likes') },
   }, (a) => ({
     messages: [{
       role: 'user' as const,
