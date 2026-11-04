@@ -455,4 +455,11 @@ export const entries: Entry[] = [
     title: '🕺 Ziggy learns 20 new moves and dances all over the stage',
     body: 'The dancer was stuck in the middle. Now he travels: low notes pull him to the left, high notes to the right, just like the keyboard, and a fast run up or down the keys sends him moonwalking, skipping or sliding across the stage. He learned 20 new moves, from the robot and the running man to a twirl, a knee slide and (for big loud chords) a cartwheel, and he never does the same move twice in a row. The label under him tells you which move it is. Animators call making feet stay on the floor while the body moves "foot planting".',
   },
+  {
+    id: 64,
+    time: 'Night',
+    stage: 'ship',
+    title: '🥁 Your DJ controller is now a drum machine',
+    body: 'The 8 pads on the DJ controller can now play drums. Tap the 🥁 Drums button (or pick Drums for the controller in the plug icon) and the pads become kick, snare, two hi-hats, clap, two toms and a rim click. Hit one and you hear it right away, no waiting. Press PLAY to start a beat, press CUE (REC on screen) and whatever you tap gets added to the pattern, snapped to the nearest sixteenth of a beat. If you hit a hair early, it still lands on beat one. Hold a pad for a second to wipe that drum, hold PLAY to wipe everything. The jog wheel adds swing, the knobs change a drum\'s pitch and tone, and there are three kits and four starter beats if you want a head start. No controller? The same pads and a grid of steps are on the screen. Musicians call snapping notes to the grid "quantising", and the bouncy late-sixteenth feel is called "swing".',
+  },
 ]

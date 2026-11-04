@@ -39,11 +39,14 @@ export const emitSurface = (data: Uint8Array, t: number, id: string) => emit('su
 /** raw MIDI from any device whose role is 'loop' (the controller runs the Loop Station; src/features/loopstation) */
 export const onLoopMessage = (fn: DjListener) => subscribe('loop', fn)
 export const emitLoop = (data: Uint8Array, t: number, id: string) => emit('loop', data, t, id)
+/** raw MIDI from any device whose role is 'drums' (the controller's pads play the drum machine; src/features/drumpads) */
+export const onDrumsMessage = (fn: DjListener) => subscribe('drums', fn)
+export const emitDrums = (data: Uint8Array, t: number, id: string) => emit('drums', data, t, id)
 /** raw MIDI from any device whose role is 'dj' */
 export const onDjMessage = (fn: DjListener) => subscribe('dj', fn)
 export const emitDj = (data: Uint8Array, t: number, id: string) => emit('dj', data, t, id)
-/** LEDs etc.: send raw bytes to the DJ-style controller's output (dj, surface or loop role; no-op if none) */
-export const sendToDj = (bytes: number[]) => void send(['dj', 'surface', 'loop'], bytes)
+/** LEDs etc.: send raw bytes to the DJ-style controller's output (dj, surface, loop or drums role; no-op if none) */
+export const sendToDj = (bytes: number[]) => void send(['dj', 'surface', 'loop', 'drums'], bytes)
 /** legacy: override the DJ output sender (null = look the output up by role) */
 export const setDjSender = (fn: ((b: number[]) => void) | null) => setSenderOverride(fn)
 

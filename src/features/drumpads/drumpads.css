@@ -1,0 +1,58 @@
+/* Drum pads panel (dp-*). Dark, colourful pads; the step grid; fits 1280x800 and a 390 px phone with no sideways scroll. */
+.dp-dock { pointer-events: auto; position: absolute; left: 8px; right: 8px; top: 8px; bottom: calc(var(--sheet-h, 0px) + var(--duo-h, 0px) + 8px); z-index: var(--z-dock-ctl, 14); box-sizing: border-box; overflow: auto; scrollbar-width: thin; border-radius: 16px; color: #e6e2ff;
+  background: linear-gradient(180deg, rgba(26, 20, 62, .96), rgba(12, 9, 30, .97)); border: 1px solid rgba(255, 216, 108, .35); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+.dp { box-sizing: border-box; padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; color: #e6e2ff; font-size: 12px; }
+.dp * { box-sizing: border-box; }
+.dp-head { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.dp-head h3 { margin: 0; font-size: 15px; color: #ffd86c; letter-spacing: .04em; white-space: nowrap; }
+.dp-note { flex: 1; min-width: 120px; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-body { display: grid; grid-template-columns: minmax(250px, 340px) minmax(0, 1fr); gap: 12px; align-items: start; min-width: 0; }
+
+.dp-chip { font: inherit; font-size: 11px; font-weight: 700; color: #f4f2ff; cursor: pointer; padding: 5px 9px; min-height: 28px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .08); white-space: nowrap; }
+.dp-chip:hover:not(:disabled) { border-color: #ffd86c; } .dp-chip.on { background: #ffd86c; color: #1b1832; border-color: #ffd86c; } .dp-chip:disabled { opacity: .4; cursor: default; }
+.dp-chip.now { box-shadow: 0 0 0 2px #7fe3ff inset; }
+.dp button:focus-visible, .dp input:focus-visible, .dp summary:focus-visible { outline: 2px solid #ffd86c; outline-offset: 2px; }
+
+/* pads: 2 rows x 4, like the controller */
+.dp-pads { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.dp-pad { aspect-ratio: 1; min-height: 56px; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; font: inherit; color: #fff;
+  border-radius: 14px; border: 2px solid hsl(var(--h) 80% 62% / .9); background: linear-gradient(160deg, hsl(var(--h) 70% 34%), hsl(var(--h) 75% 22%)); box-shadow: 0 4px 0 hsl(var(--h) 70% 14%), 0 6px 10px rgba(0, 0, 0, .4); transition: transform .06s, filter .12s; }
+.dp-pad-e { font-size: clamp(18px, 3.2vw, 30px); line-height: 1; } .dp-pad-l { font-size: clamp(9px, 1.5vw, 12px); font-weight: 800; letter-spacing: .06em; }
+.dp-pad.down, .dp-pad:active { transform: translateY(3px); box-shadow: 0 1px 0 hsl(var(--h) 70% 14%); }
+.dp-pad.hit, .dp-pad.down { filter: brightness(1.35); }
+
+/* step grid */
+.dp-seq { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dp-bars { display: flex; gap: 6px; margin-bottom: 2px; }
+.dp-row { display: grid; grid-template-columns: minmax(40px, 74px) repeat(16, minmax(0, 1fr)) 20px; gap: 2px; align-items: stretch; min-width: 0; }
+.dp-rl { display: flex; align-items: center; gap: 4px; min-width: 0; font: inherit; font-size: 10px; color: hsl(var(--h) 90% 82%); background: hsl(var(--h) 50% 20% / .6); border: 1px solid hsl(var(--h) 60% 45% / .6); border-radius: 7px; padding: 0 4px; cursor: pointer; overflow: hidden; white-space: nowrap; }
+.dp-rl b { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
+.dp-cell { min-width: 0; min-height: 24px; padding: 0; cursor: pointer; border-radius: 5px; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .06); }
+.dp-cell.beat { background: rgba(255, 255, 255, .12); }
+.dp-cell.on { background: hsl(var(--h) 85% 58%); border-color: hsl(var(--h) 90% 75%); } .dp-cell.on.soft { background: hsl(var(--h) 60% 40%); }
+.dp-cell.now { outline: 2px solid #7fe3ff; outline-offset: -1px; }
+.dp-rx { font: inherit; font-size: 10px; padding: 0; color: #cfc9f5; background: transparent; border: 0; cursor: pointer; opacity: .6; } .dp-rx:hover { opacity: 1; color: #ff8a8a; }
+
+/* controls */
+.dp-ctl { display: flex; flex-direction: column; gap: 6px; }
+.dp-main, .dp-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.dp-big { font: inherit; font-size: 15px; font-weight: 900; letter-spacing: .06em; cursor: pointer; padding: 8px 18px; min-height: 40px; border-radius: 12px; color: #fff; border: 2px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); }
+.dp-big.play.on { background: #2fbf71; border-color: #7dffb1; color: #06210f; } .dp-big.rec { color: #ff9a9a; } .dp-big.rec.on { background: #e5484d; border-color: #ff9a9a; color: #fff; }
+.dp-bpm { display: inline-flex; align-items: center; gap: 5px; } .dp-bpm b { font-size: 18px; min-width: 2.2em; text-align: center; color: #ffd86c; } .dp-bpm small { opacity: .6; }
+.dp-sl { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; } .dp-sl input { width: 110px; max-width: 28vw; accent-color: #ffd86c; } .dp-sl i { font-style: normal; opacity: .7; min-width: 2.6em; }
+.dp-grp { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 11px; font-weight: 700; }
+.dp-more summary { cursor: pointer; font-size: 11px; opacity: .85; } .dp-more[open] .dp-opts { margin-top: 6px; }
+.dp-pic { display: flex; flex-direction: column; gap: 4px; } .dp-pic .dj-pic { display: block; width: 100%; max-width: 720px; height: auto; margin: 0 auto; }
+.dp-pic-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; } .dp-pic-head small { opacity: .75; }
+
+@media (max-width: 760px) {
+  .dp-body { grid-template-columns: minmax(0, 1fr); }
+  .dp-pads { gap: 6px; } .dp-pad { min-height: 0; }
+  .dp-row { grid-template-columns: 26px repeat(16, minmax(0, 1fr)) 16px; gap: 1px; }
+  .dp-rl b { display: none; } .dp-rl { justify-content: center; padding: 0; }
+  .dp-cell { min-height: 22px; border-radius: 3px; }
+  .dp-big { padding: 8px 12px; } .dp-sl input { width: 90px; }
+  .dp-dock { left: 4px; right: 4px; top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .dp-pad, .dp-pad * { transition: none !important; } .dp-pad.hit { filter: none; } }
+.dp-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }

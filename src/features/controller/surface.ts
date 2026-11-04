@@ -228,7 +228,7 @@ function apply(on: boolean) {
 }
 export function setScreenMode(v: boolean) { set({ screenOn: v }); apply(v || get().roleOn) }
 function setRoleOn(v: boolean) { set({ roleOn: v }); apply(v || get().screenOn) }
-const isController = (r: string) => r === 'dj' || r === 'surface' || r === 'loop'
+const isController = (r: string) => r === 'dj' || r === 'surface' || r === 'loop' || r === 'drums'
 /** The 🎧 DJ <-> 🎛️ Synth switch: flips every connected DJ controller between its two roles (no controller: just the on-screen surface) */
 export function toggleControllerMode() {
   const devs = useDevices.getState().devices.filter((d) => isController(d.role))

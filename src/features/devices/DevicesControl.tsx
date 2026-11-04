@@ -4,13 +4,15 @@ import { useDevices, setRole, type DeviceRole } from '../../music/devices'
 import { SOUNDS, chooseSound, useSound } from './soundChoice'
 import { unlockAudio } from '../../music/localNotes'
 import { setScreenMode, useSurface } from '../controller/surface'
+import { setControllerPage } from '../loopstation/loopSurface'
+import { useDrumPage } from '../drumpads/drumSurface'
 import { PedalSetup } from '../pedal/PedalSetup'
 import { usePedal } from '../pedal/pedal'
 import './devices.css'
 import { Icon } from '../../ui/Icon'
 import { useOnePop } from '../../ui/onePop'
 
-const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['loop', '🔁 Loop'], ['off', 'Off']]
+const ROLES: [DeviceRole, string][] = [['piano', '🎹 Piano'], ['dj', '🎧 DJ'], ['surface', '🎛️ Synth'], ['loop', '🔁 Loop'], ['drums', '🥁 Drums'], ['off', 'Off']]
 
 /** Top-strip chip: connected MIDI devices + their roles, and the piano's sound ("change instruments"). */
 export function DevicesControl() {
@@ -29,8 +31,9 @@ export function DevicesControl() {
   }, [open])
 
   const live = devices.filter((d) => d.connected)
-  const hasDj = live.some((d) => d.role === 'dj' || d.role === 'surface' || d.role === 'loop')
+  const hasDj = live.some((d) => d.role === 'dj' || d.role === 'surface' || d.role === 'loop' || d.role === 'drums')
   const surfaceOn = useSurface((s) => s.on)
+  const drumsOn = useDrumPage((s) => s.on)
   const cur = SOUNDS.find((s) => s.id === sound) ?? SOUNDS[0]
   const n = live.length
   const pedalOn = usePedal((p) => (!!p.code || p.midi) && p.action !== 'off')
@@ -52,7 +55,7 @@ export function DevicesControl() {
               <span className={'kg-dev-dot' + (d.connected ? ' on' : '')} title={d.connected ? 'Connected' : 'Unplugged'} />
               <span className="kg-dev-name" title={d.name}>{d.name}</span>
               <div className="kg-dev-roles" role="group" aria-label={'Role for ' + d.name}>
-                {ROLES.map(([r, l]) => <button key={r} type="button" className={d.role === r ? 'on' : ''} aria-pressed={d.role === r} title={r === 'surface' ? 'Synth controller: its knobs and faders shape the synth sound' : r === 'loop' ? 'Loop station: pads are layers, PLAY starts everything' : undefined} onClick={() => setRole(d.name, r)}>{l}</button>)}
+                {ROLES.map(([r, l]) => <button key={r} type="button" className={d.role === r ? 'on' : ''} aria-pressed={d.role === r} title={r === 'surface' ? 'Synth controller: its knobs and faders shape the synth sound' : r === 'loop' ? 'Loop station: pads are layers, PLAY starts everything' : r === 'drums' ? 'Drum machine: the 8 pads are drums, PLAY starts the beat, CUE records' : undefined} onClick={() => setRole(d.name, r)}>{l}</button>)}
               </div>
             </div>
           ))}
@@ -60,6 +63,7 @@ export function DevicesControl() {
           {live.length === 0 && (
             <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
           )}
+          <button type="button" className={drumsOn ? 'on' : ''} aria-pressed={drumsOn} onClick={() => setControllerPage(drumsOn ? 'dj' : 'drums')}>🥁 Drum pads {drumsOn ? 'ON' : 'OFF'}</button>
           {/* Boss mode has the full sound rack and split/layers in STUDIO, so the popover keeps only devices + pedal there */}
           {mode === 'kid' && <>
             <h4>Sound (what the piano plays)</h4>

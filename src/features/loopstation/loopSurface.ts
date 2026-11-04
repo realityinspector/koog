@@ -17,9 +17,10 @@ import { decode, ledBytes } from '../dj/map'
 import { resyncLeds } from '../dj/engine'
 import { setScreenMode } from '../controller/surface'
 import { beatPos, getBpm, setBpm, tapTempo, useMaster } from '../../music/masterClock'
+import { refreshDrumPage, setDrumScreen } from '../drumpads/drumSurface'
 import { LEN_CHOICES, buttonDown, buttonUp, getSel, redo, select, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, togglePlay, undo, useLoop } from './loopEngine'
 
-export type Page = 'dj' | 'synth' | 'loop'
+export type Page = 'dj' | 'synth' | 'loop' | 'drums'
 interface PageState { screenOn: boolean; roleOn: boolean; on: boolean; bank: 0 | 1; lit: Record<string, boolean>; values: Record<string, number>; ghost: Record<string, number>; touched: Record<string, number>; last: string }
 type Hot = { store?: ReturnType<typeof make>; led?: Record<string, boolean>; off?: () => void; timer?: number }
 const hot = (import.meta.hot?.data ?? {}) as Hot
@@ -198,21 +199,25 @@ function apply() {
   else { ledsDark(); resyncLeds() }
   ensureTimer()
 }
-const isCtl = (r: string) => r === 'dj' || r === 'surface' || r === 'loop'
-export const currentPage = (surfaceOn: boolean, loopOn: boolean): Page => (loopOn ? 'loop' : surfaceOn ? 'synth' : 'dj')
-/** switch every connected DJ controller (or the on-screen picture, with no hardware) to a page */
+const isCtl = (r: string) => r === 'dj' || r === 'surface' || r === 'loop' || r === 'drums'
+export const currentPage = (surfaceOn: boolean, loopOn: boolean, drumsOn = false): Page => (drumsOn ? 'drums' : loopOn ? 'loop' : surfaceOn ? 'synth' : 'dj')
+/** switch every connected DJ controller (or the on-screen picture, with no hardware) to a page. The pages are mutually exclusive. */
 export function setControllerPage(p: Page) {
   const devs = useDevices.getState().devices.filter((d) => isCtl(d.role))
   useLoopPage.setState({ screenOn: false })
+  setDrumScreen(false)
   if (!devs.length) {
     setScreenMode(p === 'synth')
     if (p === 'loop') useLoopPage.setState({ screenOn: true })
-    apply(); return
+    if (p === 'drums') setDrumScreen(true)
+    // the page being left goes dark first, then the new one lights up (so the DJ LED resync never lands on top of the new page)
+    if (p === 'drums') { apply(); refreshDrumPage() } else { refreshDrumPage(); apply() }
+    return
   }
   setScreenMode(false)
-  const role = p === 'dj' ? 'dj' : p === 'synth' ? 'surface' : 'loop'
+  const role = p === 'dj' ? 'dj' : p === 'synth' ? 'surface' : p === 'drums' ? 'drums' : 'loop'
   for (const d of devs) setRole(d.name, role)
-  apply()
+  if (p === 'drums') { apply(); refreshDrumPage() } else { refreshDrumPage(); apply() }
 }
 
 function init() {

@@ -28,6 +28,7 @@ import { DuoDeck } from './features/dj/DjDeck'
 import { ControllerOverlay } from './features/controller/ControllerOverlay'
 import { ProStudio } from './features/pro/ProStudio'
 import { DjScreen, LoopsScreen, ScenesScreen, SynthsScreen } from './features/pro/ProScreens'
+import { DrumsDock, DrumsScreen } from './features/drumpads/DrumPads'
 import { MimicChip } from './features/mimic/MimicChip'
 import { ModesLauncher } from './features/modes/ModesLauncher'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
@@ -61,6 +62,7 @@ export function App() {
       { id: 'play', icon: <Icon name="sliders" />, label: 'STUDIO', title: 'Studio' },
       { id: 'dj', icon: <Icon name="phones" />, label: 'DJ', title: 'DJ decks', node: <DjScreen /> },
       { id: 'loops', icon: <Icon name="loop" />, label: 'LOOPS', title: 'Loop station', node: <LoopsScreen /> },
+      { id: 'drums', icon: <Icon name="drum" />, label: 'DRUMS', title: 'Drum pads', node: <DrumsScreen /> },
       { id: 'synth', icon: <Icon name="knobs" />, label: 'SYNTHS', title: 'Emulator rack', node: <SynthsScreen /> },
       { id: 'scenes', icon: <Icon name="scenes" />, label: 'SCENES', title: 'Scenes', node: <ScenesScreen key={'sc-' + player} /> },
     ]
@@ -75,7 +77,7 @@ export function App() {
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
       <LinkNote />
       <Gallery />

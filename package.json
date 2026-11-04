@@ -19,6 +19,7 @@
     "check:listen": "npx --no-install tsx scripts/listen-fixtures.ts",
     "check:mentor": "npx --no-install tsx scripts/mentor-fixtures.ts",
     "check:loops": "npx --no-install tsx scripts/loop-fixtures.ts",
+    "check:drums": "npx --no-install tsx scripts/drum-fixtures.ts",
     "deploy:fly": "./scripts/deploy-fly.sh"
   },
   "dependencies": {
