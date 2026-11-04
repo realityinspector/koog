@@ -12,3 +12,4 @@ private/
 *.log
 scripts/shots/*.png
 dist-web
+retire.sh

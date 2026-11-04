@@ -137,7 +137,7 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | Mode | |
 |---|---|
 | **PLAY** | The visualizer fills the display: fireworks, ripples, rising bars, 🔥 fire, 👻 ghosts, 💌 mail (each note's letter pops out of an envelope), 🎉 confetti or 🧟 zombies. New scenes plug in through a small interface in `src/features/visualizer/scenes.ts`. In-key notes burst gold and out-of-key notes go "spicy". Smart readouts show the detected key, chord, in-key % and streak. |
-| **🎛️ Patch** (inside PLAY) | A Moog-style patch on the display: VCO → VCF → VCA, with ENV and a cable-patching game. The patch drives the visuals: the waveform sets particle shape, filter cutoff sets brightness, resonance adds halos, and release sets the trails. You can also play your keyboard through the synth. |
+| **🎛️ Patch** (inside PLAY) | A classic analog-style patch on the display: VCO → VCF → VCA, with ENV and a cable-patching game. The patch drives the visuals: the waveform sets particle shape, filter cutoff sets brightness, resonance adds halos, and release sets the trails. You can also play your keyboard through the synth. |
 | **🤖 Smart Band** (inside PLAY) | Turn it on and play a melody. It guesses the chord your notes fit, follows your tempo, and plays pad, bass and light drums along with you. It uses a small readable rule set in `src/features/smartband/harmonizer.ts`, not a black box. |
 | **🧩 Patch Quests** (in the Patch drawer) | Guided synth-patching lessons, such as "make it dark", "make it scream" and "slide like a theremin". Each one tells you what to watch in the visuals as the sound changes. |
 | **🎓 The judge** (everywhere) | Every note is graded for KEY, BEAT and STYLE, and the judge spots *tension → release*, *motifs*, *cadences* and forearm *tone clusters*. Visuals react: good playing launches big, steady fireworks, and slams fizzle… unless you've charged **⚡ BOOM** by playing in key. Then the same slam is a giant finale. The rules are in `src/music/judge.ts`, and the design is in [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md). |
@@ -153,11 +153,11 @@ Koog is laid out like one instrument: a big **display**, a rail of lit **mode bu
 | **🎧 DUO (DJ + piano)** | Plug in a DJ controller (made for the Numark Mixtrack Go) and a piano at the same time. 🎛️ Devices gives each one a role. The DJ's decks set the key and the beat for the piano player, and good piano playing fires DJ effects back. 🎹 Sound swaps the piano's instrument (organ, Moog-style, FM electric piano, tape strings and more). |
 | **🎛️ Controller Mode** | Switch the DJ controller to 🎛️ Synth and it becomes the control surface for the piano. The crossfader controls the filter cutoff, and the knobs, faders, jogs and pads drive the Koog synth or the open emulator's own parameters. It has soft takeover, MIDI learn, and on-screen labels for every control. |
 | **🎼 Sheet levels** | Single notes, Easy chords (chord symbols and left-hand roots) or Full (an arranged left-hand part). SONGS grades the left hand too. |
-| **🔁 Loop station** (Boss mode, `#/boss/loops`) | One big button, like a classic looper pedal: tap to record, tap to loop, tap to overdub, double-tap to stop, hold 2 seconds to undo or redo. A metronome and count-in keep time, loops snap to whole bars (or set the tempo from the first loop), each layer has its own sound, and any layer can be muted or removed. A foot pedal can run it too. |
-| **🥁 Drum pads** | Pads that play drum sounds, plus a step grid to draw a looping beat. Open it from the 🔌 devices menu (*Drum pads*), by setting a controller's role to Drums, with the 🥁 Drums page on the DJ controller strip, or with the DRUMS tab in Boss mode. |
+| **🔁 Loop station** (✨ Modes → 🔁 Looper, or Boss mode `#/boss/loops`) | One big button, like a classic looper pedal: tap to record, tap to loop, tap to overdub, double-tap to stop, hold 2 seconds to undo or redo. A metronome and count-in keep time, loops snap to whole bars (or set the tempo from the first loop), each layer has its own sound, and any layer can be muted or removed. A foot pedal can run it too. |
+| **🥁 Drum pads** (✨ Modes → 🥁 Drum pads, or Boss mode `#/boss/drums`) | Eight drum pads (kick, snare, two hi-hats, clap, two toms, rim) in three kits, and a 16-step beat that loops. Tap a pad to hear it, press REC and your hits snap onto the grid, or click steps to draw a beat. Tap tempo, swing, roll and four starter beats. A DJ controller becomes a pad drum machine: set its role to 🥁 Drums in the devices menu (PLAY starts, CUE records, SYNC taps the tempo). |
 | **🖼 Gallery** (top bar) | The Gallery button opens a self-playing guided tour of every feature (about 18 minutes, `#/gallery`) or Art Gallery mode, a calm full-screen loop for a TV (`#/gallery/art`). |
 | **🕺 Dancer** (a PLAY visual) | A little dancer who moves to the mood of your music and travels across the stage as your pitch rises and falls. Tap *Name him* to give him a name; the captions use it. |
-| **🏢 Boss mode** (Dad mode) | A lean studio for grown-ups, with the visualizer and the kid features off. The rail is STUDIO (master clock, mixer, sound rack, routing; the MIDI monitor is under diag), DJ, LOOPS, SYNTHS and SCENES (8 scenes), plus a Stage performance view. Includes the keyboard split and layers and the 🔁 loop station (see above): up to 8 layers of recorded notes and knob moves, controllable from the DJ controller, exportable as MIDI. |
+| **🏢 Boss mode** (Dad mode) | A lean studio for grown-ups, with the visualizer and the kid features off. The rail is STUDIO (master clock, mixer, sound rack, routing; the MIDI monitor is under diag), DJ, LOOPS, DRUMS, SYNTHS and SCENES (8 scenes), plus a Stage performance view. Includes the keyboard split and layers and the 🔁 loop station (see above): up to 8 layers of recorded notes and knob moves, controllable from the DJ controller, exportable as MIDI. |
 | **🧠 Phrase memory** | In SONGS, *Learn it* teaches a song in 2–3-note phrases up a ladder (listen → follow → echo → memory → timed → blind → hands), then chains phrases into lines and the whole song. Mastery is saved per kid and shared with the games: BachDoom phrase waves (Galaga-style dives on the phrase rhythm; Episode 0: Boot Camp), Zombie Lanes conga lines, Jiu-Jitsu calls and Runway phrase walks. Sheet music shows phrase brackets and fades notes in memory mode. |
 | **🎓 Mentor** | An optional front-row synth robot (chrome dome, LED eyes, a sine-wave mouth) that names what you play (motif, sequence, inversion, cadence, I–V–vi–IV, modulation…), spots quotes of public-domain tunes (and names the composer) and of your learned phrases, gives honest critiques that name the problem and the fix, and shows a highlights reel. |
 | **😀 Vibes** | The mood of the music as a face: chords, progressions, contour, register, tempo and dynamics drive valence and arousal, plus a "Make it spooky" challenge. |
@@ -194,12 +194,17 @@ Koog runs entirely on your computer. It has no accounts, no server-side data, no
 - Visual effects stay at 3 or fewer flashes per second and respect `prefers-reduced-motion`.
 - Pre-flight warns if the Mac's output volume is above 70%.
 
+## Testing
+
+Every screen has been played end to end by test scripts in a muted headless browser (`scripts/screenshot.mjs`), and the logic checks run with `npm run check:catalog`, `check:listen`, `check:mentor`, `check:loops` and `check:drums`. Run `npm run typecheck` and `npm run build:web` before a deploy.
+
 ## Songs and copyright
 
 Koog only ships music that is public domain in the US: published in 1930 or earlier, or traditional. Kids will ask for current pop songs. Those are copyrighted, so the Beat Machine and My Songs recorder let them make their own instead. Sources and reasoning are in [docs/learning](docs/learning/).
 
 ## Roadmap
 
+- Try the drum pads, looper and foot pedal on real hardware (so far they are tested with simulated MIDI and a muted browser).
 - **Eventually: teach modular synthesizer patches too.** Oscillators, filters, envelopes and patch cables. Patch Quests and LFO patching (vibrato, wah and tremolo, routed with a cable) are the first steps. Next up: more modules and free-form cable routing.
 - Measure real keyboards (range, velocity curve, latency) and adapt songs to fit.
 - Check every song by ear. Some were transcribed from memory.
