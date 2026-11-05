@@ -9,6 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY server/ server/
 COPY src/links/ src/links/
+COPY src/features/synth-history/emu/aliases.ts src/features/synth-history/emu/aliases.ts
 COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY site/ /usr/share/nginx/html/
 COPY entrypoint.sh /entrypoint.sh

@@ -16,8 +16,11 @@ cp src/links/links.ts src/links/catalog.ts src/links/catalog.data.json "$ctx/src
 mkdir -p "$ctx/src/features/synth-history/emu"
 cp src/features/synth-history/emu/aliases.ts "$ctx/src/features/synth-history/emu/"
 # fail before deploying if the server can't load in the copied context (catches a missing import like this one)
-(cd "$ctx" && ln -s "$OLDPWD/node_modules" node_modules && node -e "import('./server/core.ts').then(()=>console.log('server context ok'))" ) || { echo "server context is missing a file; not deploying"; rm -rf "$ctx"; exit 1; }
-rm -f "$ctx/node_modules"
+# check exactly what the Dockerfile copies (not the whole build context), so a missing COPY line also fails here
+chk=$(mktemp -d); mkdir -p "$chk"
+grep -E '^COPY (server|src)/' "$ctx/Dockerfile" | while read -r _ from to; do mkdir -p "$chk/$(dirname "$to")"; cp -R "$ctx/$from" "$chk/$to"; done
+(cd "$chk" && ln -s "$OLDPWD/node_modules" node_modules && node -e "import('./server/core.ts').then(()=>console.log('server context ok'))" ) || { echo "the server image would be missing a file; not deploying"; rm -rf "$ctx" "$chk"; exit 1; }
+rm -rf "$chk"
 cp server/package.json server/package-lock.json "$ctx/"
 flyctl deploy "$ctx" --config "$ctx/fly.toml" --ha=false "$@"
 rm -rf "$ctx"
