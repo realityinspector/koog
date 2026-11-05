@@ -19,6 +19,12 @@ import { drumRowsToLine, loopNotesToLine, writeFromPlayed, type Played } from '.
 import { CYCLE_BEATS, describe, type Diag, type Program } from '../../kode/lang/types'
 import { EXAMPLES } from '../../kode/lang/examples'
 import { createKodeSink, type KodeSink } from './kodeAudio'
+import { resolveMotif } from '../../kode/kore/motifs'
+import { markConcept } from '../../kode/kore/concepts'
+
+/** `play <name>` asks the Koding Kore for the motif (looked up again every bar, so editing My Motifs is live) */
+const knownMotif = (name: string) => { try { return resolveMotif(name) !== null } catch { return false } }
+const motifs = (name: string, shift: number, speed: number) => { try { return resolveMotif(name, shift, speed) } catch { return null } }
 
 export interface KodeView {
   text: string
@@ -49,7 +55,7 @@ const set = (p: Partial<KodeView>) => useKode.setState(p)
 const clock: Clock = { beatPos: (t) => beatPos(t), timeOfBeat: (b) => timeOfBeat(b), bpm: () => getBpm(), setBpm: (b) => setBpm(b) }
 function newEng(): Eng {
   const sink = createKodeSink()
-  return { runner: new Runner(clock, sink, 100), sink, startedClock: false, played: [], lastHeard: 0, doneTimer: 0, saveTimer: 0 }
+  return { runner: new Runner(clock, sink, 100, (n, sh, sp) => motifs(n, sh, sp)), sink, startedClock: false, played: [], lastHeard: 0, doneTimer: 0, saveTimer: 0 }
 }
 const E: Eng = hot.E ?? newEng()
 // an engine kept from before an edit of this file keeps its runner and sink; only the wiring is renewed below
@@ -62,7 +68,7 @@ export function debugOn(on: boolean) { E.sink.logOn = on; if (on) E.sink.log.len
 
 // ---------- editing ----------
 export function setText(text: string) {
-  set({ text, errors: parseProgram(text).errors })
+  set({ text, errors: parseProgram(text, knownMotif).errors })
   window.clearTimeout(E.saveTimer)
   E.saveTimer = window.setTimeout(() => psave(KEY, get().text), 500)
 }
@@ -98,10 +104,12 @@ function wire() {
 
 /** run the text. Returns the bar the new code starts on, or null when the code has a problem. */
 export function run(text = get().text): number | null {
-  const prog: Program = parseProgram(text)
+  const prog: Program = parseProgram(text, knownMotif)
   if (text !== get().text) set({ text })
   set({ errors: prog.errors })
   if (prog.errors.length) { set({ note: describe(prog.errors[0]) }); return null }
+  const plays = prog.layers.filter((l) => l.motif)
+  if (plays.length) { markConcept('function'); if (plays.some((l) => l.motif!.shift !== 0 || l.motif!.speed !== 1)) markConcept('parameter') }
   void unlockHost()
   E.sink.warm(prog.layers.map((l) => l.sound))
   if (!isRunning()) { startMaster(); E.startedClock = true }
@@ -181,7 +189,7 @@ export function useMyLoop(): string[] {
 // ---------- life cycle ----------
 E.unPanic?.()
 E.unPanic = registerPanicTarget('kode', () => { if (get().listening) cancelListening(); stop() })
-const offProfile = onProfileChange(() => { stop(); const t = loadText(); set({ text: t, errors: parseProgram(t).errors }) })
+const offProfile = onProfileChange(() => { stop(); const t = loadText(); set({ text: t, errors: parseProgram(t, knownMotif).errors }) })
 if (E.runner.isPlaying()) wire()
 
 if (import.meta.hot) {

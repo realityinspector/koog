@@ -105,12 +105,14 @@ function clickFirst(sel: string, text?: RegExp): boolean {
   }
   return false
 }
+// the big Start / GO buttons of the games that do not read the foot pedal (Songs, Zombie Lanes, BachDoom, Jiu-Jitsu, Runway); a game can opt in with data-padplay="start"
+const START_BUTTONS = '[data-padplay="start"], .zl-btn.go, .bd-start, .bj-btn.go, .fr-btn.go'
 /** PLAY: the same press the foot pedal makes (Phrase Racer and the holiday games listen to it), plus the Play button of Songs */
 export function pressStart() {
   usePedal.setState({ down: true })
   window.setTimeout(() => usePedal.setState({ down: false }), 90)
   if (useScreen.getState().screen === 'songs') clickFirst('button.btn', /^(Play|Restart)$/)
-  clickFirst('[data-padplay="start"]')
+  clickFirst(START_BUTTONS)
 }
 /** CUE: hear it again (holiday games' Hear button, the Songs Listen button) */
 export function pressHear(): boolean { return clickFirst('[data-act="hear"], [data-padplay="hear"]') || clickFirst('button.btn-ghost', /^👂/) }

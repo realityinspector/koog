@@ -13,7 +13,7 @@ export const drumVoice = (w: string): number => {
 export const SOUND_NAMES = ['piano', 'organ', 'ladder', 'epiano', 'bell', 'strings', 'choir', 'pad', 'brass', 'patchbay', 'squelch', 'shimmer', 'bellfm', 'five', 'wheelhouse', 'tapechoir', 'ribbon', 'airhands'] as const
 export const isSound = (w: string) => w === 'koog' || (SOUND_NAMES as readonly string[]).includes(w)
 
-export const KEYWORDS = ['notes', 'drums', 'tempo', 'sound', 'loud'] as const
+export const KEYWORDS = ['notes', 'drums', 'play', 'tempo', 'sound', 'loud'] as const
 
 const PC: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 }
 const NOTE_RE = /^([a-g])(#|b)?(\d)?$/

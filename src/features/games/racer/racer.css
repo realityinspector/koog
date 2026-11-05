@@ -17,11 +17,11 @@
 .rc-sub { margin: 0; opacity: .92; max-width: 70ch; }
 .rc-sub.small { font-size: 13px; opacity: .75; }
 .rc-mode { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.rc-garage { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.rc-veh { display: flex; flex-direction: column; gap: 3px; align-items: center; text-align: center; padding: 12px 8px; border-radius: 16px; font: inherit; color: #fff; cursor: pointer; background: rgba(60, 70, 140, .7); border: 2px solid rgba(255,255,255,.25); }
+.rc-garage { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; }
+.rc-veh { display: flex; flex-direction: column; gap: 3px; align-items: center; text-align: center; padding: 8px 6px; border-radius: 14px; font: inherit; color: #fff; cursor: pointer; background: rgba(60, 70, 140, .7); border: 2px solid rgba(255,255,255,.25); }
 .rc-veh.sel { border-color: #ffe27a; background: rgba(80, 90, 170, .9); box-shadow: 0 0 0 2px #ffe27a inset; }
 .rc-veh.pop .rc-vem { animation: rc-pop .5s ease-out; }
-.rc-vem { font-size: 40px; line-height: 1; }
+.rc-vem { font-size: 32px; line-height: 1; }
 .rc-vkey { font-weight: 800; color: #ffe27a; font-size: 14px; }
 .rc-vbl { font-size: 12px; opacity: .8; }
 .rc-coach { margin: 0; min-height: 1.4em; font-weight: 700; color: #ffe9a0; }
@@ -36,11 +36,11 @@
 .rc-stars i { font-style: normal; }
 .rc-stars i.on { color: #ffb400; }
 .rc-stars.big { font-size: 40px; }
-.rc-banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 8px 16px; border-radius: 999px; background: rgba(14, 16, 40, .82); z-index: 3; max-width: calc(100% - 24px); }
+.rc-banner { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 8px 16px; border-radius: 999px; background: rgba(14, 16, 40, .82); z-index: 3; max-width: calc(100% - 24px); width: max-content; text-align: center; }
 .rc-step { font-weight: 900; color: #7cf3ff; white-space: nowrap; }
 .rc-banner b { font-size: 15px; }
 .rc-count { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); font-size: 110px; font-weight: 900; text-shadow: 0 4px 14px rgba(0,0,0,.6); z-index: 3; }
-.rc-dock { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 3; }
+.rc-dock { position: absolute; right: 18px; bottom: 26px; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 3; }
 .rc-timer { width: min(320px, 70%); height: 8px; border-radius: 4px; background: rgba(0,0,0,.4); overflow: hidden; }
 .rc-timer i { display: block; height: 100%; background: #ffe27a; transition: width .12s linear; }
 .rc-hint { position: absolute; left: 12px; right: 12px; bottom: 2px; margin: 0; text-align: center; font-size: 12px; opacity: .9; text-shadow: 0 1px 2px rgba(0,0,0,.7); z-index: 3; }
@@ -55,7 +55,9 @@
 .rc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @keyframes rc-pop { 0% { transform: scale(.7) } 60% { transform: scale(1.25) } 100% { transform: scale(1) } }
 @media (max-width: 600px) {
-  .rc-title { font-size: 15px; } .rc-btn { font-size: 14px; padding: 8px 12px; } .rc-btn.big { font-size: 28px; padding: 12px 40px; }
-  .rc-banner { top: 92px; } .rc-panel { inset: 92px 0 0 0; } .rc-count { font-size: 84px; }
+  .rc-top { gap: 6px; padding: 6px 8px; } .rc-title { font-size: 14px; min-width: 0; } .rc-long, .rc-title > span, .rc-panel .rc-sub.small { display: none; } .rc-btn { font-size: 13px; padding: 6px 10px; min-height: 34px; } .rc-btn.big { font-size: 26px; padding: 10px 34px; }
+  .rc-banner { top: 48px; left: 8px; right: 8px; transform: none; width: auto; max-width: none; border-radius: 14px; flex-wrap: wrap; justify-content: center; padding: 6px 10px; }
+  .rc-banner b { font-size: 13px; } .rc-panel { inset: 48px 0 0 0; } .rc-count { font-size: 80px; }
+  .rc-dock { right: 50%; transform: translateX(50%); bottom: 22px; gap: 6px; } .rc-hint { display: none; } .rc-oops { font-size: 14px; bottom: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .rc-veh.pop .rc-vem { animation: none; } .rc-timer i { transition: none; } }

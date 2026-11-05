@@ -70,3 +70,9 @@
 
 /* phrase walk: long kind tips wrap instead of running off the left edge */
 .fr-toast.run { white-space: normal; max-width: 40%; width: max-content; text-align: center; line-height: 1.2; border-radius: 18px; }
+
+/* Kode power drawer */
+.fr-kode { position: absolute; left: 8px; top: 56px; bottom: 8px; width: min(420px, calc(100% - 16px)); overflow-y: auto; z-index: 5; }
+.fr-panel .gk-card { flex: none; align-self: center; max-height: 38%; overflow-y: auto; }
+.gk-col { display: flex; flex-direction: column; gap: 4px; }
+.gk-row.now { outline: 2px solid #ffe27a; border-radius: 6px; }

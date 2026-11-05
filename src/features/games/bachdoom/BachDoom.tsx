@@ -12,6 +12,10 @@ import { buildTextures } from './textures'
 import { buildSprites } from './sprites'
 import { buildFaces, buildGun } from './gunface'
 import { linkNote, report } from '../../../links/bus'
+import { useMotifs } from '../../../kode/kore/motifs'
+import { KodePowerCard } from '../gamekode/KodePowerCard'
+import { kload, ksave } from '../gamekode/kodeStore'
+import { callSignOf, phraseText } from '../gamekode/kodeLogic'
 import './bachdoom.css'
 
 /** BachDoom: a rail shooter where the weapon is a piano. See docs in this folder's modules. */
@@ -162,9 +166,13 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
               )
             })}
           </div>
+          <SpellKode />
           <button className="bd-btn bd-start" onClick={act(() => game.start(level, diff))}>▶ Start {LEVELS[level].id}: {LEVELS[level].name}</button>
           <p className="bd-fine">A fan-made parody. Not affiliated with id Software.</p>
         </div>
+      )}
+      {phase === 'play' && game && game.spells.length > 0 && (
+        <div className="gk-hud" role="status" data-testid="spell-hud">{game.spells.map((sp) => sp.emoji).join(' ')} spells: {'⚡'.repeat(game.spellCharges) || 'charging (5 hits in a row = 1)'}</div>
       )}
       {phase === 'tally' && game && (
         <div className="bd-actions">
@@ -185,5 +193,31 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
         </div>
       )}
     </div>
+  )
+}
+
+/** Kode power: equip up to 3 saved motifs (functions) as spells. Play a call sign below the melody to cast; higher hits harder (a parameter). */
+function SpellKode() {
+  const motifs = useMotifs((m) => m.list)
+  const [k, setK] = useState(() => ({ on: false, ids: [] as string[], ...kload<{ on?: boolean; ids?: string[] }>('bachdoom', {}) }))
+  const upd = (n: Partial<typeof k>) => { const next = { ...k, ...n }; setK(next); ksave('bachdoom', next) }
+  const usable = motifs.filter((m) => m.kind === 'pitch' && m.notes.length >= 3)
+  const toggle = (id: string) => upd({ ids: k.ids.includes(id) ? k.ids.filter((x) => x !== id) : [...k.ids, id].slice(-3) })
+  return (
+    <KodePowerCard game="bachdoom" on={k.on} onToggle={() => upd({ on: !k.on })} status={k.on ? undefined : 'Off: the game plays exactly as before.'}>
+      {usable.length === 0 ? (
+        <p>No spells yet. Play a 3-note tune in <a href="#/apps/my-motifs">My Motifs</a> and save it, then come back and pick it here.</p>
+      ) : (
+        <ul className="gk-list" aria-label="Pick up to 3 spells">
+          {usable.map((m) => (
+            <li key={m.id}>
+              <button className="gk-btn" aria-pressed={k.ids.includes(m.id)} onClick={() => toggle(m.id)}>{m.emoji} {m.name}</button>
+              <span>call sign <code className="gk-code">{phraseText(callSignOf(m.notes.map((n) => n.v)))}</code></span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p>To cast: play the call sign on keys <b>below</b> the tune. Every 5 hits in a row charges a spell. The higher you play it, the harder it hits.</p>
+    </KodePowerCard>
   )
 }

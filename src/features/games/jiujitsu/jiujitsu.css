@@ -83,3 +83,5 @@
 }
 
 .bj-from { font-size: 14px; font-weight: 700; color: #cfc9ea; white-space: nowrap; }
+
+.bj-root[data-phase="menu"] .bj-card { overflow-y: auto; }

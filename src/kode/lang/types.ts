@@ -39,9 +39,16 @@ export type Node =
 /** a friendly problem, pointing at exact characters of the source (start inclusive, end exclusive) */
 export interface Diag { message: string; start: number; end: number; line: number; col: number }
 
+/** `play <name> [+n|-n] [x2|x½]`: a saved motif (🧩 My Motifs), looped on the bar grid and looked up again at every bar */
+export interface MotifRef { name: string; shift: number; speed: number; s: number; e: number }
+/** finds a motif by name (the app wires this to the Koding Kore). Pitched notes are MIDI numbers; pad notes are lanes 0..7. */
+export type MotifResolver = (name: string, shift: number, speed: number) => { kind: 'pitch' | 'lane'; notes: { note: number; beat: number; beats: number; vel: number }[] } | null
+
 export interface LayerSpec {
   kind: PatKind
   node: Node
+  /** set for a `play` line (then node is empty) */
+  motif?: MotifRef
   sound: string
   loud: number
   /** 1-based source line */

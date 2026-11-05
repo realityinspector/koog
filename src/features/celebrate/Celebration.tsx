@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useCelebrateStore, type CelebrateKind } from './celebrate'
 import './celebrate.css'
+import { KoogAlien } from '../../brand/mascot/KoogAlien'
 
 const COLORS = ['#7c5cff', '#ff5da2', '#ffd76c', '#35d4e8']
 const DURATION = 2500
@@ -71,6 +72,7 @@ export function Celebration() {
           <div key={event.id} className={`kc-toast ${event.kind}`}>
             <span className="kc-emoji" aria-hidden="true">{event.emoji}</span>
             <span>{event.title}</span>
+            <span className="kc-mascot" aria-hidden="true"><KoogAlien pose="cheer" mood="excited" size={72} animated labelled={false} /></span>
           </div>
         </div>
       )}

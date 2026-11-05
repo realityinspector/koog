@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { checkCode, isGuest, psave, useProfile } from './profile'
 import './profile.css'
 import { Icon } from '../ui/Icon'
+import { KoogAlien } from '../brand/mascot/KoogAlien'
 
 const HOLD_MS = 1200
 
@@ -120,7 +121,7 @@ export function WhoIsPlaying() {
 
   return (
     <section className="pf-who-card" aria-label="Who's playing?">
-      <h2>Who's playing?</h2>
+      <div className="pf-who-head"><KoogAlien pose="wave" mood="happy" size={64} animated labelled={false} /><h2>Who's playing?</h2></div>
       <div className="pf-tiles">
         {profiles.map((p) => {
           const t = tileInfo(p)

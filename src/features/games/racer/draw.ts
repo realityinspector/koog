@@ -169,7 +169,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, cam: Camera, w: number,
     }
   }
   const following = racing
-  const fitZ = Math.max(0.35, Math.min(2.4, Math.min((w - 40) / (v.maxX - v.minX + 2 * ROAD_HALF + 60), (h - 150) / (v.maxY - v.minY + 2 * ROAD_HALF + 60))))
+  const fitZ = Math.max(0.35, Math.min(2.4, Math.min((w - 40) / (v.maxX - v.minX + 2 * ROAD_HALF + 60), (h - 110) / (v.maxY - v.minY + 2 * ROAD_HALF + 60))))
   const tz = following ? Math.min(1.5, Math.max(0.8, Math.min(w, h) / 380)) : fitZ
   const tx = following ? car.x : (v.minX + v.maxX) / 2, ty = following ? car.y : (v.minY + v.maxY) / 2
   const trot = following ? -base.heading * (v.reduced ? 0.15 : 0.45) : 0

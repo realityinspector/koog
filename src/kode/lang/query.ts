@@ -1,5 +1,5 @@
 // Turn a pattern into the sounds of one bar. PURE. Times are fractions of the bar (0..1).
-import { CYCLE_BEATS, type LayerSpec, type Node, type PlanEvent, type Program } from './types'
+import { CYCLE_BEATS, type LayerSpec, type MotifResolver, type Node, type PlanEvent, type Program } from './types'
 
 export interface QEvent { t0: number; t1: number; kind: 'note' | 'drum'; value: number; s: number; e: number }
 
@@ -32,14 +32,32 @@ export function query(node: Node, cyc: number, t0: number, t1: number, out: QEve
   }
 }
 
-export function planLayer(L: LayerSpec, index: number, cyc: number): PlanEvent[] {
+/** a motif's slice for bar `cyc`: it loops, and a motif longer than a bar spreads over the next bars */
+function planMotif(L: LayerSpec, index: number, cyc: number, res?: MotifResolver): PlanEvent[] {
+  const m = L.motif!
+  const r = res ? res(m.name, m.shift, m.speed) : null
+  if (!r || !r.notes.length) return []
+  const total = Math.max(...r.notes.map((n) => n.beat + n.beats))
+  const bars = Math.max(1, Math.ceil(total / CYCLE_BEATS - 1e-9))
+  const from = (((cyc % bars) + bars) % bars) * CYCLE_BEATS
+  const out: PlanEvent[] = []
+  for (const n of r.notes) {
+    if (n.beat < from - 1e-9 || n.beat >= from + CYCLE_BEATS - 1e-9) continue
+    const lane = Math.max(0, Math.min(7, Math.round(n.note)))
+    out.push({ layer: index, kind: r.kind === 'lane' ? 'drum' : 'note', value: r.kind === 'lane' ? lane : n.note, sound: L.sound, vel: Math.max(0.05, Math.min(1, n.vel * L.loud)), beat: n.beat - from, dur: n.beats, s: m.s, e: m.e })
+  }
+  return out
+}
+
+export function planLayer(L: LayerSpec, index: number, cyc: number, res?: MotifResolver): PlanEvent[] {
+  if (L.motif) return planMotif(L, index, cyc, res)
   const q: QEvent[] = []
   query(L.node, cyc, 0, 1, q)
   return q.map((e) => ({ layer: index, kind: e.kind, value: e.value, sound: L.sound, vel: L.loud, beat: e.t0 * CYCLE_BEATS, dur: (e.t1 - e.t0) * CYCLE_BEATS, s: e.s, e: e.e }))
 }
 /** every layer's sounds for bar number `cyc`, in time order */
-export function planCycle(p: Program, cyc: number): PlanEvent[] {
+export function planCycle(p: Program, cyc: number, res?: MotifResolver): PlanEvent[] {
   const out: PlanEvent[] = []
-  p.layers.forEach((L, i) => out.push(...planLayer(L, i, cyc)))
+  p.layers.forEach((L, i) => out.push(...planLayer(L, i, cyc, res)))
   return out.sort((a, b) => a.beat - b.beat || a.layer - b.layer)
 }

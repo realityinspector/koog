@@ -13,6 +13,8 @@ import {
 } from './data'
 import type { Phrase, Rung } from '../../../music/phrases'
 import { RULES, easier, masteryOf, songPhrases, startAttempt, recordRung, stopPhrase, demo as singPhrase, wrongNote, ord, pcName, type AttemptHandle } from '../phraseKit'
+import { kload, ksave, markConcept } from '../gamekode/kodeStore'
+import { applyLook, showOrder, type ChordArg, type KLook, type ShowStep } from '../gamekode/kodeLogic'
 import { NEUTRAL, buildFigure, drawFigure, drawHatAlone, goofyHat, makeAudience, type Figure, type Layer, type Pose } from './sprites'
 
 export interface Toast { id: number; text: string; kind: 'good' | 'oops' | 'boom' | 'info' }
@@ -25,7 +27,10 @@ export interface Snapshot {
   save: Save; newUnlock: string | null; reduced: boolean; zoneHit: number
   /** phrase walk HUD: which phrase of how many, the era's rung, and what to do now */
   ph?: { i: number; n: number; rung: Rung; text: string } | null
+  /** Kode power (opt-in): saved looks (functions), the active one, the show program */
+  kode?: KodeSave & { active: number; showing: number }
 }
+export interface KodeSave { on: boolean; looks: KLook[]; show: ShowStep[] }
 /** Phrase walk: the runway is walked phrase by phrase. The model waits on a mark, the phrase is taught, then you play it. */
 interface PW {
   list: Phrase[]; pi: number; rung: Rung; stage: 'teach' | 'play' | 'pose' | 'stumble'
@@ -61,6 +66,11 @@ export class Game {
   private save: Save
   private phase: Phase = 'eras'
   private era: Era = ERAS[0]
+  private kActive = 0
+  private kShowing = -1
+  private kTimers: number[] = []
+  /** dev/test log of every look call: the look, the chord argument and the resulting items/accessory */
+  callLog: { look: string; chord: string; accIx: number; items: number[] }[] = []
   private items = [0, 0, 0, 0, 0]
   private pal: Pal = { root: 0, q: 'major' }
   private modelIdx = 0
@@ -122,7 +132,7 @@ export class Game {
     this.ro.disconnect(); this.mo?.disconnect()
     window.removeEventListener('resize', this.onWin)
     this.canvas.removeEventListener('pointerdown', this.onPointer)
-    clearInterval(this.poll); clearTimeout(this.cycleTimer)
+    clearInterval(this.poll); clearTimeout(this.cycleTimer); this.kodeStopShow()
     this.mq?.removeEventListener('change', this.onMq)
     this.offJudge(); this.offHarm()
     this.leaveRunway()
@@ -142,10 +152,59 @@ export class Game {
       nextName: next != null ? noteName(next) : '', started: !!r?.started,
       toast: this.toast, says: this.says, scores: this.scores, stars: this.stars, saved: this.saved, save: this.save, newUnlock: this.newUnlock, reduced: this.rm, zoneHit: this.zoneHit,
       ph: this.pw ? { i: this.pw.pi + 1, n: this.pw.list.length, rung: this.pw.rung, text: this.pwText() } : null,
+      kode: { ...this.kodeSave(), active: this.kActive, showing: this.kShowing },
     }
   }
   private emit() { if (!this.dead) this.onSnap(this.snap()) }
   private say(text: string, kind: Toast['kind'] = 'info', secs = 2.2) { this.toast = { id: ++this.toastId, text, kind }; this.toastUntil = this.clock + secs; this.emit() }
+
+  // ---------------- Kode power: looks are functions ----------------
+  kodeSave(): KodeSave { const k = kload<Partial<KodeSave>>('fashion', {}); return { on: !!k.on, looks: k.looks ?? [], show: k.show ?? [] } }
+  private kodeWrite(k: KodeSave) { ksave('fashion', k); this.emit() }
+  kodeToggle() { const k = this.kodeSave(); k.on = !k.on; if (!k.on) this.kActive = 0; this.kodeWrite(k) }
+  /** save the current outfit as look(color, extra): the chord and accessory are left as blanks */
+  kodeSaveLook() {
+    const k = this.kodeSave()
+    const n = k.looks.length + 1
+    const emoji = ['👑', '🌟', '🎩', '🦋', '🔥', '🌈'][(n - 1) % 6]
+    const look: KLook = { id: Date.now(), name: `look${n}`, emoji, era: this.era.id, items: [...this.items] }
+    k.looks = [...k.looks, look].slice(-6)
+    markConcept('fashion', 'function')
+    this.kActive = look.id
+    this.say(`Saved ${emoji} ${look.name}(color, extra). Play a chord to call it!`, 'good', 3)
+    this.kodeWrite(k)
+  }
+  kodeDelete(id: number) { const k = this.kodeSave(); k.looks = k.looks.filter((l) => l.id !== id); k.show = k.show.filter((s) => s.lookId !== id); if (this.kActive === id) this.kActive = 0; this.kodeWrite(k) }
+  kodeUse(id: number) { this.kActive = this.kActive === id ? 0 : id; this.emit() }
+  kodeShowSet(show: ShowStep[]) { const k = this.kodeSave(); k.show = showOrder(show); this.kodeWrite(k) }
+  /** call a look with a chord argument: the chord colours it and its root picks the extra */
+  private callLook(look: KLook, chord: ChordArg) {
+    if (look.era !== this.era.id) return
+    const a = applyLook(look, chord, optionsOf(this.era, 'acc').length)
+    this.items = a.items; this.pal = { ...a.pal }
+    this.figDirty = true; this.styleBounce = this.clock; this.wheelPulse = this.clock
+    const pn = palName(a.pal), acc = optionsOf(this.era, 'acc')[a.accIx]?.name ?? ''
+    this.callLog.push({ look: look.name, chord: pn, accIx: a.accIx, items: [...a.items] })
+    this.floatText(`${look.name}(${pn}, ${acc})`, palColors(a.pal).main)
+    markConcept('fashion', 'parameter')
+    this.emit()
+  }
+  /** run the show program: up to three look calls in order, one every 1.8 seconds */
+  kodeRunShow() {
+    const k = this.kodeSave()
+    this.kodeStopShow()
+    const steps = showOrder(k.show).filter((s) => k.looks.some((l) => l.id === s.lookId))
+    if (!steps.length || this.phase !== 'style') return
+    markConcept('fashion', 'sequence')
+    steps.forEach((st, i) => {
+      this.kTimers.push(window.setTimeout(() => {
+        const look = k.looks.find((l) => l.id === st.lookId)
+        if (look && !this.dead && this.phase === 'style') { this.kShowing = i; this.callLook(look, st.chord) }
+      }, i * 1800))
+    })
+    this.kTimers.push(window.setTimeout(() => { this.kShowing = -1; this.emit() }, steps.length * 1800))
+  }
+  kodeStopShow() { this.kTimers.forEach(clearTimeout); this.kTimers = []; this.kShowing = -1 }
 
   // ---------------- commands (called by the UI) ----------------
   private setEraInternal(e: Era) {
@@ -282,6 +341,9 @@ export class Game {
     const p = parseChord(name)
     if (!p || this.phase !== 'style') return
     if (this.pendingCycle) { this.pendingCycle = null; clearTimeout(this.cycleTimer) } // the notes were a chord, not a keypress
+    const k = this.kodeSave()
+    const look = k.on ? k.looks.find((l) => l.id === this.kActive) : undefined
+    if (look && look.era === this.era.id) { this.callLook(look, { root: p.root, q: p.q }); return }
     this.setPal(p)
     this.floatText(palName(p) + ' colours', palColors(p).main)
   }

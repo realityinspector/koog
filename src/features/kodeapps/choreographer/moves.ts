@@ -113,7 +113,7 @@ function ik(hx: number, hy: number, fx: number, fy: number, a: number, b: number
   if (d > max) { dx *= max / d; dy *= max / d; d = max }
   const cosA = Math.max(-1, Math.min(1, (a * a + d * d - b * b) / (2 * a * d || 1)))
   const ang = Math.acos(cosA), base = Math.atan2(dy, dx)
-  const t = base + ang * (dir > 0 ? 1 : -1) * -1
+  const t = base + ang * (dir > 0 ? 1 : -1)
   return [hx + Math.cos(t) * a, hy + Math.sin(t) * a]
 }
 export function rigOf(p: Pose): Rig {

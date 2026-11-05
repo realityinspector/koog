@@ -7,3 +7,8 @@
 .kc-emoji { font-size: 1.4em; }
 @keyframes kc-pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .kc-toast { animation: none; } .kc-canvas { display: none; } }
+
+/* Koog Alien cheers from the banner's top-right corner, sitting above it so it covers nothing */
+.kc-toast { position: relative; }
+.kc-mascot { position: absolute; right: 10px; bottom: calc(100% - 14px); line-height: 0; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
+@media (max-width: 420px) { .kc-mascot { display: none; } }

@@ -69,3 +69,7 @@
 .pf-guest:hover { background: var(--k-surface-3); }
 .pf-note { font-size: var(--k-fs-xs); }
 @media (prefers-reduced-motion: reduce) { .pf-tile { transition: none; } .pf-tile:hover { transform: none; } }
+
+/* Koog Alien waves above the picker */
+.pf-who-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.pf-who-head h2 { margin: 0; }

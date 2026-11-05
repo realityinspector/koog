@@ -1,0 +1,53 @@
+[
+ {
+  "nav": "http://localhost:5173/",
+  "wait": 1200
+ },
+ {
+  "js": "localStorage.setItem('koog.profiles','[\"tester\"]'); localStorage.setItem('koog.active','tester'); 'set'",
+  "log": false
+ },
+ {
+  "nav": "http://localhost:5173/",
+  "wait": 2500
+ },
+ {
+  "name": "open",
+  "js": "(async()=>{const M=await import('/src/kode/kore/devMount.tsx'); M.mountKoreApp('koogalien'); await new Promise(r=>setTimeout(r,2500)); return !!document.querySelector('.kgx-app')})()"
+ },
+ {
+  "shot": "koogalien-01-open"
+ },
+ {
+  "name": "hello-world",
+  "js": "(async()=>{const L=await import('/src/music/localNotes.ts'); const wait=(ms)=>new Promise(r=>setTimeout(r,ms)); const chord=async(ns)=>{ns.forEach(n=>L.playLocal(n,64,true)); await wait(120); ns.forEach(n=>L.playLocal(n,0,false))}; await chord([60,69]); await wait(800); await chord([60,67,72]); await wait(800); await chord([67,72]); await wait(900); const q=(r)=>document.querySelectorAll('.kgx-col:not(.listening):not(.closer) [data-row=\"'+r+'\"]').length; const S=await import('/src/features/koogalien/store.ts'); const s=S.useKoogalien.getState(); return JSON.stringify({gloss:s.sentence&&s.sentence.words.map(w=>w.en).join(' '), code:s.code, ended:s.ended, rows:[q('notes'),q('code'),q('en')], english:[...document.querySelectorAll('.kgx-col [data-row=en]')].map(e=>e.textContent.trim()), sr:document.querySelector('.kgx-sr').textContent})})()"
+ },
+ {
+  "shot": "koogalien-02-hello"
+ },
+ {
+  "name": "hear",
+  "js": "(async()=>{const wait=(ms)=>new Promise(r=>setTimeout(r,ms)); const b=[...document.querySelectorAll('.kgx-app button')].find(b=>b.textContent.trim()==='Hear it'); b.click(); await wait(300); const seen=[]; for(let i=0;i<20;i++){const p=document.querySelector('.kgx-col.playing'); if(p) seen.push(p.dataset.word); await wait(150)} return JSON.stringify({seen:[...new Set(seen)]})})()"
+ },
+ {
+  "shot": "koogalien-03-hear"
+ },
+ {
+  "name": "edit-code",
+  "js": "(async()=>{const wait=(ms)=>new Promise(r=>setTimeout(r,ms)); const t=document.querySelector('#kgx-code'); const set=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set; set.call(t,'say hello friend.'); t.dispatchEvent(new Event('input',{bubbles:true})); await wait(300); return [...document.querySelectorAll('.kgx-col [data-row=en]')].map(e=>e.textContent.trim()).join('|')})()"
+ },
+ {
+  "viewport": [
+   390,
+   844
+  ],
+  "wait": 600
+ },
+ {
+  "shot": "koogalien-04-phone"
+ },
+ {
+  "name": "no-hscroll",
+  "js": "JSON.stringify({sw:document.documentElement.scrollWidth, cw:document.documentElement.clientWidth})"
+ }
+]

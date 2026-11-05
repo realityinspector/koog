@@ -8,7 +8,7 @@
 import { BPM_MAX, BPM_MIN } from './limits'
 import { KEYWORDS, SOUND_NAMES, didYouMean, isSound } from './names'
 import { parseNotation } from './notation'
-import { KodeError, LIMITS, diag, type Diag, type LayerSpec, type PatKind, type Program } from './types'
+import { KodeError, LIMITS, diag, type Diag, type LayerSpec, type MotifRef, type PatKind, type Program } from './types'
 
 interface Tok { kind: 'word' | 'str'; text: string; start: number; end: number }
 
@@ -36,9 +36,13 @@ function tokenize(line: string, at: number): Tok[] {
 
 interface Defaults { sound: string; loud: number }
 
-function parseLine(line: string, at: number, lineNo: number, d: Defaults, st: { tempo?: number }): LayerSpec | null {
+const SPEED_RE = /^x(2|1|½|1\/2|0?\.5)$/i
+const SHIFT_RE = /^[+-]\d{1,2}$/
+
+function parseLine(line: string, at: number, lineNo: number, d: Defaults, st: { tempo?: number }, known?: (name: string) => boolean): LayerSpec | null {
   const toks = tokenize(line, at)
   let pat: { kind: PatKind; tok: Tok } | null = null
+  let motif: MotifRef | null = null
   let sound: string | undefined, loud: number | undefined
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i]
@@ -48,9 +52,26 @@ function parseLine(line: string, at: number, lineNo: number, d: Defaults, st: { 
     switch (kw) {
       case 'notes': case 'drums': {
         if (!arg || arg.kind !== 'str') throw new KodeError(`${kw} needs a pattern in quotes, like ${kw} "${kw === 'notes' ? 'c e g e' : 'kick ~ snare ~'}".`, t.start, t.end)
-        if (pat) throw new KodeError('Put each pattern on its own line. Every line is its own layer.', t.start, t.end)
+        if (pat || motif) throw new KodeError('Put each pattern on its own line. Every line is its own layer.', t.start, t.end)
         pat = { kind: kw, tok: arg }
         i++
+        break
+      }
+      case 'play': {
+        if (!arg || arg.kind !== 'word') throw new KodeError('play needs the name of a motif, like play round +2 (save motifs in 🧩 My Motifs).', t.start, t.end)
+        if (pat || motif) throw new KodeError('Put each pattern on its own line. Every line is its own layer.', t.start, t.end)
+        if (known && !known(arg.text)) throw new KodeError(`I don't know a motif called '${arg.text}'. Save one in 🧩 My Motifs first.`, arg.start, arg.end)
+        let shift = 0, speed = 1
+        i++
+        for (let k = i + 1; k < toks.length && toks[k].kind === 'word'; k++) {
+          const w = toks[k].text
+          if (SHIFT_RE.test(w)) shift = Math.max(-24, Math.min(24, Number(w)))
+          else if (SPEED_RE.test(w)) { const m = w.toLowerCase().slice(1); speed = m === '2' ? 2 : m === '1' ? 1 : 0.5 }
+          else if (/^[+-]/.test(w) || /^x/i.test(w)) throw new KodeError(`I can't read '${w}'. After the name use +2 or -3 to move the notes, and x2 or x½ for speed.`, toks[k].start, toks[k].end)
+          else break
+          i = k
+        }
+        motif = { name: arg.text, shift, speed, s: arg.start, e: arg.end }
         break
       }
       case 'tempo': {
@@ -86,6 +107,7 @@ function parseLine(line: string, at: number, lineNo: number, d: Defaults, st: { 
       }
     }
   }
+  if (motif) return { kind: 'notes', node: { t: 'seq', items: [] }, motif, sound: sound ?? d.sound, loud: loud ?? d.loud, line: lineNo }
   if (!pat) {
     // a line with only sound / loud / tempo sets the defaults for the layers below it
     if (sound !== undefined) d.sound = sound
@@ -97,7 +119,7 @@ function parseLine(line: string, at: number, lineNo: number, d: Defaults, st: { 
 }
 
 /** Parse a program. Never throws; problems come back in `errors` (at most one per line). */
-export function parseProgram(src: string): Program {
+export function parseProgram(src: string, known?: (name: string) => boolean): Program {
   const prog: Program = { src, layers: [], errors: [] }
   if (src.length > LIMITS.src) {
     prog.errors.push(diag(src, `That is a lot of code! Koog Kode stops at ${LIMITS.src} characters. Cut some lines.`, LIMITS.src, src.length))
@@ -113,7 +135,7 @@ export function parseProgram(src: string): Program {
     if (!line.trim() || line.trim().startsWith('#')) continue
     if (++codeLines > LIMITS.lines) { prog.errors.push(diag(src, `That is more than ${LIMITS.lines} lines of code. Koog Kode keeps it small.`, lineAt, lineAt + line.length)); break }
     try {
-      const layer = parseLine(line, lineAt, lineNo, d, st)
+      const layer = parseLine(line, lineAt, lineNo, d, st, known)
       if (layer) {
         if (prog.layers.length >= LIMITS.layers) throw new KodeError(`Koog Kode plays up to ${LIMITS.layers} layers at once. Take a line out first.`, lineAt, lineAt + line.length)
         prog.layers.push(layer)

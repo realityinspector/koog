@@ -3,6 +3,7 @@
 import { createElement, type ComponentType } from 'react'
 import { registerApp } from './registry'
 import type { KodeApp, KoreAppProps } from './types'
+import { KOOGALIEN_APP } from '../../features/koogalien/listing'
 
 type Mod = Record<string, unknown>
 type Loader = () => Promise<Mod>
@@ -32,12 +33,17 @@ const motifsUi = import.meta.glob('/src/features/kodeapps/motifs/MyMotifs.tsx') 
 export const BUILT_IN: KodeApp[] = [
   { id: 'phrase-racer', name: 'Koogalien Racer', icon: '🏎️', tagline: 'Play a phrase and it becomes the road. Steer with the notes.', concepts: ['sequence', 'event', 'debug'], inputs: ['keys', 'drums', 'dj', 'pedal'], ages: [6, 14], minutes: 8, route: '#/games/racer', status: 'beta', kind: 'kode', component: lazyOf(racer, 'RacerGame') },
   { id: 'koog-kode', name: 'Koog Kode', icon: '⌨️', tagline: 'Type a pattern and it plays. Change a word, hear it change.', concepts: ['sequence', 'loop', 'variable', 'parallel', 'random'], inputs: ['keys', 'screen'], ages: [8, 16], minutes: 10, route: '#/kode', status: 'beta', kind: 'kode', component: lazyOf(editor, 'KodePanel') },
-  { id: 'choreographer', name: 'Koreographer', icon: '💃', tagline: 'Play phrases to choreograph a dancer. Every phrase is a move.', concepts: ['sequence', 'loop', 'function', 'event'], inputs: ['keys', 'drums', 'pedal'], ages: [6, 14], minutes: 8, route: '#/apps/choreographer', status: 'beta', kind: 'kode', component: lazyOf(choreo) },
+  { id: 'choreographer', name: 'Koreographer', icon: '💃', tagline: 'Play phrases to choreograph a dancer. Every phrase is a move.', concepts: ['sequence', 'loop', 'function', 'parameter', 'event', 'condition', 'debug'], inputs: ['keys', 'drums', 'pedal'], ages: [6, 14], minutes: 8, route: '#/apps/choreographer', status: 'beta', kind: 'kode', component: lazyOf(choreo) },
   { id: 'my-motifs', name: 'My Motifs', icon: '🧩', tagline: 'Save a phrase as a function. Play its call sign to run it, higher, faster or louder.', concepts: ['function', 'parameter', 'recursion', 'event'], inputs: ['keys', 'drums', 'dj', 'pedal', 'screen'], ages: [7, 16], minutes: 6, route: '#/apps/my-motifs', status: 'ready', kind: 'kode', component: lazyOf(motifsUi) },
-  { id: 'phrase-match', name: 'Phrase Match', icon: '🃏', tagline: 'Flip cards, find the twin tunes, play them back.', concepts: ['sequence', 'condition'], inputs: ['keys'], ages: [5, 12], minutes: 6, route: '#/games/memory', status: 'ready', kind: 'learning' },
+  { id: 'phrase-match', name: 'Phrase Match', icon: '🃏', tagline: 'Flip cards, find the twin tunes, play them back.', concepts: ['variable', 'sequence'], inputs: ['keys'], ages: [5, 12], minutes: 6, route: '#/games/memory', status: 'ready', kind: 'learning' },
+  { id: 'bachdoom', name: 'BachDoom', icon: '🎹', tagline: 'Save motifs as spells; a higher call sign hits harder.', concepts: ['function', 'parameter'], inputs: ['keys'], ages: [8, 16], minutes: 10, route: '#/games/bachdoom', status: 'ready', kind: 'learning' },
+  { id: 'zombielanes', name: 'Zombie Lanes', icon: '🧟', tagline: 'Program a helper turret with a looped lane pattern.', concepts: ['sequence', 'loop', 'event'], inputs: ['keys'], ages: [6, 14], minutes: 8, route: '#/games/zombies', status: 'ready', kind: 'learning' },
+  { id: 'jiujitsu', name: 'Jiu-Jitsu Flow', icon: '🥋', tagline: 'Save a combo of positions and drill it with a call sign.', concepts: ['function', 'loop'], inputs: ['keys'], ages: [7, 14], minutes: 8, route: '#/games/jiujitsu', status: 'ready', kind: 'learning' },
+  { id: 'fashion', name: 'Runway Remix', icon: '👗', tagline: 'Save a look as a function; the chord you play picks its colors.', concepts: ['function', 'parameter', 'sequence'], inputs: ['keys'], ages: [6, 14], minutes: 8, route: '#/games/fashion', status: 'ready', kind: 'learning' },
   { id: 'light-the-tree', name: 'Light the Tree', icon: '🎄', tagline: 'Learn a holiday song rung by rung; each phrase hangs an ornament.', concepts: ['sequence', 'loop', 'debug'], inputs: ['keys'], ages: [5, 12], minutes: 10, route: '#/games/tree', status: 'ready', kind: 'learning' },
   { id: 'harvest-feast', name: 'Harvest Feast', icon: '🦃', tagline: 'Learn a harvest song rung by rung; each phrase fills the table.', concepts: ['sequence', 'loop', 'debug'], inputs: ['keys'], ages: [5, 12], minutes: 10, route: '#/games/feast', status: 'ready', kind: 'learning' },
 ]
+BUILT_IN.push(KOOGALIEN_APP) // Koogalien (decision 7): its manifest lives in src/features/koogalien/listing.ts
 for (const a of BUILT_IN) registerApp(a)
 
 if (import.meta.hot) import.meta.hot.accept()

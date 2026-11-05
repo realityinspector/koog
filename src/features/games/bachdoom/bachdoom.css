@@ -33,3 +33,7 @@
 .bd-actions { position: absolute; left: 0; right: 0; bottom: 22cqh; display: flex; gap: 10px; justify-content: center; z-index: 3; }
 .bd-actions .bd-btn { font-size: clamp(11px, 3.2cqh, 16px); padding: clamp(5px, 1.5cqh, 9px) clamp(12px, 3cqw, 28px); }
 @media (prefers-reduced-motion: reduce) { .bd-btn { transition: none; } }
+
+.bd-title { overflow-y: auto; }
+.bd-title { overflow-y: auto; }
+.bd-title .gk-card { flex: none; width: min(560px, 100%); }

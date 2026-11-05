@@ -92,3 +92,5 @@
 .zl-coach { position: absolute; left: 50%; top: 46px; transform: translateX(-50%); z-index: 4; max-width: min(92%, 640px); text-align: center; font-size: clamp(15px, 4.4cqh, 21px); font-weight: 800; line-height: 1.25; color: #fff; background: rgba(40, 28, 96, .92); border: 2px solid rgba(190, 170, 255, .6); border-radius: 14px; padding: 6px 16px; pointer-events: none; }
 .zl-coach.oops { border-color: #ffb0a0; background: rgba(100, 40, 60, .92); }
 .zl-coach.good { border-color: #7dffb0; background: rgba(24, 80, 60, .92); }
+
+.zl-root[data-phase="menu"] .zl-card { overflow-y: auto; }

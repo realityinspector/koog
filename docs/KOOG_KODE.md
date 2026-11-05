@@ -1,5 +1,9 @@
 # Koog Kode
 
+> Koding allows the keyboard (like a piano keyboard) to become a coding interface. New types of apps, games, and adventures can come from learning music.
+
+Every musical input is a way to write programs, and every program is something you can hear. Apps built on this layer run on the Koding Kore: see `docs/KODING_KORE.md` (SDK, motif functions, rules).
+
 **Koding is coding-with-music.** Any musical device can be a way to Kode: a piano keyboard or its on-screen emulator, the drum pads, the DJ controller, a foot pedal, any USB musical gadget. Koog Kode turns all of them into one stream of small events ("Kode tokens") that Kode apps read, so an app never has to care which instrument the player picked.
 
 The first Kode app is **🏁 Koogalien Racer** (`#/games/racer`): the track is a timeline built from a tune, and the player's phrase steers the car. (Koogalien is the musical language of the Koog Aliens; Koogalien Racer is a first taste of reading music as a road.)

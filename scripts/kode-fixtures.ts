@@ -5,7 +5,7 @@ import { planCycle } from '../src/kode/lang/query'
 import { Runner, type Clock, type Sink } from '../src/kode/lang/scheduler'
 import { drumRowsToLine, loopNotesToLine, writeFromPlayed, type Played } from '../src/kode/lang/write'
 import { EXAMPLES } from '../src/kode/lang/examples'
-import { LIMITS, describe, type PlanEvent } from '../src/kode/lang/types'
+import { LIMITS, describe, type MotifResolver, type PlanEvent } from '../src/kode/lang/types'
 
 let fails = 0, passes = 0
 function eq(name: string, got: unknown, want: unknown) {
@@ -92,7 +92,7 @@ eq('9th layer refused', parseProgram(Array.from({ length: 9 }, () => 'notes "c"'
 eq('no code execution: odd text is just an error', parseProgram('notes "c"; process.exit(1)').errors.length > 0, true)
 eq('eval text is just an error', parseProgram('eval("1")').errors[0]?.message.startsWith("I don't know the word"), true)
 eq('every example parses', EXAMPLES.map((e) => parseProgram(e.code).errors.length), EXAMPLES.map(() => 0))
-eq('examples count', EXAMPLES.length >= 6 && EXAMPLES.length <= 8, true)
+eq('examples count', EXAMPLES.length >= 6 && EXAMPLES.length <= 9, true)
 
 // ---- the player: bar-line switching on a fake clock ----
 {
@@ -181,6 +181,38 @@ const pad = (lane: number, t: number): Played => ({ src: 'drums', lane, vel: 0.9
   eq('empty drum pattern', drumRowsToLine(Array.from({ length: 8 }, () => new Array<number>(16).fill(0)), 16), null)
   eq('looper layer -> a notes line', loopNotesToLine([{ t: 0, n: 60 }, { t: 1, n: 64 }, { t: 2, n: 67 }, { t: 3, n: 64 }]), 'notes "c e g e"')
   eq('empty looper layer', loopNotesToLine([]), null)
+}
+
+// ---- play <motif> ----
+{
+  const MOT: Record<string, { kind: 'pitch' | 'lane'; base: { note: number; beat: number; beats: number; vel: number }[] }> = {
+    zap: { kind: 'pitch', base: [{ note: 60, beat: 0, beats: 1, vel: 0.8 }, { note: 64, beat: 1, beats: 1, vel: 0.8 }] },
+    thump: { kind: 'lane', base: [{ note: 0, beat: 0, beats: 0.5, vel: 1 }, { note: 1, beat: 2, beats: 0.5, vel: 1 }] },
+    long: { kind: 'pitch', base: [{ note: 60, beat: 0, beats: 1, vel: 1 }, { note: 67, beat: 5, beats: 1, vel: 1 }] },
+  }
+  const known = (n: string) => !!MOT[n.toLowerCase()]
+  const res: MotifResolver = (n, shift, speed) => { const m = MOT[n.toLowerCase()]; return m ? { kind: m.kind, notes: m.base.map((x) => ({ ...x, note: m.kind === 'pitch' ? x.note + shift : x.note, beat: x.beat / speed, beats: x.beats / speed })) } : null }
+  const plan = (src: string, cyc = 0) => planCycle(parseProgram(src, known), cyc, res).map((e) => [e.kind, e.value, +e.beat.toFixed(3), +e.dur.toFixed(3)])
+  eq('play parses', parseProgram('play zap', known).errors, [])
+  eq('play is a layer with the motif ref', (() => { const l = parseProgram('play zap +2 x2', known).layers[0]; return [l.motif?.name, l.motif?.shift, l.motif?.speed] })(), ['zap', 2, 2])
+  eq('play plays the motif', plan('play zap'), [['note', 60, 0, 1], ['note', 64, 1, 1]])
+  eq('play +2 transposes', plan('play zap +2').map((x) => x[1]), [62, 66])
+  eq('play -3 transposes down', plan('play zap -3').map((x) => x[1]), [57, 61])
+  eq('play x2 is twice as fast', plan('play zap x2').map((x) => x[2]), [0, 0.5])
+  eq('play x½ is half speed', plan('play zap x½').map((x) => x[2]), [0, 2])
+  eq('shift and speed together', plan('play zap +7 x2'), [['note', 67, 0, 0.5], ['note', 71, 0.5, 0.5]])
+  eq('a lane motif plays drum voices', plan('play thump'), [['drum', 0, 0, 0.5], ['drum', 1, 2, 0.5]])
+  eq('play loops every bar', plan('play zap', 5), plan('play zap', 0))
+  eq('a long motif spreads over bars: bar 0', plan('play long', 0).map((x) => x[1]), [60])
+  eq('a long motif spreads over bars: bar 1', plan('play long', 1), [['note', 67, 1, 1]])
+  eq('play is case-insensitive in the resolver', plan('play ZAP').length, 2)
+  eq('unknown motif: friendly message and exact characters', (() => { const e = parseProgram('tempo 90\nplay buzz +2', known).errors[0]; return [e.message, e.line, e.col, e.start, e.end] })(), ["I don't know a motif called 'buzz'. Save one in 🧩 My Motifs first.", 2, 6, 14, 18])
+  eq('play without a name', parseProgram('play', known).errors[0]?.message.startsWith('play needs the name of a motif'), true)
+  eq('bad argument', parseProgram('play zap +2z', known).errors[0]?.message.startsWith("I can't read '+2z'"), true)
+  eq('play and notes on one line', parseProgram('play zap notes "c"', known).errors[0]?.message.startsWith('Put each pattern on its own line'), true)
+  eq('a motif renamed or deleted mid-play just goes quiet', planCycle(parseProgram('play zap', known), 0, () => null), [])
+  eq('play mixes with other layers', parseProgram('notes "c"\nplay zap\ndrums "kick"', known).layers.length, 3)
+  eq('without a resolver play parses (no name check)', parseProgram('play anything').errors, [])
 }
 
 console.log(`${passes} passed, ${fails} failed`)

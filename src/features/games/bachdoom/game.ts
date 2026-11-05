@@ -8,6 +8,9 @@ import type { NoteResult } from '../../../music/scoreStore'
 import { pload, psave } from '../../../profile/profile'
 import { GameLh } from '../../songs/gameLh'
 import type { JudgeEvent, NoteGrade } from '../../../music/judge'
+import { userMotifs } from '../../../kode/kore/motifs'
+import { kload, markConcept } from '../gamekode/kodeStore'
+import { callSignOf, castMatch, chargesAfter, pushRecent, spellDamage, spellPower } from '../gamekode/kodeLogic'
 import type { DemonKind } from './types'
 import { LEGACY_LEVELS, LEVELS, buildMap, buildPiece, isUnlocked, nextInMenu, pathAt, roomCounts } from './levels'
 import { WaveRun } from './waves'
@@ -89,6 +92,12 @@ export class Game {
   /** Easy/Full left-hand bonus judge (null while the Prelude, which has its own chords, is the piece) */
   lh: GameLh | null = null
   private lhPopAt = -9
+  /** Kode power (opt-in): motifs equipped as spells. Play a spell's call sign below the melody to cast it; higher = harder. */
+  spells: { id: string; name: string; emoji: string; sign: number[] }[] = []
+  spellCharges = 0
+  private spellBuf: { n: number; t: number }[] = []
+  /** dev/test log of casts */
+  spellLog: { name: string; power: number; dmg: number }[] = []
   harmony = 100; armor = 0; streak = 0; jamT = 0; recoilT = 0
   face: FaceName = 'center'
   faceHurtT = 0; faceGrinT = 0; lookT = 1; look: FaceName = 'center'
@@ -151,6 +160,14 @@ export class Game {
     this.phase = 'play'
     this.clearAll()
     this.introT = 3.4
+    this.spells = []; this.spellCharges = 0; this.spellBuf = []; this.spellLog = []
+    const ks = kload<{ on?: boolean; ids?: string[] }>('bachdoom', {})
+    if (ks.on && !this.wave) {
+      const have = userMotifs().filter((m) => m.kind === 'pitch' && m.notes.length >= 3)
+      this.spells = (ks.ids ?? []).map((id) => have.find((m) => m.id === id)).filter((m): m is NonNullable<typeof m> => !!m).slice(0, 3)
+        .map((m) => ({ id: m.id, name: m.name, emoji: m.emoji, sign: callSignOf(m.notes.map((n) => n.v)) }))
+      this.spellCharges = this.spells.length ? 1 : 0
+    }
     const pc0 = this.piece
     const harm = pc0.score.length && pc0.score.every((n) => n.beats === 0.25) ? PRELUDE_C.map((b, i) => ({ start: i * 4, beats: 4, name: b.chord, pcs: [...new Set(b.notes.map((n) => n % 12))], bass: b.notes[0] })) : undefined
     const sc0 = { owner: 'bachdoom', title: pc0.title, notes: pc0.score, key: pc0.key, bpm: pc0.bpm, beatsPerBar: pc0.beatsPerBar, pickup: pc0.pickup, beatUnit: pc0.beatUnit, style: pc0.style, harmony: harm }
@@ -425,6 +442,7 @@ export class Game {
     if (!this.isBoss && !this.target) return
     const ok = this.diff === 'story' ? pc(g.note) === pc(exp) : g.note === exp
     // Easy/Full: a low chord tone is left-hand play, not a wrong melody note. It earns TEMPO armor and never costs the tune.
+    if (!ok && this.spells.length && this.trySpell(g)) return
     if (!ok && this.lh && g.note < exp && this.lh.press(g.note, this.piece.scoreIdx[this.ptr] ?? -1)) {
       this.armor = Math.min(100, this.armor + 6)
       if (this.clock - this.lhPopAt > 1.2) { this.lhPopAt = this.clock; this.addPop('LEFT HAND! +TEMPO', '#8fd4ff', false, undefined, 0.62, 0.3) }
@@ -432,6 +450,46 @@ export class Game {
     }
     if (!ok) this.pend.push({ t: this.clock + 0.11, g, exp })
     else this.hit(g)
+  }
+
+  /** Kode power: notes below the melody feed the call-sign matcher. Returns true when the note was a spell note. */
+  private trySpell(g: NoteGrade): boolean {
+    const minMel = Math.min(...this.piece.notes)
+    if (g.note >= minMel) return false
+    this.spellBuf = pushRecent(this.spellBuf, g.note, performance.now())
+    const hit = castMatch(this.spellBuf.map((x) => x.n), this.spells)
+    if (!hit) return true
+    const tail = this.spellBuf.slice(-hit.sign.length)
+    this.spellBuf = []
+    this.cast(hit, spellPower(minMel, tail[0].n))
+    return true
+  }
+  private cast(sp: { name: string; emoji: string }, power: 1 | 2 | 3) {
+    if (this.spellCharges <= 0) { this.addPop('NO SPELL CHARGE YET', '#c9c3e6', false, undefined, 0.6, 0.5); return }
+    if (!this.isBoss && !this.target) return
+    this.spellCharges--
+    const dmg = spellDamage(power)
+    const ci = this.chunkOf(this.ptr)
+    const ch = this.piece.chunks[ci]
+    if (this.isBoss) {
+      this.bossHp[ci] -= dmg
+      let ph: 0 | 1 | 2 = 0
+      if (this.bossHp[ci] <= 0) { this.st.skipped += ch.e - this.ptr - 1; this.ptr = ch.e; ph = 1 }
+      if (this.ptr >= this.piece.notes.length && this.boss && this.boss.dieT < 0) ph = 2
+      this.fireBolt(1, null, 0, dmg, true, ph > 0, ph, ci)
+    } else {
+      const d = this.target!
+      d.hp -= dmg
+      let kill = false
+      if (d.hp <= 0) { this.st.skipped += ch.e - this.ptr - 1; this.ptr = ch.e; d.dying = true; kill = true }
+      this.fireBolt(0, d, 0, dmg, true, kill, 0, ci)
+    }
+    this.recoilT = 0.16
+    this.spellLog.push({ name: sp.name, power, dmg })
+    this.addPop(`${sp.emoji} ${sp.name.toUpperCase()}! x${power}`, '#9ff5da', true, undefined, 0.45, 0.5)
+    markConcept('bachdoom', 'function')
+    if (power > 1) markConcept('bachdoom', 'parameter')
+    this.scoreSync('hit'); this.syncGuide(); this.emit()
   }
 
   private misfire(g: NoteGrade, exp: number) {
@@ -465,6 +523,7 @@ export class Game {
     const dmg = perfect ? 2 : 1
     this.st.hits++
     this.streak++
+    if (this.spells.length) { const c = chargesAfter(this.spellCharges, this.streak); if (c !== this.spellCharges) { this.spellCharges = c; this.emit() } }
     if (perfect) this.st.perfects++
     this.recoilT = 0.16
     this.muzzle(3)

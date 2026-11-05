@@ -336,7 +336,7 @@ function beginTurn() {
   R.view.dr = null; R.view.rb = -LEAD_BEATS
   R.autoAt = performance.now() + AUTO_MS; R.counting = false
   startHum(); R.view.speed = 0.15; R.click = true
-  set({ phase: 'turn', count: 0, autoLeft: 1, result: null, coach: 'Your turn! Press GO (or the foot pedal) and play the tune on the beat.' })
+  set({ phase: 'turn', count: 0, autoLeft: 1, result: null, coach: 'Press GO or the pedal, then play the tune.' })
   showHints('turn')
 }
 export function toMap() { silence(); R.token++; clearGuide(); clearScore('racer'); R.view.dr = null; set({ phase: 'map', result: null, count: 0 }) }

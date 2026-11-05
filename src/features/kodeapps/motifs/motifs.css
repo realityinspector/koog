@@ -16,5 +16,6 @@
 .mm-list { padding: 0; margin: 0; }
 .mm-empty { opacity: .7; padding: 12px 0; list-style: none; }
 .mm-msg, .mm-undo { margin: 6px 0; }
-.mm-free { display: block; margin: 8px 0; }
+.mm-free { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.mm-free input { width: 20px; height: 20px; margin: 0; flex: none; }
 @media (max-width: 480px) { .mm { padding: 12px; } }

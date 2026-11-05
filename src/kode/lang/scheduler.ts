@@ -3,7 +3,7 @@
 // (the sink hands them to the audio clock), so nothing here depends on how late a timer fires.
 //   run(program)  the new code starts at the NEXT bar line; what was playing finishes its bar first (no cut, no click)
 //   stop()        everything ends now (the sink silences what it already handed out)
-import { CYCLE_BEATS, type PlanEvent, type Program } from './types'
+import { CYCLE_BEATS, type MotifResolver, type PlanEvent, type Program } from './types'
 import { planCycle } from './query'
 
 export interface Clock {
@@ -28,7 +28,7 @@ export class Runner {
   pending: Slot | null = null
   private cursor = 0
   private marks: Mark[] = []
-  constructor(private clock: Clock, private sink: Sink, private lookMs = 100) {}
+  constructor(private clock: Clock, private sink: Sink, private lookMs = 100, private motifs?: MotifResolver) {}
 
   isPlaying() { return !!(this.active || this.pending) }
   /** the bar number the pending code starts on (absolute), or null */
@@ -63,7 +63,7 @@ export class Runner {
       }
       if (!this.active) continue
       const base = c * CYCLE_BEATS
-      for (const ev of planCycle(this.active.prog, c - this.active.cycle)) {
+      for (const ev of planCycle(this.active.prog, c - this.active.cycle, this.motifs)) {
         const abs = base + ev.beat
         if (abs < this.cursor - 1e-9 || abs >= to) continue
         const at = this.clock.timeOfBeat(abs)

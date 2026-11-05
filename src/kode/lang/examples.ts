@@ -18,4 +18,6 @@ export const EXAMPLES: Example[] = [
     code: 'tempo 84\nsound "tapechoir"\nloud 0.6\nnotes "<[c3,e3,g3] [a2,c3,e3] [f2,a2,c3] [g2,b2,d3]>"\nsound "bell"\nloud 0.8\nnotes "e5 ~ g5 [a5 g5] ~ e5 d5 ~"\n' },
   { id: 'groove', title: '8. A little song', why: 'Bass, drums and a melody that changes every bar. Notes with a number (c4, a3) pick the octave; plain c is c4.',
     code: '# a tiny band\ntempo 108\nsound "squelch"\nloud 0.7\nnotes "<c2 c2 f2 g2> ~ c3 ~ <c2 c2 f2 g2> ~ [c3 c3] ~"\nsound "piano"\ndrums "kick [hat hat] snare hat kick [kick hat] snare [hat open]"\nsound "bell"\nnotes "<[e5 g5] [d5 f5]> ~ c5*2 ~ <g4 a4> ~ ~ ~"\n' },
+  { id: 'play', title: '9. Play a motif', why: 'play runs a motif you saved in 🧩 My Motifs, like calling a function (Round comes built in). +7 moves it up seven notes, x2 plays it twice as fast.',
+    code: 'tempo 96\nplay round\nplay round +7 x2\ndrums "kick ~ snare ~"\n' },
 ]

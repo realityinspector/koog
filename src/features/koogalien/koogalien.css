@@ -1,0 +1,58 @@
+.kgx-app{max-width:980px;margin:0 auto;padding:12px 16px 40px;color:#f3f0ff;font:16px/1.4 system-ui,sans-serif;box-sizing:border-box}
+.kgx-app *{box-sizing:border-box}
+.kgx-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.kgx-head h1{margin:0;font-size:22px}
+.kgx-head nav{display:flex;gap:6px;flex:1}
+.kgx-app button{font:inherit;color:inherit;background:#2b2742;border:2px solid #5a5390;border-radius:10px;padding:8px 14px;min-height:44px;cursor:pointer}
+.kgx-app button:hover:not(:disabled){background:#3a3560}
+.kgx-app button:focus-visible,.kgx-app textarea:focus-visible,.kgx-app input:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}
+.kgx-app button:disabled{opacity:.5;cursor:default}
+.kgx-head nav .on{background:#5a5390;border-color:#ffd54a}
+.kgx-host{display:flex;align-items:center;gap:14px;margin:8px 0}
+.kgx-host-fig{flex:none;display:flex;justify-content:center}
+.kgx-badge{line-height:1}
+.kgx-bubble{margin:0;padding:10px 14px;background:#fff8e1;color:#2a2340;border-radius:14px;max-width:520px}
+.kgx-pads{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:10px 0;touch-action:none}
+.kgx-pad{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:84px;padding:6px 2px!important;user-select:none;-webkit-user-select:none}
+.kgx-pad b{font-size:22px}.kgx-pad span{font-size:14px}.kgx-pad small{opacity:.8}
+.kgx-pad.on{background:#ffd54a!important;color:#2a2340;border-color:#fff!important}
+.kgx-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.kgx-end{display:inline-flex;gap:4px}
+.kgx-check{display:inline-flex;gap:6px;align-items:center}
+.kgx-controls .hear{background:#2e7d5b;border-color:#8be0b4;font-weight:700}
+.kgx-controls .ok{background:#2e7d5b}
+.kgx-voice{border-left:8px solid var(--kc)!important}
+.kgx-voice.on{background:#5a5390!important;border-color:#ffd54a!important}
+.kgx-voice b{display:inline-block;min-width:1.4em;text-align:center;background:var(--kc);color:#111;border-radius:4px}
+.kgx-ribbon{background:#1d1a30;border-radius:12px;padding:10px;margin:8px 0;overflow-x:auto;max-width:100%}
+.kgx-empty{margin:0;opacity:.75}
+.kgx-cols{list-style:none;margin:0;padding:0;display:flex;gap:8px;align-items:flex-start}
+.kgx-col{flex:none;min-width:96px;border:2px solid var(--kc,#888);border-radius:10px;padding:6px;background:#26223d;border-bottom-width:5px}
+.kgx-col.maybe{border-style:dashed}.kgx-col.unknown{border-style:dotted;opacity:.9}
+.kgx-col.playing{background:#3d3866;border-bottom-color:#ffd54a;border-bottom-width:8px}
+.kgx-col.listening{border-style:dashed;opacity:.8}
+.kgx-cell{padding:4px 2px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:30px}
+.kgx-cell.code code{font:600 15px ui-monospace,monospace;color:#bff}
+.kgx-kind{display:inline-block;min-width:1.2em;color:var(--kc)}
+.kgx-mini{display:inline-flex;gap:2px}
+.kgx-mini i{width:7px;height:16px;border-radius:2px;background:#4a456e}.kgx-mini i.on{background:#ffd54a}
+.kgx-dim{opacity:.6}
+.kgx-maybe{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px}
+.kgx-maybe button{min-height:36px;padding:4px 10px}
+.kgx-code-l{display:block;margin-top:8px;font-size:14px;opacity:.8}
+.kgx-code{width:100%;font:16px ui-monospace,monospace;background:#14121f;color:#e8ffe8;border:2px solid #5a5390;border-radius:10px;padding:8px}
+.kgx-errs p{margin:4px 0;color:#ffb3a7}
+.kgx-wob input{vertical-align:middle;width:120px}
+.kgx-status{min-height:1.4em;opacity:.9}
+.kgx-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.kgx-soon{padding:24px;opacity:.8}
+.kgx-box ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:600px){
+  .kgx-host{flex-direction:column;align-items:flex-start}
+  .kgx-pads{gap:4px}.kgx-pad{min-height:72px}.kgx-pad b{font-size:18px}
+  .kgx-code-l{margin-top:4px}
+}
+@media (prefers-reduced-motion:reduce){.kgx-app *{animation:none!important;transition:none!important}}
+.kgx-check{white-space:nowrap}
+.kgx-check input{width:auto;flex:none;margin:0}
+.kgx-cols{flex-wrap:wrap}

@@ -160,7 +160,7 @@ export function flip(i: number) {
   if (s.phase !== 'play') return
   const c = s.cards[i]
   if (!c || c.up || c.done) return
-  const okStage = (s.stage === 'idle' && s.picks.length === 0) || (s.stage === 'hear' && s.picks.length === 1)
+  const okStage = (s.stage === 'idle' && s.picks.length <= 1) || (s.stage === 'hear' && s.picks.length === 1)
   if (!okStage) return
   const token = ++run.token
   const picks = [...s.picks, i]

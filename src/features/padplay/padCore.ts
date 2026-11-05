@@ -124,6 +124,14 @@ export function gateLeds(cur: boolean[], want: boolean[], onAt: number[], now: n
   })
 }
 
+/** the labels the drawn controller shows while Game pads is on */
+export function padLabelMap(labels: string[], oct: number, map: PadMapKind): Record<string, string> {
+  const L: Record<string, string> = { 'jog.A': oct ? `OCT ${oct > 0 ? '+' : ''}${oct}` : 'OCT', 'jog.B': '', 'padmode.A': map === 'scale' ? 'SCALE' : 'FOLLOW', 'padmode.B': map === 'scale' ? 'SCALE' : 'FOLLOW' }
+  for (const k of ['A', 'B']) { L[`play.${k}`] = 'GO'; L[`cue.${k}`] = 'HEAR'; L[`sync.${k}`] = 'BACK' }
+  PAD_IDS.forEach((id, i) => { L[id] = labels[i] ?? '' })
+  return L
+}
+
 export const HELP_MAP: { keys: string; does: string }[] = [
   { keys: 'Pads A1-A4, B1-B4', does: 'Play the 8 notes shown on the pads. A = the low four, B = the high four.' },
   { keys: 'JOG A', does: 'Turn the pads up or down an octave.' },

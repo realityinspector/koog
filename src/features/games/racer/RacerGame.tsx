@@ -43,7 +43,7 @@ export function RacerGame({ onExit }: { onExit: () => void }) {
       <canvas ref={cv} className="rc-canvas" aria-label="Koogalien Racer track" />
       <div className="rc-top">
         <button className="rc-btn ghost" onClick={() => (inRound ? toMap() : onExit())}>{inRound ? '← Tracks' : '← Games'}</button>
-        <b className="rc-title">🏁 Koogalien Racer{inRound && <span> · {world.emoji} {def.name}</span>}</b>
+        <b className="rc-title">🏁 <span className="rc-long">Koogalien Racer</span>{inRound && <span> {world.emoji} {def.name}</span>}</b>
         <span className="rc-chip" title="Stars earned">★ {totalStars(s.save)}/{TRACKS.length * 3}</span>
         {s.phase !== 'garage' && <button className="rc-btn ghost" onClick={toGarage} title="Pick your vehicle">{veh.emoji} Garage</button>}
       </div>

@@ -14,6 +14,8 @@ import {
 } from './drumEngine'
 import { drumInput, drumLabels, hintFor, useDrumPage, useDrumView, voicePad } from './drumSurface'
 import { drumsOpen } from './pedalKick'
+import { GamePadsLayer } from '../padplay/GamePadsDock'
+import { setGamePads, usePadPlay } from '../padplay/padplay'
 import { CodeMenu } from '../codeexport/CodeMenu'
 import { drumCode } from '../codeexport/sources'
 
@@ -237,6 +239,12 @@ function Status() {
   )
 }
 
+/** 🎮 the 8 pads (the controller's, or these on screen) play notes into the games instead of drums */
+function GameChip() {
+  const on = usePadPlay((s) => s.on)
+  return <Chip on={on} onClick={() => setGamePads(!on)} title="Game pads: the 8 pads play real notes, so you can play every game and song on pads. The pad that lights up is the next note.">🎮 Game pads</Chip>
+}
+
 export function DrumPads({ onClose }: { onClose?: () => void }) {
   const [pic, setPic] = useState(false)
   useEffect(() => { drumsOpen(1); return () => drumsOpen(-1) }, [])
@@ -245,6 +253,7 @@ export function DrumPads({ onClose }: { onClose?: () => void }) {
       <header className="dp-head">
         <h3>🥁 Drum pads</h3>
         <Status />
+        <GameChip />
         <Chip on={pic} onClick={() => setPic(!pic)} title="Show the drawn DJ controller">controller</Chip>
         {onClose && <button type="button" className="dp-chip" onClick={onClose} title="Back to the piano">✕ Close</button>}
       </header>
@@ -264,8 +273,8 @@ export function DrumsDock() {
   const on = useDrumPage((s) => s.on)
   const screen = useScreen((s) => s.screen)
   const mode = useProfile((s) => s.mode)
-  if (!on || screen !== 'play' || mode === 'dad') return null
-  return <div className="dp-dock"><DrumPads onClose={() => setControllerPage('dj')} /></div>
+  const dock = on && screen === 'play' && mode !== 'dad' ? <div className="dp-dock"><DrumPads onClose={() => setControllerPage('dj')} /></div> : null
+  return <>{dock}<GamePadsLayer /></>
 }
 
 /** Boss-mode rail screen */

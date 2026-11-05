@@ -4,6 +4,8 @@ import { PhraseHud } from '../PhraseHud'
 import { Game, type Snapshot } from './engine'
 import { CATS, CAT_INFO, ERAS, MODELS, eraById, loadSave, type Look, type SavedLook } from './data'
 import { JUDGE_LOOKS, drawJudge, drawStill } from './sprites'
+import { KodePowerCard } from '../gamekode/KodePowerCard'
+import type { ShowStep } from '../gamekode/kodeLogic'
 import './fashion.css'
 
 function initialSnap(): Snapshot {
@@ -29,11 +31,12 @@ export function Fashion({ onExit }: { onExit: () => void }) {
   }, [])
   const g = () => gameRef.current
   const era = eraById(s.eraId)
+  const [kopen, setKopen] = useState(false)
 
   return (
     <div className="fr-root" ref={rootRef} data-phase={s.phase}>
       <canvas className="fr-canvas" ref={canvasRef} aria-label="Runway Remix stage" />
-      {s.phase === 'eras' && <Eras s={s} onPick={(id) => g()?.pickEra(id)} onBook={() => g()?.toLookbook()} onExit={onExit} />}
+      {s.phase === 'eras' && <Eras s={s} onPick={(id) => g()?.pickEra(id)} onBook={() => g()?.toLookbook()} onExit={onExit} kode={<FashionKode s={s} g={g} canSave={false} />} />}
       {s.phase === 'style' && <Style s={s} onCycle={(i, d) => g()?.cycle(CATS[i], d)} onModel={() => g()?.nextModel()} onSong={() => g()?.setPiece(s.pieceIdx + 1)} />}
       {s.phase === 'style' && (
         <div className="fr-top">
@@ -41,11 +44,13 @@ export function Fashion({ onExit }: { onExit: () => void }) {
           <div className="fr-title"><b>{era.icon} {era.name}</b> <span>{era.years}</span></div>
           <div className="fr-grp">
             <button className="fr-btn ghost" onClick={() => g()?.toLookbook()}>📖 Lookbook</button>
+            <button className="fr-btn ghost" aria-pressed={kopen} onClick={() => setKopen(!kopen)}>🧑‍💻 Kode</button>
             <button className="fr-btn" onClick={() => g()?.startPhraseWalk()} disabled={!s.pieces.length} title="Walk the runway phrase by phrase: learn each little tune at a mark">🧠 Phrase walk</button>
             <button className="fr-btn go" onClick={() => g()?.startRunway()} disabled={!s.pieces.length}>Runway ▶</button>
           </div>
         </div>
       )}
+      {s.phase === 'style' && kopen && <div className="fr-kode"><FashionKode s={s} g={g} canSave /></div>}
       {s.phase === 'runway' && <RunHud s={s} onQuit={() => g()?.toStyle()} />}
       {s.phase === 'results' && <Results s={s} onSave={() => g()?.saveLook()} onAgain={() => g()?.retryRunway()} onRestyle={() => g()?.toStyle()} onEras={() => g()?.toEras()} />}
       {s.phase === 'lookbook' && <Lookbook s={s} onBack={() => g()?.toEras()} onDelete={(id) => g()?.deleteLook(id)} onTry={(id) => g()?.tryOn(id)} />}
@@ -56,7 +61,7 @@ export function Fashion({ onExit }: { onExit: () => void }) {
 
 const Stars = ({ n }: { n: number }) => <span className="fr-stars" aria-label={`${n} of 5 stars`}>{[0, 1, 2, 3, 4].map((i) => <i key={i} className={i < n ? 'on' : ''}>★</i>)}</span>
 
-function Eras({ s, onPick, onBook, onExit }: { s: Snapshot; onPick: (id: string) => void; onBook: () => void; onExit: () => void }) {
+function Eras({ s, onPick, onBook, onExit, kode }: { s: Snapshot; onPick: (id: string) => void; onBook: () => void; onExit: () => void; kode?: React.ReactNode }) {
   return (
     <div className="fr-panel">
       <div className="fr-head">
@@ -67,6 +72,7 @@ function Eras({ s, onPick, onBook, onExit }: { s: Snapshot; onPick: (id: string)
           <button className="fr-btn ghost" onClick={onExit}>Back</button>
         </div>
       </div>
+      {kode}
       <div className="fr-eras">
         {ERAS.map((e, i) => {
           const open = s.save.unlocked.includes(e.id)
@@ -192,5 +198,60 @@ function Lookbook({ s, onBack, onDelete, onTry }: { s: Snapshot; onBack: () => v
         ))}
       </div>
     </div>
+  )
+}
+
+const SHOW_CHORDS: { label: string; root: number; q: ShowStep['chord']['q'] }[] = [
+  { label: 'C major', root: 0, q: 'major' }, { label: 'A minor', root: 9, q: 'minor' }, { label: 'G major', root: 7, q: 'major' }, { label: 'F major', root: 5, q: 'major' },
+]
+
+/** Kode power: save an outfit as look(color, extra). The chord you play fills the blanks. A show program runs three looks in order. */
+function FashionKode({ s, g, canSave }: { s: Snapshot; g: () => Game | null; canSave: boolean }) {
+  const k = s.kode
+  if (!k) return null
+  const here = k.looks.filter((l) => l.era === s.eraId)
+  const show = k.show
+  const setStep = (i: number, p: Partial<ShowStep> & { ci?: number }) => {
+    const cur = show[i] ?? { lookId: k.looks[0]?.id ?? 0, chord: { root: 0, q: 'major' as const } }
+    const c = p.ci != null ? SHOW_CHORDS[p.ci % SHOW_CHORDS.length] : null
+    const next = [...show]; next[i] = { lookId: p.lookId ?? cur.lookId, chord: c ? { root: c.root, q: c.q } : cur.chord }
+    g()?.kodeShowSet(next)
+  }
+  const chordIx = (st?: ShowStep) => Math.max(0, SHOW_CHORDS.findIndex((c) => st && c.root === st.chord.root && c.q === st.chord.q))
+  return (
+    <KodePowerCard game="fashion" on={k.on} onToggle={() => g()?.kodeToggle()} status={k.on ? undefined : 'Off: the game plays exactly as before.'}>
+      {canSave ? (
+        <div className="gk-row">
+          <button className="gk-btn go" onClick={() => g()?.kodeSaveLook()}>💾 Save this outfit as look(color, extra)</button>
+          <span>Then pick a look below and play a chord.</span>
+        </div>
+      ) : <p>Style an outfit, open 🧑‍💻 Kode, and save it as a look.</p>}
+      <ul className="gk-list" aria-label="My looks">
+        {k.looks.map((l) => (
+          <li key={l.id}>
+            <button className="gk-btn" aria-pressed={k.active === l.id} disabled={!canSave || l.era !== s.eraId} onClick={() => g()?.kodeUse(l.id)}>{l.emoji} {l.name}(color, extra)</button>
+            <small>{l.era}</small>
+            <button className="gk-btn" onClick={() => g()?.kodeDelete(l.id)} aria-label={`Delete ${l.name}`}>✕</button>
+          </li>
+        ))}
+      </ul>
+      {k.active > 0 && <p className="gk-status">Calling {k.looks.find((l) => l.id === k.active)?.name}: play a chord and its colours fill the blanks.</p>}
+      {k.looks.length > 0 && (
+        <div className="gk-col" aria-label="Show program">
+          <b>Show program</b>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={'gk-row' + (k.showing === i ? ' now' : '')}>
+              <span>{i + 1}.</span>
+              <select value={show[i]?.lookId ?? ''} onChange={(e) => setStep(i, { lookId: Number(e.target.value) })} aria-label={`Show step ${i + 1} look`}>
+                <option value="">(none)</option>
+                {here.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+              <button className="gk-btn" onClick={() => setStep(i, { ci: chordIx(show[i]) + 1 })} aria-label={`Show step ${i + 1} chord`}>{SHOW_CHORDS[chordIx(show[i])].label}</button>
+            </div>
+          ))}
+          <button className="gk-btn go" disabled={!canSave || !show.some((x) => x && x.lookId)} onClick={() => g()?.kodeRunShow()}>▶ Run the show</button>
+        </div>
+      )}
+    </KodePowerCard>
   )
 }
