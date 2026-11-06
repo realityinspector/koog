@@ -10,6 +10,7 @@ import { Icon } from '../ui/Icon'
 import { useOnePop } from '../ui/onePop'
 import { consume, useLinkIn } from '../links/bus'
 import { GalleryButton } from '../features/gallery/GalleryButton'
+import { useProfile } from '../profile/profile'
 
 export type ModeDef = { id: string; icon: ReactNode; label: string; title: string; dev?: boolean; badge?: string | number; node?: ReactNode }
 
@@ -36,6 +37,15 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
   const select = (id: string) => {
     setSaved(id)
     try { localStorage.setItem(KEY, id) } catch { /* ignore */ }
+  }
+
+  // Logo: back to PLAY (STUDIO in Boss mode) and the Who's playing card. The signed-in kid stays signed in.
+  const goHome = () => {
+    select('play')
+    useProfile.getState().showGate()
+    const path = location.hash.split('?')[0]
+    const home = useProfile.getState().mode === 'dad' ? '#/boss/studio' : '#/play'
+    if (path.startsWith('#/') && path !== home) location.hash = home
   }
 
   useEffect(() => { useScreen.setState({ screen: mode }) }, [mode])
@@ -99,14 +109,16 @@ export function Instrument({ strip, idea, display, overlay, keybed, modes, sheet
         <div className="kg-cheek kg-cheek-l" aria-hidden />
         <div className="kg-panel">
           <header className="kg-strip">
-            <span className="kg-badge" aria-label="KOOG, the Koding Synth"><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">koding synth</span></span>
+            <button type="button" className="kg-badge" aria-label="KOOG. Home." onClick={goHome}><img className="kg-logo-img" src={koogLogo} alt="" width="104" height="33" /><span className="kg-sub">koding synth</span></button>
             <div className="kg-strip-mid">{strip}</div>
-            {!lean && !isEmbed() && <GalleryButton />}
-            {!lean && !isWebDemo() && !isEmbed() && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
-              <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>
-            </button>}
-            {/* stays mounted when closed so a half-typed idea isn't lost */}
-            {!lean && !isWebDemo() && !isEmbed() && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}
+            {!lean && !isEmbed() && <div className="kg-strip-side">
+              <GalleryButton />
+              {!isWebDemo() && <button className={'kg-idea' + (ideaOpen ? ' on' : '')} aria-expanded={ideaOpen} onClick={() => setIdeaOpen((v) => !v)}>
+                <Icon name="bulb" /> <span className="kg-idea-t">Idea?</span>
+              </button>}
+              {/* stays mounted when closed so a half-typed idea isn't lost */}
+              {!isWebDemo() && <div className="kg-idea-pop" hidden={!ideaOpen}>{idea}</div>}
+            </div>}
           </header>
 
           <div className="kg-bezel">

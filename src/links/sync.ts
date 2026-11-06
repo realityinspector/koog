@@ -9,7 +9,7 @@ import { useScreen } from '../layout/screenStore'
 import { useProfile } from '../profile/profile'
 import { useHarmonyStore } from '../music/harmonyStore'
 import { setSheetOn, useSheet } from '../music/scoreStore'
-import { SOUNDS, chooseSound, useSound } from '../features/devices/soundChoice'
+import { SOUNDS, chooseSound, paintKoog, useSound } from '../features/devices/soundChoice'
 import { useDuoOpen } from '../features/dj/duoOpen'
 import { ensure as ensureDj } from '../features/dj/engine'
 import * as mimic from '../features/mimic/engine'
@@ -97,8 +97,16 @@ export const currentUrl = () => galleryHash ? location.origin + location.pathnam
 
 // The gallery owns the address bar while it is open (#/gallery/<stopId>); the gallery registers these hooks.
 let galleryHash: string | null = null
+let galleryReturn = '#/play'
+/** where Exit / Esc / Not now should go: the page that was open before the gallery */
+export function galleryReturnHash() { return galleryReturn }
+function noteGalleryReturn(hash: string) {
+  const path = (hash || '').split('?')[0]
+  if (path && !path.startsWith('#/gallery')) galleryReturn = path
+}
 export const galleryHooks: { open?: (id?: string) => void; hash?: (st: KoogState | null) => void } = {}
 export function setGalleryHash(h: string | null) {
+  if (h) noteGalleryReturn(location.hash)
   galleryHash = h
   if (h && location.hash !== h) history.replaceState(null, '', location.pathname + location.search + h)
 }
@@ -162,7 +170,14 @@ function applyState(st: KoogState, problems: string[], opts: ApplyOpts = {}) {
   if (st.key === 'auto') h.setAutoDetect(true)
   else if (st.key) { h.setAutoDetect(false); h.setKey({ tonic: st.key.tonic, scale: st.key.scale }) }
 
-  if (st.sound) { if (SOUNDS.some((s) => s.id === st.sound)) chooseSound(st.sound); else linkNote("That link mentions a sound Koog doesn't have") }
+  if (st.sound) {
+    if (SOUNDS.some((s) => s.id === st.sound)) {
+      chooseSound(st.sound, st.preset)
+      // A gallery picture with no setting of its own returns to the everyday Koog patch.
+      // A normal link does not: the kid's knobs stay where they left them.
+      if (opts.immediate && st.sound === 'koog' && !st.preset) paintKoog()
+    } else linkNote("That link mentions a sound Koog doesn't have")
+  }
   if (st.sheet) setSheetOn(true)
 
   if (st.modes?.length) {
@@ -248,11 +263,13 @@ export function startLinks(): () => void {
   watch((f) => useSheet.subscribe(f)); watch((f) => useSound.subscribe(f)); watch((f) => useKodeDock.subscribe(f)); watch((f) => useDuoOpen.subscribe(f))
   watch((f) => useMentor.subscribe(f)); watch((f) => useVibes.subscribe(f)); watch((f) => useChallengeStore.subscribe(f))
   watch((f) => useLinkOut.subscribe(f)); watch(mimic.subscribe); watch(band.subscribe); watch(beats.subscribe)
-  const onHash = () => {
+  const onHash = (e: HashChangeEvent) => {
+    try { noteGalleryReturn(new URL(e.oldURL).hash) } catch { /* a synthetic event has no old URL */ }
     if (galleryHash !== null) { const { state } = parseHash(location.hash); galleryHooks.hash?.(state && state.screen === 'gallery' && !state.mode ? state : null); return }
     applyHash()
   }
   window.addEventListener('hashchange', onHash)
+  noteGalleryReturn(location.hash)
   if (location.hash.startsWith('#/')) applyHash(); else schedule()
   return () => { offs.forEach((o) => o()); window.removeEventListener('hashchange', onHash); clearTimeout(timer); disarm() }
 }

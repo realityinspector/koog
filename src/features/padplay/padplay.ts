@@ -3,7 +3,7 @@
 //
 //   pads A1-A4 (deck A, left) and B1-B4 (deck B, right) = 8 notes, low to high, through playLocal (so they sound and onNote / the judge / the games see them). Velocity follows the hit.
 //   map SCALE   the 8 notes of the key's scale (src/music/harmonyStore.ts), tonic to octave        map FOLLOW   the notes the game wants next are always on pads (padCore.ts)
-//   JOG A = octave down / up     PLAY = Start / go on (the foot pedal's path: usePedal.down, which Phrase Racer and the holiday games already read)
+//   JOG A = octave down / up     PLAY = Start / go on (its own start signal, src/features/pedal/startSignal.ts; it does not fake the foot pedal)
 //   CUE = hear it again     SYNC = pause / back     PAD MODE = Scale <-> Follow the game
 // LEDs: the pad of each target note is lit steadily, a pad you hit flashes 130 ms; a light can only switch on again 334 ms after it last did (under 3 a second).
 // Dark again, and the DJ lights resynced, when the page or role changes.
@@ -16,7 +16,7 @@ import { useGuide } from '../../music/guide'
 import { useScore } from '../../music/scoreStore'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { registerPanicTarget } from '../../music/panic'
-import { usePedal } from '../pedal/pedal'
+import { emitStart } from '../pedal/startSignal'
 import { useScreen } from '../../layout/screenStore'
 import { setControllerPage, useLoopPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
@@ -107,10 +107,9 @@ function clickFirst(sel: string, text?: RegExp): boolean {
 }
 // the big Start / GO buttons of the games that do not read the foot pedal (Songs, Zombie Lanes, BachDoom, Jiu-Jitsu, Runway); a game can opt in with data-padplay="start"
 const START_BUTTONS = '[data-padplay="start"], .zl-btn.go, .bd-start, .bj-btn.go, .fr-btn.go'
-/** PLAY: the same press the foot pedal makes (Phrase Racer and the holiday games listen to it), plus the Play button of Songs */
+/** PLAY: the start signal (Phrase Racer, the holiday games and Kode apps listen to it), plus the Play button of Songs */
 export function pressStart() {
-  usePedal.setState({ down: true })
-  window.setTimeout(() => usePedal.setState({ down: false }), 90)
+  emitStart() // its own signal; it must never fake a foot-pedal press (the looper reads the pedal)
   if (useScreen.getState().screen === 'songs') clickFirst('button.btn', /^(Play|Restart)$/)
   clickFirst(START_BUTTONS)
 }

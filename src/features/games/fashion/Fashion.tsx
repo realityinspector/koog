@@ -52,7 +52,7 @@ export function Fashion({ onExit }: { onExit: () => void }) {
       )}
       {s.phase === 'style' && kopen && <div className="fr-kode"><FashionKode s={s} g={g} canSave /></div>}
       {s.phase === 'runway' && <RunHud s={s} onQuit={() => g()?.toStyle()} />}
-      {s.phase === 'results' && <Results s={s} onSave={() => g()?.saveLook()} onAgain={() => g()?.retryRunway()} onRestyle={() => g()?.toStyle()} onEras={() => g()?.toEras()} />}
+      {s.phase === 'results' && <Results s={s} onSave={() => g()?.saveLook()} onAgain={() => g()?.retryRunway()} onRestyle={() => g()?.toStyle()} onEras={() => g()?.toEras()} onNext={(id) => g()?.pickEra(id)} />}
       {s.phase === 'lookbook' && <Lookbook s={s} onBack={() => g()?.toEras()} onDelete={(id) => g()?.deleteLook(id)} onTry={(id) => g()?.tryOn(id)} />}
       {s.toast && <div key={s.toast.id} className={'fr-toast ' + s.toast.kind + (s.phase === 'runway' ? ' run' : '')} role="status">{s.toast.text}</div>}
     </div>
@@ -144,7 +144,8 @@ function Portrait({ idx }: { idx: number }) {
   return <canvas ref={ref} width={96} height={96} className="fr-portrait" style={{ ['--jc' as string]: JUDGE_LOOKS[idx].accent }} aria-hidden />
 }
 
-function Results({ s, onSave, onAgain, onRestyle, onEras }: { s: Snapshot; onSave: () => void; onAgain: () => void; onRestyle: () => void; onEras: () => void }) {
+function Results({ s, onSave, onAgain, onRestyle, onEras, onNext }: { s: Snapshot; onSave: () => void; onAgain: () => void; onRestyle: () => void; onEras: () => void; onNext: (id: string) => void }) {
+  const nxt = s.newUnlock ? ERAS.find((e) => e.name === s.newUnlock) : undefined
   return (
     <div className="fr-results">
       <div className="fr-judges">
@@ -160,6 +161,7 @@ function Results({ s, onSave, onAgain, onRestyle, onEras }: { s: Snapshot; onSav
         <span>Final look <Stars n={s.stars} /></span>
         {s.newUnlock && <span className="unlock">🔓 {s.newUnlock} unlocked!</span>}
         <div className="fr-grp">
+          {nxt && <button className="fr-btn go" onClick={() => onNext(nxt.id)}>Next era: {nxt.name}</button>}
           <button className="fr-btn go" onClick={onSave} disabled={s.saved}>{s.saved ? '✓ Saved' : '📖 Save to Lookbook'}</button>
           <button className="fr-btn" onClick={onAgain}>↻ Walk again</button>
           <button className="fr-btn" onClick={onRestyle}>👗 Restyle</button>

@@ -13,3 +13,4 @@ private/
 scripts/shots/*.png
 dist-web
 retire.sh
+release/

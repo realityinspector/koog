@@ -19,6 +19,8 @@ interface RouterState {
 const hot = import.meta.hot
 const st: RouterState = hot ? ((hot.data.router ??= { subs: new Map(), devices: [], outputs: new Map(), override: null }) as RouterState) : { subs: new Map(), devices: [], outputs: new Map(), override: null }
 
+/** listener count per role (window.__koogState) */
+export const routerListenerCounts = () => Object.fromEntries([...st.subs].map(([r, s]) => [r, s.size]))
 /** Listen to raw MIDI from every device whose role is `role`. Returns unsubscribe. */
 export function subscribe(role: Role, fn: MidiListener) {
   let set = st.subs.get(role)

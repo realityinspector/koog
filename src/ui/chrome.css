@@ -1,41 +1,49 @@
 /* Koog chrome skin (elegance pass): one quiet surface language for the instrument shell.
    Scoped under .kg-app so it wins over older feature rules without !important.
    Flat dark glass, hairline borders, one amber accent, mint only for live/on, line icons in currentColor. */
-.kg-app { --c-pill-bg: rgba(255, 255, 255, .045); --c-pill-bd: rgba(255, 255, 255, .11); --c-pill-hov: rgba(255, 255, 255, .085); --c-h: 34px; }
+.kg-app { --c-pill-bg: rgba(255, 255, 255, .045); --c-pill-bd: rgba(255, 255, 255, .11); --c-pill-hov: rgba(255, 255, 255, .085); --c-h: 34px; --c-gap: 8px; --c-group: 16px; }
 .k-ic { display: block; flex: none; }
 
 /* ---------- chassis ---------- */
-.kg-app .kg-panel { background: radial-gradient(130% 90% at 50% 0%, #221d38 0%, #17142b 55%, #110f22 100%); }
+.kg-app .kg-panel { background: radial-gradient(130% 90% at 50% 0%, #221d38 0%, #17142b 55%, #110f22 100%); grid-template-rows: auto minmax(0, 1fr) auto auto; }
 .kg-app .kg-chassis { box-shadow: 0 30px 80px rgba(4, 2, 20, .6), 0 0 0 1px rgba(0, 0, 0, .6); }
 
-/* ---------- top strip ---------- */
-.kg-app .kg-strip { gap: 10px; }
-.kg-app .kg-badge { background: none; border: 0; box-shadow: none; padding: 0 6px 0 2px; align-items: flex-start; }
+/* ---------- top strip ----------
+   Three clusters: logo, player + sound, then gallery / store / idea.
+   8px inside a cluster, 16px between clusters. Every pill is 34px. */
+.kg-app .kg-strip { gap: var(--c-group); align-items: center; }
+.kg-app .kg-badge { background: none; border: 0; box-shadow: none; padding: 0 6px 0 2px; align-items: flex-start; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 .kg-app .kg-sub { font-size: 9px; font-weight: 700; letter-spacing: .3em; color: var(--k-ink-3); margin-top: 3px; padding-left: 2px; }
+.kg-app .kg-strip-mid { flex: 1 1 auto; gap: var(--c-group); min-width: 0; }
+.kg-app .kg-strip-controls { margin-left: 0; gap: var(--c-gap); flex: none; }
+.kg-app .kg-strip-side { margin-left: auto; flex: none; display: flex; align-items: center; gap: var(--c-gap); }
+.kg-app .kg-strip .pf-bar { flex: none; }
+.kg-app .kg-strip .pf-mode { margin-left: 0; gap: var(--c-gap); }
 /* every strip control: same height, same ghost pill */
-.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn) {
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .kg-air, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn, .kg-gal-btn, .kg-boost-btn, .kg-keys-chip, .pf-back) {
   height: var(--c-h); min-height: var(--c-h); box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px;
   border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); box-shadow: none;
   color: var(--k-ink-2); font-size: 13px; font-weight: 600; letter-spacing: 0; transition: background .15s, border-color .15s, color .15s; }
-.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn):hover { background: var(--c-pill-hov); border-color: var(--k-line-strong); color: var(--k-ink); }
-.kg-app .kg-strip :is(.kg-dev-chip.open, .sh-toggle.on, .kg-idea.on) { color: var(--k-ink); border-color: var(--k-accent); background: rgba(255, 180, 60, .08); box-shadow: none; }
+.kg-app .kg-strip :is(.kg-dev-chip, .kg-audio-btn, .kg-audio-sw, .kg-air, .sh-toggle, .kg-idea, .tour-replay, .pf-hold, .kg-link-btn, .kg-gal-btn, .kg-boost-btn, .kg-keys-chip, .pf-back):hover { background: var(--c-pill-hov); border-color: var(--k-line-strong); color: var(--k-ink); }
+.kg-app .kg-strip :is(.kg-dev-chip.open, .sh-toggle.on, .kg-idea.on, .kg-gal-btn.on) { color: var(--k-ink); border-color: var(--k-accent); background: rgba(255, 180, 60, .08); box-shadow: none; }
+.kg-app .kg-strip .kg-boost-btn.on { color: #1b0e00; background: #ff9d3c; border-color: #ff9d3c; }
 .kg-app .kg-strip :is(.kg-audio-btn, .tour-replay, .pf-hold, .kg-link-btn) { width: var(--c-h); min-width: var(--c-h); padding: 0; justify-content: center; }
 .kg-app .kg-strip .pf-hold { opacity: 1; }
 .kg-app .kg-strip .pf-hold .pf-ring { inset: 2px; }
 .kg-app .kg-strip .pf-hold .pf-lock { display: grid; place-items: center; }
-.kg-app .kg-strip :is(.kg-dev-chip, .sh-toggle, .kg-idea) { padding: 0 13px 0 11px; }
+.kg-app .kg-strip :is(.kg-dev-chip, .sh-toggle, .kg-idea, .kg-gal-btn, .kg-boost-btn, .kg-keys-chip, .pf-back) { padding: 0 13px 0 11px; }
 .kg-app .kg-strip .sh-toggle.on .k-ic { color: var(--k-accent); }
-/* player chip */
-.kg-app .kg-strip .pf-bar { margin: 0; gap: 8px; }
-.kg-app .kg-strip .pf-who { height: var(--c-h); box-sizing: border-box; padding: 0 4px 0 14px; gap: 10px; border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); }
+/* player chip. The switch inside stays shorter so it sits in the pill. */
+.kg-app .kg-strip .pf-bar { margin: 0; gap: var(--c-gap); }
+.kg-app .kg-strip .pf-who { height: var(--c-h); box-sizing: border-box; padding: 0 4px 0 14px; gap: var(--c-gap); border-radius: var(--k-r-pill); border: 1px solid var(--c-pill-bd); background: var(--c-pill-bg); }
 .kg-app .kg-strip .pf-who b { font-size: 14px; font-weight: 650; color: var(--k-ink); }
 .kg-app .kg-strip .pf-who > :first-child:not(b) { color: var(--k-ink-3); }
 .kg-app .kg-strip .pf-switch { height: 26px; padding: 0 11px; background: rgba(255, 255, 255, .06); border-color: transparent; color: var(--k-ink-3); font-size: 11.5px; }
 .kg-app .kg-strip .pf-switch:hover { color: var(--k-ink); background: rgba(255, 255, 255, .1); }
 /* sound group: speaker + slider + switch read as one cluster */
-.kg-app .kg-audio { gap: 6px; }
+.kg-app .kg-audio { gap: var(--c-gap); }
 .kg-app .kg-audio-vol { gap: 8px; }
-.kg-app .kg-vol { width: 76px; height: 4px; background: linear-gradient(90deg, var(--k-ink-2) var(--p, 70%), rgba(255, 255, 255, .14) var(--p, 70%)); }
+.kg-app .kg-vol { width: 64px; height: 4px; background: linear-gradient(90deg, var(--k-ink-2) var(--p, 70%), rgba(255, 255, 255, .14) var(--p, 70%)); }
 .kg-app .kg-vol::-webkit-slider-thumb { width: 14px; height: 14px; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
 .kg-app .kg-vol::-moz-range-thumb { width: 14px; height: 14px; background: #fff; border: 0; }
 .kg-app .kg-audio-sw { padding: 0 13px 0 8px; }
@@ -47,7 +55,15 @@
 .kg-app .kg-audio-knob { width: 12px; height: 12px; }
 .kg-app .kg-audio-sw.on .kg-audio-track { background: var(--k-lcd); }
 .kg-app .kg-audio-sw.on .kg-audio-knob { transform: translateX(12px); }
+.kg-app .kg-air.on { border-color: rgba(140, 196, 255, .7); color: var(--k-ink); }
+.kg-app .kg-air.on .kg-audio-label b { color: #d7ecff; }
+.kg-app .kg-air.on .kg-audio-track { background: #8ec5ff; }
 .kg-app .kg-dev-txt { font-variant-numeric: tabular-nums; }
+/* below a wide window the player and sound drop to their own row, clear of Gallery */
+@media (max-width: 1280px) {
+  .kg-app .kg-strip { flex-wrap: wrap; }
+  .kg-app .kg-strip-mid { flex: 1 1 100%; order: 3; }
+}
 /* popovers from the strip */
 .kg-app :is(.kg-dev-pop, .kg-audio-pop, .kg-idea-pop) { background: rgba(18, 15, 38, .97); border: 1px solid var(--k-line); border-radius: var(--k-r-lg); box-shadow: var(--k-e-3); backdrop-filter: blur(14px); }
 

@@ -74,6 +74,11 @@ export interface KoogState {
   modes?: HelperMode[]
   sheet?: boolean
   sound?: string
+  /**
+   * Gallery only: which setting of `sound` to play (an emulator preset name, or a Koog preset id).
+   * Not part of the hash, and the gallery holds saves until Exit, so this never replaces the kid's sound.
+   */
+  preset?: string
   /** gallery/art only: a holiday playlist ('thanksgiving' | 'christmas') */
   sub?: string
 }

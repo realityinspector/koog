@@ -5,15 +5,18 @@ import { create } from 'zustand'
 import { onToken, startKode, type KodeToken } from '../../../kode/tokens'
 import { isMusical, kindOf, repeatedKey } from '../../../kode/kodeCore'
 import { recentTokens } from '../../../kode/tokens'
-import { beatPos, getBpm, isRunning, onBeat, setBpm, startMaster, stopMaster, timeOfBeat } from '../../../music/masterClock'
+import { acquireClock, beatPos, getBpm, onBeat, releaseClock, setBpm, timeOfBeat } from '../../../music/masterClock'
 import { playLocal } from '../../../music/localNotes'
 import { previewVoice } from '../../drumpads/drumEngine'
-import { clearGuide, setGuide } from '../../../music/guide'
+import { clearGuideFor, setGuideFor, type GuideTone } from '../../../music/guide'
+// the key glow is OWNED: a late timer from this game can never wipe a newer feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('racer', t, tone, soon)
+const clearGuide = () => clearGuideFor('racer')
 import { clearScore, setScore } from '../../../music/scoreStore'
 import { createChannel, getCtx, unlockHost } from '../../../audio/host'
 import { registerPanicTarget } from '../../../music/panic'
 import { wClear, wTimeout } from '../../../audio/workerTimer'
-import { pload, psave } from '../../../profile/profile'
+import { onProfileChange, pload, psave } from '../../../profile/profile'
 import { noteName } from '../../../music/theory'
 import { wrongNote } from '../phraseKit'
 import type { SongNote } from '../../songs/songs'
@@ -173,7 +176,7 @@ function silence() { clearTimers(); R.click = false; stopHum() }
 
 // ------------------------------------------------------------------ the shared clock
 function ensureClock(bpm: number) {
-  if (!isRunning()) { R.startedClock = true; startMaster() }
+  acquireClock('racer') // a hold, not a flag: closing the racer can no longer stop a clock the drums or Kode still use
   if (Math.abs(getBpm() - bpm) > 0.01) setBpm(bpm)
 }
 
@@ -442,7 +445,7 @@ export function closeGame(restoreClock = true) {
   R.stopBeat?.(); R.stopBeat = null
   R.stopKode?.(); R.stopKode = null
   clearGuide(); clearScore('racer')
-  if (restoreClock && R.startedClock) { stopMaster(); R.startedClock = false }
+  if (restoreClock) releaseClock('racer')
   R.counting = false
 }
 
@@ -453,10 +456,12 @@ if (import.meta.env.DEV) {
   }
 }
 if (R.open && !R.raf) attach() // an edit of this file while the game is open: pick the loop up again where it was
+// A different kid signed in: the lap in progress ends and THEIR stars / best times load (the old kid's save stayed in the store, and the next lap wrote it under the new kid).
+const offProfile = onProfileChange(() => { const was = R.open; closeGame(false); if (was) R.open = true; set(initial()); R.view.vehicle = vehicleById(get().vehicle); if (was) attach() }, 'racer')
 const unPanic = registerPanicTarget('racer', () => { stopHum(); R.click = false })
 if (import.meta.hot) {
   import.meta.hot.data.store = useRacer
   import.meta.hot.data.run = R
-  import.meta.hot.dispose(() => { unPanic(); if (R.raf) cancelAnimationFrame(R.raf); R.raf = 0; R.stopTok?.(); R.stopBeat?.(); R.stopKode?.(); R.stopTok = R.stopBeat = R.stopKode = null; clearTimers(); stopHum(); R.click = false })
+  import.meta.hot.dispose(() => { offProfile(); unPanic(); if (R.raf) cancelAnimationFrame(R.raf); R.raf = 0; R.stopTok?.(); R.stopBeat?.(); R.stopKode?.(); R.stopTok = R.stopBeat = R.stopKode = null; clearTimers(); stopHum(); R.click = false })
   import.meta.hot.accept()
 }

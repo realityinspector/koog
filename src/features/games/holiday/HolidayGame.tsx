@@ -3,6 +3,7 @@ import { Feast, Tree } from './Scenes'
 import { backToLadder, backToSongs, begin, hear, leave, openGame, peek, pickSong, startLevel, useHoliday } from './engine'
 import { LEVELS, NLEV, goalFor, loadProg, nextUp, phrasesOf, progressPct, songsFor, type HolidayGame as Kind } from './data'
 import { usePedal } from '../../pedal/pedal'
+import { onStart } from '../../pedal/startSignal'
 import './holiday.css'
 
 const THEME: Record<Kind, { icon: string; title: string; blurb: string; unit: string; units: string; done: string }> = {
@@ -20,12 +21,16 @@ export function HolidayGame({ kind, onExit }: { kind: Kind; onExit: () => void }
   useEffect(() => { openGame(kind); return () => leave() }, [kind])
   // a foot pedal press starts a level, or moves on after one (if the pedal is plugged in)
   const phaseRef = useRef(s.phase); phaseRef.current = s.phase
-  useEffect(() => usePedal.subscribe((p, prev) => {
-    if (!p.down || prev.down) return
-    const st = useHoliday.getState()
-    if (st.phase === 'intro') begin()
-    else if (st.phase === 'result' && st.result?.passed && st.result.level < NLEV) startLevel(st.result.level + 1)
-  }), [])
+  useEffect(() => {
+    const go = () => {
+      const st = useHoliday.getState()
+      if (st.phase === 'intro') begin()
+      else if (st.phase === 'result' && st.result?.passed && st.result.level < NLEV) startLevel(st.result.level + 1)
+    }
+    const offPedal = usePedal.subscribe((p, prev) => { if (p.down && !prev.down) go() })
+    const offStart = onStart(go) // Game pads PLAY
+    return () => { offPedal(); offStart() }
+  }, [])
   const th = THEME[kind]
   const songs = useMemo(() => songsFor(kind), [kind])
   const song = songs.find((x) => x.id === s.songId)

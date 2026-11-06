@@ -113,7 +113,7 @@ export function VizControls(p: Props) {
             <div className="vb-toggles">
               <button className={'vb-tog' + (p.emoji ? ' on' : '')} aria-pressed={p.emoji} onClick={() => p.onEmoji(!p.emoji)}>Emoji 😜</button>
               <button className={'vb-tog' + (p.sparkle ? ' on' : '')} aria-pressed={p.sparkle} onClick={() => p.onSparkle(!p.sparkle)}>Sparkles ✨</button>
-              <button className={'vb-tog' + (chip ? ' on' : '')} aria-pressed={chip} onClick={() => useVibes.getState().setChip(!chip)}>Mood 😀</button>
+              {p.mode !== 'vibes' && <button className={'vb-tog' + (chip ? ' on' : '')} aria-pressed={chip} onClick={() => useVibes.getState().setChip(!chip)}>Mood 😀</button>}
             </div>
           </div>
         )}

@@ -9,7 +9,10 @@ import { create } from 'zustand'
 import { onJudge, type JudgeEvent } from '../../music/judge'
 import { onNote } from '../../music/notes'
 import { useHarmonyStore } from '../../music/harmonyStore'
-import { setGuide, clearGuide } from '../../music/guide'
+import { clearGuideFor, setGuideFor, type GuideTone } from '../../music/guide'
+// owned key glow: a late timer from this feature can't wipe another feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('coop', t, tone, soon)
+const clearGuide = () => clearGuideFor('coop')
 import { getSynth } from '../synth-history/engine'
 import { SCALES, msPerBeat, pc, PC_NAMES } from '../../music/theory'
 import { pload, psave, onProfileChange } from '../../profile/profile'

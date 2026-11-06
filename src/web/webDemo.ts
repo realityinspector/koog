@@ -1,8 +1,9 @@
 // Web demo + teacher demo flags. Shared by the app, the landing page and the teacher page.
 //
 //   Web demo   `npm run build:web` (VITE_WEB_DEMO=1). A hosted copy for trying Koog in a browser.
-//              It opens on a landing page, and supports only the computer keyboard
-//              (no MIDI devices, no foot pedal, no Idea box). In dev, open any page with ?webdemo to try it.
+//              It opens on a landing page. MIDI, the foot pedal and the Idea box stay off.
+//              The computer keyboard works, and so does a wireless game controller.
+//              In dev, open any page with ?webdemo to try it.
 //   Embed      ?embed in the URL: Koog running inside the teacher demo's laptop screen.
 //
 // The hosted copy has no sign-in. Its server rate-limits each visitor instead (see deploy/nginx.conf).

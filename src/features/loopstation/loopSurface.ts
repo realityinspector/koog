@@ -18,7 +18,8 @@ import { resyncLeds } from '../dj/engine'
 import { setScreenMode } from '../controller/surface'
 import { beatPos, getBpm, setBpm, tapTempo, useMaster } from '../../music/masterClock'
 import { refreshDrumPage, setDrumScreen } from '../drumpads/drumSurface'
-import { LEN_CHOICES, buttonDown, buttonUp, getSel, redo, select, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, togglePlay, undo, useLoop } from './loopEngine'
+import { usePedal } from '../pedal/pedal'
+import { LEN_CHOICES, isLooperOpen, buttonDown, buttonUp, getSel, redo, select, setLayerOpt, setLayerParam, setLayerVol, setLenBars, setOpt, togglePlay, undo, useLoop } from './loopEngine'
 
 export type Page = 'dj' | 'synth' | 'loop' | 'drums'
 interface PageState { screenOn: boolean; roleOn: boolean; on: boolean; bank: 0 | 1; lit: Record<string, boolean>; values: Record<string, number>; ghost: Record<string, number>; touched: Record<string, number>; last: string }
@@ -238,7 +239,7 @@ export function setControllerPage(p: Page) {
 function init() {
   hot.off?.()
   const offs = [
-    onLoopMessage((data) => { const a = decode(data); if (!a || a.fine || a.id === 'jogtouch') return; loopInput(a.deck ? `${a.id}.${a.deck}` : a.id, a.value) }),
+    onLoopMessage((data) => { const a = decode(data); if (!a || a.fine || a.id === 'jogtouch') return; if (!isLooperOpen() && !usePedal.getState().loopAlways) return /* a controller left on the Loop page must not run a looper nobody can see */; loopInput(a.deck ? `${a.id}.${a.deck}` : a.id, a.value) }),
     onRoleChange((_n, role) => { useLoopPage.setState({ roleOn: role === 'loop' ? true : useDevices.getState().devices.some((d) => d.connected && d.role === 'loop') }); apply() }),
     useDevices.subscribe((st) => { const r = st.devices.some((d) => d.connected && d.role === 'loop'); if (r !== get().roleOn) { useLoopPage.setState({ roleOn: r }); apply() } }),
     useLoop.subscribe(() => schedView()),

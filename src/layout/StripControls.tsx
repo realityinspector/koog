@@ -5,6 +5,8 @@ import { Icon } from '../ui/Icon'
 import { isEmbed, isWebDemo } from '../web/webDemo'
 import { currentUrl } from '../links/sync'
 import { linkNote } from '../links/bus'
+import { AirplaneSwitch } from '../offline/AirplaneSwitch'
+import { useAirplane } from '../offline/airplane'
 
 async function copyLink() {
   const url = currentUrl()
@@ -17,14 +19,16 @@ async function copyLink() {
 
 /** Always-visible switches in the top strip: sound (volume, mute, computer sound) and sheet music. */
 export function StripControls() {
+  const air = useAirplane((s) => s.on)
   return (
     <div className="kg-strip-controls">
       {isWebDemo()
-        ? <span className="kg-keys-chip" title="Web demo: computer keyboard only. Run Koog on your computer for USB keyboards."><Icon name="keys" size={16} /> Computer keys</span>
+        ? <span className="kg-keys-chip" title="Web demo: computer keyboard and a wireless game controller. Run Koog on your computer for USB keyboards."><Icon name="keys" size={16} /> Computer keys</span>
         : <DevicesControl />}
       <AudioControls />
+      <AirplaneSwitch />
       <SheetToggle />
-      {!isEmbed() && <button className="kg-link-btn" title="Copy a link to exactly this" aria-label="Copy a link to exactly this" onClick={() => void copyLink()}><Icon name="link" /></button>}
+      {!isEmbed() && !air && <button className="kg-link-btn" title="Copy a link to exactly this" aria-label="Copy a link to exactly this" onClick={() => void copyLink()}><Icon name="link" /></button>}
     </div>
   )
 }

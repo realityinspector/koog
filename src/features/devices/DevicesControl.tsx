@@ -9,6 +9,7 @@ import { useDrumPage } from '../drumpads/drumSurface'
 import { toggleGamePads, usePadPlay } from '../padplay/padplay'
 import { PedalSetup } from '../pedal/PedalSetup'
 import { usePedal } from '../pedal/pedal'
+import { useWireless } from '../gamepad/gamepad'
 import { setBoardOpen } from '../pedalboard/boardOpen'
 import { LatencyMeter, useBluetoothTip } from './LatencyMeter'
 import './devices.css'
@@ -39,14 +40,16 @@ export function DevicesControl() {
   const drumsOn = useDrumPage((s) => s.on)
   const gamesOn = usePadPlay((s) => s.on)
   const cur = SOUNDS.find((s) => s.id === sound) ?? SOUNDS[0]
-  const n = live.length
+  const pads = useWireless((s) => s.pads)
+  const otherPad = useWireless((s) => s.other)
+  const n = live.length + pads.length
   const pedalOn = usePedal((p) => (!!p.code || p.midi) && p.action !== 'off')
   const pedalDown = usePedal((p) => p.down)
   const bt = useBluetoothTip()
   return (
     <div className="kg-dev" ref={root}>
       <button type="button" className={'kg-dev-chip' + (open ? ' open' : '')} aria-expanded={open} aria-haspopup="dialog"
-        title={`MIDI devices and piano sound (now: ${cur.label})`} onClick={() => setOpen((o) => !o)}>
+        title={`MIDI devices, wireless controller, and piano sound (now: ${cur.label})`} onClick={() => setOpen((o) => !o)}>
         <Icon name="plug" />
         <span className="kg-dev-txt">{n} {n === 1 ? 'device' : 'devices'}</span>
         {bt && <span className="kg-dev-bt" title="Your sound goes through Bluetooth: notes will feel late" aria-label="Bluetooth sound delay">🎧</span>}
@@ -65,7 +68,20 @@ export function DevicesControl() {
               </div>
             </div>
           ))}
-          <p className="kg-dev-hint" title="On a Mac: open Audio MIDI Setup, Window > Show MIDI Studio, click Bluetooth, and Connect your keyboard. Then reload Koog. Bluetooth adds about 7 to 15 ms; a USB-C cable is the quickest.">Bluetooth keyboard? Pair it in Audio MIDI Setup (Mac). USB-C is the quickest.</p>
+          <p className="kg-dev-hint" title="Pair it in the computer's MIDI settings, then reload this page. A USB cable is quicker.">Bluetooth keyboard? Pair it in the computer's MIDI settings, then reload this page. A USB cable is quicker.</p>
+          <div className="kg-dev-wireless" data-wireless={pads.length}>
+            <h4>Wireless controller</h4>
+            {pads.length === 0 && !otherPad && <p className="kg-dev-none">Pair a wireless game controller in your computer's Bluetooth settings, then press any button. Click the page once so the notes can make sound.</p>}
+            {pads.length === 0 && otherPad && <p className="kg-dev-none">This controller is not one Koog can play.</p>}
+            {pads.map((p) => (
+              <div className="kg-dev-row" key={p.index}>
+                <span className="kg-dev-dot on" title="Connected" />
+                <span className="kg-dev-name" title={p.name}>{p.name}</span>
+                <span className="kg-dev-oct">{p.oct > 0 ? `Octave +${p.oct}` : `Octave ${p.oct}`}</span>
+              </div>
+            ))}
+            {pads.length > 0 && <p className="kg-dev-hint">The direction pad and the four face buttons play the 8 notes of the key. The shoulder buttons change octave. The left trigger is quieter and the right trigger is louder. Start begins a game. Back lets go of stuck notes.</p>}
+          </div>
           {hasDj && <p className="kg-dev-hint">Close any DJ software first: it grabs the controller.</p>}
           {live.length === 0 && (
             <button type="button" className={surfaceOn ? 'on' : ''} aria-pressed={surfaceOn} onClick={() => setScreenMode(!surfaceOn)}>🎛️ On-screen synth controller {surfaceOn ? 'ON' : 'OFF'}</button>
@@ -81,7 +97,7 @@ export function DevicesControl() {
                   onClick={() => { chooseSound(s.id); void unlockAudio() }}>{s.icon} {s.label}</button>
               ))}
             </div>
-            <p className="kg-dev-note">Turn Computer sound ON to hear it through the computer.</p>
+            <p className="kg-dev-note">A plugged-in keyboard plays this when Audio is ON. The keys on screen always play it.</p>
           </>}
           <PedalSetup />
           <button type="button" className="kg-pedal-setup" title="Stompbox effects and piano pedals" onClick={() => { setOpen(false); setBoardOpen(true) }}>🦶 Open the Pedalboard</button>

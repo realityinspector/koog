@@ -46,7 +46,7 @@ export function SentenceRibbon({ sentence, playing, listening, compact, onPick }
   const closer = sentence ? sentence.end : null
   return (
     <div className={'kgx-ribbon' + (compact ? ' compact' : '')} role="group" aria-label={describeSentence(sentence)}>
-      {words.length === 0 && pend.length === 0 ? <p className="kgx-empty">Your sentence shows up here: notes, code and English, lined up word by word.</p> : null}
+      {words.length === 0 && pend.length === 0 ? <p className="kgx-empty">Your words show up here: the keys, the code and the English, lined up.</p> : null}
       <ol className="kgx-cols">
         {words.map((w, i) => {
           const k = KIND_LOOK[kindOf(w)]
@@ -63,7 +63,7 @@ export function SentenceRibbon({ sentence, playing, listening, compact, onPick }
                 <span className="kgx-kind" title={k.label} aria-hidden="true">{k.mark}</span>
                 <span>{(w.id && lexById(w.id)?.emoji) || ''} {w.en}</span>
                 {w.tone.loud !== 'normal' ? <small> ({w.tone.loud})</small> : null}
-                {w.tone.mods.some((m) => m.name === 'wobble') ? <small title="wobble means excited"> ~wobble</small> : null}
+                {w.tone.mods.some((m) => m.name === 'wobble') ? <small title="excited voice"> ~excited</small> : null}
               </div>
               {options.length ? (
                 <div className="kgx-maybe">
@@ -71,7 +71,7 @@ export function SentenceRibbon({ sentence, playing, listening, compact, onPick }
                   {options.map((o) => <button key={o.id} type="button" onClick={() => onPick?.(i, o.id)}>{o.en}</button>)}
                 </div>
               ) : null}
-              {w.status === 'unknown' ? <div className="kgx-maybe"><small>I do not know that one. Try again, or write it in quotes to spell it.</small></div> : null}
+              {w.status === 'unknown' ? <div className="kgx-maybe"><small>I do not know that one yet. Try another chord, or look in the Word book.</small></div> : null}
             </li>
           )
         })}

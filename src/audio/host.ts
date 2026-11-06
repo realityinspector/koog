@@ -37,9 +37,16 @@ const cur = (): Host | null => G.__koogHost ?? null
 /** Chrome's DynamicsCompressor adds automatic makeup gain (~2.2x at -12 dB / ratio 20); this trims it so quiet signals pass at 1x. */
 const MAKEUP_TRIM = 0.46
 
+/** Desktop shell passes the hardware buffer. Match it so Web Audio does not queue a second, longer block. The browser build keeps the interactive hint. */
+function latencyHint(): AudioContextLatencyCategory | number {
+  const n = window.koogDesktop?.bufferFrames
+  if (n === 128 || n === 256) return n / 48000
+  return 'interactive'
+}
+
 function build(): Host {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-  const ctx = new AC({ latencyHint: 'interactive' })
+  const ctx = new AC({ latencyHint: latencyHint() })
   const master = ctx.createGain()
   master.gain.value = outputScale() * boostGain()
   const limiter = ctx.createDynamicsCompressor()

@@ -85,6 +85,17 @@ ok('woodpecker: 7 pecks is not enough', !play(line(Array.from({ length: 7 }, (_,
 ok('woodpecker: slow repeats do not peck', !play(line(Array.from({ length: 9 }, (_, i) => [72, i ? 450 : 0] as [number, number]))).includes('woodpecker'))
 ok('ghost needs a tritone, a fifth does not', !play(line([60, 67, 60, 67, 60, 67].map((n, i) => [n, i ? 400 : 0] as [number, number]))).includes('ghost'))
 ok('every tune has a distinct interval signature', (() => { const s = new Set(TUNES.map((t) => t.notes.slice(1).map((n, i) => n - t.notes[i]).join(','))); return s.size === TUNES.length })())
+{
+  const id = INFO[0].id, demo = demoFor(id), r = createRecognizer()
+  let n = 0
+  const feed = (t0: number) => { for (const e of demo) if (r.onset(t0 + e.t, e.n, e.v) === id) n++ }
+  feed(1000)
+  const len = demo.reduce((m, x) => Math.max(m, x.t), 0)
+  feed(1000 + len + 400) // still inside the cooldown: the costume has not cleared
+  r.cleared()
+  feed(1000 + len + 800) // costume cleared: the same tune fires again
+  ok('cleared() lets the same egg fire again before its cooldown', n === 2, 'n=' + n)
+}
 ok('no two eggs fire from one demo', INFO.every((i) => { const g = play(demoFor(i.id)); return g.length === 1 }), INFO.filter((i) => play(demoFor(i.id)).length !== 1).map((i) => i.id + ':' + play(demoFor(i.id)).join('+')).join(' '))
 ok('egg ids are unique and counted', new Set(INFO.map((i) => i.id)).size === INFO.length && INFO.length === 26)
 

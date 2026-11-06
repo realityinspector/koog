@@ -4,6 +4,8 @@ import { createElement, type ComponentType } from 'react'
 import { registerApp } from './registry'
 import type { KodeApp, KoreAppProps } from './types'
 import { KOOGALIEN_APP } from '../../features/koogalien/listing'
+import { KOOGALIEN_LIBRARY_APP } from '../../features/koogalien/library/listing'
+import { KOOGALIEN_GAMES_APP } from '../../features/koogalien/games/listing'
 
 type Mod = Record<string, unknown>
 type Loader = () => Promise<Mod>
@@ -44,6 +46,8 @@ export const BUILT_IN: KodeApp[] = [
   { id: 'harvest-feast', name: 'Harvest Feast', icon: '🦃', tagline: 'Learn a harvest song rung by rung; each phrase fills the table.', concepts: ['sequence', 'loop', 'debug'], inputs: ['keys'], ages: [5, 12], minutes: 10, route: '#/games/feast', status: 'ready', kind: 'learning' },
 ]
 BUILT_IN.push(KOOGALIEN_APP) // Koogalien (decision 7): its manifest lives in src/features/koogalien/listing.ts
+BUILT_IN.push(KOOGALIEN_GAMES_APP) // Koogalien Games: Alien Says, Spell Station, Chat, Word Rocket
+BUILT_IN.push(KOOGALIEN_LIBRARY_APP) // Koogalien Library: classic books as Koogalien music (src/features/koogalien/library)
 for (const a of BUILT_IN) registerApp(a)
 
 if (import.meta.hot) import.meta.hot.accept()

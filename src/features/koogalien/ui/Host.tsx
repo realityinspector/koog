@@ -2,7 +2,7 @@
 // compiles if the mascot moves; until it loads (or if it is missing) a plain emoji badge stands in.
 import { Suspense, lazy, type ComponentType } from 'react'
 
-export type HostPose = 'wave' | 'listen' | 'teach' | 'cheer' | 'puzzled' | 'sleep'
+export type HostPose = 'wave' | 'listen' | 'teach' | 'cheer' | 'puzzled' | 'oops' | 'sleep'
 type MascotProps = { pose?: string; mood?: string; size?: number | string; animated?: boolean; talking?: boolean; labelled?: boolean; title?: string }
 
 const found = import.meta.glob('../../../brand/mascot/KoogAlien.tsx') as Record<string, () => Promise<Record<string, unknown>>>
@@ -17,6 +17,7 @@ const MAP: Record<HostPose, { pose: string; mood: string }> = {
   teach: { pose: 'sing', mood: 'happy' },
   cheer: { pose: 'cheer', mood: 'excited' },
   puzzled: { pose: 'think', mood: 'curious' },
+  oops: { pose: 'oops', mood: 'curious' },
   sleep: { pose: 'sleep', mood: 'happy' },
 }
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -31,7 +32,7 @@ export function KoogAlienHost({ pose, say, size = 120 }: { pose: HostPose; say?:
           ? <Suspense fallback={badge}><Mascot pose={m.pose} mood={m.mood} size={size} animated={!reduced()} talking={pose === 'teach'} /></Suspense>
           : badge}
       </div>
-      {say ? <p className="kgx-bubble">{say}</p> : null}
+      {say ? <p className="kgx-bubble" aria-live="polite">{say}</p> : null}
     </div>
   )
 }

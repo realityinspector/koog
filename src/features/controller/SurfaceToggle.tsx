@@ -1,5 +1,6 @@
 import { useSurface } from './surface'
 import { currentPage, setControllerPage, useLoopPage, type Page } from '../loopstation/loopSurface'
+import { setLoopsDock } from '../loopstation/LoopsDock'
 import { useDrumPage } from '../drumpads/drumSurface'
 
 const PAGES: [Page, string, string][] = [
@@ -17,7 +18,7 @@ export function SurfaceToggle() {
   return (
     <span role="group" aria-label="Controller page" style={{ display: 'inline-flex', gap: 3 }}>
       {PAGES.map(([p, label, tip]) => (
-        <button key={p} type="button" className={'dj-go dj-surf' + (page === p ? ' on' : '')} aria-pressed={page === p} title={tip} onClick={() => setControllerPage(p)}>{label}</button>
+        <button key={p} type="button" className={'dj-go dj-surf' + (page === p ? ' on' : '')} aria-pressed={page === p} title={tip} onClick={() => { setControllerPage(p); setLoopsDock(p === 'loop') }}>{label}</button>
       ))}
     </span>
   )

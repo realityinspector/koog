@@ -11,6 +11,7 @@
 // State lives in import.meta.hot.data so editing this file never stops the clock.
 import { bpmFromTaps, pushTap } from './tapTempo'
 import { create } from 'zustand'
+import { createHolds } from './owners'
 import { wClear, wInterval, wTimeout } from '../audio/workerTimer' // the tick and the beat timers run in a worker: not throttled in a hidden tab
 import { getBeat } from '../features/dj/clock'
 import { bpm as beatsBpm, getState as beatsState, setBpmAdj, subscribe as beatsSubscribe } from '../features/beats/engine'
@@ -44,6 +45,7 @@ const bump = () => { A.epoch = (A.epoch ?? 0) + 1 }
 export const getBpm = () => A.bpm
 export const onBeat = (fn: BeatFn) => { beatFns.add(fn); return () => { beatFns.delete(fn) } }
 export const onBar = (fn: BeatFn) => { barFns.add(fn); return () => { barFns.delete(fn) } }
+export const clockListenerCounts = () => ({ beat: beatFns.size, bar: barFns.size, tick: tickFns.size })
 export const onTick = (fn: (now: number) => void) => { tickFns.add(fn); return () => { tickFns.delete(fn) } }
 
 function reanchor(bpm: number) { const t = now(), b = beatPos(t); A.t0 = t; A.b0 = b; A.bpm = clampBpm(bpm) }
@@ -95,12 +97,25 @@ export function startMaster() {
   if (!timer) timer = wInterval(() => tick(), 20)
 }
 export function stopMaster() {
+  clockHolds.adopt() // stopped (by anyone): nobody has a "I started it, I stop it" duty any more
   if (!A.running) return
   const b = beatPos()
   A.running = false; A.b0 = b
   if (timer) { wClear(timer); timer = 0 }
   useMaster.setState({ running: false, following: false })
 }
+// ---------- who needs the clock ----------
+// Games / the drum machine / Kode used to start it and stop it on their own ("startedClock" flags), so one closing could stop the clock
+// another still needed. Now they HOLD it: it starts with the first holder and stops only when the last one lets go, and only if a holder
+// (not the player's START button, the pedal or the looper) started it. See docs/STATE.md.
+const clockHolds = createHolds('masterClock', () => startMaster(), () => stopMaster(), () => A.running)
+export const acquireClock = (owner: string) => clockHolds.hold(owner)
+/** keepOn: something outside the holder list (the looper, a DJ deck) still uses the beat, so leave it running */
+export const releaseClock = (owner: string, keepOn = false) => clockHolds.release(owner, keepOn)
+export const clockHolders = () => clockHolds.holders()
+/** stop the clock for a caller that is not a holder, unless a holder still needs it. true = stopped */
+export function stopMasterUnlessHeld(): boolean { if (clockHolds.holders().length) return false; stopMaster(); return true }
+
 /** put beat 0 at this very moment (a free-running master only: with the DJ playing the grid belongs to the DJ) */
 export function resetPhase() {
   if (!A.running || useMaster.getState().following) return

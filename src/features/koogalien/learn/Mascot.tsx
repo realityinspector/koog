@@ -1,7 +1,7 @@
 // Thin door to the Koog Alien host (ui/Host.tsx is the only file that touches the mascot). Falls back to an emoji if Host.tsx is absent.
 import type { ComponentType } from 'react'
 
-type HostProps = { pose: 'wave' | 'listen' | 'teach' | 'cheer' | 'puzzled' | 'sleep'; say?: string; size?: number }
+type HostProps = { pose: 'wave' | 'listen' | 'teach' | 'cheer' | 'puzzled' | 'oops' | 'sleep'; say?: string; size?: number }
 const found = import.meta.glob('../ui/Host.tsx', { eager: true }) as Record<string, { KoogAlienHost?: ComponentType<HostProps> }>
 const Host = Object.values(found)[0]?.KoogAlienHost
 

@@ -10,7 +10,10 @@ import {
 import type { SongNote } from '../features/songs/songs'
 import { SONGS } from '../features/songs/songs'
 import { onJudge } from './judge'
-import { clearGuide, setGuide } from './guide'
+import { clearGuideFor, setGuideFor, type GuideTone } from './guide'
+// owned key glow: a late timer from this feature can't wipe another feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('phrase', t, tone, soon)
+const clearGuide = () => clearGuideFor('phrase')
 import { clearScore, setScore, setScorePos } from './scoreStore'
 import { getSheetLevel } from './sheetLevel'
 import { arrange, type ArrStyle } from './arrange'

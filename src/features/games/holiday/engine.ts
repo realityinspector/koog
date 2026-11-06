@@ -5,7 +5,10 @@
 import { create } from 'zustand'
 import { onJudge } from '../../../music/judge'
 import { playLocal, unlockAudio } from '../../../music/localNotes'
-import { clearGuide, setGuide } from '../../../music/guide'
+import { clearGuideFor, setGuideFor, type GuideTone } from '../../../music/guide'
+// the key glow is OWNED: a late timer from this game can never wipe a newer feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('holiday', t, tone, soon)
+const clearGuide = () => clearGuideFor('holiday')
 import { registerPanicTarget } from '../../../music/panic'
 import { msPerBeat, noteName } from '../../../music/theory'
 import { clearScore, setScore, setScorePos, setSheetOn, useScore } from '../../../music/scoreStore'

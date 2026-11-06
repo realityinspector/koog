@@ -19,6 +19,7 @@ import { CHANNELS, mixerOpen, setFader, toggleMute, toggleSolo, useMixer } from 
 import { clearMonitor, monitorMessages, setMonitor, useMonitor } from './monitor'
 import { panicAll } from './panic'
 import { setStage, useBoss } from './bossStore'
+import { AirplaneSwitch } from '../../offline/AirplaneSwitch'
 import { SLOTS, recallScene, saveScene, useScenes } from './scenes'
 import './pro.css'
 
@@ -68,6 +69,7 @@ export function SessionHeader({ onDiag }: { onDiag: () => void }) {
       <div className="bx-grp bx-right">
         <Lcd label="LOAD"><span className={load > 40 ? 'hot' : ''}>{load}%</span></Lcd>
         <button className="bx-b bx-panic" onClick={panicAll} title="All notes off, everywhere">PANIC</button>
+        <AirplaneSwitch desk />
         <button className="bx-b" onClick={() => setStage(true)} title="Performance view">STAGE</button>
         <button className="bx-b" onClick={onDiag} title="MIDI, pre-flight and test tools">⋯ diag</button>
       </div>

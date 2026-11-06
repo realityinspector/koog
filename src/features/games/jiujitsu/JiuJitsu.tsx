@@ -76,8 +76,8 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
         <div className="bj-panel">
           <div className="bj-card">
             <h2 className="bj-title">🥋 Jiu-Jitsu Flow</h2>
-            <p className="bj-sub">Your partner makes a move with a few notes. Echo them on the beat to escape, then climb to the finish. Always bow, and always tap early.</p>
-            <div className="bj-beltrow"><BeltBar belt={snap.save.belt} stripes={snap.save.stripes} big /><b>{BELTS[snap.save.belt].name} belt · stripe {snap.save.stripes + 1 > 4 ? 4 : snap.save.stripes + 1} of 4</b></div>
+            <p className="bj-sub">Your partner plays a short phrase. Play the same notes back to take the next position, then climb to the finish. Always bow, and always tap early.</p>
+            <div className="bj-beltrow"><BeltBar belt={snap.save.belt} stripes={snap.save.stripes} big /><b>{BELTS[snap.save.belt].name} belt · {snap.save.stripes} of 4 stripes</b></div>
             {snap.save.belt > 0 && (
               <div className="bj-pick" role="group" aria-label="Train at belt">
                 Train at
@@ -123,7 +123,7 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
             <BeltBar belt={snap.promoTo} stripes={0} big />
             <p className="bj-lesson">Your coach ties the new belt around your waist. You bow, and your training partner bows back. The belt is not about winning: it shows how long you have kept learning, kindly and with respect.</p>
             <div className="bj-bow" aria-hidden>🙇 🙇</div>
-            <div className="bj-row"><button className="bj-btn go" onClick={() => g()?.cont()}>Oss! Keep training ▶</button></div>
+            <div className="bj-row"><button className="bj-btn go" onClick={() => g()?.cont()}>Oss! Keep training ▶</button><button className="bj-btn ghost" onClick={() => g()?.toMenu()}>Menu</button></div>
           </div>
         </div>
       )}
@@ -133,7 +133,11 @@ export function JiuJitsu({ onExit }: { onExit: () => void }) {
             <h2 className="bj-title">🌊 Flow complete</h2>
             <div className="bj-big">{snap.points} points{snap.newBest ? ' · new best!' : ''}</div>
             <p className="bj-lesson">Longest flow chain: {snap.longest}. Smooth and steady beats fast and sloppy, on the mat and on the keys.</p>
-            <div className="bj-row"><button className="bj-btn go" onClick={() => g()?.startFlow()}>↻ Again</button><button className="bj-btn" onClick={() => g()?.toMenu()}>Menu</button></div>
+            <div className="bj-row">
+              <button className="bj-btn go" onClick={() => g()?.startFlow()}>↻ Again</button>
+              {snap.songs.length > 1 && <button className="bj-btn" onClick={() => { g()?.setSong(snap.songIx + 1); g()?.startFlow() }}>Next song ▶</button>}
+              <button className="bj-btn ghost" onClick={() => g()?.toMenu()}>Menu</button>
+            </div>
           </div>
         </div>
       )}

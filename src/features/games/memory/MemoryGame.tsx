@@ -120,6 +120,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
           {s.kode && s.vars.length > 0 && <KodeBonus />}
           <p className="pm-bestline">{s.newBest ? 'New best for this level!' : bestNow ? `Best: ${bestNow.flips} flips in ${fmtTime(bestNow.ms)}` : ''}</p>
           <div className="pm-row">
+            {s.level !== 'hard' && <button className="pm-btn go" onClick={() => start(s.level === 'easy' ? 'medium' : 'hard', s.ear)}>Next level</button>}
             <button className="pm-btn go" onClick={retry}>Retry</button>
             <button className="pm-btn" onClick={() => { toMenu() }}>Menu</button>
             <button className="pm-btn ghost" onClick={() => { stop(); toMenu(); onExit() }}>Games</button>

@@ -74,6 +74,7 @@
 /* ---------- calibration, knob check, co-op ---------- */
 .dj-key { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .dj-band { height: 20px; padding: 0 6px; font-size: 12px; }
+.dj-close { flex: none; }
 .dj-menu { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); z-index: var(--z-pop, 26); width: 480px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 10px; padding: 8px; border-radius: 14px; text-align: left;
   background: rgba(16, 12, 40, .97); border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 10px 30px rgba(0, 0, 0, .6); letter-spacing: 0; white-space: normal; }
 .dj-menu button { text-align: left; padding: 7px 10px; border-radius: 9px; border: 0; background: rgba(255, 255, 255, .07); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }

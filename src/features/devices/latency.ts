@@ -83,13 +83,13 @@ export function outputInfo(): OutInfo {
   const ctx = getCtx()
   const out = Math.max(0, (ctx.outputLatency || 0) * 1000), base = Math.max(0, (ctx.baseLatency || 0) * 1000)
   const bigLatency = out >= 100
-  return { out, base, total: out + base, bluetooth: bigLatency || btLabel, why: bigLatency ? 'the sound card reports ' + Math.round(out) + ' ms' : btLabel ? 'the output is a wireless device' : '', state: ctx.state }
+  return { out, base, total: out + base, bluetooth: btLabel, why: btLabel ? 'the output is a wireless device' : bigLatency ? 'the sound card reports ' + Math.round(out) + ' ms' : '', state: ctx.state }
 }
 
 
 // ---- tap test ----
-export interface TapState { running: boolean; clicks: number; taps: number[]; result: number | null }
-export const useTap = create<TapState>()(() => ({ running: false, clicks: 0, taps: [], result: null }))
+export interface TapState { running: boolean; clicks: number; taps: number[]; result: number | null; /** finished with fewer than 4 taps */ miss: boolean }
+export const useTap = create<TapState>()(() => ({ running: false, clicks: 0, taps: [], result: null, miss: false }))
 let clickHeard: number[] = []
 let tapTimer: ReturnType<typeof setTimeout>[] = []
 export async function startTapTest() {
@@ -104,7 +104,7 @@ export async function startTapTest() {
     o.connect(g); g.connect(bus.input); o.start(at); o.stop(at + 0.08)
     clickHeard.push(performance.now() + (at - ctx.currentTime) * 1000 + info.total)
   }
-  useTap.setState({ running: true, clicks: N, taps: [], result: null })
+  useTap.setState({ running: true, clicks: N, taps: [], result: null, miss: false })
   tapTimer.push(setTimeout(() => { bus.dispose(); finishTapTest() }, (0.5 + N * gap + 0.6) * 1000))
 }
 /** a tap at performance-clock time t (ms) */
@@ -116,9 +116,10 @@ export function tapNow(t = performance.now()) {
 }
 function finishTapTest() {
   const taps = useTap.getState().taps.slice().sort((a, b) => a - b)
-  useTap.setState({ running: false, result: taps.length >= 4 ? Math.round(taps[Math.floor(taps.length / 2)]) : null })
+  const result = taps.length >= 4 ? Math.round(taps[Math.floor(taps.length / 2)]) : null
+  useTap.setState({ running: false, result, miss: result === null })
 }
-export function stopTapTest(finish = true) { tapTimer.forEach(clearTimeout); tapTimer = []; if (finish && useTap.getState().running) finishTapTest(); else if (!finish) useTap.setState({ running: false, taps: [], result: null }) }
+export function stopTapTest(finish = true) { tapTimer.forEach(clearTimeout); tapTimer = []; if (finish && useTap.getState().running) finishTapTest(); else if (!finish) useTap.setState({ running: false, taps: [], result: null, miss: false }) }
 
 const offTap = subscribeMidi('piano', (d, ts) => { if (d.length >= 3 && (d[0] & 0xf0) === 0x90 && d[2] > 0) tapNow(ts > 0 ? ts : undefined) })
 void probeLabels()

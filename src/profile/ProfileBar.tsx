@@ -46,7 +46,7 @@ export function ProfileBar() {
         {mode === 'dad' ? (
           <>
             <span className="pf-tag">🛠️ Boss mode</span>
-            <button onClick={() => setMode('kid')}>Back to Kid mode</button>
+            <button className="pf-back" onClick={() => setMode('kid')}>Back to Kid mode</button>
           </>
         ) : (
           <button
@@ -99,16 +99,14 @@ const tileInfo = (code: string) => ({
   badges: Object.keys(read<Record<string, number>>(code, 'challenges.badges', {})).length,
 })
 
-/** Shown while nobody is signed in. Kids tap their tile, or make a new one. */
+/** Home picker. Open on a plain launch for a guest, and whenever the KOOG logo is pressed. */
 export function WhoIsPlaying() {
-  const { active, profiles, hasLegacy, signIn, create } = useProfile()
+  const { profiles, hasLegacy, gate, hideGate, signIn, create } = useProfile()
   const [code, setCode] = useState('')
   const [claim, setClaim] = useState(true)
   const [err, setErr] = useState<string | null>(null)
-  // a link that names a screen opens it as a guest: the picker must not cover it
-  const [hidden, setHidden] = useState(() => location.hash.startsWith('#/'))
   const [adding, setAdding] = useState(false)
-  if (!isGuest(active) || hidden || isEmbed()) return null
+  if (!gate || isEmbed()) return null
 
   const showForm = adding || profiles.length === 0
   const typedExisting = profiles.includes(code.trim().toLowerCase())
@@ -163,7 +161,7 @@ export function WhoIsPlaying() {
           Bring the badges and high scores already saved on this computer
         </label>
       )}
-      <button className="pf-guest" onClick={() => setHidden(true)}>Just play</button>
+      <button className="pf-guest" onClick={hideGate}>Just play</button>
       <p className="pf-note">Your name keeps your badges and scores separate from your brother's or sister's. It's not a password, so pick something easy.</p>
     </section>
   )

@@ -163,7 +163,7 @@ function Settings({ more, setMore, pic, setPic }: { more: boolean; setMore: (b: 
         <Seg on={s.measure} onClick={() => setOpt('measure', !s.measure)} title="MEASURE: REC / DUB / PLAY wait for the next bar line (the ring blinks while waiting)">MEASURE</Seg>
         <span className="lp-grp"><Seg on={g.on} onClick={() => { unlockGuide(); setGuide({ on: !g.on }) }} title="Rhythm guide: a light drum pattern on the loop's tempo">GUIDE</Seg>
           <select aria-label="Guide pattern" value={g.pat} onChange={(e) => setGuide({ pat: e.target.value as GuidePat })}>{GUIDE_PATS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select></span>
-        <Seg on={s.metro} onClick={() => setMetronomeOn(!s.metro)} title="Metronome: a soft click every beat, accent on beat 1. It needs no loop and is not recorded. Press M anywhere to flip it (Shift+M while Keys play notes is on).">🔔 METRO</Seg>
+        <Seg on={s.metro} onClick={() => setMetronomeOn(!s.metro)} title="Metronome: a soft click every beat, accent on beat 1. It needs no loop and is not recorded. Press Shift+M anywhere to flip it (plain M is the note B).">🔔 METRO</Seg>
         <small className="lp-timing" data-timing={ti.mode}>{ti.words}</small>
         <Seg on={more} onClick={() => setMore(!more)} title="Show tracks 6 to 8">{more ? '◂ 1-5' : '6-8 ▸'}</Seg>
         <details className="lp-more"><summary title="More settings: quantise, bars, save / load, export">⋯ MORE</summary>

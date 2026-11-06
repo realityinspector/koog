@@ -11,7 +11,7 @@ import { useOnePop } from '../../ui/onePop'
 import { setLoopsDock, useLoopsDock } from '../loopstation/LoopsDock'
 import { setControllerPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
-import { setBoardOpen } from '../pedalboard/boardOpen'
+import { setBoardOpen, useBoardOpen } from '../pedalboard/boardOpen'
 import { setKodeDock, useKodeDock } from '../kode/kodeDock'
 import { openStore } from '../appstore/storeState'
 import { STORE_NAME as storeName } from '../../kode/kore/brand'
@@ -36,6 +36,7 @@ export function ModesLauncher() {
   const looper = useLoopsDock((s) => s.open)
   const drums = useDrumPage((s) => s.on)
   const kode = useKodeDock((s) => s.open)
+  const board = useBoardOpen((s) => s.open)
 
   useEffect(() => {
     if (!open) return
@@ -70,7 +71,7 @@ export function ModesLauncher() {
       toggle: () => { if (!drums) { setLoopsDock(false); setKodeDock(false) } setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
     { id: 'kode', icon: '🧑‍💻', name: 'Koog Kode', blurb: 'Code your music: type a pattern like notes "c e g e" and it plays. Or play something and Koog writes the code.', on: kode,
       toggle: () => { if (!kode) { setLoopsDock(false); setControllerPage('dj') } setKodeDock(!kode); setOpen(false) } },
-    { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: false, toggle: () => { setBoardOpen(true); setOpen(false) } },
+    { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: board, toggle: () => { setBoardOpen(!board); setOpen(false) } },
   ]
   const cards = [...play, ...make, ...helpers]
   const count = cards.filter((c) => c.on).length
@@ -85,7 +86,7 @@ export function ModesLauncher() {
   return (
     <div className="md-wrap" ref={box} data-modes-launcher onPointerDown={(e) => e.stopPropagation()}>
       <button data-tour="modes" className={'md-btn' + (open ? ' open' : '') + (count ? ' has' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
-        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Koog Kode, Mentor and Vibes">
+        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Koog Kode, Pedalboard, Mentor and Vibes">
         <Icon name="spark" /><b>Modes</b>
         <span className="md-dots" aria-label={count + ' on'}>
           {cards.map((c) => <i key={c.id} className={c.on ? 'on' : ''} />)}

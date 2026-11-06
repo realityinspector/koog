@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './codeexport.css'
 import { strudelUrl } from '../../kode/export'
+import { airplaneOn } from '../../offline/airplane'
 
 // "</> Code": show a loop, beat or song as text for two free live-coding tools from the education world.
 // Copy for Sonic Pi puts the text on the clipboard; Open in Strudel opens strudel.cc with the code already in it (a new tab, only when the
@@ -30,6 +31,7 @@ export function CodeMenu({ build, disabled, what = 'loop', className = '' }: { b
   }
   const open = async () => {
     const c = build(); if (!c) { say(`Make a ${what} first, then try again.`); return }
+    if (airplaneOn()) { say((await copyText(c.strudel)) ? 'Airplane is on. Copied, and it stays here.' : 'Airplane is on.'); return }
     const url = strudelUrl(c.strudel)
     if (url.length > STRUDEL_URL_MAX) { say((await copyText(c.strudel)) ? 'Too long for a link. Copied! Paste it into strudel.cc and press Ctrl+Enter' : 'Too long for a link.'); return }
     window.open(url, '_blank', 'noopener')

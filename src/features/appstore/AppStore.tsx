@@ -232,7 +232,7 @@ export function StoreHost() {
 export function StoreButton() {
   return (
     <button className="kg-gal-btn as-entry" aria-label={storeName} title={storeName + ': find Kode apps, track your coding powers'} onClick={() => openStore()} data-tour="appstore">
-      <span aria-hidden>🏪</span> <span className="kg-gal-t">{storeName}</span>
+      <span aria-hidden>🏪</span> <span className="kg-gal-t">Store</span>
     </button>
   )
 }

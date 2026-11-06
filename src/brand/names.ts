@@ -4,6 +4,9 @@
 // Settings, Back, Start) are deliberately NOT here: they stay plain (Rule 1).
 // Not wired into components yet.
 
+/** System window and browser-tab title. The synth on screen stays KOOG. Dock and home-screen names stay short. */
+export const APP_TITLE = 'KOOG: The Koding Synth for Koogaliens'
+
 export const NAMES = {
   // helpers and characters
   mentor: 'Mentor',

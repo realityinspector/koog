@@ -201,11 +201,13 @@ export function SheetOverlay() {
       {free && groups.length === 0 && <div className="sh-empty">Play something and we will write it down.</div>}
       <div className="sh-bar">
         <span className="sh-pill">{free ? 'free play: we are writing down what you play' : arr?.title ?? score.title}</span>
-        <span className="sh-seg" role="group" aria-label="Sheet level">
-          {SHEET_LEVELS.map((l) => (
-            <button key={l.id} className={'sh-lv' + (level === l.id ? ' on' : '')} aria-pressed={level === l.id} title={l.label + ': ' + l.hint} aria-label={l.label} onClick={() => setSheetLevel(l.id)}>{l.icon}</button>
-          ))}
-        </span>
+        {!free && (
+          <span className="sh-seg" role="group" aria-label="Sheet level">
+            {SHEET_LEVELS.map((l) => (
+              <button key={l.id} className={'sh-lv' + (level === l.id ? ' on' : '')} aria-pressed={level === l.id} title={l.hint} aria-label={l.label} onClick={() => setSheetLevel(l.id)}>{l.icon} {l.label}</button>
+            ))}
+          </span>
+        )}
         <button className={'sh-btn' + (names ? ' on' : '')} aria-pressed={names} title="Show note names under the notes" onClick={toggleNames}>Aa</button>
         <button className="sh-btn" aria-label="Turn sheet music off" title="Hide the sheet music" onClick={() => { setSheetOn(false)}}>✕</button>
       </div>

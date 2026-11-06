@@ -502,7 +502,7 @@ export const entries: Entry[] = [
     time: 'Day',
     stage: 'ship',
     title: "🔁 A tighter looper, a pedal that just works, and Boost",
-    body: "Your loop is only as tight as the clock that runs it. Timers on a web page slow down whenever the page is busy, so the looper clock now lives in a background helper called a Web Worker, and recordings use the exact moment you pressed each key. The pedal runs the looper the simple way: one tap records, one tap loops, two taps stop, hold to clear. Press M (Shift+M when the computer keys play notes) for the metronome anywhere. And 🔊 Boost makes quiet laptop speakers louder, asks you twice, and switches itself off after an hour to protect ears.",
+    body: "Your loop is only as tight as the clock that runs it. Timers on a web page slow down whenever the page is busy, so the looper clock now lives in a background helper called a Web Worker, and recordings use the exact moment you pressed each key. The pedal runs the looper the simple way: one tap records, one tap loops, two taps stop, hold to clear. Press Shift+M for the metronome anywhere. And 🔊 Boost makes quiet laptop speakers louder, asks you twice, and switches itself off after an hour to protect ears.",
   },
   {
     id: 72,

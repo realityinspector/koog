@@ -25,7 +25,7 @@ export interface OutboxItem { code: string; en: string; at: number }
 export interface KoogalienSettings { autoAccept: boolean; alien: string; chordBuilder: boolean }
 
 export interface KoogalienState {
-  tab: 'write' | 'dictionary' | 'learn'
+  tab: 'home' | 'write' | 'dictionary' | 'learn' | 'games' | 'library'
   sentence: Sentence | null
   /** false while the kid is still mid-sentence (the draft shows, but no closer has been played) */
   ended: boolean
@@ -50,7 +50,7 @@ export interface KoogalienState {
 
 const EMPTY: Listening = { chords: [], words: [], spelling: false, half: null }
 const INITIAL: KoogalienState = {
-  tab: 'write', sentence: null, ended: false, listening: EMPTY, code: '', codeErrors: [], playingWord: null, alien: 'pip', bpm: 100,
+  tab: 'home', sentence: null, ended: false, listening: EMPTY, code: '', codeErrors: [], playingWord: null, alien: 'pip', bpm: 100,
   wobble: 0, chordBuilder: false, autoAccept: false, lit: [], status: '', outbox: [], homeC: 60,
 }
 
@@ -152,6 +152,7 @@ export const koogalienActions = {
     if (t.src === 'pedal' || t.src === 'screen') { run({ type: 'token', token: t }); return }
     const d = degreeOfToken(t)
     if (d == null) { if (t.pitch != null) set({ status: 'That is a black key. Koogalien uses the white keys C to C.' }); return }
+    if (get().status.startsWith('That is a black key')) set({ status: '' })
     const now = t.t
     if (get().chordBuilder && (t.pitch != null || t.lane != null)) {
       builderTokens.push(t)

@@ -37,12 +37,16 @@ import { PedalboardDock } from './features/pedalboard/Pedalboard'
 import { SmartBandChip } from './features/smartband/SmartBandChip'
 import { useEffect } from 'react'
 import { startLinks } from './links/sync'
+import { installAirplane } from './offline/airplane'
 import { LinkNote } from './links/LinkNote'
 import { GlobalClearedToast } from './features/loopstation/GlobalClearedToast'
 import { Gallery } from './features/gallery/Gallery'
+import { EggCheatSheet } from './features/vibes/EggCheatSheet'
 import { BossStoreEntry } from './features/appstore/AppStore'
 import { PerfHud } from './features/perfmon/PerfHud'
 import './music/judge'
+import './layout/dockWiring' // one-at-a-time docks (docs/STATE.md)
+import './layout/stateInspector' // dev only: window.__koogState()
 import './ui/chrome.css'
 
 export function App() {
@@ -50,7 +54,7 @@ export function App() {
   const player = useProfile((s) => s.active)
   const badgeCount = useChallengeStore((s) => Object.keys(s.badges).length)
   const dad = mode === 'dad'
-  useEffect(() => startLinks(), [])
+  useEffect(() => { startLinks(); installAirplane() }, [])
   const modes: ModeDef[] = [
     { id: 'play', icon: <Icon name="keys" />, label: 'PLAY', title: 'Play' },
     { id: 'songs', icon: <Icon name="note" />, label: 'SONGS', title: 'Songs', node: <SongsPanel key={'so-' + player} /> },
@@ -76,6 +80,7 @@ export function App() {
       <ErrorBoundary>
         <Instrument lean strip={<><ProfileBar /><StripControls /></>} idea={null} display={<ProStudio key={'bx-' + player} diag={diag} />} overlay={<><DuoDeck /><MimicChip /><Mentor tech /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={boss} />
         <WhoIsPlaying />
+        <EggCheatSheet />
         <LinkNote /><GlobalClearedToast />
         <Gallery />
         <BossStoreEntry />
@@ -85,8 +90,9 @@ export function App() {
   }
   return (
     <ErrorBoundary>
-      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><KodeDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
+      <Instrument strip={<><ProfileBar /><StripControls /></>} idea={<RequestBar key={'rq-' + player} />} display={<Visualizer />} overlay={<><SmartReadout /><CoachTips /><ModesLauncher /><DuoDeck chip={false} /><DrumsDock /><LoopsDock /><KodeDock /><MimicChip launcher /><SmartBandChip pill /><Mentor /><PedalboardDock /></>} keybed={<PianoStrip />} sheet={<><SheetOverlay /><ControllerOverlay /></>} modes={modes} />
       <WhoIsPlaying />
+      <EggCheatSheet />
       <LinkNote /><GlobalClearedToast />
       <Gallery />
       <PerfHud />

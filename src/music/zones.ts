@@ -193,7 +193,7 @@ function load() {
 }
 
 hot.off?.()
-const offProfile = onProfileChange(load)
+const offProfile = onProfileChange(load, 'zones')
 load()
 
 if (import.meta.hot) {

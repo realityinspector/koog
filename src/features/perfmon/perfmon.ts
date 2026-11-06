@@ -250,8 +250,16 @@ export const perfmon = {
 ;(window as unknown as { __perfmon?: typeof perfmon }).__perfmon = perfmon
 
 sync()
-useProfile.subscribe((s, p) => { if (s.mode !== p.mode) sync() })
-window.addEventListener('pagehide', () => { if (M.on) save() })
-document.addEventListener('visibilitychange', () => { M.last = 0; M.beatAt = 0; M.wall = 0 })
+// global listeners: removed on a hot edit, so each edit of this file no longer stacks another copy (docs/STATE.md)
+;(import.meta.hot?.data.globalOff as (() => void) | undefined)?.()
+const offMode = useProfile.subscribe((s, p) => { if (s.mode !== p.mode) sync() })
+const onHide = () => { if (M.on) save() }
+const onVis = () => { M.last = 0; M.beatAt = 0; M.wall = 0 }
+window.addEventListener('pagehide', onHide)
+document.addEventListener('visibilitychange', onVis)
 
-if (import.meta.hot) { import.meta.hot.data.m = M; import.meta.hot.accept(() => { /* a new copy of this file re-runs sync() above */ }) }
+if (import.meta.hot) {
+  import.meta.hot.data.m = M
+  import.meta.hot.data.globalOff = () => { offMode(); window.removeEventListener('pagehide', onHide); document.removeEventListener('visibilitychange', onVis) }
+  import.meta.hot.accept(() => { /* a new copy of this file re-runs sync() above */ })
+}

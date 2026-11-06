@@ -15,6 +15,7 @@ import { startMonitor, stopMonitor } from './monitor'
 import { panicAll } from './panic'
 import { useScenes, recallScene } from './scenes'
 import { CHANNELS } from './mixer'
+import { AirplaneSwitch } from '../../offline/AirplaneSwitch'
 import { peak as djPeak, getView } from '../dj/engine'
 import './pro.css'
 
@@ -77,6 +78,7 @@ function Stage() {
         <button className={'bx-b' + (m.running ? ' on' : '')} onClick={() => (m.running ? stopMaster() : startMaster())}>{m.running ? '■ STOP' : '▶ START'}</button>
         <button className="bx-b" onClick={() => tapTempo()}>TAP</button>
         <button className="bx-b bx-panic" onClick={panicAll}>PANIC</button>
+        <AirplaneSwitch desk />
         <button className="bx-b" onClick={() => setStage(false)}>EXIT STAGE (Esc)</button>
       </div>
     </div>

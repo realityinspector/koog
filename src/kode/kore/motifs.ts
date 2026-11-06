@@ -21,7 +21,7 @@ const get = () => useMotifs.getState()
 const persist = (list: Motif[]) => { kvSave(KEY, list); useMotifs.setState((s) => ({ list, v: s.v + 1 })) }
 export const reloadMotifs = () => useMotifs.setState((s) => ({ list: sane(kvLoad<Motif[]>(KEY, [])), trash: null, free: kvLoad<boolean>(FREE_KEY, false) === true, v: s.v + 1 }))
 hot.off?.()
-const offProfile = onProfileChange(reloadMotifs)
+const offProfile = onProfileChange(reloadMotifs, 'motifs')
 
 // ---- runtime wiring (clock + sound), set by sdk.ts
 interface Runtime { beat: () => number; bpm: () => number; sink: (evs: MotifEvent[]) => void }

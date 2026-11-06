@@ -3,7 +3,8 @@
 // Tunes are matched by INTERVAL, so any key or octave works. Rhythm is checked loosely: the tempo is fitted to what was
 // played and every gap must stay within a factor of the written rhythm (rt). Notes within 45 ms of each other are ONE
 // "group" (a chord, or a hand landing slightly apart); a group counts as its top note for melodies, and as a set for chords.
-// Held notes make no new onset, so a drone under a tune does not disturb it. Every egg has a cooldown.
+// Held notes make no new onset, so a drone under a tune does not disturb it. Every egg has a cooldown so one
+// performance cannot fire twice. cleared() lifts that cooldown once the costume has finished, so the same tune can fire again.
 // Only public-domain tunes (US publication 1930 or earlier, or traditional) and simple universal patterns.
 import { seq } from '../../music/classical'
 import { HOLIDAY_SONGS } from '../songs/holidaySongs'
@@ -77,7 +78,12 @@ interface G { t: number; top: number; cnt: number; pcs: number; v: number }
 interface Raw { t: number; n: number; v: number }
 const GROUP_MS = 45
 
-export interface Recognizer { onset(t: number, note: number, v: number): EggId | null; reset(): void }
+export interface Recognizer {
+  onset(t: number, note: number, v: number): EggId | null
+  reset(): void
+  /** the costume finished (or never started), so any egg may fire again on the next tune */
+  cleared(): void
+}
 
 type Check = (g: G[], r: Raw[], t: number) => boolean
 const gap = (g: G[], i: number) => g[i].t - g[i - 1].t
@@ -209,6 +215,7 @@ export function createRecognizer(): Recognizer {
   const ready = (id: EggId, t: number) => t - (fired.get(id) ?? -1e9) >= cdOf(id)
   return {
     reset() { gs.length = 0; raw.length = 0; fired.clear(); lock = -1e9 },
+    cleared() { fired.clear(); lock = -1e9 },
     onset(t, note, v) {
       raw.push({ t, n: note, v }); if (raw.length > 24) raw.shift()
       const last = gs[gs.length - 1]

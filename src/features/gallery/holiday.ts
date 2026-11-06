@@ -4,6 +4,7 @@
 import { SONGS, type Song } from '../songs/songs'
 import { HOLIDAY_SONGS, HOLIDAY_ORDER } from '../songs/holidaySongs'
 import type { Piece } from './art.data'
+import { galleryVoice } from './voices'
 
 export type Season = 'thanksgiving' | 'christmas'
 export const isSeason = (s: unknown): s is Season => s === 'thanksgiving' || s === 'christmas'
@@ -42,11 +43,13 @@ export function holidayPieces(kind: Season): Piece[] {
   const looks = LOOKS[kind]
   return songsFor(kind).map((s, i) => {
     const l = looks[i % looks.length]
+    // The picture picks the synth. The same look keeps the same type and setting; the next look moves on.
+    const voice = galleryVoice(i % looks.length)
     // keep the busiest passage under about 3 notes a second: calm, and never a flash
     const fastest = Math.min(...s.notes.filter((n) => n.note != null).map((n) => n.beats))
     const speed = Math.max(0.6, Math.min(1, 3 / ((s.bpm / 60) / fastest)))
     return { id: `${kind}-${s.id}`, room: 'Play', season: kind, title: s.title.replace(/\s*\((opening|theme)\)$/i, ''), line: l.line,
-      state: { screen: 'play', visual: l.visual, palette: l.palette }, perf: { k: 'song', id: s.id, vel: 58 }, seconds: 18, speed } as Piece
+      state: { screen: 'play', visual: l.visual, palette: l.palette, sound: voice.sound, preset: voice.preset }, perf: { k: 'song', id: s.id, vel: 58 }, seconds: 18, speed } as Piece
   })
 }
 

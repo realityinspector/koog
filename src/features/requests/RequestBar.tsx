@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { isGuest, useProfile } from '../../profile/profile'
+import { isGuest, ploadShared, psave, useProfile } from '../../profile/profile'
+import { useAirplane } from '../../offline/airplane'
 import './requests.css'
 
 const API = 'http://127.0.0.1:5174/requests'
@@ -17,7 +18,7 @@ const LABEL: Record<Req['status'], string> = {
 const SEEN = 'koog.rq.seen'
 const sig = (r: Req) => r.status + '|' + r.reply
 function loadSeen(): Record<number, string> | null {
-  try { const s = localStorage.getItem(SEEN); return s ? JSON.parse(s) : null } catch { return null }
+  return ploadShared<Record<number, string> | null>('rq.seen', SEEN, null) // per player now (was one key for the whole computer)
 }
 
 /** Pops up when Claude updates a request, so she sees replies without opening the Idea box. */
@@ -28,7 +29,7 @@ function RequestToasts({ list }: { list: Req[] }) {
     if (seen === null && list.length) {
       const all = Object.fromEntries(list.map((r) => [r.id, sig(r)]))
       setSeen(all)
-      try { localStorage.setItem(SEEN, JSON.stringify(all)) } catch { /* ignore */ }
+      psave('rq.seen', all)
     }
   }, [list, seen])
   if (!seen) return null
@@ -40,7 +41,7 @@ function RequestToasts({ list }: { list: Req[] }) {
   const dismiss = (r: Req) => {
     const next = { ...seen, [r.id]: sig(r) }
     setSeen(next)
-    try { localStorage.setItem(SEEN, JSON.stringify(next)) } catch { /* ignore */ }
+    psave('rq.seen', next)
   }
   return createPortal(
     <div className="rq-toasts" aria-live="polite">
@@ -63,9 +64,11 @@ export function RequestBar() {
   const [sending, setSending] = useState(false)
   // privacy between siblings: each player only sees (and gets pop-ups for) THEIR OWN ideas
   const active = useProfile((s) => s.active)
+  const air = useAirplane((s) => s.on)
   const mine = list.filter((r) => (isGuest(active) ? !r.from : r.from === active))
 
   useEffect(() => {
+    if (air) { setOnline(false); return }
     let alive = true
     const poll = async () => {
       try {
@@ -78,12 +81,12 @@ export function RequestBar() {
     void poll()
     const id = setInterval(poll, 3000)
     return () => { alive = false; clearInterval(id) }
-  }, [])
+  }, [air])
 
   const submit = async (e: { preventDefault(): void }) => {
     e.preventDefault()
     const t = text.trim()
-    if (!t || sending) return
+    if (!t || sending || !online || useAirplane.getState().on) return
     setSending(true)
     const who = useProfile.getState().active
     try {
@@ -108,12 +111,12 @@ export function RequestBar() {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Got an idea? Type a feature request and hit Enter. Claude gets it live."
+          placeholder={air ? 'Airplane is on. Ideas stay here.' : online ? 'Got an idea? Type a feature request and hit Enter. Claude gets it live.' : 'The ideas inbox is offline. Your idea stays here until it is back.'}
           maxLength={500}
         />
-        <button disabled={!text.trim() || sending}>Send</button>
+        <button disabled={air || !online || !text.trim() || sending}>Send</button>
       </form>
-      {!online && <div className="rq-off">Request inbox is offline right now.</div>}
+      {air ? <div className="rq-off">Airplane is on. Ideas stay on this computer.</div> : !online && <div className="rq-off">Request inbox is offline right now.</div>}
       {recent.length > 0 && (
         <ul className="rq-list">
           {recent.map((r) => (

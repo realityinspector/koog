@@ -30,7 +30,7 @@ function BoostConfirm({ onYes, onNo }: { onYes: () => void; onNo: () => void }) 
     </div>, document.body)
 }
 
-/** Top-strip sound controls: mute, volume (inline when wide, popover otherwise), Computer sound ON/OFF switch. */
+/** Top-strip sound controls: mute, volume (inline when wide, popover otherwise), Audio ON/OFF switch. */
 export function AudioControls() {
   const volume = useAudioSettings((s) => s.volume)
   const muted = useAudioSettings((s) => s.muted)
@@ -82,7 +82,7 @@ export function AudioControls() {
       {ask && <BoostConfirm onYes={() => { setAsk(false); setBoost(true) }} onNo={() => setAsk(false)} />}
       <div className="kg-audio-vol">
         <button type="button" className={'kg-audio-btn' + (muted ? ' off' : '')} onClick={speaker}
-          aria-label={wide ? 'Mute' : 'Volume'} aria-pressed={wide ? muted : undefined}
+          aria-label={wide ? (muted ? 'Unmute' : 'Mute') : 'Volume'} aria-pressed={wide ? muted : undefined}
           aria-expanded={wide ? undefined : pop} title={wide ? (muted ? 'Unmute' : 'Mute') : 'Volume'}>
           {icon}
         </button>
@@ -96,17 +96,17 @@ export function AudioControls() {
             {badge}
             {boostBtn}
             <button type="button" className="kg-audio-mute" aria-pressed={muted} onClick={() => { setMuted(!muted); if (muted) void unlockAudio() }}>
-              <span aria-hidden>{muted ? '🔇' : '🔊'}</span> Mute
+              <span aria-hidden>{muted ? '🔇' : '🔊'}</span> {muted ? 'Unmute' : 'Mute'}
             </button>
           </div>
         )}
       </div>
       {/* the web demo has no USB keyboards, so this switch would do nothing there */}
       {!isWebDemo() && <button type="button" role="switch" aria-checked={computer} className={'kg-audio-sw' + (computer ? ' on' : '')}
-        title="Play your keyboard through the speakers. ON: the notes you play come out of the computer (the Koog synth, or the emulator you have open). OFF: only your keyboard's own sound."
+        title="Play your keyboard through the speakers. On: the notes you play come out of the speakers. Off: only your keyboard's own sound."
         onClick={() => { const next = !computer; if (next) void unlockAudio(); setComputerSound(next) }}>
         <span className="kg-audio-track" aria-hidden="true"><span className="kg-audio-knob" /></span>
-        <span className="kg-audio-label">Computer sound <b>{computer ? 'ON' : 'OFF'}</b></span>
+        <span className="kg-audio-label">Audio <b>{computer ? 'ON' : 'OFF'}</b></span>
       </button>}
     </div>
   )

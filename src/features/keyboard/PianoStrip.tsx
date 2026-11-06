@@ -15,10 +15,7 @@ import './keyboard.css'
 const push = (ev: { note: number; velocity: number; on: boolean }) => playLocal(ev.note, ev.velocity, ev.on)
 
 function loadRange(): [number, number] {
-  try {
-    const r = JSON.parse(localStorage.getItem('koog.kb.range') || 'null')
-    if (Array.isArray(r) && Number.isFinite(r[0]) && Number.isFinite(r[1])) return snapRange(Math.min(r[0], 48), Math.max(r[1], 84))
-  } catch { /* ignore */ }
+  // a wider range used to be saved, so one high note left every key tiny the next time
   return [48, 84]
 }
 function loadNames(): boolean {
@@ -125,9 +122,7 @@ export function PianoStrip() {
         setHeld((h) => (h.has(e.note) ? h : new Set(h).add(e.note)))
         setRange((r) => {
           if (e.note >= r[0] && e.note <= r[1]) return r
-          const nr = snapRange(Math.min(r[0], e.note), Math.max(r[1], e.note))
-          try { localStorage.setItem('koog.kb.range', JSON.stringify(nr)) } catch { /* ignore */ }
-          return nr
+          return snapRange(Math.min(r[0], e.note), Math.max(r[1], e.note))
         })
         const now = performance.now()
         if (judge(e.note) === 'out' && now - lastFlash.current >= 334) {
@@ -171,14 +166,15 @@ export function PianoStrip() {
 
   return (
     <section className="kb">
-      {!played && !midiConnected && <div className="kb-nudge" role="note">No keyboard? Click the keys or press Z S X D C V…</div>}
+      {!played && !midiConnected && <div className="kb-nudge" role="note">{keysOn ? 'No keyboard? Click the keys or press Z S X D C V…' : 'No keyboard? Click the keys, or turn on Keys play notes.'}</div>}
       <div className="kb-top">
         <div className={'kb-chord' + (chord ? ' on' : '')} aria-live="polite">{shownChord ?? ' '}</div>
       </div>
       <div className="kb-opts">
-        <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing. While it is on, M plays the note B, so Shift+M flips the metronome; with it off, plain M flips the metronome.">
+        <label className="kb-toggle" title="When on, the computer keyboard plays notes (Z S X D C… and Q 2 W 3 E…). Turn off to use the keyboard for typing and tabbing. M plays the note B; Shift+M flips the metronome.">
           <input type="checkbox" checked={keysOn} onChange={() => setTypingOn(!keysOn)} /> Keys play notes
         </label>
+        {keysOn && <span className="kb-oct" aria-live="polite">Octave {shift > 0 ? '+1' : shift < 0 ? '−1' : '0'}</span>}
         <label className="kb-toggle">
           <input type="checkbox" checked={typing} onChange={toggleTyping} /> Show computer keys
         </label>

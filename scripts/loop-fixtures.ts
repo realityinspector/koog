@@ -203,13 +203,13 @@ eq('timestamp 0 (synthetic) falls back to now', noteTime(0, 1000), 1000)
 
 // ---- the M key ----
 const key = (o: Partial<{ code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean }>) => ({ code: 'KeyM', shiftKey: false, ctrlKey: false, metaKey: false, altKey: false, repeat: false, ...o })
-eq('M with Keys-play-notes off toggles', isMetronomeKey(key({}), false), true)
-eq('Shift+M with Keys-play-notes off toggles', isMetronomeKey(key({ shiftKey: true }), false), true)
-eq('plain M with Keys-play-notes on stays the note B', isMetronomeKey(key({}), true), false)
-eq('Shift+M with Keys-play-notes on toggles', isMetronomeKey(key({ shiftKey: true }), true), true)
-eq('Ctrl+M never toggles', isMetronomeKey(key({ ctrlKey: true }), false), false)
-eq('a held (repeating) M toggles once', isMetronomeKey(key({ repeat: true }), false), false)
-eq('another key never toggles', isMetronomeKey(key({ code: 'KeyN' }), false), false)
+eq('plain M never toggles the metronome (it is the note B)', isMetronomeKey(key({})), false)
+eq('Shift+M toggles, everywhere', isMetronomeKey(key({ shiftKey: true })), true)
+eq('Ctrl+Shift+M never toggles', isMetronomeKey(key({ ctrlKey: true, shiftKey: true })), false)
+eq('Cmd+Shift+M never toggles', isMetronomeKey(key({ metaKey: true, shiftKey: true })), false)
+eq('Alt+Shift+M never toggles', isMetronomeKey(key({ altKey: true, shiftKey: true })), false)
+eq('a held (repeating) Shift+M toggles once', isMetronomeKey(key({ repeat: true, shiftKey: true })), false)
+eq('another key never toggles', isMetronomeKey(key({ code: 'KeyN', shiftKey: true })), false)
 
 // ---- timing science round: grace in time, stop-press lead, seam, tap tempo, drift ----
 eq('grace is 0.25 beat at 120 bpm', graceBeats(500), 0.25)

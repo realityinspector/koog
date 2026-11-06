@@ -66,9 +66,10 @@ export function recallScene(i: number) {
   return true
 }
 
+hot?.off?.()
+// outside the hot block: registered only under HMR before, so a production build never reloaded scenes for the next player
+const off = onProfileChange(() => useScenes.setState({ scenes: load(), last: null }), 'scenes')
 if (import.meta.hot) {
-  hot!.off?.()
-  const off = onProfileChange(() => useScenes.setState({ scenes: load(), last: null }))
   import.meta.hot.data.store = useScenes; import.meta.hot.data.off = off
   import.meta.hot.accept()
 }

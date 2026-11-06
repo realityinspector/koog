@@ -7,7 +7,7 @@ import { SONGS, TIER_LABEL, hasLyrics, type Song, type Tier } from './songs'
 import { HOLIDAY_ORDER, SEASON_LABEL, type Season } from './holidaySongs'
 import { MySongs } from './MySongs'
 import { loadMine, saveMine } from './recording'
-import { pload, psave } from '../../profile/profile'
+import { pload, ploadShared, psave } from '../../profile/profile'
 import { celebrate } from '../celebrate/celebrate'
 import { startBacking, stopBacking } from '../beats/engine'
 import { syncSongScore } from '../sheet/songSync'
@@ -37,7 +37,8 @@ const GROOVE_FOR: Record<string, string> = {
   'pop-dance': 'disco', 'pop-spooky': 'boombap', 'pop-hyper': 'sprint',
 }
 function loadBeat(): Record<string, boolean> {
-  try { const v = JSON.parse(localStorage.getItem(BEAT_KEY) ?? '{}'); return v && typeof v === 'object' ? v : {} } catch { return {} }
+  const v = ploadShared<Record<string, boolean> | null>('songs.beat', BEAT_KEY, {}) // per player now (was one key for the whole computer)
+  return v && typeof v === 'object' ? v : {}
 }
 const LYR_KEY = 'koog.songs.lyrics'
 function loadLy(): boolean {
@@ -184,7 +185,7 @@ export function SongsPanel() {
     if (!song) return
     const n = { ...beatPref, [song.tier]: on }
     setBeatPref(n)
-    try { localStorage.setItem(BEAT_KEY, JSON.stringify(n)) } catch { /* ignore */ }
+    psave('songs.beat', n)
   }
   const beatOnRef = useRef(beatOn)
   beatOnRef.current = beatOn
@@ -461,6 +462,9 @@ export function SongsPanel() {
     return fresh ? { ...fresh, why: 'A great one to start with' } : null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [songId, learn])
+  const songRow = song ? rows.find((r) => (song.season ? r.id === 'holiday' : r.tiers.includes(song.tier))) : undefined
+  const songList = songRow ? listFor(songRow) : []
+  const nextSong = song ? songList[songList.findIndex((s) => s.id === song.id) + 1] : undefined
   const cardFor = (s: Song, extra = '') => {
     const pr = songProgress(s.id, s.notes, s.beatsPerBar), d = diffOf(s)
     return (
@@ -487,8 +491,8 @@ export function SongsPanel() {
           <div className="bar">
             <button className="btn-ghost" onClick={() => setSongId(null)}>← All songs</button>
             <span className="seg" role="group" aria-label="How the song moves">
-              <button className={mode === 'wait' ? 'on' : ''} aria-pressed={mode === 'wait'} title="The notes wait for you" onClick={() => setMode('wait')}>Wait</button>
-              <button className={mode === 'flow' ? 'on' : ''} aria-pressed={mode === 'flow'} title="Keep going with the beat" onClick={() => setMode('flow')}>Flow</button>
+              <button className={mode === 'wait' ? 'on' : ''} aria-pressed={mode === 'wait'} disabled={phase === 'playing' || phase === 'listening'} title={phase === 'playing' || phase === 'listening' ? 'Restart the song to switch how it moves' : 'The notes wait for you'} onClick={() => setMode('wait')}>Wait</button>
+              <button className={mode === 'flow' ? 'on' : ''} aria-pressed={mode === 'flow'} disabled={phase === 'playing' || phase === 'listening'} title={phase === 'playing' || phase === 'listening' ? 'Restart the song to switch how it moves' : 'Keep going with the beat'} onClick={() => setMode('flow')}>Flow</button>
             </span>
             <button className="btn-ghost" onClick={() => { reset(); setLearn(true) }} title="Learn it a few notes at a time">🧠 Learn it</button>
             <span className="seg" role="group" aria-label="Sheet level">
@@ -540,6 +544,7 @@ export function SongsPanel() {
                 {result.lh && <div>Left hand <b>{result.lh.hits}/{result.lh.total}</b> chord notes</div>}
                 <div>Score <b>{result.score}</b> · Accuracy <b>{Math.round(result.acc * 100)}%</b> · <span className="gold">{result.best ? 'New personal best!' : curBest ? `Best ${curBest.score}` : 'First score on the board.'}</span></div>
                 <div className="bar c">
+                  {nextSong && <button className="btn" onClick={() => setSongId(nextSong.id)}>Next song</button>}
                   <button className="btn" onClick={start}>Again</button>
                   <button className="btn-ghost" onClick={() => setSongId(null)}>Pick another</button>
                 </div>

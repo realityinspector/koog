@@ -37,7 +37,7 @@ import { canonSoundId } from '../synth-history/emu/aliases'
 import { liveEngines, onEmuSet } from '../synth-history/emu/bus'
 import { SOUNDS } from '../devices/soundChoice'
 import { dispatch, onPad } from '../dj/engine'
-import { beatPos, getBpm, isRunning, msPerBeat, onBeat, onTick, realign, resetPhase, setBpm, startMaster, stopMaster, timeOfBeat, useMaster } from '../../music/masterClock'
+import { beatPos, getBpm, isRunning, msPerBeat, onBeat, onTick, realign, resetPhase, setBpm, startMaster, stopMasterUnlessHeld, timeOfBeat, useMaster } from '../../music/masterClock'
 import { onProfileChange, pload, psave } from '../../profile/profile'
 import { clearScore, setScore } from '../../music/scoreStore'
 import { writeMidi, type MidiTrack } from './midiFile'
@@ -185,7 +185,7 @@ export function setMetronomeOn(on: boolean) {
     if (!isRunning()) { startMaster(); E.metroClock = true }
   } else {
     setOpt('metro', false)
-    if (E.metroClock) { E.metroClock = false; if (E.running) E.ownMaster = true; else stopMaster() }
+    if (E.metroClock) { E.metroClock = false; if (E.running) E.ownMaster = true; else stopMasterUnlessHeld() }
   }
 }
 /** the M key: flip the metronome and say so (a small toast) */
@@ -347,7 +347,7 @@ function startPlaying(L: Layer, at: number) {
 function releaseMaster() {
   E.ownMaster = false
   if (S().metro) E.metroClock = true
-  else stopMaster()
+  else stopMasterUnlessHeld() // (the drums / Kode / racer may hold the clock too: state-audit)
 }
 
 function ensureTransport(countBars: number) {
@@ -825,7 +825,12 @@ export function bigProgress(): number {
 }
 /** a loop station panel on screen (the pedal's "automatic" choice works the looper while one is visible) */
 export function registerLooperView(el: HTMLElement) { E.views.add(el); return () => { E.views.delete(el) } }
-export const isLooperOpen = () => [...E.views].some((el) => el.isConnected && el.getClientRects().length > 0)
+export const isLooperOpen = () => [...E.views].some((el) => {
+  if (!el.isConnected || el.getClientRects().length === 0) return false
+  // display:none is caught above; also treat visibility:hidden / content-visibility as closed (a panel parked off-screen is not "open")
+  const cv = (el as HTMLElement & { checkVisibility?: (o?: object) => boolean }).checkVisibility
+  return cv ? cv.call(el, { visibilityProperty: true, contentVisibilityAuto: true }) : true
+})
 
 export function toggleMute(i: number) { E.layers[i].mute = !E.layers[i].mute; if (E.layers[i].mute) quietLayer(i); commit() }
 export function toggleSolo(i: number) { E.layers[i].solo = !E.layers[i].solo; for (let k = 0; k < LAYERS; k++) if (!audible(k)) quietLayer(k); commit() }
