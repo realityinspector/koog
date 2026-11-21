@@ -502,7 +502,7 @@ export const entries: Entry[] = [
     time: 'Day',
     stage: 'ship',
     title: "🔁 A tighter looper, a pedal that just works, and Boost",
-    body: "Your loop is only as tight as the clock that runs it. Timers on a web page slow down whenever the page is busy, so the looper clock now lives in a background helper called a Web Worker, and recordings use the exact moment you pressed each key. The pedal runs the looper the simple way: one tap records, one tap loops, two taps stop, hold to clear. Press M (Shift+M when the computer keys play notes) for the metronome anywhere. And 🔊 Boost makes quiet laptop speakers louder, asks you twice, and switches itself off after an hour to protect ears.",
+    body: "Your loop is only as tight as the clock that runs it. Timers on a web page slow down whenever the page is busy, so the looper clock now lives in a background helper called a Web Worker, and recordings use the exact moment you pressed each key. The pedal runs the looper the simple way: one tap records, one tap loops, two taps stop, hold to clear. Press Shift+M for the metronome anywhere. And 🔊 Boost makes quiet laptop speakers louder, asks you twice, and switches itself off after an hour to protect ears.",
   },
   {
     id: 72,
@@ -594,5 +594,26 @@ export const entries: Entry[] = [
     stage: 'ship',
     title: "⏱ A stopwatch for grown-ups",
     body: "Koog now has a secret stopwatch for grown-ups: it times every frame and the gap between pressing a key and hearing it. Under about 10 milliseconds feels instant, and each picture on screen only gets 16 milliseconds to be drawn at 60 frames a second.",
+  },
+  {
+    id: 85,
+    time: 'Day',
+    stage: 'ship',
+    title: '👽 The Agentic Koog Alien',
+    body: 'The Koog Alien stays with you now. Its name is the Agentic Koog Alien. It brings Koogalien, and it takes care of the KOOG. Type a word and it turns the word into notes. A new word gets its own chord while a free one is left. After that, Koogalien spells the word, and the alien still remembers it. When you play a song it knows, it keeps that song. A tune you make up gets a name. It watches which part of KOOG you are in and talks about that place. It also keeps learning while you do something else: it tries one new thing, then checks its integrity, its coherence, and its integrity again. A try that does not agree is let go. The notebook stays on this computer. You can empty it.',
+  },
+  {
+    id: 86,
+    time: 'Day',
+    stage: 'ship',
+    title: '🥚 More secret songs',
+    body: 'The dancer learned more playground songs. Row, Row, Row Your Boat puts him in a boat. Mary Had a Little Lamb gives him woolly ears. London Bridge, Frère Jacques, Old MacDonald, Yankee Doodle, and more each have their own costume. He still hears the jumps between the notes, so any key works. Tap Eggs to see the new ones.',
+  },
+  {
+    id: 87,
+    time: 'Day',
+    stage: 'ship',
+    title: '🤓 D-A-D, and a synth history show',
+    body: 'Play the notes D, then A, then D, one at a time, and the dancer turns into a super nerd: taped-up glasses, a pocket full of pens, a bow tie and his very own synthesizer. He says "Synthesizers are awesome!" and bounces. There is also a new Present tab on the Synth page. It walks through the history of synthesizers one slide at a time, with photos of the chips and processors inside. Kid view shows one simple line per slide. Press T, or tap the Technical button, to add the grown-up details. Then take one of three quizzes about chips, about what Bob Moog built alone versus with Kurzweil, and about who came first. You can even load your own slides from a small file.',
   },
 ]

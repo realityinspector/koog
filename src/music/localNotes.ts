@@ -160,9 +160,9 @@ function releaseMidi() {
 st.off?.()
 // Sticky user activation (any click/key on the page so far) lets MIDI notes start audio too.
 const hasActivation = () => (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive === true
-// MIDI plays through the computer when SYNTHESIZER is ON, or whenever an instrument was picked on purpose
-// (an emulator panel is open, or a 🎹 Sound was chosen): picking one means "I want to hear THIS".
-const midiThrough = () => useAudioSettings.getState().computerSound || getActiveInstrument() != null || useZones.getState().mode !== 'single'
+// A plugged-in keyboard plays through the computer only while Computer sound is ON.
+// On-screen keys and the computer keyboard use playLocal and ignore this switch.
+const midiThrough = () => useAudioSettings.getState().computerSound
 const offNote = onNote((e) => {
   if (isLocalNote(e)) return
   if (e.id === st.fast) return // connection.ts already sounded this one before the store update
@@ -176,7 +176,7 @@ const offInst = onInstrumentChange(releaseStale)
 const offZones = onZonesRelease(releaseAllNotes)
 const onBlur = () => releaseAllNotes()
 window.addEventListener('blur', onBlur)
-const offSet = useAudioSettings.subscribe((s, prev) => { if (prev.computerSound && !s.computerSound && !getActiveInstrument() && useZones.getState().mode === 'single') releaseMidi() })
+const offSet = useAudioSettings.subscribe((s, prev) => { if (prev.computerSound && !s.computerSound) releaseMidi() })
 const getSynthReadyNow = () => synthTarget.ready() && currentTarget().ready()
 // Any click or key wakes the current instrument's audio, so the first MIDI note after it already sounds.
 const wake = () => { if (getSynthReadyNow() && !zonesActive()) return; void unlockHost().catch(() => {}); void currentTarget().unlock().catch(() => {}); void unlockZones().catch(() => {}) }

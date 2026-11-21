@@ -5,7 +5,7 @@
 //   useMyLoop()      turn the looper layers and the drum pattern into Kode lines.
 // State lives in import.meta.hot.data so editing this file never stops the music.
 import { create } from 'zustand'
-import { beatPos, getBpm, isRunning, onTick, setBpm, startMaster, stopMaster, timeOfBeat, useMaster } from '../../music/masterClock'
+import { acquireClock, beatPos, getBpm, onTick, releaseClock, setBpm, timeOfBeat, useMaster } from '../../music/masterClock'
 import { registerPanicTarget } from '../../music/panic'
 import { unlockHost } from '../../audio/host'
 import { getBeat } from '../dj/clock'
@@ -90,7 +90,7 @@ function tickOnce() {
   if (!E.runner.isPlaying() && s.running) endRun()
 }
 function endRun() {
-  if (E.startedClock && !loopsRunning() && !getBeat().playing && !drumsRunning()) stopMaster()
+  releaseClock('kode', loopsRunning() || getBeat().playing || drumsRunning())
   E.startedClock = false
   set({ running: false, waitingBar: null, playingText: null, layers: 0 })
 }
@@ -112,7 +112,7 @@ export function run(text = get().text): number | null {
   if (plays.length) { markConcept('function'); if (plays.some((l) => l.motif!.shift !== 0 || l.motif!.speed !== 1)) markConcept('parameter') }
   void unlockHost()
   E.sink.warm(prog.layers.map((l) => l.sound))
-  if (!isRunning()) { startMaster(); E.startedClock = true }
+  acquireClock('kode')
   wire()
   const wasPlaying = E.runner.isPlaying()
   const bar = E.runner.run(prog, performance.now())

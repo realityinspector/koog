@@ -355,14 +355,17 @@ export function eraScore(l: Look): number {
   const era = eraById(l.era)
   let filled = 0, sigs = 0
   CATS.forEach((c, i) => { const idx = l.items[i]; if (idx > 0) { filled++; if (era.items[c][idx - 1]?.sig) sigs++ } })
-  return 0.3 + 0.5 * (filled / 5) + 0.2 * (sigs / 5)
+  // a plain starter scores 0. Signature pieces count more than a filled slot.
+  if (!filled) return 0
+  return (0.55 * filled + 0.45 * sigs) / 5
 }
 export interface Scores { style: number; rhythm: number; harmony: number; era: number; pal: number }
 export function computeScores(l: Look, st: RunStats, key: Key): Scores {
   const era = eraScore(l)
   const pal = palMatch(l.pal, key)
-  const style = Math.min(1, 0.55 * era + 0.45 * pal + Math.min(0.1, st.cadences * 0.04 + st.motifs * 0.03) + Math.min(0.08, (st.lhOn ?? 0) * 0.01))
-  const rhythm = st.rhythmN > 0 ? st.rhythmOn / st.rhythmN : 0.6
+  // clothes weigh more than the palette, so a plain outfit cannot outscore a dressed one
+  const style = Math.min(1, 0.72 * era + 0.28 * pal + Math.min(0.08, st.cadences * 0.04 + st.motifs * 0.03) + Math.min(0.06, (st.lhOn ?? 0) * 0.01))
+  const rhythm = st.rhythmN > 0 ? st.rhythmOn / st.rhythmN : 0.5
   const harmony = st.allNotes > 0 ? st.inKey / st.allNotes : 0.6
   return { style, rhythm, harmony, era, pal }
 }
@@ -373,22 +376,37 @@ export interface JudgeSay { who: 'STYLE' | 'RHYTHM' | 'HARMONY'; name: string; s
 export function judgeSay(l: Look, st: RunStats, key: Key, sc: Scores): JudgeSay[] {
   const era = eraById(l.era)
   const c = palColors(l.pal)
-  const sigItem = CATS.map((cat, i) => (l.items[i] > 0 && era.items[cat][l.items[i] - 1]?.sig ? era.items[cat][l.items[i] - 1] : null)).find(Boolean)
+  const worn = CATS.map((cat, i) => (l.items[i] > 0 ? era.items[cat][l.items[i] - 1] : null)).filter((x): x is Item => !!x)
+  const sigs = worn.filter((it) => it.sig)
   const blank = CATS.findIndex((_, i) => l.items[i] === 0)
-  // STYLE
-  const eraLine = sigItem ? `${sigItem.name} says ${era.name} loud and clear!` : `Nice mix of ${era.name} pieces!`
+  // STYLE — only claim the era when the clothes actually worn say it
+  const eraLine = sigs.length >= 4 ? `${sigs[0].name} says ${era.name} loud and clear!`
+    : sigs.length >= 2 ? `${sigs[0].name} and other ${era.name} pieces are in this look.`
+    : sigs.length === 1 ? `${sigs[0].name} is a real ${era.name} piece. The rest is still mostly plain.`
+    : worn.length >= 3 ? `Nice mix of ${era.name} pieces!`
+    : worn.length > 0 ? `A little ${era.name} is showing. Most of the outfit is still the plain starter.`
+    : `This is still the plain starter. It does not say ${era.name} yet.`
   const palLine = c.mood === 'moody' ? 'Love that minor-key palette, so moody and deep!' : c.mood === 'dreamy' ? 'Those dreamy pastel colours float like a maj7 chord!' : c.mood === 'bright' ? 'Those bright major colours are pure sunshine!' : `That ${c.mood} palette is a bold choice!`
   const styleTip = sc.pal < 0.8 ? `Try colours from ${PC_NAMES[key.tonic]}, the home chord, or its neighbours on the wheel to match the music.`
     : blank >= 0 ? `Try adding a ${CAT_INFO[CATS[blank]].label.toLowerCase().replace(/s$/, '')} piece to complete the ${era.name} look!` : 'Try the other era pieces next time for a brand new look!'
   const styleSay = sc.pal >= 0.9 ? `${eraLine} ${palLine} And your colours match the song's home key.` : `${eraLine} ${palLine}`
   // RHYTHM
   const rhy = sc.rhythm
-  const rSay = rhy >= 0.8 ? 'Steady as a metronome! Your model landed every step right on the beat.' : rhy >= 0.55 ? 'A lovely, confident strut. Most steps landed right on the beat!' : st.hits >= 4 ? 'You kept going and finished the whole walk. That takes real nerve!' : 'You stepped out onto the runway. Brave start!'
-  const rTip = rhy >= 0.8 ? 'Try a faster piece next for an even bigger challenge!' : 'Try counting 1-2-3-4 out loud and step on each number.'
+  const untimed = st.rhythmN === 0
+  const rSay = untimed ? 'This walk did not time your steps. You still finished it!'
+    : rhy >= 0.95 ? 'Steady as a metronome! Your steps matched the tune.'
+    : rhy >= 0.8 ? 'Most steps matched the long and short notes of the tune.'
+    : rhy >= 0.55 ? 'Some steps matched the tune. Others rushed or waited.'
+    : st.hits >= 4 ? 'You finished the walk, but the steps were not on the beat of the tune.'
+    : 'You stepped out onto the runway. Brave start!'
+  const rTip = untimed ? 'Match the pulse on a runway walk. This one was about remembering the notes.'
+    : rhy >= 0.8 ? 'Try a faster piece next for an even bigger challenge!'
+    : 'Give the long notes more time than the short ones. Follow the pulse.'
   // HARMONY
   const hm = sc.harmony
-  const hSay = hm >= 0.92 ? 'Every note belonged to the key. So smooth and clean!' : hm >= 0.7 ? 'Almost every note fit the key. Great ear!' : 'You found lots of notes that fit the key, and you kept playing. Nice recovery!'
-  const hTip = st.homeFinish ? 'That last note landed on the home key, a perfect finish pose!' : 'Try landing the last note on the home key for a big finish pose!'
+  const hSay = hm >= 0.92 ? 'Every note belonged to the key. So smooth and clean!' : hm >= 0.7 ? 'Almost every note fit the key. Great ear!' : 'Some notes stepped outside the key. You still finished the song.'
+  // the walk only accepts the written notes, so a miss here means the tune itself does not end at home
+  const hTip = st.homeFinish ? 'That last note is the home note. A real finish pose!' : 'You played the last note as written. This part of the tune does not end on the home note.'
   return [
     { who: 'STYLE', name: 'Ms. Sparkle', stars: starsOf(sc.style), say: styleSay, tip: styleTip },
     { who: 'RHYTHM', name: 'Mr. Tempo', stars: starsOf(sc.rhythm), say: rSay, tip: rTip },

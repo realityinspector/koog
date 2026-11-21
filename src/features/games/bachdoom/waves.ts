@@ -73,6 +73,8 @@ export class WaveRun {
   private shadow: { cancel(): void } | null = null
   private regroupEnd = 0
   private pulsed = 0
+  /** last time we said the swoop has not started (a press then does not count, and must say so) */
+  private leadPop = -9
   private unsubView: (() => void) | null = null
   private kinds: Demon['kind'][] = []
   private tmp = { x: 0, y: 0 }
@@ -90,7 +92,7 @@ export class WaveRun {
     this.stop()
     this.token++
     this.state = 'idle'; this.fds = []; this.wi = 0; this.extra = 0; this.breaks = 0; this.totalBreaks = 0; this.chain = 0
-    this.lastNow = 0
+    this.lastNow = 0; this.leadPop = -9
   }
   /** leave: stop the engine's demo/attempt and drop the guide */
   stop() {
@@ -195,7 +197,9 @@ export class WaveRun {
     let want: number | null = null
     if (c) {
       const mode = this.rungCfg.guide
-      if (mode === 'lit' || this.breaks >= 2) want = c.note
+      // a lit key means the note counts. Lighting it during the lead-in made a press do nothing.
+      const live = now >= c.due - this.L - 120
+      if (live && (mode === 'lit' || this.breaks >= 2)) want = c.note
       else if (mode === 'flash' && now >= c.due - this.L - 100 && now < c.due - this.L + 520) want = c.note
     }
     const cur = useGuide.getState().targets
@@ -287,7 +291,11 @@ export class WaveRun {
       return
     }
     if (gr.chordMember) return
-    if (now < c.due - this.L - 120) return // before its dive began: not part of this phrase
+    if (now < c.due - this.L - 120) {
+      // the banner already says "now you", so a press here has to answer instead of vanishing
+      if (g.clock - this.leadPop > 0.9) { this.leadPop = g.clock; g.addPop('WAIT FOR THE SWOOP', '#ffd76c', true, undefined, 0.22) }
+      return
+    }
     const dt = now - c.due
     const ok = g.diff === 'story' ? pc(gr.note) === pc(exp) : gr.note === exp
     if (!ok) {
@@ -388,12 +396,13 @@ export class WaveRun {
     this.chain++
     const allPerfect = this.fds.every((f) => f.perfect)
     const bonus = Math.min(30, 6 * this.chain) * (allPerfect ? 2 : 1)
-    g.harmony = Math.min(100, g.harmony + bonus)
+    const gain = Math.min(bonus, 100 - g.harmony)
+    g.harmony += gain
     g.armor = Math.min(100, g.armor + 12)
     g.faceGrinT = 2.2; g.killT = 0.3
     if (!g.reduced) g.kickT = 0.12
-    g.addPop('PHRASE PERFECT!', '#ffd76c', true, undefined, 0.5)
-    g.addPop('CHAIN x' + this.chain + (allPerfect ? '  ALL ON THE BEAT!' : '') + '  +' + bonus + ' HARMONY', '#7cf0a0', false, undefined, 0.62)
+    g.addPop(allPerfect ? 'PHRASE PERFECT!' : 'CLEAN PHRASE!', '#ffd76c', true, undefined, 0.5)
+    g.addPop('CHAIN x' + this.chain + (allPerfect ? '  ALL ON THE BEAT!' : '') + (gain ? '  +' + gain + ' HARMONY' : '  HARMONY IS FULL'), '#7cf0a0', false, undefined, 0.62)
     // the empty formation shatters into golden notes
     const r = g.room
     for (const f of this.fds) {

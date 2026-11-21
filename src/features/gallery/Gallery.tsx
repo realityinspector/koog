@@ -1,9 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { ROOMS, STOPS } from './stops.data'
-import { again, exitGallery, jump, minutes, next, pick, piecesFor, prev, startArt, startGallery, toggle, tourInstead, useGallery } from './runner'
+import { again, exitGallery, jump, minutes, next, pick, pieceVoice, piecesFor, prev, startArt, startGallery, stopVoice, toggle, tourInstead, useGallery } from './runner'
 import { findSong, SEASONS } from './holiday'
 import { SeasonCanvas } from './Season'
+import { SOUNDS } from '../devices/soundChoice'
+import { PRESETS } from '../synth-history/presets'
 import './gallery.css'
+
+/** Kid-facing line for the picture's synth: the type, then the setting. */
+function voiceCaption(v: { sound: string; preset?: string } | null): string | null {
+  if (!v) return null
+  const s = SOUNDS.find((x) => x.id === v.sound)
+  const type = s?.label ?? 'Koog synth'
+  const setting = v.sound === 'koog'
+    ? (v.preset && v.preset !== 'classic' ? PRESETS.find((p) => p.id === v.preset)?.name ?? 'Classic' : 'Classic')
+    : (v.preset ?? s?.preset ?? null)
+  return setting ? `${type} · ${setting}` : type
+}
 
 /** The gallery's face: title card, museum label, control bar, soft veil between stops. Sits over the display; the app underneath keeps running. */
 export function Gallery() {
@@ -27,6 +40,7 @@ export function Gallery() {
   if (art && phase !== 'title') return <ArtFrame />
   const s = STOPS[idx]
   const roomN = ROOMS.indexOf(s.room) + 1
+  const heard = voiceCaption(stopVoice(s))
   const live = phase === 'run' || phase === 'paused' || phase === 'taken'
   return (
     <div ref={root} className="gl-root" data-phase={phase} role="region" aria-label="Koog gallery">
@@ -76,6 +90,7 @@ export function Gallery() {
             <div className="gl-room">{s.room} room</div>
             <h3>{s.title}</h3>
             <p>{s.says}</p>
+            {heard && <p className="gl-sound"><b>Sound:</b> {heard}</p>}
             <p className="gl-learn"><b>You learn:</b> {s.learns}</p>
             {s.link && <p><a href={s.link.href} target="_blank" rel="noreferrer">{s.link.label}</a></p>}
             {phase !== 'run' && <p className="gl-hold" role="status">{phase === 'taken' ? "You're playing! Press Space to resume the gallery." : 'Paused. Press Space to resume.'}</p>}
@@ -110,6 +125,7 @@ const credit = (id?: string) => {
 function ArtFrame() {
   const { phase, veil, piece, pieceMs, pieceAt, kind, ducked } = useGallery()
   const music = piece?.perf?.k === 'song' ? credit(piece.perf.id) : null
+  const heard = voiceCaption(piece ? pieceVoice(piece) : null)
   const [keys, setKeys] = useState(false)
   useEffect(() => { document.documentElement.toggleAttribute('data-art-keys', keys); return () => document.documentElement.removeAttribute('data-art-keys') }, [keys])
   const list = piecesFor(kind)
@@ -126,6 +142,7 @@ function ArtFrame() {
           <div className="gl-wall-room">{piece.season ? SEASONS[piece.season].button : piece.room + ' room'}</div>
           <h3>{piece.title}</h3>
           <p>{piece.line}</p>
+          {heard && <p className="gl-sound">Sound: {heard}</p>}
           {music && <p className="gl-wall-credit">{music}</p>}
         </figure>
       )}

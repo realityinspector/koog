@@ -15,7 +15,7 @@ const TIPS: Record<TipId, [string, string]> = {
   resolve: ['✨ Release!', '✨ Tension → release! An out-of-key note that steps back into the key is how songs get exciting.'],
   cadence: ['🏁 Cadence!', '🏁 Cadence! You ended on the home note. That\'s how music says "end of sentence".'],
   motif: ['🔁 Motif!', '🔁 Motif! You repeated a pattern. Beethoven built a whole symphony out of a four-note motif.'],
-  phrase: ['🧠 Memorize it?', '🧠 That\'s a phrase! Want to memorize it? Tap 🧠 in SONGS and we\'ll learn it one finger at a time.'],
+  phrase: ['🧠 Memorize it?', '🧠 That\'s a phrase! Want to memorize it? Open a song in SONGS and tap Learn it. We\'ll learn it one finger at a time.'],
   charged: ['⚡ BOOM ready!', '⚡ BOOM is charged! Now a forearm slam becomes a finale instead of a fizzle.'],
 }
 const LESSONS = 3 // full explanation this many times per kid, then just the short label

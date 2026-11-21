@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Pro Viz</string>
+	<key>CFBundleDisplayName</key>
+	<string>Pro Viz</string>
+	<key>CFBundleIdentifier</key>
+	<string>dev.koog.proviz</string>
+	<key>CFBundleExecutable</key>
+	<string>ProViz</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>KOOG Pro Viz listens for bass, mids, and treble so the picture can follow the mix.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>KOOG Pro Viz uses a camera as a live video layer.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>KOOG Pro Viz uses Bluetooth MIDI when the Mixtrack Go is connected wirelessly.</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.music</string>
+</dict>
+</plist>

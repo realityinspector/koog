@@ -11,8 +11,9 @@ import { useOnePop } from '../../ui/onePop'
 import { setLoopsDock, useLoopsDock } from '../loopstation/LoopsDock'
 import { setControllerPage } from '../loopstation/loopSurface'
 import { useDrumPage } from '../drumpads/drumSurface'
-import { setBoardOpen } from '../pedalboard/boardOpen'
+import { setBoardOpen, useBoardOpen } from '../pedalboard/boardOpen'
 import { setKodeDock, useKodeDock } from '../kode/kodeDock'
+import { setFamilyOpen, useFamily } from '../familyband/store'
 import { openStore } from '../appstore/storeState'
 import { STORE_NAME as storeName } from '../../kode/kore/brand'
 
@@ -36,6 +37,8 @@ export function ModesLauncher() {
   const looper = useLoopsDock((s) => s.open)
   const drums = useDrumPage((s) => s.on)
   const kode = useKodeDock((s) => s.open)
+  const board = useBoardOpen((s) => s.open)
+  const family = useFamily((s) => s.open)
 
   useEffect(() => {
     if (!open) return
@@ -51,8 +54,11 @@ export function ModesLauncher() {
     if (keep !== 'duo' && duo) useDuoOpen.getState().setOpen(false)
     if (keep !== 'mimic' && mimicOn) void mimic.toggle()
     if (keep !== 'band' && bandOn) void band.toggle()
+    if (keep !== 'family' && family) setFamilyOpen(false)
   }
   const play: CardDef[] = [
+    { id: 'family', icon: '🎶', name: 'Family Band', blurb: 'Sing along to classics and holiday songs. One person on the foot pedal, one on the wireless controller, plus a MIDI keyboard, a real piano, and a real guitar.', on: family,
+      toggle: () => { if (!family) offOthers('family'); setFamilyOpen(!family); setOpen(false) } },
     { id: 'duo', icon: '🎧', name: 'DJ + Piano', blurb: 'A friend DJs on two decks while you play. The DJ sets the beat and key.', on: duo,
       toggle: () => { if (!duo) offOthers('duo'); useDuoOpen.getState().setOpen(!duo); void ensure() } },
     { id: 'band', icon: '🤖', name: 'Band', blurb: 'A backing band that listens and plays along with you.', on: bandOn, toggle: () => { if (!bandOn) offOthers('band'); void band.toggle() } },
@@ -70,7 +76,7 @@ export function ModesLauncher() {
       toggle: () => { if (!drums) { setLoopsDock(false); setKodeDock(false) } setControllerPage(drums ? 'dj' : 'drums'); setOpen(false) } },
     { id: 'kode', icon: '🧑‍💻', name: 'Koog Kode', blurb: 'Code your music: type a pattern like notes "c e g e" and it plays. Or play something and Koog writes the code.', on: kode,
       toggle: () => { if (!kode) { setLoopsDock(false); setControllerPage('dj') } setKodeDock(!kode); setOpen(false) } },
-    { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: false, toggle: () => { setBoardOpen(true); setOpen(false) } },
+    { id: 'pedalboard', icon: '🦶', name: 'Pedalboard', blurb: 'Stomp Fuzz, Echo, Wobble and more on your sound, and use the piano pedals.', on: board, toggle: () => { setBoardOpen(!board); setOpen(false) } },
   ]
   const cards = [...play, ...make, ...helpers]
   const count = cards.filter((c) => c.on).length
@@ -85,7 +91,7 @@ export function ModesLauncher() {
   return (
     <div className="md-wrap" ref={box} data-modes-launcher onPointerDown={(e) => e.stopPropagation()}>
       <button data-tour="modes" className={'md-btn' + (open ? ' open' : '') + (count ? ' has' : '')} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}
-        title="Modes: DJ + Piano, Band, Mimic, Looper, Drum pads, Koog Kode, Mentor and Vibes">
+        title="Modes: Family Band, DJ + Piano, Band, Mimic, Looper, Drum pads, Koog Kode, Pedalboard, Mentor and Vibes">
         <Icon name="spark" /><b>Modes</b>
         <span className="md-dots" aria-label={count + ' on'}>
           {cards.map((c) => <i key={c.id} className={c.on ? 'on' : ''} />)}
@@ -101,7 +107,7 @@ export function ModesLauncher() {
           </div>
           <button className="md-gallery" onClick={() => { setOpen(false); openStore() }}>🏪 {storeName} <span>find Kode apps and earn coding powers</span></button>
           <div className="md-sec">Play along <span>pick one</span></div>
-          <div className="md-grid md-grid-3">{play.map(card)}</div>
+          <div className="md-grid">{play.map(card)}</div>
           <div className="md-sec">Make music</div>
           <div className="md-grid">{make.map(card)}</div>
           <div className="md-sec">Helpers</div>

@@ -13,6 +13,7 @@ import { onDrumHit } from '../features/drumpads/drumEngine'
 import { onDjMessage } from '../music/devices'
 import { decode } from '../features/dj/map'
 import { usePedal } from '../features/pedal/pedal'
+import { onStart } from '../features/pedal/startSignal'
 import { buttonToken, djLane, keyToken, laneOfVoice, padToken, type KodeToken } from './kodeCore'
 
 export type { KodeToken, KodeSrc } from './kodeCore'
@@ -27,6 +28,7 @@ let off: (() => void) | undefined = hot.off
 const KEEP = 12
 
 /** listen to every Kode token. Returns unsubscribe. */
+export const tokenListenerCount = () => fns.size
 export function onToken(fn: Fn) { fns.add(fn); return () => { fns.delete(fn) } }
 /** the last few tokens, oldest first (do not modify) */
 export const recentTokens = (): readonly KodeToken[] => recent
@@ -53,6 +55,7 @@ function listen() {
       emitToken(padToken('dj', lane, data[2] > 0 ? data[2] / 127 : 1, performance.now()))
     }),
     usePedal.subscribe((p, prev) => { if (p.down && !prev.down) emitToken(buttonToken('pedal', 1, performance.now())) }),
+    onStart(() => emitToken(buttonToken('pedal', 1, performance.now()))), // Game pads PLAY: a start press, not a pedal press
   ]
   return () => { for (const o of offs) o() }
 }

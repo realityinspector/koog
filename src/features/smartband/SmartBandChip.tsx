@@ -21,7 +21,7 @@ export function SmartBandChip({ pill = false }: { pill?: boolean } = {}) {
 
   useEffect(() => {
     applySaved()
-    const off = onProfileChange(applySaved)
+    const off = onProfileChange(applySaved, 'SmartBandChip')
     return () => { off(); panic() }
   }, [])
 
@@ -35,7 +35,7 @@ export function SmartBandChip({ pill = false }: { pill?: boolean } = {}) {
   return (
     <div className={'sr-cell sb' + (pill ? ' sb-pill' : '')}>
       <div className="sb-row">
-        <button className="sb-main" onClick={toggle} aria-pressed={S.on} title="Smart Band: a backing band that listens and follows you">
+        <button className="sb-main" onClick={pill ? () => setOpen(true) : toggle} aria-pressed={S.on} aria-expanded={pill ? open : undefined} title={pill ? 'Band: open to change the style or turn it off' : 'Smart Band: a backing band that listens and follows you'}>
           <span className="sr-lbl">🤖 BAND <i className={'sr-led sb-led' + (S.on ? ' on' : '') + (S.on && !S.idle ? ' live' : '')} aria-hidden /></span>
           <b className="sr-val sr-chord sb-chord" key={status} aria-live="polite">{status}</b>
           <span className="sr-best">{S.on ? `${S.bpm} BPM · ` : ''}{style.label.toUpperCase()}</span>
@@ -52,6 +52,7 @@ export function SmartBandChip({ pill = false }: { pill?: boolean } = {}) {
             ))}
           </div>
           <p className="kp-note">{style.hint}</p>
+          {pill && S.on && <button type="button" className="kp-btn" onClick={() => { toggle(); setOpen(false) }}>Turn off</button>}
           <label className="sb-vol">
             <span className="kp-lbl">Volume {vol}%</span>
             <input type="range" min={0} max={100} value={vol} onChange={(e) => setVolume(Number(e.target.value) / 100)}

@@ -2,6 +2,7 @@ node_modules
 dist
 .dev-server.log
 .requests-server.log
+.desktop.pid
 .DS_Store
 
 # Local, per-family data. Never published.
@@ -13,3 +14,4 @@ private/
 scripts/shots/*.png
 dist-web
 retire.sh
+release/

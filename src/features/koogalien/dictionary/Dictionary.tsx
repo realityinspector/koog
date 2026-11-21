@@ -6,7 +6,7 @@ import { ALPHABET } from '../../../koogalien/data/alphabet'
 import { LEXICON } from '../../../koogalien/data/lexicon'
 import { print } from '../../../koogalien/lang/print'
 import { nearest } from '../../../koogalien/learn/checks'
-import { DIGITS, solfege, unitTitle } from '../../../koogalien/learn/items'
+import { DIGITS, unitTitle } from '../../../koogalien/learn/items'
 import { isLearned, unitUnlocked, type WordProg } from '../../../koogalien/learn/ladder'
 import { PROGRESS_KEY, sanitize } from '../../../koogalien/learn/progress'
 import { sentenceOf, VOICES_BY_UNIT } from '../../../koogalien/learn/speak'
@@ -15,6 +15,7 @@ import { MiniPads } from '../learn/MiniPads'
 import { rungInfo } from '../learn/rungInfo'
 import { sayChords, sayLetter } from '../learn/say'
 import { useChordInput } from '../learn/useChordInput'
+import { useNames } from '../ui/prefs'
 import '../learn/learn.css'
 
 const ALL: readonly LexEntry[] = [...DIGITS, ...LEXICON]
@@ -27,6 +28,7 @@ function Badge({ p, locked }: { p: WordProg | undefined; locked: boolean }) {
 }
 
 export default function Dictionary({ host }: { host: KoogalienHost }) {
+  const solfege = useNames()
   const [q, setQ] = useState('')
   const [listen, setListen] = useState(false)
   const [found, setFound] = useState<{ chord: Chord; hits: { entry: LexEntry; confidence: number }[] } | null>(null)
@@ -49,11 +51,11 @@ export default function Dictionary({ host }: { host: KoogalienHost }) {
   const shown = ALL.filter((e) => matches(e, ql)).length + letters.length
 
   return (
-    <section className="kgl" aria-label="Koogalien Dictionary">
-      <h2>Koogalien Dictionary</h2>
-      <p className="kgl-sub">Every word is a chord: keys pressed together. Search by English, or play a chord and see which word it is.</p>
+    <section className="kgl" aria-label="Koogalien Word book">
+      <h2>📚 Word book</h2>
+      <p className="kgl-sub">Every word is a chord: keys pressed together. Search for a word, or play keys to see which word they make.</p>
       <div className="kgl-tools">
-        <input className="kgl-search" type="search" placeholder="Search in English, like hello or happy" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the dictionary in English" />
+        <input className="kgl-search" type="search" placeholder="Search for a word, like hello or happy" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the word book" />
         <button type="button" className={'kgl-btn' + (listen ? ' on' : '')} aria-pressed={listen} onClick={() => { setListen((v) => !v); setFound(null) }}>
           {listen ? '👂 Listening: play a chord' : '🎹 Play to look up'}
         </button>
@@ -80,7 +82,7 @@ export default function Dictionary({ host }: { host: KoogalienHost }) {
         const open = unitUnlocked(u, prog.words)
         return (
           <div key={u}>
-            <div className="kgl-unit"><h3>Unit {u}: {unitTitle(u)}</h3>{open ? null : <span className="kgl-lock">🔒 opens when unit {u - 1} is learned. You can still look and listen.</span>}</div>
+            <div className="kgl-unit"><h3>Unit {u}: {unitTitle(u)}</h3>{open ? null : <span className="kgl-lock">🔒 opens after you learn unit {u - 1}. You can still look and listen.</span>}</div>
             <div className="kgl-grid">
               {list.map((e) => (
                 <article key={e.id} id={'kgl-card-' + e.id} className={'kgl-card' + (hit === e.id ? ' hit' : '') + (open ? '' : ' locked')} aria-label={`${e.en}: ${e.chord.map(solfege).join(' ')}`}>
@@ -95,7 +97,7 @@ export default function Dictionary({ host }: { host: KoogalienHost }) {
       })}
       {letters.length ? (
         <div>
-          <div className="kgl-unit"><h3>Letters: spell any word</h3><span className="kgl-sub">Play the spell chord (1 + 2), then a row note and a column note for each letter.</span></div>
+          <div className="kgl-unit"><h3>Letters: spell any word</h3><span className="kgl-sub">Play the spell chord (C + D), then a row note and a column note for each letter.</span></div>
           <div className="kgl-grid">
             {letters.map((g) => (
               <article key={g.ch} className="kgl-card" aria-label={`letter ${g.ch}: row ${g.row}, column ${g.col}`}>

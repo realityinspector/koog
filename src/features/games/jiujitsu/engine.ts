@@ -314,7 +314,7 @@ export class Game {
     else { this.assist = false; this.choosePhrase() }
     this.again = false
     this.ei = 0; this.slips = 0; this.offBeat = 0; this.rhy = []
-    const label = this.rung % 2 === 0 ? 'Partner attacks: listen!' : 'Your turn: watch the technique!'
+    const label = this.rung % 2 === 0 ? 'Partner attacks: listen!' : 'Listen to this technique. Your turn is next.'
     this.banner = label
     this.tip = `Next: ${STEPS[this.rung].name}${STEPS[this.rung].pts ? ` (${STEPS[this.rung].pts} pts)` : ''}`
     this.publishScore()
@@ -484,20 +484,20 @@ export class Game {
   private counter(msg: string) {
     this.phase = 'move'
     this.clearInput()
-    this.banner = 'Your partner countered and took the position. That is how we learn!'
+    const lost = this.rung > 0
+    this.banner = lost
+      ? 'Your partner countered and took the position. That is how we learn!'
+      : 'Still standing. Nothing was taken. Try the same phrase again.'
     this.tip = msg + ' Breathe. Same phrase again, with a little help.'
     this.again = true
     this.wobble = 0.5
-    this.dropRung(2, true)
+    this.dropRung(2)
     this.later(2.2, () => this.nextExchange())
     this.emit()
   }
 
-  private dropRung(partnerPts: number, always = false) {
-    if (this.rung <= 0) {
-      if (always) { this.partner += partnerPts; this.pop(`Partner +${partnerPts}`, 'p', '#9ec5ff', 0.8) }
-      return
-    }
+  private dropRung(partnerPts: number) {
+    if (this.rung <= 0) return
     const from = this.rung - 1
     this.partner += partnerPts
     this.pop(`Partner +${partnerPts}`, 'p', '#9ec5ff', 0.8)
@@ -565,13 +565,14 @@ export class Game {
     this.newBest = this.points > this.save.best
     if (this.newBest) this.save.best = this.points
     this.save.total += this.points
-    this.stripeEarned = trainingHere
+    this.stripeEarned = false
     this.promoTo = -1
-    if (trainingHere) {
+    // a black belt already has every stripe; finishing another roll must not announce a new one
+    if (trainingHere && !(this.save.belt >= 4 && this.save.stripes >= 3)) {
       this.save.stripes++
-      if (this.save.stripes >= 4) {
-        if (this.save.belt < 4) { this.promoTo = this.save.belt + 1; this.save.belt++; this.save.stripes = 0; this.trainBelt = this.save.belt }
-        else this.save.stripes = 3
+      this.stripeEarned = true
+      if (this.save.stripes >= 4 && this.save.belt < 4) {
+        this.promoTo = this.save.belt + 1; this.save.belt++; this.save.stripes = 0; this.trainBelt = this.save.belt
       }
     }
     writeSave(this.save)
@@ -657,7 +658,13 @@ export class Game {
     if (this.dead) return
     if (e.type === 'cluster') { this.cluster(e.boom); return }
     if (e.type !== 'note' || e.g.cluster != null) return
-    if ((this.phase === 'lesson' || this.phase === 'promo' || this.phase === 'flowend') && this.clock - this.cardAt > 1.4) { this.cont(); return }
+    if (this.phase === 'lesson' || this.phase === 'promo' || this.phase === 'flowend') return
+    if (this.phase === 'call') {
+      this.tip = 'Listen first. Play when it says your turn.'
+      this.pop('Listen first', 'k', '#ffe27a', 0.6)
+      this.emit()
+      return
+    }
     if (this.phase === 'echo') this.echoNote(e.g)
     else if (this.phase === 'flow') this.flowNote(e.g)
   }

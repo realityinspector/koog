@@ -19,9 +19,11 @@ export const useSheetLevel = (import.meta.hot?.data.sheetLevelStore as ReturnTyp
 export const getSheetLevel = () => useSheetLevel.getState().level
 export const setSheetLevel = (level: SheetLevel) => { useSheetLevel.setState({ level }); psave(KEY, level) }
 
+// Registered OUTSIDE the hot block: it used to be inside `if (import.meta.hot)`, so in a production build (no HMR) the sheet level
+// was never reloaded when another kid signed in (found by scripts/state-fixtures.ts).
+const off = onProfileChange(() => useSheetLevel.setState({ level: read() }), 'sheetLevel')
 if (import.meta.hot) {
   import.meta.hot.data.sheetLevelStore = useSheetLevel
-  const off = onProfileChange(() => useSheetLevel.setState({ level: read() }))
   import.meta.hot.dispose(() => off())
   import.meta.hot.accept()
 }

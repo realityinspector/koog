@@ -7,6 +7,9 @@ import { createEngine, type Engine } from '../synth-history/emu/core'
 import { getEmu } from '../synth-history/emu'
 import { canonSoundId } from '../synth-history/emu/aliases'
 import { onProfileChange, pload, psave } from '../../profile/profile'
+import { getSynth } from '../synth-history/engine'
+import { PRESETS } from '../synth-history/presets'
+import { DEFAULT_PARAMS } from '../synth-history/params'
 
 export interface SoundChoice { id: string; label: string; icon: string; emu?: string; preset?: string }
 export const SOUNDS: SoundChoice[] = [
@@ -34,15 +37,26 @@ function dropEngine() {
   cur.e = null; cur.inst = null
 }
 
-function apply(id: string) {
+/** Put the Koog synth back on one of its own settings. 'classic' (or an unknown id) is the everyday patch. */
+export function paintKoog(preset?: string) {
+  if (!preset || preset === 'classic') { getSynth().setParams({ ...DEFAULT_PARAMS }); return }
+  const p = PRESETS.find((x) => x.id === preset)
+  getSynth().setParams(p ? { ...DEFAULT_PARAMS, ...p.params } : { ...DEFAULT_PARAMS })
+}
+
+function apply(id: string, presetName?: string) {
   id = canonSoundId(id)
   const ch = SOUNDS.find((s) => s.id === id) ?? SOUNDS[0]
   dropEngine()
   useSound.setState({ id: ch.id })
   const spec = ch.emu ? getEmu(ch.emu) : undefined
-  if (!spec) return
+  if (!spec) {
+    if (presetName) paintKoog(presetName)
+    return
+  }
   const e = createEngine(spec)
-  const p = spec.presets.find((x) => x.name === ch.preset) ?? spec.presets[0]
+  const named = presetName ? spec.presets.find((x) => x.name === presetName) : undefined
+  const p = named ?? spec.presets.find((x) => x.name === ch.preset) ?? spec.presets[0]
   if (p) for (const c of spec.ctls) e.set(c.key, p.values[c.key] ?? c.def)
   cur.e = e
   cur.inst = { id: 'sound:' + ch.id, name: ch.label, noteOn: (n, v) => e.noteOn(n, v), noteOff: (n) => e.noteOff(n), allOff: () => e.allOff(), unlock: () => e.unlock() }
@@ -52,11 +66,11 @@ function apply(id: string) {
 /** the headless emulator engine behind the picked sound (null for the Koog synth); Boss scenes read and restore its params */
 export const soundEngine = (): Engine | null => cur.e
 
-/** Pick a sound for the piano (saved for the active kid). */
-export function chooseSound(id: string) { id = canonSoundId(id); psave(KEY, id); apply(id) }
+/** Pick a sound for the piano (saved for the active kid). `preset` overrides that sound's usual setting for this call only. */
+export function chooseSound(id: string, preset?: string) { id = canonSoundId(id); psave(KEY, id); apply(id, preset) }
 
 hot.off?.()
-const offProfile = onProfileChange(() => apply(pload<string>(KEY, 'koog')))
+const offProfile = onProfileChange(() => apply(pload<string>(KEY, 'koog')), 'soundChoice')
 // when an emulator panel closes it sets the instrument to null: put the kid's choice back
 const offInst = onInstrumentChange((i) => {
   if (i === null && useSound.getState().id !== 'koog' && cur.e) queueMicrotask(() => { if (!getActiveInstrument() && cur.inst) setActiveInstrument(cur.inst) })

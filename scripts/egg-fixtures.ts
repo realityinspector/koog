@@ -1,6 +1,7 @@
 // Fixtures for the Dancer's easter eggs (src/features/vibes/eggs.ts): every egg gets a positive in two keys, a near-miss, and a cooldown check.
 // Run: npm run check:eggs
 import { createRecognizer, demoFor, INFO, TUNES, type DemoNote, type EggId } from '../src/features/vibes/eggs'
+import { createEarGate } from '../src/audio/ear/gate'
 
 let fails = 0, passes = 0
 const ok = (name: string, cond: boolean, extra = '') => { if (cond) passes++; else { fails++; console.log('FAIL', name, extra) } }
@@ -32,6 +33,7 @@ const nearMiss = (id: EggId, ev: DemoNote[]): DemoNote[] => {
     case 'quake': e.pop(); e.pop(); e.forEach((x) => (x.n += 12)); break // fewer, and too high
     case 'pogo': e[3].n += 1; break
     case 'ghost': e[3].n += 1; break
+    case 'nerd': e[1].n += 1; break // D A# D is not the word
     case 'crown': e[6].n += 1; e[7].n += 1; e[8].n += 1; break // IV chord wrong
     case 'dizzy': e.forEach((x) => (x.v = 0.3)); break // soft mashing
     case 'sleepy': e[1].t -= 1000; e[2].t -= 1000; break // too quick
@@ -45,7 +47,7 @@ for (const info of INFO) {
   for (const [key, by] of [['C', 0], ['F#', 6]] as const) {
     const sh = id0(info.id) ? demo : demo
     // quake and sleepy keep their register (low cluster / soft) so shift by octaves for them
-    const k2 = info.id === 'quake' ? (by ? -12 : 0) : info.id === 'pogo' || info.id === 'woodpecker' ? by : by
+    const k2 = info.id === 'nerd' ? (by ? 12 : 0) : info.id === 'quake' ? (by ? -12 : 0) : info.id === 'pogo' || info.id === 'woodpecker' ? by : by
     const got = play(shift(sh, k2 === -12 && info.id === 'quake' ? 0 : k2), 1000, 18)
     ok(`${info.id} fires in ${key}`, got[0] === info.id, JSON.stringify(got))
     ok(`${info.id} fires once in ${key}`, got.filter((g) => g === info.id).length === 1, JSON.stringify(got))
@@ -84,9 +86,64 @@ ok('quake: four low notes but high up is not a quake', !play([60, 63, 65, 67].ma
 ok('woodpecker: 7 pecks is not enough', !play(line(Array.from({ length: 7 }, (_, i) => [72, i ? 100 : 0] as [number, number]))).includes('woodpecker'))
 ok('woodpecker: slow repeats do not peck', !play(line(Array.from({ length: 9 }, (_, i) => [72, i ? 450 : 0] as [number, number]))).includes('woodpecker'))
 ok('ghost needs a tritone, a fifth does not', !play(line([60, 67, 60, 67, 60, 67].map((n, i) => [n, i ? 400 : 0] as [number, number]))).includes('ghost'))
+ok('spider: the leap up to the spout fires too', play(line([[67, 0], [72, 340], [72, 340], [72, 340], [74, 340], [76, 340], [76, 340], [74, 340]])).includes('spider'))
+ok('lullaby: the real minor third fires too', play(line([[60, 0], [60, 510], [63, 170], [60, 340], [60, 510], [63, 170]])).includes('lullaby'))
+ok('row: the whole boat through stream still fires on the way', play(line([[60, 0], [60, 680], [60, 680], [62, 340], [64, 340], [64, 680], [62, 340], [64, 340], [65, 340], [67, 680]])).includes('row'))
 ok('every tune has a distinct interval signature', (() => { const s = new Set(TUNES.map((t) => t.notes.slice(1).map((n, i) => n - t.notes[i]).join(','))); return s.size === TUNES.length })())
+{
+  const id = INFO[0].id, demo = demoFor(id), r = createRecognizer()
+  let n = 0
+  const feed = (t0: number) => { for (const e of demo) if (r.onset(t0 + e.t, e.n, e.v) === id) n++ }
+  feed(1000)
+  const len = demo.reduce((m, x) => Math.max(m, x.t), 0)
+  feed(1000 + len + 400) // still inside the cooldown: the costume has not cleared
+  r.cleared()
+  feed(1000 + len + 800) // costume cleared: the same tune fires again
+  ok('cleared() lets the same egg fire again before its cooldown', n === 2, 'n=' + n)
+}
 ok('no two eggs fire from one demo', INFO.every((i) => { const g = play(demoFor(i.id)); return g.length === 1 }), INFO.filter((i) => play(demoFor(i.id)).length !== 1).map((i) => i.id + ':' + play(demoFor(i.id)).join('+')).join(' '))
-ok('egg ids are unique and counted', new Set(INFO.map((i) => i.id)).size === INFO.length && INFO.length === 26)
+ok('egg ids are unique and counted', new Set(INFO.map((i) => i.id)).size === INFO.length && INFO.length === 40)
+
+// A microphone follows one note. Loudness dips between strikes, the way a real instrument does in a room.
+// Chord eggs need several notes at once, so a single microphone line cannot play them.
+function throughMic(ev: DemoNote[]): DemoNote[] {
+  const gate = createEarGate()
+  const raw = [...ev].sort((a, b) => a.t - b.t || b.n - a.n)
+  const notes: DemoNote[] = []
+  for (const n of raw) {
+    const last = notes[notes.length - 1]
+    if (last && n.t - last.t < 40) { if (n.n > last.n) notes[notes.length - 1] = n }
+    else notes.push(n)
+  }
+  if (!notes.length) return []
+  const step = 32
+  const end = notes[notes.length - 1].t + 240
+  const heard: DemoNote[] = []
+  for (let t = 0; t <= end; t += step) {
+    let i = 0
+    while (i + 1 < notes.length && notes[i + 1].t <= t) i++
+    if (t < notes[0].t) continue
+    const cur = notes[i]
+    const nextT = i + 1 < notes.length ? notes[i + 1].t : 1e9
+    const soft = cur.v <= 0.38
+    const loud = cur.v >= 0.85
+    const base = soft ? 0.018 : loud ? 0.14 : 0.06
+    // the dip is the little quiet between notes, after the note itself has spoken
+    const dip = nextT - t <= step && t - cur.t >= step * 2
+    const rms = dip ? Math.max(0.01, base * 0.3) : base
+    for (const e of gate.step({ t, midi: cur.n + 0.08, clarity: 0.96, rms })) {
+      if (e.on) heard.push({ n: e.note, t: e.t, d: 80, v: e.velocity / 127 })
+    }
+  }
+  return heard
+}
+const ONE_NOTE = new Set<EggId>(['quake', 'crown'])
+for (const info of INFO) {
+  const heard = throughMic(demoFor(info.id))
+  const got = play(heard)
+  if (ONE_NOTE.has(info.id)) ok(`${info.id} needs more than one note at a time`, !got.includes(info.id), JSON.stringify(got))
+  else ok(`${info.id} fires when a microphone plays it`, got.includes(info.id), heard.map((e) => e.n + '@' + e.t + '/' + e.v.toFixed(2)).join(' ') + ' → ' + got.join(','))
+}
 
 console.log(`egg fixtures: ${passes} passed, ${fails} failed`)
 process.exit(fails ? 1 : 0)

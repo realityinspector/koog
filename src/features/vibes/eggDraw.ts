@@ -27,7 +27,10 @@ type Pose = Record<string, number>
 export const SAY: Record<EggId, string> = {
   shave: 'Two bits!', birthday: 'Happy birthday!', scales: 'Scales!', ode: 'Ode to Joy!', twinkle: 'Look at all the stars!', chromatic: 'Rainbow!',
   woodpecker: 'Peck peck peck!', quake: 'Rumble!', pogo: 'Boing boing!', crown: 'Hail the crown!', clock: 'BONG!', wig: 'Quite fancy!', sleepy: 'Zzz…',
-  dizzy: 'Whoa…', ghost: 'Boo!', surf: 'Surf\'s up!', santa: 'Ho ho ho!', lights: 'Fa la la la la!', present: 'A present for you!', snow: 'Silent night…',
+  dizzy: 'Whoa…', ghost: 'Boo!', surf: 'Surf\'s up!', nerd: 'Synthesizers are awesome!',
+  row: 'Row, row, row!', lamb: 'Baa!', jacques: 'Ding, ding, dong!', bridge: 'Falling down!', mac: 'E-I-E-I-O!', buns: 'Hot cross buns!',
+  yankee: 'Macaroni!', saints: 'Oh when the saints!', spider: 'Up the spout!', mountain: 'When she comes!', camp: 'Doo-dah!', susanna: 'Oh Susanna!', lullaby: 'Good night.',
+  santa: 'Ho ho ho!', lights: 'Fa la la la la!', present: 'A present for you!', snow: 'Silent night…',
   tree: 'O Christmas tree!', antlers: 'Click click click!', sleigh: 'Over the river!', pilgrim: 'Thank you!', pie: 'Mmm, pie!', turkey: 'Gobble gobble!',
 }
 
@@ -118,6 +121,7 @@ export function createEggFx(reduced: boolean): EggFx {
       case 'quake': if (every(reduced ? 300 : 120)) spawn(3, S.X + (rnd() - 0.5) * U * 10, S.gy + U * 0.3, (rnd() - 0.5) * 40, -30 - rnd() * 30, 1.0, U * 0.8); break
       case 'sleigh': if (every(140)) spawn(3, S.X - A.sx * U * 2.4, S.gy, -A.sx * 20, -8, 0.7, U * 0.4); break
       case 'woodpecker': if (every(400)) spawn(3, S.hx + S.hr, S.hy - S.hr * 0.4, 30, -30, 0.5, U * 0.2); break
+      case 'nerd': if (every(reduced ? 600 : 260)) spawn(2, S.hx + (rnd() - 0.5) * U * 5, S.gy - U * 2.2 + rnd() * U, (rnd() - 0.5) * 14, -20 - rnd() * 14, 1.8, U * (0.22 + rnd() * 0.18)); break
       case 'chromatic': break
       default: break
     }
@@ -166,6 +170,20 @@ export function createEggFx(reduced: boolean): EggFx {
         q.nod = 0.35 * sm((k - 0.4) / 0.1) * (1 - sm((k - 0.6) / 0.1)); break
       }
       case 'turkey': q.la1 = 0.7 + 0.45 * pos(s(t * 7)) * c; q.ra1 = 0.7 + 0.45 * pos(-s(t * 7)) * c; q.la2 = 1.3; q.ra2 = 1.3; q.nod = 0.2 * s(t * 7) * c; q.lfx = 0.2; q.rfx = 0.2; q.y -= 0.15; break
+      case 'row': { const o = s(t * 3) * c; q.la1 = 0.9 + 0.7 * o; q.ra1 = 0.9 - 0.7 * o; q.la2 = -0.4; q.ra2 = -0.4; q.y -= 0.15; q.lean = 0.06 * o; break }
+      case 'lamb': q.la1 = 0.55; q.ra1 = 0.55; q.la2 = 0.35; q.ra2 = 0.35; q.y += 0.08 * s(t * 3) * c; q.nod = 0.08; break
+      case 'jacques': q.ra1 = 2.2 + 0.35 * s(t * 10) * c; q.ra2 = 0.2; q.la1 = 0.4; q.la2 = 0.3; q.nod = 0.12 * s(t * 5) * c; break
+      case 'bridge': q.y += 0.85; q.la1 = 1.15; q.ra1 = 1.15; q.la2 = 0.2; q.ra2 = 0.2; q.lfx = 0.35; q.rfx = 0.35; break
+      case 'mac': q.la1 = 0.7 + 0.4 * pos(s(t * 6)) * c; q.ra1 = 0.7; q.la2 = 0.4; q.ra2 = 0.4; q.y += 0.12 * pos(s(t * 6)) * c; break
+      case 'buns': q.la1 = 0.95; q.la2 = -1.4; q.ra1 = 0.95; q.ra2 = -1.4; q.nod = -0.1; break
+      case 'yankee': q.la1 = 0.4 + 0.8 * pos(s(t * 8)) * c; q.ra1 = 0.4 + 0.8 * pos(-s(t * 8)) * c; q.la2 = 0.5; q.ra2 = 0.5; q.y += 0.15 * pos(s(t * 8)) * c; q.lean = 0.05; break
+      case 'saints': q.la1 = 0.9 * s(t * 7) * c; q.ra1 = -0.9 * s(t * 7) * c; q.la2 = 0.4; q.ra2 = 0.4; q.lfy = 0.55 * pos(s(t * 7)) * c; q.rfy = 0.55 * pos(-s(t * 7)) * c; q.lean = 0.06; break
+      case 'spider': q.ra1 = 2.4; q.ra2 = 0.1; q.la1 = 0.5; q.la2 = 0.4; q.nod = 0.2; break
+      case 'mountain': q.y += 0.25 + 0.2 * s(t * 2) * c; q.la1 = 1.6; q.ra1 = 0.8; q.la2 = 0.3; q.ra2 = 0.4; q.lfx = 0.25; q.knee = 0.35; break
+      case 'camp': q.ra1 = 2.3; q.ra2 = 0.15; q.la1 = 0.6; q.la2 = 0.3; q.y += 0.1 * pos(s(t * 6)) * c; break
+      case 'susanna': q.la1 = 0.8; q.la2 = -1.2; q.ra1 = 1.1 + 0.35 * s(t * 8) * c; q.ra2 = -0.6; q.nod = 0.05 * s(t * 4) * c; break
+      case 'lullaby': q.la1 = 0.35; q.ra1 = 0.35; q.la2 = 0.2; q.ra2 = 0.2; q.lean = 0.08 * s(t * 1.4) * c; q.nod = 0.12; q.tilt = 0.06 * s(t * 1.4) * c; break
+      case 'nerd': { const b = s(t * 7) * c; q.la1 = 0.85 + 0.12 * b; q.ra1 = 0.85 - 0.12 * b; q.la2 = 0.55; q.ra2 = 0.55; q.y += 0.06 * Math.abs(b); q.nod = 0.12 + 0.1 * b; q.tilt = 0.05 * s(t * 3.5) * c; q.lean = 0.03; break } // hands on his synth, a little excited bounce
       case 'scales': break
     }
     return 1
@@ -315,6 +333,33 @@ export function createEggFx(reduced: boolean): EggFx {
         }
         break
       }
+      case 'row': {
+        ctx.fillStyle = '#c47a3a'; ctx.strokeStyle = INK; ctx.lineWidth = 0.14 * u
+        ctx.beginPath(); ctx.moveTo(A.hipX - 3.2 * u, A.floorY - 0.55 * u); ctx.quadraticCurveTo(A.hipX, A.floorY + 0.85 * u, A.hipX + 3.2 * u, A.floorY - 0.55 * u)
+        ctx.lineTo(A.hipX + 2.5 * u, A.floorY - 1.15 * u); ctx.lineTo(A.hipX - 2.5 * u, A.floorY - 1.15 * u); ctx.closePath(); ctx.fill(); ctx.stroke()
+        break
+      }
+      case 'bridge': {
+        ctx.strokeStyle = '#8d8a99'; ctx.lineWidth = 0.5 * u; ctx.lineCap = 'butt'
+        ctx.beginPath(); ctx.moveTo(A.hipX - 3.4 * u, A.floorY); ctx.quadraticCurveTo(A.hipX, A.floorY - 2.6 * u, A.hipX + 3.4 * u, A.floorY); ctx.stroke()
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.1 * u
+        ctx.beginPath(); ctx.moveTo(A.hipX - 3.4 * u, A.floorY); ctx.quadraticCurveTo(A.hipX, A.floorY - 2.6 * u, A.hipX + 3.4 * u, A.floorY); ctx.stroke()
+        break
+      }
+      case 'spider': {
+        const cx = A.hipX + 2.2 * u, cy = A.hipY - 1.2 * u
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 0.05 * u
+        for (let i = 0; i < 6; i++) { const a = (i * TAU) / 6; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * 1.6 * u, cy + Math.sin(a) * 1.6 * u); ctx.stroke() }
+        for (let r = 1; r <= 3; r++) { ctx.beginPath(); ctx.arc(cx, cy, r * 0.5 * u, 0, TAU); ctx.stroke() }
+        break
+      }
+      case 'mountain': {
+        ctx.fillStyle = '#7aa2c4'; ctx.strokeStyle = INK; ctx.lineWidth = 0.12 * u
+        ctx.beginPath(); ctx.moveTo(A.hipX - 3.6 * u, A.floorY); ctx.lineTo(A.hipX - 1.2 * u, A.floorY - 3.2 * u); ctx.lineTo(A.hipX + 1.4 * u, A.floorY); ctx.closePath(); ctx.fill(); ctx.stroke()
+        ctx.fillStyle = '#f7fbff'
+        ctx.beginPath(); ctx.moveTo(A.hipX - 1.7 * u, A.floorY - 2.2 * u); ctx.lineTo(A.hipX - 1.2 * u, A.floorY - 3.2 * u); ctx.lineTo(A.hipX - 0.55 * u, A.floorY - 2.15 * u); ctx.closePath(); ctx.fill()
+        break
+      }
     }
   }
 
@@ -337,6 +382,17 @@ export function createEggFx(reduced: boolean): EggFx {
         ctx.fillStyle = '#d33'; at(0, 2.55); ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(A.px + 0.55 * u, A.py - 0.28 * u); ctx.lineTo(A.px + 0.55 * u, A.py + 0.28 * u); ctx.lineTo(A.px - 0.55 * u, A.py - 0.28 * u); ctx.lineTo(A.px - 0.55 * u, A.py + 0.28 * u); ctx.closePath(); ctx.fill()
         break
       }
+      case 'nerd': {
+        // short-sleeve button shirt: a pocket protector with pens, and a bow tie
+        at(0.75, 1.9); const px = A.px, py = A.py
+        ctx.fillStyle = '#f4f8ff'; ctx.beginPath(); ctx.rect(px - 0.5 * u, py - 0.1 * u, 1.0 * u, 1.05 * u); ctx.fill(); ctx.stroke()
+        const pens = ['#e63b5a', '#3a6bff', '#1f9d55']
+        for (let i = 0; i < 3; i++) { ctx.fillStyle = pens[i]; ctx.beginPath(); ctx.rect(px - 0.36 * u + i * 0.3 * u, py - 0.5 * u - i * 0.07 * u, 0.2 * u, 0.7 * u); ctx.fill(); ctx.stroke() }
+        at(0, 2.7); ctx.fillStyle = '#e63b5a'
+        ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(A.px + 0.7 * u, A.py - 0.3 * u); ctx.lineTo(A.px + 0.7 * u, A.py + 0.3 * u); ctx.lineTo(A.px - 0.7 * u, A.py - 0.3 * u); ctx.lineTo(A.px - 0.7 * u, A.py + 0.3 * u); ctx.closePath(); ctx.fill(); ctx.stroke()
+        ctx.fillStyle = '#ffd23f'; dot(ctx, A.px, A.py, 0.12 * u)
+        break
+      }
       case 'twinkle': {
         ctx.fillStyle = '#f2f4ff'
         at(-1.25, 2.75); const ax = A.px, ay = A.py; at(1.25, 2.75); const bx = A.px, by = A.py; at(0.95, 0.35); const cx = A.px, cy = A.py; at(-0.95, 0.35)
@@ -355,6 +411,14 @@ export function createEggFx(reduced: boolean): EggFx {
         ctx.fillStyle = '#222'; at(-0.95, 1.35); const x1 = A.px, y1 = A.py; at(0.95, 1.35)
         ctx.fillRect(Math.min(x1, A.px), Math.min(y1, A.py), Math.abs(A.px - x1) + 0.01, 0.34 * u)
         ctx.fillStyle = '#ffd23f'; at(0, 1.35); ctx.fillRect(A.px - 0.22 * u, A.py - 0.05 * u, 0.44 * u, 0.44 * u)
+        break
+      }
+      case 'saints': {
+        at(-0.9, 2.5); const ax = A.px, ay = A.py; at(0.7, 0.5)
+        ctx.strokeStyle = '#f2d23a'; ctx.lineWidth = 0.42 * u
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(A.px, A.py); ctx.stroke()
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.08 * u
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(A.px, A.py); ctx.stroke()
         break
       }
       case 'pilgrim': {
@@ -412,6 +476,27 @@ export function createEggFx(reduced: boolean): EggFx {
     const u = A.u
     ctx.lineWidth = 0.13 * u; ctx.strokeStyle = INK; ctx.lineJoin = 'round'; ctx.lineCap = 'round'
     switch (id) {
+      case 'nerd': {
+        // his very own synthesizer on a stand: keys under his hands, a panel of knobs and a glowing wave screen above
+        const x = (A.lhx + A.rhx) / 2, ky = Math.min(A.lhy, A.rhy) + 0.15 * u, wd = 2.0 * u, t = A.t
+        ctx.strokeStyle = '#3b3b4a'; ctx.lineWidth = 0.16 * u
+        ctx.beginPath(); ctx.moveTo(x - wd * 0.75, ky + 0.9 * u); ctx.lineTo(x - wd * 0.95, A.floorY); ctx.moveTo(x + wd * 0.75, ky + 0.9 * u); ctx.lineTo(x + wd * 0.95, A.floorY); ctx.stroke()
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.13 * u
+        ctx.fillStyle = '#2b2d45'; ctx.beginPath(); ctx.rect(x - wd, ky - 1.2 * u, wd * 2, 1.35 * u); ctx.fill(); ctx.stroke() // panel
+        ctx.fillStyle = '#fbfbff'; ctx.beginPath(); ctx.rect(x - wd, ky + 0.15 * u, wd * 2, 0.7 * u); ctx.fill(); ctx.stroke() // keys
+        ctx.lineWidth = 0.06 * u
+        for (let i = 1; i < 8; i++) { ctx.beginPath(); ctx.moveTo(x - wd + (i * wd * 2) / 8, ky + 0.15 * u); ctx.lineTo(x - wd + (i * wd * 2) / 8, ky + 0.85 * u); ctx.stroke() }
+        ctx.fillStyle = INK
+        for (const i of [1, 2, 4, 5, 6]) ctx.fillRect(x - wd + (i * wd * 2) / 8 - 0.1 * u, ky + 0.15 * u, 0.2 * u, 0.42 * u)
+        // glowing wave screen, then rainbow knobs
+        ctx.fillStyle = '#0d2b2b'; ctx.beginPath(); ctx.rect(x - wd * 0.9, ky - 1.08 * u, wd * 0.9, 0.7 * u); ctx.fill()
+        ctx.strokeStyle = '#6bffb0'; ctx.lineWidth = 0.07 * u; ctx.beginPath()
+        for (let i = 0; i <= 16; i++) { const px = x - wd * 0.86 + (i / 16) * wd * 0.82, py = ky - 0.73 * u + Math.sin(i * 0.9 + (reduced ? 0 : t * 5)) * 0.2 * u; if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py) }
+        ctx.stroke()
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.08 * u
+        for (let i = 0; i < 5; i++) { ctx.fillStyle = RAINBOW[i]; dot(ctx, x + wd * 0.15 + i * wd * 0.17, ky - 0.7 * u, 0.15 * u); ctx.stroke() }
+        break
+      }
       case 'birthday': {
         const x = (A.lhx + A.rhx) / 2, y = Math.min(A.lhy, A.rhy) + 0.25 * u, wd = 1.5 * u
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(x, y + 0.15 * u, wd * 1.15, 0.28 * u, 0, 0, TAU); ctx.fill(); ctx.stroke()
@@ -481,6 +566,53 @@ export function createEggFx(reduced: boolean): EggFx {
         ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 0.16 * u; ctx.beginPath(); ctx.moveTo(A.hipX - 3.1 * u, A.floorY - 1.2 * u); ctx.lineTo(A.hipX + 2.85 * u, A.floorY - 1.2 * u); ctx.stroke()
         break
       }
+      case 'row': {
+        ctx.strokeStyle = '#6b4a2a'; ctx.lineWidth = 0.16 * u
+        ctx.beginPath(); ctx.moveTo(A.lhx, A.lhy); ctx.lineTo(A.lhx - 1.4 * u, A.floorY - 0.2 * u); ctx.moveTo(A.rhx, A.rhy); ctx.lineTo(A.rhx + 1.4 * u, A.floorY - 0.2 * u); ctx.stroke()
+        break
+      }
+      case 'jacques': {
+        const x = A.rhx, y = A.rhy
+        ctx.fillStyle = '#ffd23f'
+        ctx.beginPath(); ctx.moveTo(x - 0.35 * u, y - 0.55 * u); ctx.lineTo(x + 0.35 * u, y - 0.55 * u); ctx.lineTo(x + 0.22 * u, y + 0.15 * u); ctx.quadraticCurveTo(x, y + 0.45 * u, x - 0.22 * u, y + 0.15 * u); ctx.closePath(); ctx.fill(); ctx.stroke()
+        dot(ctx, x, y + 0.42 * u, 0.1 * u)
+        break
+      }
+      case 'buns': {
+        const x = (A.lhx + A.rhx) / 2, y = Math.min(A.lhy, A.rhy) - 0.15 * u
+        ctx.fillStyle = '#e6b15a'; dot(ctx, x, y, 0.7 * u); ctx.stroke()
+        ctx.strokeStyle = '#f4e2b0'; ctx.lineWidth = 0.12 * u
+        ctx.beginPath(); ctx.moveTo(x - 0.35 * u, y); ctx.lineTo(x + 0.35 * u, y); ctx.moveTo(x, y - 0.35 * u); ctx.lineTo(x, y + 0.35 * u); ctx.stroke()
+        break
+      }
+      case 'spider': {
+        const x = A.rhx, y = A.rhy + 1.3 * u + (reduced ? 0 : Math.sin(A.t * 2) * 0.15 * u)
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 0.04 * u
+        ctx.beginPath(); ctx.moveTo(A.rhx, A.rhy); ctx.lineTo(x, y); ctx.stroke()
+        ctx.strokeStyle = INK; ctx.fillStyle = '#2a2140'; ctx.lineWidth = 0.06 * u
+        dot(ctx, x, y, 0.18 * u); ctx.stroke()
+        for (let i = 0; i < 4; i++) {
+          const a = -0.8 + i * 0.5
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * 0.45 * u, y + Math.sin(a) * 0.28 * u); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(a) * 0.45 * u, y + Math.sin(a) * 0.28 * u); ctx.stroke()
+        }
+        break
+      }
+      case 'susanna': {
+        const x = A.lhx, y = A.lhy
+        ctx.fillStyle = '#f4e2c4'; dot(ctx, x, y, 0.55 * u); ctx.stroke()
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.1 * u
+        ctx.beginPath(); ctx.moveTo(x, y - 0.15 * u); ctx.lineTo(x + 0.15 * u, y - 1.5 * u); ctx.stroke()
+        ctx.fillStyle = '#c47a3a'; ctx.fillRect(x - 0.02 * u, y - 1.7 * u, 0.28 * u, 0.28 * u)
+        break
+      }
+      case 'camp': {
+        const x = A.rhx, y = A.rhy
+        ctx.strokeStyle = INK; ctx.lineWidth = 0.1 * u
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 1.6 * u); ctx.stroke()
+        ctx.fillStyle = '#3ddc84'
+        ctx.beginPath(); ctx.moveTo(x, y - 1.6 * u); ctx.lineTo(x + 1.1 * u, y - 1.25 * u); ctx.lineTo(x, y - 0.9 * u); ctx.closePath(); ctx.fill(); ctx.stroke()
+        break
+      }
     }
   }
 
@@ -500,6 +632,20 @@ export function createEggFx(reduced: boolean): EggFx {
           ctx.fillStyle = '#2f3b52'; ctx.fillRect(0.5 * R, -0.1 * R, 0.8 * R, 0.2 * R)
           ctx.restore()
         }
+        break
+      }
+      case 'nerd': {
+        // slicked side-part, thick taped glasses (the tape is the best part), a buck tooth and a happy grin
+        ctx.strokeStyle = '#4a2f1a'; ctx.lineWidth = 0.1 * u; ctx.beginPath(); ctx.moveTo(-0.15 * R, -0.98 * R); ctx.quadraticCurveTo(0.15 * R, -0.7 * R, 0.55 * R, -0.62 * R); ctx.stroke()
+        const ey = -0.16 * R, ex = 0.34 * R, gr = 0.27 * R
+        ctx.fillStyle = 'rgba(190,230,255,0.28)'; ctx.strokeStyle = '#111'; ctx.lineWidth = 0.17 * u
+        for (const s2 of [-1, 1]) { ctx.beginPath(); ctx.arc(s2 * ex, ey, gr, 0, TAU); ctx.fill(); ctx.stroke() }
+        ctx.lineWidth = 0.12 * u; ctx.beginPath(); ctx.moveTo(-ex + gr, ey - 0.02 * R); ctx.lineTo(ex - gr, ey - 0.02 * R); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(-ex - gr, ey); ctx.lineTo(-1.0 * R, ey - 0.08 * R); ctx.stroke()
+        ctx.fillStyle = '#e9e2cf'; ctx.strokeStyle = '#a79f86'; ctx.lineWidth = 0.05 * u; ctx.beginPath(); ctx.rect(-0.1 * R, ey - 0.12 * R, 0.2 * R, 0.22 * R); ctx.fill(); ctx.stroke() // the tape on the bridge
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 0.06 * u
+        for (const s2 of [-1, 1]) { ctx.beginPath(); ctx.arc(s2 * ex, ey, gr * 0.72, PI * 1.15, PI * 1.45); ctx.stroke() }
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 0.05 * u; ctx.beginPath(); ctx.rect(-0.07 * R, 0.4 * R, 0.14 * R, 0.17 * R); ctx.fill(); ctx.stroke()
         break
       }
       case 'birthday': {
@@ -578,6 +724,41 @@ export function createEggFx(reduced: boolean): EggFx {
         break
       }
       case 'ghost': break
+      case 'lamb': {
+        ctx.fillStyle = '#f7f4ee'
+        for (const side of [-1, 1]) {
+          ctx.beginPath(); ctx.ellipse(side * 0.72 * R, -0.95 * R, 0.28 * R, 0.55 * R, side * 0.45, 0, TAU); ctx.fill(); ctx.stroke()
+          ctx.fillStyle = '#ffd6e0'; ctx.beginPath(); ctx.ellipse(side * 0.72 * R, -0.95 * R, 0.12 * R, 0.28 * R, side * 0.45, 0, TAU); ctx.fill()
+          ctx.fillStyle = '#f7f4ee'
+        }
+        ctx.fillStyle = '#fff'
+        for (let i = 0; i < 5; i++) dot(ctx, (-0.6 + i * 0.3) * R, 0.95 * R, 0.22 * R)
+        break
+      }
+      case 'jacques': {
+        ctx.fillStyle = '#6b5cff'
+        ctx.beginPath(); ctx.moveTo(-0.9 * R, -0.35 * R); ctx.quadraticCurveTo(-0.2 * R, -2.3 * R, 0.95 * R, -1.55 * R); ctx.quadraticCurveTo(0.4 * R, -0.9 * R, 0.9 * R, -0.35 * R); ctx.closePath(); ctx.fill(); ctx.stroke()
+        ctx.fillStyle = '#fff'; dot(ctx, 1.05 * R, -1.6 * R, 0.22 * R); ctx.stroke()
+        break
+      }
+      case 'mac': {
+        ctx.fillStyle = '#e2b657'
+        ctx.beginPath(); ctx.ellipse(0, -0.85 * R, 1.55 * R, 0.28 * R, 0, 0, TAU); ctx.fill(); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(-0.7 * R, -0.9 * R); ctx.quadraticCurveTo(0, -1.9 * R, 0.7 * R, -0.9 * R); ctx.closePath(); ctx.fill(); ctx.stroke()
+        break
+      }
+      case 'yankee': {
+        ctx.fillStyle = '#2a4d8f'
+        ctx.beginPath(); ctx.ellipse(0, -0.75 * R, 1.25 * R, 0.22 * R, 0, 0, TAU); ctx.fill(); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(-0.55 * R, -0.8 * R); ctx.lineTo(-0.15 * R, -1.55 * R); ctx.lineTo(0.55 * R, -0.8 * R); ctx.closePath(); ctx.fill(); ctx.stroke()
+        ctx.strokeStyle = '#e23b3b'; ctx.lineWidth = 0.1 * u
+        ctx.beginPath(); ctx.moveTo(0.15 * R, -1.45 * R); ctx.quadraticCurveTo(0.9 * R, -2.1 * R, 1.15 * R, -1.5 * R); ctx.stroke()
+        break
+      }
+      case 'lullaby': {
+        ctx.fillStyle = '#ffe9a0'; dot(ctx, 0.15 * R, -1.65 * R, 0.42 * R); ctx.stroke()
+        break
+      }
     }
     void k
   }

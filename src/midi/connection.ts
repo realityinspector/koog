@@ -19,6 +19,8 @@ interface Persisted {
   timers?: Set<number>
   heldBy?: Map<string, Set<number>>
   unsub?: () => void
+  /** inputs that are not Web MIDI ports (a keyboard connected straight over Bluetooth, see bleMidi.ts) */
+  virtual?: Map<string, Device>
 }
 export type RawListener = (data: Uint8Array, timeStamp: number) => void
 const hot = import.meta.hot
@@ -121,9 +123,27 @@ function refresh(access: MIDIAccess) {
     registerPort(i.id, name)
     i.onmidimessage = (e) => { if (e.data) { recordLag(i.id, e.timeStamp); route(liveRole(i.id, name), e.data, e.timeStamp, i.id) } }
   }
+  for (const v of virtualInputs().values()) devices.push(v)
   useDevices.setState({ devices })
   syncRoles()
   applyDevices(access)
+}
+
+const virtualInputs = () => (keep.virtual ??= new Map())
+/** Add, update or drop an input that is not a Web MIDI port. It gets a role and routes like any keyboard. */
+export function setVirtualInput(id: string, name: string, connected: boolean | null) {
+  const v = virtualInputs()
+  const was = useDevices.getState().devices.find((d) => d.id === id)
+  if (connected === null) v.delete(id)
+  else { v.set(id, { id, name, role: was?.role ?? roleFor(name), connected, hasOutput: false }); registerPort(id, name) }
+  const others = useDevices.getState().devices.filter((d) => d.id !== id)
+  useDevices.setState({ devices: connected === null ? others : [...others, v.get(id)!] })
+  syncRoles()
+  if (keep.access) applyDevices(keep.access)
+}
+/** Bytes from a virtual input, routed exactly like bytes from a Web MIDI port. */
+export function feedVirtualInput(id: string, name: string, data: Uint8Array, t = performance.now()) {
+  route(liveRole(id, name), data, t, id) // no lag reading: the timestamp is ours, not the device's
 }
 
 function syncRoles() { roleCache.clear(); for (const d of useDevices.getState().devices) roleCache.set(d.id, d.role) }

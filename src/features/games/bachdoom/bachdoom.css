@@ -16,7 +16,9 @@
 .bd-top:hover { background: rgba(60,24,40,.95); }
 .bd-menu { left: 6px; }
 .bd-back { right: 6px; }
-.bd-title { position: absolute; left: 0; right: 0; top: 37%; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: clamp(4px, 1.8cqh, 9px); padding: 0 clamp(8px, 4cqw, 40px) 4px; }
+.bd-title { position: absolute; left: 0; right: 0; top: 37%; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: clamp(4px, 1.8cqh, 9px); padding: 0 clamp(8px, 4cqw, 40px) 4px; overflow: hidden; }
+.bd-pick { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: inherit; overflow-y: auto; }
+.bd-title > .bd-start, .bd-title > .bd-fine { flex: none; }
 .bd-diffs, .bd-levels { display: flex; gap: clamp(4px, 1cqw, 10px); width: min(100%, 980px); }
 .bd-diff { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: clamp(3px, 1.2cqh, 8px) 6px; min-width: 0; }
 .bd-diff b { font-size: clamp(10px, 3cqh, 15px); line-height: 1.1; }
@@ -34,6 +36,4 @@
 .bd-actions .bd-btn { font-size: clamp(11px, 3.2cqh, 16px); padding: clamp(5px, 1.5cqh, 9px) clamp(12px, 3cqw, 28px); }
 @media (prefers-reduced-motion: reduce) { .bd-btn { transition: none; } }
 
-.bd-title { overflow-y: auto; }
-.bd-title { overflow-y: auto; }
 .bd-title .gk-card { flex: none; width: min(560px, 100%); }

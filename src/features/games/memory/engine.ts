@@ -3,8 +3,11 @@
 import { create } from 'zustand'
 import { onNote } from '../../../music/notes'
 import { demo, stopAll } from '../../../music/phraseEngine'
-import { clearGuide, setGuide } from '../../../music/guide'
-import { pload, psave } from '../../../profile/profile'
+import { clearGuideFor, setGuideFor, type GuideTone } from '../../../music/guide'
+// the key glow is OWNED: a late timer from this game can never wipe a newer feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('memory', t, tone, soon)
+const clearGuide = () => clearGuideFor('memory')
+import { onProfileChange, pload, psave } from '../../../profile/profile'
 import { kload, ksave, markConcept } from '../gamekode/kodeStore'
 import { exprNotes, makeExpr, noteOk, varName, type KVar } from '../gamekode/kodeLogic'
 import { bestKey, fmtTime, isBetter, levelDef, pickPhrases, shuffle, starsFor, type Best, type Level, type MemSave, type Phr } from './data'
@@ -194,7 +197,11 @@ export function stop() { run.token++; clearTimers(); run.off?.(); run.off = null
 export function toMenu() { stop(); set({ ...initial(), phase: 'menu', kode: get().kode, kodeWins: get().kodeWins }) }
 export function retry() { const s = get(); start(s.level, s.ear) }
 
+// A different kid signed in: their best scores and Kode power replace the last kid's (the stale copy used to be shown, and setKode wrote the old win count under the new kid).
+const offProfile = onProfileChange(() => { stop(); set({ ...initial(), phase: 'menu' }) }, 'memory')
+
 if (import.meta.hot) {
+  import.meta.hot.dispose(offProfile)
   import.meta.hot.data.memStore = useMemory
   import.meta.hot.data.memRun = run
   import.meta.hot.dispose(() => { clearTimers(); run.off?.(); run.off = null })

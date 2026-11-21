@@ -47,6 +47,7 @@ export function say(line: CoachLine): number {
   for (const f of [...fns]) { try { f({ ...line, id }) } catch (e) { console.error('[coach]', e) } }
   return id
 }
+export const sayListenerCount = () => fns.size
 export function onSay(fn: (l: CoachLine & { id: number }) => void) { fns.add(fn); return () => { fns.delete(fn) } }
 /** per-kid "how many times has this kid seen topic X" (for 'full lesson the first few times') */
 export function seenCount(topic: string): number { return pload<Record<string, number>>('coach.seen', {})[topic] ?? 0 }

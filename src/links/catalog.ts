@@ -96,6 +96,7 @@ const HELPERS: Record<string, { title: string; blurb: string; concepts: ConceptI
   vibes: { title: 'Vibes (chords become a face)', blurb: 'Play a chord and a face shows the mood: A minor looks sad, C major looks happy.', concepts: ['mood-emotion', 'chords'], level: 1, age: 5 },
   mimic: { title: 'Mimic (answer in a style)', blurb: 'Play a phrase and Koog answers it in Baroque, ragtime, blues and more.', concepts: ['style-history', 'phrases-cadences'], level: 2, age: 7 },
   band: { title: 'Smart Band (it plays along)', blurb: 'Play a melody and a band guesses the chords and plays pad, bass and drums with you.', concepts: ['chords', 'rhythm-pulse'], level: 2, age: 6 },
+  family: { title: 'Family Band (sing along together)', blurb: 'Classics and holiday songs for a few people: foot pedal, wireless controller, MIDI keyboard, real piano, and real guitar.', concepts: ['rhythm-pulse', 'notes'], level: 1, age: 4 },
 }
 /** DUO needs a DJ controller, so it is a valid link option but never recommended. */
 const UNLISTED_HELPERS = ['duo']

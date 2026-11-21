@@ -1,0 +1,40 @@
+/* The steward sits at the bottom-right of the display, clear of the Mentor on the left. */
+.ka { position: absolute; inset: 0; pointer-events: none; z-index: var(--z-caption, 7); }
+.ka-seat { position: absolute; right: 12px; bottom: calc(var(--stack-h, 0px) + 36px); pointer-events: auto; cursor: pointer; padding: 0; border: 0; background: none; }
+.ka-seat:focus-visible { outline: 2px solid var(--gold, #ffc35a); outline-offset: 3px; border-radius: 16px; }
+.ka-panel {
+  position: absolute; right: 12px; bottom: calc(var(--stack-h, 0px) + 116px); width: min(320px, calc(100% - 24px));
+  max-height: calc(100% - 128px); overflow: auto; pointer-events: auto; z-index: 2; box-sizing: border-box;
+  padding: 12px; border-radius: 16px; color: #fff8ea; background: rgba(22, 14, 54, .94);
+  border: 1px solid rgba(255, 195, 90, .6); box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+}
+.ka-head { display: flex; align-items: flex-start; gap: 8px; }
+.ka-head h2 { margin: 0; font-size: 16px; }
+.ka-head p { margin: 2px 0 0; font-size: 12px; font-weight: 700; color: #ffc35a; }
+.ka-x, .ka-list button, .ka-fresh, .ka-go, .ka-code button {
+  font: inherit; font-weight: 800; cursor: pointer; color: #1b1832; background: #fff4d8; border: 0; border-radius: 8px;
+}
+.ka-x { margin-left: auto; width: 28px; height: 28px; }
+.ka-x:focus-visible, .ka-go:focus-visible, .ka-code button:focus-visible, .ka-fresh:focus-visible, .ka-list button:focus-visible, .ka-panel input:focus-visible {
+  outline: 2px solid var(--gold, #ffc35a); outline-offset: 2px;
+}
+.ka-line { margin: 8px 0; font-size: 14px; font-weight: 700; line-height: 1.35; }
+.ka-panel form { display: flex; gap: 6px; }
+.ka-panel input { flex: 1; min-width: 0; font: inherit; font-size: 14px; font-weight: 700; color: #1b1832; background: #fff8ea; border: 0; border-radius: 8px; padding: 6px 8px; }
+.ka-go { padding: 6px 8px; white-space: nowrap; }
+.ka-code { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-family: ui-monospace, Menlo, monospace; font-size: 13px; font-weight: 700; }
+.ka-code span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ka-code button { padding: 4px 8px; }
+.ka-check { margin: 0 0 8px; font-size: 13px; font-weight: 700; line-height: 1.35; color: #d7fff4; }
+.ka-count { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #ffe9a0; }
+.ka-panel details { margin-top: 6px; }
+.ka-panel summary { cursor: pointer; font-size: 13px; font-weight: 800; }
+.ka-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ka-list li { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.ka-list b { font-weight: 800; }
+.ka-list span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffe9a0; }
+.ka-list button { margin-left: auto; width: 24px; height: 24px; flex: none; }
+.ka-fresh { margin-top: 10px; padding: 6px 8px; width: 100%; background: transparent; color: #fff4d8; border: 1px solid rgba(255, 244, 216, .4); }
+@media (prefers-reduced-motion: reduce) {
+  .ka-panel { scroll-behavior: auto; }
+}

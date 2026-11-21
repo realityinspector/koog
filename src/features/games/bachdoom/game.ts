@@ -60,6 +60,8 @@ export class Game {
   phase: Phase = 'title'
   diff: Diff = 'normal'
   levelIdx = 0
+  /** episode tab the title is showing. The banner follows this, not the backdrop level. */
+  menuEp: 0 | 1 | 2 = 1
   save: SaveData
   reduced = false
 
@@ -597,7 +599,7 @@ export class Game {
     this.bfgT = 0; this.bfgDone = false
     this.st.bfgs++
     this.faceGrinT = 2
-    this.addPop('BFG!', '#fff0a0', true, undefined, 0.3)
+    this.addPop('BOOM!', '#fff0a0', true, undefined, 0.3)
   }
   private bfgImpact() {
     this.bfgDone = true

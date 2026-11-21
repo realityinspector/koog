@@ -9,6 +9,7 @@
 .gk-status { margin: 6px 0 0; color: #ffe27a; font-weight: 600; }
 .gk-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
 .gk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gk-row input { width: 18px; height: 18px; flex: none; margin: 0; padding: 0; accent-color: #6fe3c1; }
 .gk-btn { min-height: 36px; padding: 4px 10px; border-radius: 8px; border: 1.5px solid #6fe3c1; background: #0e2d27; color: #e9fff8; font-weight: 600; cursor: pointer; }
 .gk-btn[aria-pressed='true'], .gk-btn.go { background: #6fe3c1; color: #0d2a22; }
 .gk-btn:disabled { opacity: 0.45; cursor: default; }

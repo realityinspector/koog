@@ -29,7 +29,7 @@ export function Tour() {
   const [cardH, setCardH] = useState(180)
   // the strip isn't in the DOM yet during the first render, so find it after mount
   const [strip, setStrip] = useState<Element | null>(null)
-  useEffect(() => setStrip(document.querySelector('.kg-strip')), [])
+  useEffect(() => setStrip(document.querySelector('.kg-strip-side') ?? document.querySelector('.kg-strip')), [])
   const card = useRef<HTMLDivElement>(null)
   const later = useRef(0) // pending 'start the tour' timer after the first note
   useEffect(() => () => window.clearTimeout(later.current), [])

@@ -36,6 +36,9 @@ export function LatencyMeter({ devices }: { devices: Device[] }) {
       {info?.bluetooth && (
         <p className="kg-lat-tip" role="status">🎧 Your sound goes through Bluetooth, so notes will feel late. Use the computer speakers or wired headphones for playing.</p>
       )}
+      {info && !info.bluetooth && info.total >= 100 && (
+        <p className="kg-lat-tip" role="status">Notes will feel late. Use the computer speakers or wired headphones for playing.</p>
+      )}
       <div className="kg-lat-row"><span>Sound out</span><b className={'kg-lat-' + grade(info?.total ?? 0)}>{info ? (info.state === 'running' ? Math.round(info.total) + ' ms' : 'wakes on first note') : '...'}</b></div>
       {dev && conn && (
         <>
@@ -55,7 +58,10 @@ export function LatencyMeter({ devices }: { devices: Device[] }) {
         )}
         {tap.result !== null && !tap.running && (
           <span className="kg-lat-res">You tapped <b>{tap.result > 0 ? tap.result + ' ms after' : -tap.result + ' ms before'}</b> the clicks.
-            {dev && <button type="button" onClick={() => setOffset(dev.name, off + tap.result!)}>Use as timing offset</button>}</span>
+            {dev && <button type="button" onClick={() => setOffset(dev.name, tap.result!)}>Use as timing offset</button>}</span>
+        )}
+        {!tap.running && tap.result === null && tap.miss && (
+          <span className="kg-lat-res">Not enough taps. Tap once for each click, then try again.</span>
         )}
       </div>
       {dev && (

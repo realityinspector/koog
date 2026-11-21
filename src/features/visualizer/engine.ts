@@ -14,6 +14,10 @@ import { createMail } from './mail'
 import { createZombies } from './zombies'
 import { createVibes } from '../vibes/vibesScene'
 import { createDancer } from '../vibes/dancer'
+import { drawHeldGlow, rocketGlitter, spawnRocketEmber, trailOn } from '../../desktop/fireworks'
+import { desktopOn, nextVizQuality, openVizContext, vizBackingScale, vizFrameDue } from '../../desktop/perf'
+import { useAirplane } from '../../offline/airplane'
+import { createLayerStamp } from '../../desktop/stamp'
 
 export type Mode = 'fireworks' | 'ripples' | 'rise' | 'fire' | 'ghost' | 'mail' | 'confetti' | 'zombie' | 'vibes' | 'dancer'
 
@@ -247,7 +251,11 @@ function dudSprite() {
 }
 
 export function createEngine(canvas: HTMLCanvasElement): Engine {
-  const ctx = canvas.getContext('2d')!
+  const desktop = desktopOn()
+  let air = desktop && useAirplane.getState().on
+  const unAir = desktop ? useAirplane.subscribe((s) => { air = s.on }) : () => {}
+  const ctx = openVizContext(canvas, desktop)
+  const lanes = desktop ? createLayerStamp() : null
   let w = 0
   let h = 0
   let mode: Mode = 'fireworks'
@@ -557,8 +565,9 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
   }
 
   let dpr = 1
+  let lastPaint = 0
   const resize = () => {
-    dpr = Math.min(1.5, window.devicePixelRatio || 1)
+    dpr = vizBackingScale(window.devicePixelRatio || 1, desktop)
     const r = canvas.getBoundingClientRect()
     w = r.width
     h = r.height
@@ -1093,8 +1102,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     const now = performance.now()
     frameEma = frameEma * 0.9 + Math.min(100, now - lastFrame) * 0.1
     lastFrame = now
-    if (frameEma > 21) quality = Math.max(0.35, quality - 0.02)
-    else if (frameEma < 17.5) quality = Math.min(1, quality + 0.005)
+    quality = nextVizQuality(quality, frameEma, desktop, air)
     // Translucent fill leaves soft trails. Kept dark and even: no full-screen flashes.
     ctx.globalCompositeOperation = 'source-over'
     {
@@ -1163,32 +1171,38 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     if (mode === 'ghost' || scenes[mode]?.ownBackdrop) sparkles.draw(ctx, now, quality, false, 0.55)
     else if (sparkleOn) sparkles.draw(ctx, now, quality, true, 1)
 
-    // key backdrop: faint glowing lanes where the safe notes live
+    // key backdrop: faint glowing lanes where the safe notes live.
+    // Desktop stamps a cached copy. The lanes change with the key and the canvas size, not every frame.
     {
       const k = curKey()
-      const pad = Math.min(60, w * 0.06)
-      for (let n = lo; n <= hi; n++) {
-        if (!inKey(n, k)) continue
-        const x = pad + ((n - lo) / Math.max(1, hi - lo)) * (w - pad * 2)
-        const ton = pc(n) === k.tonic
-        const lw = Math.max(6, (w / Math.max(12, hi - lo + 1)) * 0.5)
-        const hh = ton ? 45 : hueFor(n)
-        const gk = `${hh}|${ton}|${h}`
-        let g = laneGrad.get(gk)
-        if (!g) {
-          g = ctx.createLinearGradient(0, h, 0, h * (ton ? 0.55 : 0.75))
-          g.addColorStop(0, `hsla(${hh},90%,65%,${ton ? 0.2 : 0.09})`)
-          g.addColorStop(1, `hsla(${hh},90%,65%,0)`)
-          if (laneGrad.size > 200) laneGrad.clear()
-          laneGrad.set(gk, g)
+      const drawLanes = (target: CanvasRenderingContext2D) => {
+        const grads = target === ctx ? laneGrad : new Map<string, CanvasGradient>()
+        const pad = Math.min(60, w * 0.06)
+        for (let n = lo; n <= hi; n++) {
+          if (!inKey(n, k)) continue
+          const x = pad + ((n - lo) / Math.max(1, hi - lo)) * (w - pad * 2)
+          const ton = pc(n) === k.tonic
+          const lw = Math.max(6, (w / Math.max(12, hi - lo + 1)) * 0.5)
+          const hh = ton ? 45 : hueFor(n)
+          const gk = `${hh}|${ton}|${h}`
+          let g = grads.get(gk)
+          if (!g) {
+            g = target.createLinearGradient(0, h, 0, h * (ton ? 0.55 : 0.75))
+            g.addColorStop(0, `hsla(${hh},90%,65%,${ton ? 0.2 : 0.09})`)
+            g.addColorStop(1, `hsla(${hh},90%,65%,0)`)
+            if (grads.size > 200) grads.clear()
+            grads.set(gk, g)
+          }
+          target.fillStyle = g
+          target.fillRect(x - lw / 2, h * (ton ? 0.55 : 0.75), lw, h * (ton ? 0.45 : 0.25))
+          target.fillStyle = `hsla(${hh},90%,70%,${ton ? 0.5 : 0.25})`
+          target.beginPath()
+          target.arc(x, h - 8, ton ? 4 : 2.5, 0, Math.PI * 2)
+          target.fill()
         }
-        ctx.fillStyle = g
-        ctx.fillRect(x - lw / 2, h * (ton ? 0.55 : 0.75), lw, h * (ton ? 0.45 : 0.25))
-        ctx.fillStyle = `hsla(${hh},90%,70%,${ton ? 0.5 : 0.25})`
-        ctx.beginPath()
-        ctx.arc(x, h - 8, ton ? 4 : 2.5, 0, Math.PI * 2)
-        ctx.fill()
       }
+      if (lanes) lanes(ctx, w, h, `${Math.round(w)}|${Math.round(h)}|${lo}|${hi}|${k.tonic}|${k.scale}`, drawLanes)
+      else drawLanes(ctx)
     }
 
     // rockets: streak rockets, rhythm "formation" rockets, the BOOM barrage, and fizzled duds
@@ -1206,8 +1220,9 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       for (let k = 0; k < steps; k++) {
         r.y += r.vy / steps
         if (r.wob) r.x += (Math.sin(r.age * 0.33 + (r.ph ?? 0)) * r.wob) / steps
+        if (!spawnRocketEmber(k, steps, desktop)) continue
         pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 0.4, vy: 0.5, life: 0, max: steps > 1 ? 16 : 25, size: 2, hue: r.hue, tw: 1, nb: true })
-        if (!reduced && quality > 0.5 && Math.random() < 0.55) pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 1.4, vy: 0.2 + Math.random() * 0.8, life: 0, max: 28 + Math.random() * 18, size: 1, hue: 44 + Math.random() * 10, tw: Math.random() * 6.28, nb: true, gl: true })
+        if (!reduced && rocketGlitter(quality, desktop) && Math.random() < 0.55) pushP({ x: r.x, y: r.y + k * 2, vx: (Math.random() - 0.5) * 1.4, vy: 0.2 + Math.random() * 0.8, life: 0, max: 28 + Math.random() * 18, size: 1, hue: 44 + Math.random() * 10, tw: Math.random() * 6.28, nb: true, gl: true })
       }
       r.vy *= r.drag ?? 0.985
       ctx.fillStyle = `hsl(${r.hue},100%,85%)`
@@ -1306,6 +1321,10 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     }
     if (mode !== 'rise') {
       for (const s of hs) {
+        if (desktop) {
+          drawHeldGlow(ctx, s.x, s.y, s.velocity, dot(s.hue, false))
+          continue
+        }
         const r = 18 + s.velocity * 30
         const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r)
         g.addColorStop(0, `hsla(${s.hue},100%,75%,0.5)`)
@@ -1343,7 +1362,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
       if (t <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); continue }
       if (p.wob) p.x += Math.sin(p.life * 0.5 + i) * 0.6
       const tw = p.tw !== undefined ? 0.55 + 0.45 * Math.sin(p.life * 0.35 + p.tw) : 1
-      if (p.trail && quality > 0.7 && p.life % 3 === 0 && particles.length < MAX_PARTICLES * 0.8 * quality) pushP({ x: p.x, y: p.y, vx: 0, vy: 0.2, life: 0, max: 18, size: p.size * 0.6, hue: p.hue + 20, tw: p.tw, nb: true })
+      if (p.trail && trailOn(quality, desktop) && p.life % 3 === 0 && particles.length < MAX_PARTICLES * 0.8 * quality) pushP({ x: p.x, y: p.y, vx: 0, vy: 0.2, life: 0, max: 18, size: p.size * 0.6, hue: p.hue + 20, tw: p.tw, nb: true })
       const dull = p.sat !== undefined
       const grow = atkFrames > 1 && !p.nb && p.life < atkFrames ? p.life / atkFrames : 1
       const r = (lfoTgt === 'amp' && lfoOn ? 1 + 0.3 * lfoDep * lfoSin : 1) * 2.2 * p.size * sizeMul * (dull ? 0.8 + (1 - t) * 1.2 : 0.4 + t * 0.6) * (0.35 + 0.65 * grow)
@@ -1532,11 +1551,16 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     ctx.globalAlpha = 1
     ctx.textBaseline = 'alphabetic'
   }
-  function frame() {
+  function frame(ts = 0) {
     raf = 0
     if (paused || dead) return
+    if (!vizFrameDue(ts, lastPaint, desktop)) {
+      raf = requestAnimationFrame(frame)
+      return
+    }
     try {
       paint()
+      lastPaint = ts || performance.now()
     } catch (e) {
       if (!warned) { warned = true; console.error('[viz] frame failed', e) }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -1594,6 +1618,7 @@ export function createEngine(canvas: HTMLCanvasElement): Engine {
     },
     destroy() {
       dead = true
+      unAir()
       cancelAnimationFrame(raf)
       ro.disconnect()
     },

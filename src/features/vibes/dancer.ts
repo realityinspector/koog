@@ -180,7 +180,7 @@ export const createDancer: SceneFactory = (reduced): Scene => {
   const eggFx = createEggFx(reduced)
   let eggEnd = 0, eggBeat = -1e6, eggLeg = 0
   const headS = { x: 400, y: 200, r: 30 }
-  function endEgg() { eggFx.stop(); eggDebug.active = null; eggDebug.k = -1 }
+  function endEgg() { eggFx.stop(); eggDebug.active = null; eggDebug.k = -1; rec.cleared() }
   function startEgg(id: EggId) {
     const now = lastNow || performance.now()
     eggFx.start(id, now); eggEnd = now + eggFx.dur; eggBeat = now; eggLeg = 0
@@ -878,9 +878,13 @@ export const createDancer: SceneFactory = (reduced): Scene => {
     noteOn(note, x, v, k, hue, _name, g) {
       held.add(note)
       everActive = true
-      if (eggFx.id === 'sleepy' && v >= 0.6) { eggFx.dur = performance.now() - eggFx.t0 + 450; eggEnd = eggFx.t0 + eggFx.dur; say('Huh? Oh!', true) }
-      const hit = rec.onset(performance.now(), note, v)
-      if (hit) startEgg(hit)
+      const nowMs = performance.now()
+      if (eggFx.id === 'sleepy' && v >= 0.6 && nowMs < eggEnd) { eggFx.dur = nowMs - eggFx.t0 + 450; eggEnd = eggFx.t0 + eggFx.dur; say('Huh? Oh!', true) }
+      if (eggFx.id && nowMs >= eggEnd) endEgg()
+      const showing = !!eggFx.id
+      const hit = rec.onset(nowMs, note, v)
+      // a tune played while a costume is up waits; once that costume has cleared, the same egg can fire again
+      if (hit && !showing) startEgg(hit)
       const now = lastNow
       // tempo: the gap between notes sets his beat (folded into a danceable range)
       const ioi = now - lastOn

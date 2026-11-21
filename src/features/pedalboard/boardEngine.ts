@@ -165,7 +165,12 @@ export function applyPreset(id: string) {
 }
 
 /** The foot pedal / footswitch: stomp the selected pedal. Effects toggle; the Looper stomp taps the looper's big button. */
-export function stompSelected(loopStyle: LoopStyle = 'simple') { stomp(useBoard.getState().selected, loopStyle) }
+/** `looperOk` false (the looper is not on screen): a selected Looper stomp does nothing, so a foot tap never records a loop nobody can see */
+export function stompSelected(loopStyle: LoopStyle = 'simple', looperOk = true) {
+  const id = useBoard.getState().selected
+  if (!looperOk && pedalDef(id)?.kind === 'looper') return
+  stomp(id, loopStyle)
+}
 export function stomp(id: string, loopStyle: LoopStyle = 'simple') {
   if (pedalDef(id)?.kind === 'looper') { bigDown(loopStyle); setTimeout(bigUp, 60); useBoard.setState({ selected: id }); return }
   togglePedal(id)

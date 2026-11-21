@@ -24,7 +24,7 @@ export interface Level {
 }
 export const LEVELS: Level[] = [
   { n: 1, id: 'hunt', name: 'Hunt & Peck', icon: '🔍', rule: 'The next key glows. No timer, any speed.', coach: 'Find the glowing key. Take your time.', sheet: true, keys: true },
-  { n: 2, id: 'follow', name: 'Follow', icon: '👀', rule: 'Keys glow for a moment, then fade.', coach: 'Watch for the glow, then play it before it fades.', sheet: true, keys: true },
+  { n: 2, id: 'follow', name: 'Follow', icon: '👀', rule: 'The next key glows, fades, then glows again.', coach: 'Play the glowing key. If it fades, it comes back.', sheet: true, keys: true },
   { n: 3, id: 'echo', name: 'Echo', icon: '👂', rule: 'Listen to a phrase, then play it back.', coach: 'Listen first. Then play it back.', sheet: true, keys: false },
   { n: 4, id: 'memory', name: 'Memory', icon: '🧠', rule: 'Phrase by phrase, no hints. A peek costs a star.', coach: 'Play it from memory. A peek costs a star.', sheet: false, keys: false },
   { n: 5, id: 'full', name: 'Play full', icon: '🎼', rule: 'The whole song from memory, your own pace.', coach: 'Play the whole song from memory. A slip just waits for the right note.', sheet: false, keys: false },
@@ -38,7 +38,7 @@ export function goalFor(level: Level, game: HolidayGame, count: number, total: n
   const verb = game === 'feast' ? `set ${count} ${count === 1 ? 'dish' : 'dishes'} on the table` : `hang ${count} ${count === 1 ? 'ornament' : 'ornaments'} on the tree`
   switch (level.id) {
     case 'hunt': return `Play the glowing keys to ${verb}. No timer, any speed.`
-    case 'follow': return `Play each key as it glows, before it fades, to ${verb}.`
+    case 'follow': return `Play each glowing key to ${verb}. If the glow fades, it comes back.`
     case 'echo': return `Listen to each phrase, then play it back, to ${verb}.`
     case 'memory': return `Play each phrase from memory, with no hints, to ${verb}. A peek costs a star.`
     case 'full': return `Play all ${total} notes of the song from memory, no hints, at your own pace. ${game === 'feast' ? 'Serve the turkey!' : 'Put the star on the tree!'}`

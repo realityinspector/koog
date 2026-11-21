@@ -7,7 +7,7 @@
 import { create } from 'zustand'
 import { useHarmonyStore } from '../../music/harmonyStore'
 import { onJudge } from '../../music/judge'
-import { useGuide, setGuide } from '../../music/guide'
+import { useGuide, setGuideFor } from '../../music/guide'
 import { useScreen } from '../../layout/screenStore'
 import { SCALES, type Key } from '../../music/theory'
 import { start as bandStart, panic as bandPanic, getState as bandState } from '../smartband/engine'
@@ -113,8 +113,8 @@ function onPadHit(e: { deck: 'A' | 'B'; n: number }) {
   const key = v[e.deck].playing ? TRACKS[e.deck].key : useHarmonyStore.getState().key
   const t = hintNotes(key, e.n)
   D.lastTargets = t
-  setGuide(t, 'next')
-  later(() => { if (useGuide.getState().targets === t) { setGuide([], 'next'); D.lastTargets = null } }, 1500)
+  setGuideFor('duo', t, 'next')
+  later(() => { if (useGuide.getState().targets === t) { setGuideFor('duo', [], 'next'); D.lastTargets = null } }, 1500)
 }
 
 // ---------- piano -> DJ ----------

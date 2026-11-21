@@ -232,8 +232,7 @@ export const lagNext = (avg: number, lateMs: number): number => Math.min(LAG_MAX
 /** a note's own timestamp (the MIDI event's timeStamp, performance.now ms) when it is sane (not in the future, under 250 ms old), else `now` */
 export function noteTime(t: number | undefined, now = performance.now()): number { return t != null && t > 0 && t <= now && now - t < 250 ? t : now }
 
-/** does this key press mean "flip the metronome"? M anywhere; while the computer keys play notes (M is the note B) it takes Shift+M */
-export function isMetronomeKey(e: { code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean; isComposing?: boolean }, keysPlayNotes: boolean): boolean {
-  if (e.code !== 'KeyM' || e.repeat || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false
-  return keysPlayNotes ? e.shiftKey : true
+/** does this key press mean "flip the metronome"? ALWAYS Shift+M, on every screen. Plain M is only the piano note B and never flips it. */
+export function isMetronomeKey(e: { code: string; shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean; repeat: boolean; isComposing?: boolean }): boolean {
+  return e.code === 'KeyM' && e.shiftKey && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing
 }

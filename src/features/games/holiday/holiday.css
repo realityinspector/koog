@@ -157,8 +157,7 @@
 }
 .hg-scene { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-/* the shared sheet-music strip sits over the bottom of the display: leave room for it */
-.hg-root.hg-sheet .hg-svg { height: clamp(110px, 22vh, 200px); }
+/* sheet clearance is restated after the general height rule below */
 .hg-rung { min-height: 30px; padding: 2px 8px; }
 .hg-rail { gap: 3px; }
 @media (max-height: 800px) { .hg-rung .hg-stars { display: none; } .hg-rung.here .hg-stars, .hg-rung.done .hg-stars { display: inline; } }
@@ -169,3 +168,8 @@
 .hg-scene { height: auto; }
 .hg-svg { flex: none; height: clamp(150px, 30vh, 330px); max-height: none; }
 @media (max-width: 1000px) { .hg-svg { height: clamp(120px, 24vh, 220px); } }
+/* the shared sheet sits over the bottom of the display; this has to follow the height above */
+.hg-root.hg-sheet { padding-bottom: calc(18px + var(--sheet-h, 96px)); }
+.hg-root.hg-sheet .hg-svg { height: clamp(88px, 16vh, 140px); }
+.hg-root.hg-sheet .hg-rail { gap: 2px; }
+.hg-root.hg-sheet .hg-rung { min-height: 26px; padding-top: 1px; padding-bottom: 1px; }

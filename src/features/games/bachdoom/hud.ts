@@ -5,7 +5,7 @@ import { PC_NAMES, pc } from '../../../music/theory'
 import { PRELUDE_C } from '../../../music/scores'
 import { useJudge } from '../../../music/judge'
 import { drawText, textWidth } from './font'
-import { LEVELS } from './levels'
+import { EPISODES, LEVELS } from './levels'
 import { DIFFS } from './game'
 import type { Bolt, Demon, FaceName, Game, Phase } from './game'
 import type { View } from './render'
@@ -457,9 +457,9 @@ export class Painter {
     const bx = Math.round(W * 0.5 + fw / 2 + 12), bW = Math.round(W * 0.19)
     this.panel(ctx, bx, py, bW, ph)
     const full = judge.charge >= 1
-    drawText(ctx, 'BFG', bx + 6, py + 5, sl, full ? '#fff0a0' : GOLD)
-    const lab = full ? 'READY! SLAM A FOREARM' : 'BIG FOREARM GESTURE'
-    if (textWidth(lab, 1) + textWidth('BFG', sl) + 24 < bW) drawText(ctx, lab, bx + bW - 6, py + 5, 1, full ? '#fff0a0' : '#b59a6a', { align: 'right' })
+    drawText(ctx, 'BOOM', bx + 6, py + 5, sl, full ? '#fff0a0' : GOLD)
+    const lab = full ? 'READY! SLAM THE KEYS' : 'PLAY IN KEY'
+    if (textWidth(lab, 1) + textWidth('BOOM', sl) + 24 < bW) drawText(ctx, lab, bx + bW - 6, py + 5, 1, full ? '#fff0a0' : '#b59a6a', { align: 'right' })
     else if (full) drawText(ctx, 'READY!', bx + bW - 6, py + 5, 1, '#fff0a0', { align: 'right' })
     drawText(ctx, Math.round(judge.charge * 100) + '%', bx + 6, py + 5 + lh, sn, CREAM, { shadow: DARK })
     const segs = 12, sgW = (bW - 12) / segs, sgH = 6
@@ -616,7 +616,7 @@ export class Painter {
     const rows: [string, string][] = [
       ['ACCURACY', this.count(t, 0.4, Math.round(r.acc * 100)) + '%'],
       ['PERFECTS', String(g.st.perfects)],
-      ['BFGS', String(g.st.bfgs)],
+      ['BOOMS', String(g.st.bfgs)],
       ['TIME', Math.floor(r.time / 60) + ':' + String(Math.floor(r.time % 60)).padStart(2, '0')],
     ]
     const ry = y + bh * 0.4
@@ -658,14 +658,12 @@ export class Painter {
     // note decorations
     drawText(ctx, '♪', lx - 9 * s, ly + s, s, '#ffd76c', { shadow: '#3a0a1c' })
     drawText(ctx, '♪', lx + lw + 3 * s, ly + s, s, '#ffd76c', { shadow: '#3a0a1c' })
-    const sub = 'EPISODE 1: KNEE-DEEP IN THE BAROQUE'
+    const sub = (EPISODES.find((e) => e.n === g.menuEp) ?? EPISODES[1]).name.toUpperCase()
     const ss = Math.max(1, Math.min(ps, Math.floor((W * 0.8) / ((sub.length * 6) | 0))))
     drawText(ctx, sub, W / 2, ly + 7 * s + s * 2, ss, CREAM, { align: 'center', shadow: '#3a0a1c' })
     // the bottom strip: the same wooden bar the game uses, with a tagline
     ctx.drawImage(this.bar(W, hudH), 0, H - hudH)
-    const tag = '♪ PLAY THE PIECE. HARMONIZE THE DEMONS. ♪'
-    drawText(ctx, tag, W / 2, H - hudH / 2 - 3.5 * ps, ps, GOLD, { align: 'center', shadow: DARK })
-    // keep DIFFS referenced so a rename there is caught by the type checker
+    // the Start button sits on this bar, so the old tagline is not drawn through it
     void DIFFS; void LEVELS
   }
 }

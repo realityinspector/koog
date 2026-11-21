@@ -38,6 +38,8 @@ function dispatch(recent: NoteEvent[]) {
 feed.unsub?.()
 feed.unsub = useAppStore.subscribe((s) => dispatch(s.recentNotes))
 
+/** how many things listen to the note feed (window.__koogState; a number that keeps growing after edits is a leak) */
+export const noteListenerCount = () => feed.fns.size
 export function onNote(fn: NoteListener): () => void {
   feed.fns.add(fn)
   return () => void feed.fns.delete(fn)

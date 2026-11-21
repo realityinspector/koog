@@ -64,6 +64,7 @@ export function resetJudge() {
   if (cadenceTimer) { clearTimeout(cadenceTimer); cadenceTimer = null }
 }
 
+export const judgeListenerCount = () => listeners.size
 export function onJudge(fn: JudgeListener): () => void {
   listeners.add(fn)
   return () => { listeners.delete(fn) }

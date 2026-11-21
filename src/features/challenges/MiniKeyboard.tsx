@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
-import { setGuide, clearGuide } from '../../music/guide'
+import { clearGuideFor, setGuideFor, type GuideTone } from '../../music/guide'
+// owned key glow: a late timer from this feature can't wipe another feature's glow (docs/STATE.md)
+const setGuide = (t: number[], tone?: GuideTone, soon?: number[]) => setGuideFor('miniKeyboard', t, tone, soon)
+const clearGuide = () => clearGuideFor('miniKeyboard')
 import type { View } from './defs'
 
 // The CHALLENGE screen no longer draws its own keyboard: the targets light up on the main keybed via the shared guide.

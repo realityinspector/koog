@@ -3,7 +3,16 @@
 import { create } from 'zustand'
 
 const OPEN_KEY = 'koog.dj.open'
-const load = () => { try { return localStorage.getItem(OPEN_KEY) === '1' } catch { return false } }
+/** null = the player has never chosen; false = they closed it; true = they opened it. Closing must stay closed. */
+export function duoChoice(): boolean | null {
+  try {
+    const v = localStorage.getItem(OPEN_KEY)
+    if (v === '1') return true
+    if (v === '0') return false
+    return null
+  } catch { return null }
+}
+const load = () => duoChoice() === true
 const hot = (import.meta.hot?.data ?? {}) as { store?: ReturnType<typeof make> }
 function make() {
   return create<{ open: boolean; setOpen: (v: boolean) => void }>()((set) => ({

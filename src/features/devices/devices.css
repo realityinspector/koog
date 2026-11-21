@@ -20,9 +20,24 @@
 .kg-dev-sounds { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .kg-dev-sounds button { text-align: left; }
 .kg-dev-hint { margin: 6px 0 0; font-size: 12px; color: #ffd36b; }
+.kg-dev-wireless { margin-top: 14px; }
+.kg-dev-oct { flex: none; font-size: 12px; font-weight: 700; color: #ffd36b; }
+.kg-pad-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.kg-pad-map { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.kg-pad-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.kg-pad-row span { flex: 1 1 42%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kg-pad-row select { flex: 1 1 54%; min-width: 0; font: inherit; font-size: 12px; font-weight: 600; color: #1b1832; background: #f4f2ff; border-radius: 8px; padding: 3px 4px; }
+.kg-dev-pop select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .kg-dev-none, .kg-dev-note { margin: 6px 0 0; font-size: 12px; color: #b9b6d8; }
 
 .kg-dev-pop { max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain; }
+
+/* Hear: microphone as notes */
+.kg-ear { margin-top: 14px; }
+.kg-ear-kinds { display: flex; gap: 6px; margin-top: 8px; }
+.kg-ear-meter { height: 6px; margin-top: 8px; border-radius: 999px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.kg-ear-meter span { display: block; height: 100%; background: #6cffa8; }
+.kg-ear-now { margin: 6px 0 0; font-size: 13px; font-weight: 800; color: #ffd36b; }
 
 /* USB foot pedal */
 .kg-pedal { margin-top: 14px; }

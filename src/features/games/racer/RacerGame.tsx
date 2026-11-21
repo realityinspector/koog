@@ -49,27 +49,31 @@ export function RacerGame({ onExit }: { onExit: () => void }) {
       </div>
 
       {s.phase === 'garage' && (
-        <div className="rc-panel" role="region" aria-label="Garage">
-          <h2>🔧 The Garage</h2>
-          <p className="rc-sub small">Koogalien is the musical language of the Koog Aliens: here your tune is the road, and the car reads it.</p>
-          <p className="rc-sub">Pick a vehicle by playing its key <b>four times</b>{pads ? ' (tap its pad four times)' : ''}, or just tap it.</p>
-          <div className="rc-mode" role="group" aria-label="What are you playing">
-            <button className={'rc-btn' + (!pads ? ' on' : '')} onClick={() => setMode('keys')}>🎹 Keys</button>
-            <button className={'rc-btn' + (pads ? ' on' : '')} onClick={() => setMode('pads')}>🥁 Pads</button>
-            <span className="rc-sub small">Piano, drum pads or a DJ controller: Koog hears them all.</span>
+        <div className="rc-panel rc-fit" role="region" aria-label="Garage">
+          <div className="rc-scroll">
+            <h2>🔧 The Garage</h2>
+            <p className="rc-sub small">Koogalien is the musical language of the Koog Aliens: here your tune is the road, and the car reads it.</p>
+            <p className="rc-sub">Pick a vehicle by playing its key <b>four times</b>{pads ? ' (tap its pad four times)' : ''}, or just tap it.</p>
+            <div className="rc-mode" role="group" aria-label="What are you playing">
+              <button className={'rc-btn' + (!pads ? ' on' : '')} onClick={() => setMode('keys')}>🎹 Keys</button>
+              <button className={'rc-btn' + (pads ? ' on' : '')} onClick={() => setMode('pads')}>🥁 Pads</button>
+              <span className="rc-sub small">Piano, drum pads or a DJ controller: Koog hears them all.</span>
+            </div>
+            <div className="rc-garage">
+              {VEHICLES.map((v) => (
+                <button key={v.id} className={'rc-veh' + (s.vehicle === v.id ? ' sel' : '') + (s.picked === v.id ? ' pop' : '')} onClick={() => chooseVehicle(v.id)} aria-pressed={s.vehicle === v.id}>
+                  <span className="rc-vem" aria-hidden>{v.emoji}</span>
+                  <b>{v.name}</b>
+                  <span className="rc-vkey">{pads ? `Tap ${padLabel(v.lane)} 4x` : `Play ${keyName(v)} 4x`}</span>
+                  <span className="rc-vbl">{v.blurb}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="rc-garage">
-            {VEHICLES.map((v) => (
-              <button key={v.id} className={'rc-veh' + (s.vehicle === v.id ? ' sel' : '') + (s.picked === v.id ? ' pop' : '')} onClick={() => chooseVehicle(v.id)} aria-pressed={s.vehicle === v.id}>
-                <span className="rc-vem" aria-hidden>{v.emoji}</span>
-                <b>{v.name}</b>
-                <span className="rc-vkey">{pads ? `Tap ${padLabel(v.lane)} 4x` : `Play ${keyName(v)} 4x`}</span>
-                <span className="rc-vbl">{v.blurb}</span>
-              </button>
-            ))}
+          <div className="rc-foot">
+            <p className="rc-coach" role="status">{s.coach || (s.vehicle ? `You drive the ${veh.name}.` : 'Try it: play C four times for the Bee Buggy.')}</p>
+            <button className="rc-btn go" disabled={!s.vehicle} onClick={() => { toMap() }}>Let's race →</button>
           </div>
-          <p className="rc-coach" role="status">{s.coach || (s.vehicle ? `You drive the ${veh.name}.` : 'Try it: play C four times for the Bee Buggy.')}</p>
-          <button className="rc-btn go" disabled={!s.vehicle} onClick={() => { toMap() }}>Let's race →</button>
         </div>
       )}
 

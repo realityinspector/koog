@@ -51,6 +51,8 @@ interface Run {
   notes: RunNote[]; idx: number; cum: number[]; total: number; stats: RunStats; piece: Piece
   p: number; target: number; foot: 0 | 1; stepT0: number; stepDur: number; lastHit: number
   confidence: number; poseUntil: number; ended: boolean; endAt: number; started: boolean; wobbleT0: number; hits: number
+  /** index and clock of the previous correct step, so the next gap can be checked against the tune */
+  prevIdx: number; prevHitAt: number
 }
 
 export class Game {
@@ -288,7 +290,7 @@ export class Game {
     if (idx < 0) idx = 0
     this.run = {
       notes, idx, cum, total: cum[cum.length - 1] || 1, stats: newStats(notes.filter((n) => n.note != null).length), piece,
-      p: 0, target: 0, foot: 0, stepT0: -9, stepDur: 0.4, lastHit: -9, confidence: 0, poseUntil: 0, ended: false, endAt: 0, started: false, wobbleT0: -9, hits: 0,
+      p: 0, target: 0, foot: 0, stepT0: -9, stepDur: 0.4, lastHit: -9, confidence: 0, poseUntil: 0, ended: false, endAt: 0, started: false, wobbleT0: -9, hits: 0, prevIdx: -1, prevHitAt: -1,
     }
     this.says = null; this.scores = null; this.saved = false; this.newUnlock = null
     const hs = useHarmonyStore.getState()
@@ -363,12 +365,12 @@ export class Game {
       return
     }
     if (this.pw && !this.pwJudge(g)) return
-    r.started = true
     st.allNotes++
     if (g.kind !== 'spicy') st.inKey++
-    const onBeat = g.rhythm == null || g.rhythm >= 0.6
-    if (g.rhythm != null) { st.rhythmN++; if (g.rhythm >= 0.6) st.rhythmOn++ }
     if (pc(g.note) === pc(exp)) {
+      const onBeat = this.stepOnBeat(r)
+      r.prevIdx = r.idx; r.prevHitAt = this.clock
+      r.started = true
       st.hits++; r.hits++
       const sec = r.notes[r.idx].beats * 60 / r.piece.song.bpm
       r.foot = r.foot ? 0 : 1; r.stepT0 = this.clock; r.stepDur = clamp(sec * 0.85, 0.24, 0.55); r.lastHit = this.clock
@@ -391,6 +393,22 @@ export class Game {
       this.floatText('Whoops, recover!', '#ffd0a0')
       this.emit()
     }
+  }
+
+  /** true when this step landed in time with the written gap (long notes wait longer than short ones). The first step of a walk is not scored. A phrase rung that does not time the beat is not scored either. */
+  private stepOnBeat(r: Run): boolean {
+    if (this.pw && RULES[this.pw.rung].windowMs == null) return true
+    if (r.prevIdx < 0 || r.prevHitAt < 0) return true
+    const gap = r.cum[r.idx] - r.cum[r.prevIdx]
+    if (!(gap > 0)) return true
+    const bpm = this.pw?.bpm || r.piece.song.bpm || 100
+    const expect = gap * 60 / bpm
+    const actual = this.clock - r.prevHitAt
+    const tol = Math.max(0.12, expect * 0.3)
+    r.stats.rhythmN++
+    const ok = Math.abs(actual - expect) <= tol
+    if (ok) r.stats.rhythmOn++
+    return ok
   }
 
   private finish() {
@@ -469,7 +487,7 @@ export class Game {
     pw.att?.cancel(); pw.att = null
     pw.stage = 'teach'; pw.ei = 0; pw.tRef = 0
     pw.map = []; for (let i = ph.start; i < ph.end; i++) if (r.notes[i]?.note != null) pw.map.push(i)
-    r.idx = ph.start; r.target = r.cum[ph.start] / r.total
+    r.idx = ph.start; r.target = r.cum[ph.start] / r.total; r.prevIdx = -1; r.prevHitAt = -1
     pw.bpm = RULES[pw.rung].bpm
     pw.t0 = this.clock + 0.5
     const dur = (ph.notes[ph.notes.length - 1].beat + ph.notes[ph.notes.length - 1].beats) * 60 / pw.bpm
@@ -566,7 +584,7 @@ export class Game {
     else this.say(tip, 'oops', 3.4)
     // back to the mark
     const ph = pw.list[pw.pi]
-    r.idx = ph.start; r.target = r.cum[ph.start] / r.total
+    r.idx = ph.start; r.target = r.cum[ph.start] / r.total; r.prevIdx = -1; r.prevHitAt = -1
     pw.att?.cancel(); pw.att = null
     this.emit()
   }
@@ -757,7 +775,7 @@ export class Game {
     const key = useHarmonyStore.getState().key
     const look = this.look()
     const sc = computeScores(look, r.stats, key)
-    const overall = (sc.style + sc.rhythm + sc.harmony) / 3
+    const overall = r.stats.rhythmN > 0 ? (sc.style + sc.rhythm + sc.harmony) / 3 : (sc.style + sc.harmony) / 2
     this.scores = sc; this.stars = starsOf(overall)
     this.says = judgeSay(look, r.stats, key, sc)
     const prev = this.save.best[this.era.id] ?? 0

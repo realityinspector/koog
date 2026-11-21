@@ -35,8 +35,8 @@ export const ART_ROOMS: Room[] = ['Play', 'Feel', 'Learn', 'History']
 
 const scene = (id: string, title: string, visual: string, palette: string, song: string, line: string, extra: Partial<KoogState> = {}): Piece =>
   ({ id, room: 'Play', title, line, state: { screen: 'play', visual, palette, ...extra }, perf: { k: 'song', id: song, vel: 62 }, seconds: 16 })
-const sound = (id: string, title: string, snd: string, visual: string, palette: string, song: string, line: string): Piece =>
-  ({ id, room: 'History', title, line, state: { screen: 'play', visual, palette, sound: snd }, perf: { k: 'song', id: song, vel: 62 }, seconds: 16 })
+const sound = (id: string, title: string, snd: string, preset: string, visual: string, palette: string, song: string, line: string): Piece =>
+  ({ id, room: 'History', title, line, state: { screen: 'play', visual, palette, sound: snd, preset }, perf: { k: 'song', id: song, vel: 62 }, seconds: 16 })
 const songScreen = (id: string, title: string, song: string, line: string, mode?: 'flow'): Piece =>
   ({ id, room: 'Learn', title, line, state: { screen: 'songs', item: song, songMode: mode }, perf: { k: 'song', id: song, vel: 64 },
     ui: [{ sel: '.sg .play button.btn', text: 'Play', after: mode === 'flow' ? 200 : 600 }], seconds: 16 })
@@ -70,10 +70,10 @@ export const PIECES: Piece[] = [
   songScreen('art-song-gymnopedie', 'Slow music', 'gymnopedie', 'Floating piano music from 1888. Every note has room to ring.'),
 
   // ---------------------------------------------------------------- History: sounds from the synth time machine
-  sound('art-organ', 'Drawbar organ', 'organ', 'ripples', 'sunset', 'jesu', 'A warm, humming organ in the style of the 1930s, built in code.'),
-  sound('art-strings', 'Tape strings', 'strings', 'rise', 'ocean', 'newworld', 'A tape-style keyboard in the spirit of the 1960s, built in code.'),
-  sound('art-bells', 'FM bells', 'bell', 'ripples', 'night', 'twinkle', 'Glassy bells, made by one sound wave bending another.'),
-  sound('art-pad', 'Lush pad', 'pad', 'ghost', 'galaxy', 'brahms', 'A soft 1980s synth sound, like a warm cloud under the tune.'),
+  sound('art-organ', 'Drawbar organ', 'organ', 'Cathedral full', 'ripples', 'sunset', 'jesu', 'A warm, humming organ in the style of the 1930s, built in code.'),
+  sound('art-strings', 'Tape strings', 'strings', 'Koog moonlit strings', 'rise', 'ocean', 'newworld', 'A tape-style keyboard in the spirit of the 1960s, built in code.'),
+  sound('art-bells', 'FM bells', 'bell', 'Koog glass bell', 'ripples', 'night', 'twinkle', 'Glassy bells, made by one sound wave bending another.'),
+  sound('art-pad', 'Lush pad', 'pad', 'Koog moon shimmer', 'ghost', 'galaxy', 'brahms', 'A soft 1980s synth sound, like a warm cloud under the tune.'),
 ]
 
 export const pieceIndex = (id: string) => PIECES.findIndex((p) => p.id === id)

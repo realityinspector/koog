@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useScreen } from '../../layout/screenStore'
 import { keyName } from '../../music/theory'
 import { GROOVES } from './grooves'
 import {
@@ -48,7 +49,9 @@ export function BeatsPanel() {
     return () => cancelAnimationFrame(raf)
   }, [S.playing])
 
-  // Stop sound if the panel unmounts.
+  // The screen stays mounted while hidden, so leaving BEATS has to stop the groove (and give the key back).
+  const screen = useScreen((s) => s.screen)
+  useEffect(() => { if (screen !== 'beats') stop() }, [screen])
   useEffect(() => () => stop(), [])
 
   const g = S.groove

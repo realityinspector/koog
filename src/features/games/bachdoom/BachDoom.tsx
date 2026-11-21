@@ -4,7 +4,7 @@ import { onJudge } from '../../../music/judge'
 import { clearGuide } from '../../../music/guide'
 import { DIFFS, Game } from './game'
 import type { Diff } from './game'
-import { EPISODES, LEGACY_LEVELS, LEVELS, episodeOf, isUnlocked, menuOrder } from './levels'
+import { EPISODES, LEGACY_LEVELS, LEVELS, episodeOf, isUnlocked, menuOrder, nextInMenu } from './levels'
 import { View } from './render'
 import { Painter } from './hud'
 import { SceneList } from './scene'
@@ -116,11 +116,14 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
   useEffect(() => { report({ level: sel != null ? LEVELS[sel].id.toLowerCase() : null }) }, [sel])
   useEffect(() => () => report({ level: null }), [])
   const phase = game?.phase ?? 'title'
+  const nextIx = game ? nextInMenu(game.levelIdx) : -1
+  const canNext = !!game && nextIx >= 0 && isUnlocked(nextIx, game.save.unlocked)
   const save = game?.save
   const unlocked = save?.unlocked ?? 1
   const level = sel ?? Math.min(LEGACY_LEVELS - 1, unlocked - 1)
   const ep = epSel ?? episodeOf(LEVELS[level])
   const diff = diffSel ?? game?.diff ?? 'normal'
+  if (game) game.menuEp = ep
   // a click should never leave a focused button behind: the computer keyboard plays notes, and Space/Enter would press it
   const act = (fn: () => void) => (e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.blur(); fn() }
 
@@ -133,6 +136,7 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
 
       {phase === 'title' && game && (
         <div className="bd-title">
+          <div className="bd-pick">
           <div className="bd-diffs">
             {DIFFS.map((d) => (
               <button key={d.id} className={'bd-btn bd-diff' + (diff === d.id ? ' on' : '')} onClick={act(() => setDiffSel(d.id))}>
@@ -167,6 +171,7 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
             })}
           </div>
           <SpellKode />
+          </div>
           <button className="bd-btn bd-start" onClick={act(() => game.start(level, diff))}>▶ Start {LEVELS[level].id}: {LEVELS[level].name}</button>
           <p className="bd-fine">A fan-made parody. Not affiliated with id Software.</p>
         </div>
@@ -176,7 +181,9 @@ export function BachDoom({ onExit, levelId }: { onExit: () => void; levelId?: st
       )}
       {phase === 'tally' && game && (
         <div className="bd-actions">
-          <button className="bd-btn bd-start" onClick={act(() => game.next())}>Next level ▶</button>
+          {canNext
+            ? <button className="bd-btn bd-start" onClick={act(() => game.next())}>Next level ▶</button>
+            : <button className="bd-btn bd-start" onClick={act(() => game.toTitle())}>Back to the title</button>}
           <button className="bd-btn" onClick={act(() => game.retry())}>Replay</button>
         </div>
       )}

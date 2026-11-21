@@ -253,9 +253,9 @@ export const STOPS: Stop[] = [
     perf: { k: 'notes', seq: 'G4:1.5 A4:.5 G4:1 E4:3 G4:1.5 A4:.5 G4:1 E4:3', bpm: 66, vel: 60, loop: true, gap: 1 },
     says: 'Pick a Christmas song and climb the same six rungs, all the way to the whole song from memory. Every phrase you nail hangs an ornament and lights the tree, and when you can play the whole song from memory a star goes on top. A peek in the memory level costs you a star.',
     learns: 'The echo level trains your ear: hear a phrase, then play it back.' },
-  { id: 'looper-pedal-boost', room: 'Studio', title: 'Pedal looper, M metronome, Boost', seconds: 14, state: play('fireworks', 'rainbow'),
+  { id: 'looper-pedal-boost', room: 'Studio', title: 'Pedal looper, Shift+M metronome, Boost', seconds: 14, state: play('fireworks', 'rainbow'),
     perf: { k: 'notes', seq: 'C3:1 G3 C4 G3 A2 E3 A3 E3 F2 C3 F3 C3 G2 D3 G3 D3', bpm: 84, vel: 64, loop: true, gap: 1 },
-    says: 'A foot pedal can run the looper with one tap: tap to record, tap to loop, two quick taps to stop, hold two seconds to clear (with a five second Undo). Press M anywhere for a metronome click (Shift+M while the computer keys play notes). And Boost lifts the volume for quiet laptop speakers, never for headphones.', learns: 'Keeping time, and how loud is too loud.' },
+    says: 'A foot pedal can run the looper with one tap: tap to record, tap to loop, two quick taps to stop, hold two seconds to clear (with a five second Undo). Press Shift+M anywhere for a metronome click (plain M is the piano note B). And Boost lifts the volume for quiet laptop speakers, never for headphones.', learns: 'Keeping time, and how loud is too loud.' },
   { id: 'pedalboard-stomp', room: 'Studio', title: 'Pedalboard and piano pedals', seconds: 16, state: play('ripples', 'sunset'),
     perf: { k: 'notes', seq: 'C4:1 E4 G4 C5:2 G4:1 E4 C4:2', bpm: 90, vel: 64, loop: true, gap: 1 },
     says: 'Open the Pedalboard from the Devices menu or ✨ Modes. Each pedal is a stompbox: Fuzz, Echo, Chorus, Jet, Swirl, Wobble, Quack, Octave, Squeeze and Reverb. Stomp one on, turn its knobs, drag to change the order, or try a preset like Space or Underwater. A USB foot pedal can stomp the selected one, and a keyboard pedal can be the soft pedal, the sostenuto or an expression swell.',
@@ -309,6 +309,16 @@ export const STOPS: Stop[] = [
     link: { label: 'Open Koreographer', href: '#/apps/choreographer' },
     says: 'Open the Koog Store and pick Koreographer. Play a short tune, say it means Spin, and you have taught the dancer a function. Then build a routine: tap moves to line them up, wrap one in a repeat, add a when rule (when the kick hits, jump) and an if / else (a high note waves left, a low note waves right). Press Perform and he dances to the beat while each block lights up like a debugger; Step goes one move at a time. Twelve puzzles, and you can save a dance or share it as a link.',
     learns: 'A function is a name plus what it does, a loop repeats, an event waits for something to happen, and an if / else chooses. Programs are those four ideas in different clothes.' },
+  { id: 'koogalien-games', room: 'Games', title: 'Koogalien Games', seconds: 15, state: { screen: 'games' },
+    perf: { k: 'notes', seq: 'C4:.5 A4:1 R:.5 E4:.5 G4:.5 C5:1 R:.5 C4:.5 G4:.5 A4:1', bpm: 92, vel: 60, loop: true, gap: 1 },
+    link: { label: 'Open Koogalien Games', href: '#/apps/koogalien-games' },
+    says: 'Four small games are made for learning Koogalien. In Alien Says a Koogalien says a word, you tap its picture, then play the chord back, and a clean streak charges a little UFO. Spell Station docks the Koog Alien ship: spell KOOG, then your own name, one letter at a time as a row note and a column note, and the letter grid fades as you learn it. Chat with a Koogalien asks you something like you happy? and you answer with a sentence. Word Rocket lets words fall slowly while you zap them with their chords. Words you miss come back soon, and what you learn in one game counts in all of them.',
+    learns: 'Spaced repetition shows a word again just before you would forget it, so a missed word is not a failure, it is a reminder. A name you spell is a variable: a label that holds a value. And a chat that answers differently depending on what you play is a condition.' },
+  { id: 'koogalien-library', room: 'Studio', title: 'The Koogalien Library', seconds: 16, state: { screen: 'play' },
+    perf: { k: 'notes', seq: 'C4:.5 E4:.5 G4:1 R:.5 D4:.5 F4:.5 A4:1 R:.5 E4:.5 G4:.5 B4:1 C5:2', bpm: 88, vel: 58, loop: true, gap: 1 },
+    link: { label: 'Open the Library', href: '#/apps/koogalien-library' },
+    says: 'Open the Koog Store, pick Koogalien Library, and choose a classic: Peter Rabbit, Alice in Wonderland, Aesop\'s Fables and more, all public domain. Press play and the book plays as Koogalien music while the notes, the code and the English scroll by like karaoke. Plain Koogalien says every word as itself. High Koogalien adds music on top: each chapter has its own key, a talking character gets its own voice (Pip, Dro or Zee), a scary scene turns minor and slow, a question lifts at the end, and a comma is a breath. Try Play along and the book waits for you to play the next word.',
+    learns: 'One language can carry more meaning by adding dimensions: pitch, length, loudness, key, tempo and voice each add a layer, the way tone does in spoken languages. A computer cuts a book into chapters, paragraphs and sentences, then translates each one, which is exactly what a compiler does with code.' },
 ]
 
 /** the tour's total length in seconds */

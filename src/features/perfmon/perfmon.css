@@ -8,7 +8,8 @@
 .pm-sw { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
 .pm-priv { margin: 6px 0; color: #aab3c2; font-size: 11px; }
 .pm-state { margin: 4px 0 6px; padding: 3px 6px; border-radius: 6px; background: #ffffff12; font-weight: 600; overflow-wrap: anywhere; }
-.pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+/* Scoped: Phrase Match's card table is also .pm-grid, and a bare rule here forced that game into two columns. */
+.pm-wrap .pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .pm-cell { padding: 4px 7px; border-radius: 6px; border-left: 4px solid #7a8494; background: #ffffff0d; display: flex; flex-direction: column; }
 .pm-cell span { font-size: 10.5px; color: #aab3c2; } .pm-cell b { font-variant-numeric: tabular-nums; font-size: 13px; }
 .pm-cell.ok, td.ok { border-color: #3ecf8e; } .pm-cell.warn { border-color: #f0b429; } .pm-cell.bad { border-color: #f06060; }

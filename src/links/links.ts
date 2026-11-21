@@ -26,7 +26,7 @@
 //   key=c-major | a-minor | f-sharp-major ...   the key Koog listens in ("auto" = detect it)
 //   visual=<sceneId>                            the PLAY visual (fireworks, ripples, ...)
 //   palette=<paletteId>                         the visual's colours
-//   modes=mentor,vibes                          helpers to switch on (duo, band, mimic, mentor, vibes)
+//   modes=mentor,vibes                          helpers to switch on (family, duo, band, mimic, mentor, vibes)
 //   sheet=on                                    show the sheet music
 //   sound=<soundId>                             the piano's sound
 //   rung=1..7                                   Learn it: the ladder rung to start on
@@ -45,7 +45,7 @@ export const DEFAULT_ORIGIN = 'https://koog-demo.fly.dev/'
 export const SCREENS = ['play', 'songs', 'challenges', 'games', 'beats', 'synth', 'log', 'gallery', 'kode', 'apps'] as const
 export const BOSS_SCREENS = ['studio', 'dj', 'loops', 'drums', 'synth', 'scenes'] as const
 export const SONG_MODES = ['wait', 'flow', 'learn'] as const
-export const HELPER_MODES = ['band', 'duo', 'mentor', 'mimic', 'vibes'] as const
+export const HELPER_MODES = ['band', 'duo', 'family', 'mentor', 'mimic', 'vibes'] as const
 export const TONICS = ['c', 'c-sharp', 'd', 'd-sharp', 'e', 'f', 'f-sharp', 'g', 'g-sharp', 'a', 'a-sharp', 'b'] as const
 const FLAT_ALIASES: Record<string, string> = { 'd-flat': 'c-sharp', 'e-flat': 'd-sharp', 'g-flat': 'f-sharp', 'a-flat': 'g-sharp', 'b-flat': 'a-sharp' }
 export const SCALES = ['major', 'minor'] as const
@@ -74,6 +74,11 @@ export interface KoogState {
   modes?: HelperMode[]
   sheet?: boolean
   sound?: string
+  /**
+   * Gallery only: which setting of `sound` to play (an emulator preset name, or a Koog preset id).
+   * Not part of the hash, and the gallery holds saves until Exit, so this never replaces the kid's sound.
+   */
+  preset?: string
   /** gallery/art only: a holiday playlist ('thanksgiving' | 'christmas') */
   sub?: string
 }

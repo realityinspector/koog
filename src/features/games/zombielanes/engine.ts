@@ -742,11 +742,17 @@ export class Game {
     } else this.setGuideKey('')
   }
 
+  /** Zombie for phrase step i. `cg` is its place in the line, not its slot in the array. */
+  private lineZombie(i: number): Zombie {
+    const zs = this.cg!.zs
+    return zs.find((z) => z.cg === i) ?? zs[Math.min(i, zs.length - 1)]
+  }
+
   private congaNote(g: NoteGrade) {
     const cg = this.cg!
     if (cg.stage !== 'march' || this.ending) return
     const ph = cg.plan[cg.li].phrase, rule = RULES[cg.rung], i = cg.idx
-    const exp = ph.notes[i].note, z = cg.zs[i]
+    const exp = ph.notes[i].note, z = this.lineZombie(i)
     const dtMs = g.t - cg.arr[i] * 1000
     if (!this.matches(exp, g.note)) {
       // Easy/Full: a low chord tone is left-hand play, a bonus, never a wrong note
@@ -788,7 +794,7 @@ export class Game {
     cg.speed = Math.min(1.3, cg.speed * 1.1)
     cg.extra = Math.min(3, cg.extra + 1)
     this.combo = 0
-    const z = cg.zs[i]
+    const z = this.lineZombie(i)
     this.pop(kind === 'wrong' ? 'Not that one!' : kind === 'early' ? 'Early!' : 'Late!', z.x, this.yAt(Math.min(z.p, P_LINE)) - this.zk * ZH * 0.9, '#ffb0a0', 26, 1.2)
     if (this.cg === cg) {
       const lane = played != null ? this.laneFor(played) : undefined
@@ -931,7 +937,9 @@ export class Game {
         b.age += dt; b.flinch = Math.max(0, b.flinch - dt * 4)
         if (!this.ending) {
           b.p += dt / (lv.travel * slow)
-          if (b.p >= 1 && this.shield) { this.shield = false; b.p = 0.7; this.pop('SHIELDED!', this.w / 2, this.h - 90, '#8fd4ff', 30, 1.1) } else if (b.p >= 1) { this.boss = null; this.lives = 1; this.loseBrain(this.w / 2) }
+          // one arrival costs one brain, then he steps back. The last brain still ends the run.
+          if (b.p >= 1 && this.shield) { this.shield = false; b.p = 0.7; this.pop('SHIELDED!', this.w / 2, this.h - 90, '#8fd4ff', 30, 1.1) }
+          else if (b.p >= 1) { b.p = 0.62; this.loseBrain(this.w / 2) }
         }
       } else if (this.cg) {
         if (!this.ending) this.updateConga(dt)
@@ -1145,9 +1153,8 @@ export class Game {
     // conga strike line
     if (this.cg && this.phase === 'play') this.drawStrikeLine()
     if (this.tur && this.phase === 'play' && !this.boss) this.drawTurret()
-    // zombies, far ones first
-    const zs = this.cg ? this.cg.zs : this.zombies
-    zs.sort((a, b) => a.p - b.p)
+    // far ones first. Copy: conga play looks zombies up by their place in the line.
+    const zs = (this.cg ? this.cg.zs : this.zombies).slice().sort((a, b) => a.p - b.p)
     if (this.dying.length > 1) this.dying.sort((a, b) => a.z.p - b.z.p)
     let di = 0
     const dy = this.dying

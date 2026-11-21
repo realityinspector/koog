@@ -3,13 +3,15 @@
 // Tunes are matched by INTERVAL, so any key or octave works. Rhythm is checked loosely: the tempo is fitted to what was
 // played and every gap must stay within a factor of the written rhythm (rt). Notes within 45 ms of each other are ONE
 // "group" (a chord, or a hand landing slightly apart); a group counts as its top note for melodies, and as a set for chords.
-// Held notes make no new onset, so a drone under a tune does not disturb it. Every egg has a cooldown.
+// Held notes make no new onset, so a drone under a tune does not disturb it. Every egg has a cooldown so one
+// performance cannot fire twice. cleared() lifts that cooldown once the costume has finished, so the same tune can fire again.
 // Only public-domain tunes (US publication 1930 or earlier, or traditional) and simple universal patterns.
 import { seq } from '../../music/classical'
 import { HOLIDAY_SONGS } from '../songs/holidaySongs'
 
 export type EggId =
-  | 'shave' | 'birthday' | 'scales' | 'ode' | 'twinkle' | 'chromatic' | 'woodpecker' | 'quake' | 'pogo' | 'crown' | 'clock' | 'wig' | 'sleepy' | 'dizzy' | 'ghost' | 'surf'
+  | 'shave' | 'birthday' | 'scales' | 'ode' | 'twinkle' | 'chromatic' | 'woodpecker' | 'quake' | 'pogo' | 'crown' | 'clock' | 'wig' | 'sleepy' | 'dizzy' | 'ghost' | 'surf' | 'nerd'
+  | 'row' | 'lamb' | 'jacques' | 'bridge' | 'mac' | 'buns' | 'yankee' | 'saints' | 'spider' | 'mountain' | 'camp' | 'susanna' | 'lullaby'
   | 'santa' | 'lights' | 'present' | 'snow' | 'tree' | 'antlers' | 'sleigh' | 'pilgrim' | 'pie' | 'turkey'
 
 export interface DemoNote { n: number; t: number; d: number; v: number }
@@ -50,6 +52,20 @@ export const TUNES: Tune[] = [
   fromSeq('twinkle', 'C4:1 C4 G4 G4 A4 A4 G4:2'),
   fromSeq('clock', 'G#4:1 F#4 E4 B3:2 E4:1 G#4 F#4 B3:2', 3),
   fromSeq('wig', 'E5:.5 D#5 E5 D#5 E5 B4 D5 C5'),
+  // Playground songs. Traditional, or published before 1930. `mountain` is listed before `camp` because its ending shares camp's jumps.
+  fromSeq('row', 'C4:2 C4:2 C4:1 D4:1 E4:2 E4:1 D4:1 E4:2'),
+  fromSeq('lamb', 'E4:1 D4:1 C4:1 D4:1 E4:1 E4:1 E4:2'),
+  fromSeq('jacques', 'C4:1 D4:1 E4:1 C4:1 C4:1 D4:1 E4:1 C4:2'),
+  fromSeq('bridge', 'G4:1 A4:1 G4:1 F4:1 E4:1 F4:1 G4:2'),
+  fromSeq('mac', 'C4:1 C4:1 C4:1 G4:1 A4:1 A4:1 G4:2'),
+  fromSeq('buns', 'E4:1 D4:1 C4:2 E4:1 D4:1 C4:2'),
+  fromSeq('yankee', 'C4:1 C4:1 D4:1 E4:1 C4:1 E4:1 D4:2'),
+  fromSeq('saints', 'C4:1 E4:1 F4:1 G4:2 C4:1 E4:1 F4:1 G4:2'),
+  fromSeq('spider', 'C4:1 C4:1 C4:1 D4:1 E4:1 E4:1 E4:1 D4:2', 2.2, [[5, 0, 0, 2, 2, 0, -2]]),
+  fromSeq('mountain', 'C4:1 C4:1 C4:1 A3:1 C4:1 D4:1 C4:1 A3:2'),
+  fromSeq('camp', 'G4:1 G4:1 E4:1 G4:1 A4:1 G4:1 E4:2'),
+  fromSeq('susanna', 'C4:1 E4:1 G4:1 G4:1 A4:1 G4:1 E4:1 C4:2'),
+  fromSeq('lullaby', 'C4:1.5 C4:.5 E4:1 C4:1.5 C4:.5 E4:2', 2.2, [[0, 3, -3, 0, 3]]),
   opening('santa', 'jingle', 8),
   opening('lights', 'deckhalls', 8),
   opening('present', 'wewish', 8),
@@ -77,7 +93,12 @@ interface G { t: number; top: number; cnt: number; pcs: number; v: number }
 interface Raw { t: number; n: number; v: number }
 const GROUP_MS = 45
 
-export interface Recognizer { onset(t: number, note: number, v: number): EggId | null; reset(): void }
+export interface Recognizer {
+  onset(t: number, note: number, v: number): EggId | null
+  reset(): void
+  /** the costume finished (or never started), so any egg may fire again on the next tune */
+  cleared(): void
+}
 
 type Check = (g: G[], r: Raw[], t: number) => boolean
 const gap = (g: G[], i: number) => g[i].t - g[i - 1].t
@@ -196,8 +217,16 @@ CHECK.crown = (g) => {
   return d === a && b === (a + 5) % 12 && c === (a + 7) % 12
 }
 
+/** nerd: the letters D, A, D. Matched by NOTE NAME (pitch class 2, 9, 2) in any octave, each a calm 80 ms to 1.6 s after the last. */
+CHECK.nerd = (g) => {
+  if (g.length < 3) return false
+  const w = g.slice(g.length - 3)
+  if (w[0].top % 12 !== 2 || w[1].top % 12 !== 9 || w[2].top % 12 !== 2) return false
+  return gap(w, 1) >= 80 && gap(w, 1) <= 1600 && gap(w, 2) >= 80 && gap(w, 2) <= 1600
+}
+
 /** order matters: specific tunes first, impulsive reactions last */
-const ORDER: EggId[] = ['scales', 'surf', 'chromatic', 'woodpecker', 'pogo', 'ghost', 'crown', 'quake', 'dizzy', 'sleepy']
+const ORDER: EggId[] = ['scales', 'surf', 'chromatic', 'woodpecker', 'pogo', 'ghost', 'crown', 'nerd', 'quake', 'dizzy', 'sleepy']
 
 export const INFO: EggInfo[] = []
 const cdOf = (id: EggId) => INFO.find((e) => e.id === id)?.cd ?? 6000
@@ -209,6 +238,7 @@ export function createRecognizer(): Recognizer {
   const ready = (id: EggId, t: number) => t - (fired.get(id) ?? -1e9) >= cdOf(id)
   return {
     reset() { gs.length = 0; raw.length = 0; fired.clear(); lock = -1e9 },
+    cleared() { fired.clear(); lock = -1e9 },
     onset(t, note, v) {
       raw.push({ t, n: note, v }); if (raw.length > 24) raw.shift()
       const last = gs[gs.length - 1]
@@ -248,6 +278,20 @@ INFO.push(
   E('dizzy', '😵', 'Dizzy', 'Try mashing the keys loud and fast…', 'fun', 3600, 'a dizzy spin with stars', 5000),
   E('ghost', '👻', 'Spooky sheet', 'Try two spooky notes, back and forth…', 'fun', 5000, 'a ghost costume'),
   E('surf', '🏄', 'Surf\'s up', 'Try a super-fast slide across all the white keys…', 'fun', 4500, 'a surfboard'),
+  E('nerd', '🤓', 'D-A-D', 'Try spelling a word with notes: D, then A, then D…', 'fun', 6500, 'a super nerd with taped glasses and his own synthesizer'),
+  E('row', '🚣', 'Row Your Boat', 'Try the song about gently going down the stream…', 'fun', 5200, 'a little rowboat'),
+  E('lamb', '🐑', 'Little Lamb', 'Try the song about an animal that followed Mary to school…', 'fun', 4800, 'lamb ears and a woolly chin'),
+  E('jacques', '🔔', 'Are You Sleeping', 'Try the round about someone who is still asleep…', 'fun', 5200, 'a nightcap and a bell'),
+  E('bridge', '🌉', 'London Bridge', 'Try the song about a bridge that keeps falling…', 'fun', 4800, 'a stone bridge'),
+  E('mac', '🤠', 'Old MacDonald', 'Try the song about a farm and a funny letter song…', 'fun', 5000, 'a farm hat'),
+  E('buns', '🍞', 'Hot Cross Buns', 'Try the song about buns that cost a penny…', 'fun', 4600, 'a bun with a cross'),
+  E('yankee', '🪶', 'Yankee Doodle', 'Try the song about a feather in a cap…', 'fun', 4800, 'a cap with a feather'),
+  E('saints', '🎺', 'The Saints', 'Try the song about saints who go marching in…', 'fun', 5200, 'a marching sash'),
+  E('spider', '🕷️', 'Itsy Spider', 'Try the song about a tiny spider and a waterspout…', 'fun', 5000, 'a spider on a thread'),
+  E('mountain', '⛰️', 'Round the Mountain', 'Try the song about someone coming round the mountain…', 'fun', 5000, 'a mountain he climbs'),
+  E('camp', '🏁', 'Camptown Races', 'Try the song that shouts doo-dah…', 'fun', 4800, 'a racing flag'),
+  E('susanna', '🪕', 'Oh Susanna', 'Try the song about coming from Alabama with a banjo…', 'fun', 5000, 'a little banjo'),
+  E('lullaby', '🌙', 'Lullaby', 'Try the soft good-night song…', 'fun', 5600, 'a moon and a gentle rock'),
   E('santa', '🎅', 'Santa', 'Try the sleigh-bell song…', 'holiday', 6000, 'a red suit, hat and white beard'),
   E('lights', '💡', 'String lights', 'Try the fa-la-la song…', 'holiday', 6000, 'lights wrapped around him'),
   E('present', '🎁', 'Present', 'Try the song that asks for figgy pudding…', 'holiday', 5500, 'he hands out a present'),
@@ -284,6 +328,7 @@ export function demoFor(id: EggId): DemoNote[] {
     case 'woodpecker': step([72, 72, 72, 72, 72, 72, 72, 72, 72], 105, 0.8); break
     case 'pogo': step([60, 72, 60, 72, 60, 72], 320); break
     case 'ghost': step([60, 66, 60, 66, 60, 66], 420); break
+    case 'nerd': step([62, 69, 62], 450); break // D A D
     case 'sleepy': step([60, 64, 62], 1700, 0.22); break
     case 'quake': for (const n of [36, 39, 41, 43, 46]) out.push({ n, t: 0, d: 700, v: 0.9 }); break
     case 'dizzy': step([60, 71, 62, 69, 64, 67, 72, 59, 66, 61, 70, 63, 68, 65], 70, 0.95); break

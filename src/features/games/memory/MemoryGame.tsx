@@ -57,7 +57,7 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
           <h2>🃏 Phrase Match</h2>
           <p>Flip cards to hear short tunes. Find two cards with the same tune, then <b>play it back</b> on the keys to win the pair.</p>
           <EarToggle />
-          <KodePowerCard game="memory" on={s.kode} onToggle={() => setKode(!s.kode)} status={s.kode && s.kodeWins ? `Expressions played: ${s.kodeWins}` : undefined}>
+          <KodePowerCard game="memory" on={s.kode} onToggle={() => setKode(!s.kode)} status={s.kode ? (s.kodeWins ? `Expressions played: ${s.kodeWins}` : undefined) : 'Off: the game plays exactly as before.'}>
             <p>Win a pair and its tune gets a name. After the table is clear, a bonus asks you to play an expression like <code className="gk-code">b a b</code>.</p>
           </KodePowerCard>
           <div className="pm-levels">
@@ -116,10 +116,11 @@ export function MemoryGame({ onExit }: { onExit: () => void }) {
           <div className="pm-confetti" aria-hidden>{['🎵', '⭐', '🎶', '🃏', '🎉', '🎵', '⭐', '🎶'].map((e, i) => <i key={i} style={{ ['--i' as string]: i }}>{e}</i>)}</div>
           <h3>Table cleared!</h3>
           <Stars n={s.stars} />
-          <p>{s.flips} flips · {s.misses} missed play-backs · {fmtTime(ms)}</p>
+          <p>{s.flips} {s.flips === 1 ? 'flip' : 'flips'} · {s.misses} missed {s.misses === 1 ? 'play-back' : 'play-backs'} · {fmtTime(ms)}</p>
           {s.kode && s.vars.length > 0 && <KodeBonus />}
           <p className="pm-bestline">{s.newBest ? 'New best for this level!' : bestNow ? `Best: ${bestNow.flips} flips in ${fmtTime(bestNow.ms)}` : ''}</p>
           <div className="pm-row">
+            {s.level !== 'hard' && <button className="pm-btn go" onClick={() => start(s.level === 'easy' ? 'medium' : 'hard', s.ear)}>Next level</button>}
             <button className="pm-btn go" onClick={retry}>Retry</button>
             <button className="pm-btn" onClick={() => { toMenu() }}>Menu</button>
             <button className="pm-btn ghost" onClick={() => { stop(); toMenu(); onExit() }}>Games</button>

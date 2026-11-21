@@ -67,6 +67,7 @@ export function ChallengesPanel() {
   // ---------- finish ----------
   if (result) {
     const def = CHALLENGES.find((c) => c.id === result.defId)!
+    const nxt = [...CHALLENGES].sort((a, b) => a.difficulty - b.difficulty).find((c) => !badges[c.id] && c.id !== 'daily' && c.id !== result.defId)
     return (
       <section className="ch ch-finish">
         <div className="ch-emoji-big">{result.perfect ? '🌟' : '🎉'}</div>
@@ -78,6 +79,7 @@ export function ChallengesPanel() {
           {result.newBadge && <> · Badge earned: <b className="ch-pb">{def.emoji} {result.newBadge}</b></>}
         </p>
         <div className="ch-actions">
+          {nxt && <button className="btn" onClick={() => start(nxt.id, 0)}>Next</button>}
           <button className="btn" onClick={() => start(result.defId, result.level)}>Go again</button>
           <button className="btn-ghost" onClick={quit}>Pick another</button>
         </div>

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useScreen } from '../../layout/screenStore'
 import { consume, linkNote, report, useLinkIn } from '../../links/bus'
 import { getEmu } from './emu'
 import { Timeline } from './Timeline'
 import { InstrumentsRack } from './InstrumentsRack'
 import { SynthPlayground } from './SynthPlayground'
 import { EmulatorPanel } from './EmulatorPanel'
+import { Present } from './present/Present'
 import './synth-history.css'
 
-const TABS = ['🎹 Instruments', '🕰 Timeline', 'Playground'] as const
+const TABS = ['🎹 Instruments', '🕰 Timeline', '🎬 Present', 'Playground'] as const
 
 export function SynthHistoryPanel() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('🎹 Instruments')
@@ -25,6 +27,9 @@ export function SynthHistoryPanel() {
   }, [req])
   useEffect(() => { report({ emu: emu?.id ?? (tab === '🕰 Timeline' ? 'timeline' : null) }) }, [emu?.id, tab])
   useEffect(() => () => report({ emu: null }), [])
+  // Hidden screens stay mounted. Unmount the emulator and playground so PLAY and SONGS get the keyboard back.
+  const screen = useScreen((s) => s.screen)
+  if (screen !== 'synth') return null
   if (emu) return <section className="sh"><EmulatorPanel key={emu.id + emu.preset} id={emu.id} preset={emu.preset} onBack={() => setEmu(null)} /></section>
   return (
     <section className="sh">
@@ -40,6 +45,7 @@ export function SynthHistoryPanel() {
       </div>
       {tab === '🎹 Instruments' && <InstrumentsRack onPlay={(id) => setEmu({ id, preset: 0 })} />}
       {tab === '🕰 Timeline' && <Timeline onPlay={(id, preset) => setEmu({ id, preset })} />}
+      {tab === '🎬 Present' && <Present />}
       {tab === 'Playground' && <SynthPlayground />}
     </section>
   )

@@ -11,7 +11,7 @@
 import { create } from 'zustand'
 import { registerPanicTarget } from '../../music/panic'
 import { createChannel, getCtx, getNoise, unlockHost } from '../../audio/host'
-import { beatPos, clockEpoch, getBpm, isRunning, onTick, setBpm, startMaster, stopMaster, tapTempo, timeOfBeat, useMaster } from '../../music/masterClock'
+import { acquireClock, beatPos, clockEpoch, getBpm, isRunning, onTick, releaseClock, setBpm, tapTempo, timeOfBeat, useMaster } from '../../music/masterClock'
 import { getBeat } from '../dj/clock'
 import { useLoop } from '../loopstation/loopEngine'
 import { onProfileChange, pkey } from '../../profile/profile'
@@ -184,7 +184,7 @@ function schedule(now: number) {
 export function startPattern() {
   if (get().running) return
   void unlockHost(); ensureAudio()
-  if (!isRunning()) { startMaster(); E.startedClock = true } else E.startedClock = false
+  acquireClock('drums') // starts the shared clock if it is off; the clock stops again only when the last holder lets go
   E.epoch = undefined; E.patStart = 0; E.firstN = -1
   set({ running: true })
   say('Playing')
@@ -196,7 +196,7 @@ export function stopPattern() {
   E.passOpen = false
   if (E.queued >= 0 && E.queued !== E.bank) swapTo(E.queued, 0)
   chokeAll(); stopFill()
-  if (E.startedClock && !loopsRunning() && !getBeat().playing) stopMaster()
+  releaseClock('drums', loopsRunning() || getBeat().playing) // the looper / a DJ deck may still be using the beat
   E.startedClock = false
   say('Stopped')
 }
@@ -379,6 +379,7 @@ export function stopFill() {
 function silence() {
   releaseAllPads(); stopFill()
   if (get().running) { set({ running: false }); E.startedClock = false }
+  releaseClock('drums', loopsRunning() || getBeat().playing)
   chokeAll()
   try { E.bus?.disconnect() } catch { /* ignore */ }
   E.bus = null // rebuilt on the next hit
@@ -388,8 +389,8 @@ registerPanicTarget('drumpads', silence)
 E.offTick?.(); E.offMaster?.(); E.offProfile?.()
 E.offTick = onTick(schedule)
 // someone else stopped the shared clock (the looper, say): the pattern stops with it
-E.offMaster = useMaster.subscribe((s) => { if (!s.running && get().running) { set({ running: false }); E.startedClock = false; say('Stopped') } })
-E.offProfile = onProfileChange(() => load())
+E.offMaster = useMaster.subscribe((s) => { if (!s.running && get().running) { set({ running: false }); E.startedClock = false; releaseClock('drums', true); say('Stopped') } })
+E.offProfile = onProfileChange(() => load(), 'drumEngine')
 if (!hot.eng) load()
 
 if (import.meta.hot) {

@@ -1,0 +1,69 @@
+.pr{display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;color:var(--text)}
+.pr-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pr-bar>b{font-size:calc(16px*var(--prs,1))}.pr-dtitle{flex:1;min-width:0}
+.pr-count{font-size:calc(13px*var(--prs,1));color:var(--text-dim);font-weight:700}
+.pr-tech{min-height:calc(40px*var(--prs,1));padding:6px 16px;border-radius:999px;font-size:calc(14px*var(--prs,1));font-weight:800;cursor:pointer;background:var(--surface-2);border:1px solid var(--border);color:var(--text);margin-left:auto}
+.pr-tech.on{background:#1d4d5c;border-color:var(--cyan)}
+.pr-tech kbd{font:inherit;font-size:calc(11px*var(--prs,1));padding:1px 6px;border-radius:6px;border:1px solid var(--border);margin-left:4px;opacity:.8}
+.pr-decks{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.pr-deck{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border-radius:var(--r-md);cursor:pointer;font:inherit;color:var(--text);background:linear-gradient(160deg,rgba(124,92,255,.25),rgba(0,0,0,.35));border:1px solid var(--border);min-height:120px}
+.pr-deck:hover{border-color:var(--cyan)}
+.pr-deck b{font-size:calc(17px*var(--prs,1))}.pr-deck span{font-size:calc(14px*var(--prs,1));color:var(--text-dim)}.pr-deck small{margin-top:auto;font-weight:800;color:var(--gold)}
+.pr-deck.quiz{background:linear-gradient(160deg,rgba(79,216,255,.22),rgba(0,0,0,.35))}
+.pr-load{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pr-note{font-size:calc(13px*var(--prs,1));color:var(--text-dim);flex:1;min-width:200px}
+.pr-slide{flex:1;min-height:0;display:flex;gap:18px;align-items:stretch;padding:14px 18px;border-radius:var(--r-md);background:rgba(0,0,0,.34);border:1px solid var(--border);overflow:auto;animation:pr-in .25s ease-out}
+.pr-text{flex:1 1 55%;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:flex-start}
+.pr-year{font-size:calc(15px*var(--prs,1));font-weight:800;color:var(--gold);letter-spacing:.5px}
+.pr-slide h2{margin:0;font-size:calc(clamp(20px,2.6vw,30px)*var(--prs,1));line-height:1.15}
+.pr-kid{margin:0;font-size:calc(clamp(16px,2vw,22px)*var(--prs,1));line-height:1.35}
+.pr-techlist{margin:2px 0 0;padding:10px 12px 10px 28px;border-radius:var(--r-sm);background:rgba(79,216,255,.1);border:1px solid rgba(79,216,255,.4);display:flex;flex-direction:column;gap:4px;font-size:calc(13px*var(--prs,1));line-height:1.4}
+.pr-techline{margin:0;padding:8px 12px;border-radius:var(--r-sm);background:rgba(79,216,255,.1);border:1px solid rgba(79,216,255,.4);font-size:calc(14px*var(--prs,1));line-height:1.45}
+.pr-pics{flex:0 1 38%;min-width:0;display:flex;flex-direction:column;gap:8px;justify-content:center;align-items:center}
+.pr-fig{margin:0;width:100%;display:flex;flex-direction:column;gap:4px;align-items:center}
+.pr-fig img{max-width:100%;max-height:26vh;border-radius:var(--r-sm);border:1px solid var(--border);object-fit:contain;background:#000}
+.pr-fig.small img{max-height:14vh}
+.pr-fig figcaption{font-size:calc(11px*var(--prs,1));color:var(--text-dim);text-align:center}
+.pr-fig a{color:var(--cyan)}
+.pr-cap{margin:0;font-size:calc(13px*var(--prs,1));color:var(--text-dim);text-align:center}
+.pr-nav{display:flex;align-items:center;gap:8px}
+.pr-nav .sh-play{min-height:40px;min-width:48px;padding:4px 14px;font-size:calc(15px*var(--prs,1))}
+.pr-pulse{border-color:var(--gold)!important;color:var(--gold)}
+.pr-nav .sh-play:disabled{opacity:.35;cursor:default}
+.pr-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.pr-opts .sh-opt{min-height:56px;font-size:calc(16px*var(--prs,1))}
+.pr-why{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.pr-result{flex:1;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;text-align:center}
+.pr-big{font-size:calc(64px*var(--prs,1))}
+@keyframes pr-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pr-slide{animation:none}}
+@media (max-width:700px){.pr-slide{flex-direction:column}.pr-pics{flex-basis:auto}}
+
+.pr-featured{display:flex;flex-direction:column;gap:6px;text-align:left;padding:18px 20px;border-radius:var(--r-md);cursor:pointer;font:inherit;color:var(--text);background:linear-gradient(135deg,rgba(255,215,108,.3),rgba(255,122,26,.22) 50%,rgba(160,108,255,.3));border:2px solid var(--gold);box-shadow:0 0 22px rgba(255,215,108,.25)}
+.pr-featured:hover{box-shadow:0 0 30px rgba(255,215,108,.5)}
+.pr-featured b{font-size:calc(22px*var(--prs,1))}.pr-featured span{font-size:calc(14px*var(--prs,1));color:var(--text-dim)}.pr-featured small{font-weight:800;color:var(--gold)}
+.pr-star{color:var(--gold)!important;font-weight:800;letter-spacing:.5px;text-transform:uppercase;font-size:calc(12px*var(--prs,1))!important}
+.pr-cue{margin:0;font-size:calc(14px*var(--prs,1));font-style:italic;color:var(--gold)}
+.pr-read{margin:0;font-family:Georgia,'Times New Roman',serif;font-size:calc(clamp(17px,2.1vw,24px)*var(--prs,1));line-height:1.5}
+.pr-kidnote{margin:0;font-size:calc(13px*var(--prs,1));color:var(--text-dim)}
+
+/* the controls borrowed from the Synth page scale with the presentation text too */
+.pr .sh-small{font-size:calc(14px*var(--prs,1));min-height:calc(40px*var(--prs,1))}
+.pr .sh-play{font-size:calc(17px*var(--prs,1));min-height:calc(48px*var(--prs,1))}
+.pr .sh-opt{font-size:calc(16px*var(--prs,1))}
+.pr .sh-reset{font-size:calc(14px*var(--prs,1))}
+.pr-size{display:flex;align-items:center;gap:4px;margin-left:auto}
+.pr-size button{min-width:calc(40px*var(--prs,1));min-height:calc(40px*var(--prs,1));border-radius:999px;font-weight:800;font-size:calc(14px*var(--prs,1));cursor:pointer;background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+.pr-size button:disabled{opacity:.35;cursor:default}
+.pr-size span{font-size:calc(12px*var(--prs,1));color:var(--text-dim);min-width:3.2em;text-align:center}
+.pr-tech{margin-left:0!important}
+
+/* the top bar grows only a little, so a big slide keeps its room; the slide, cards and quiz text use the full size */
+.pr{--prb:min(var(--prs,1),1.2)}
+.pr-bar{gap:calc(8px*var(--prb))}
+.pr-bar>b,.pr-count{font-size:calc(15px*var(--prb))}
+.pr-bar .sh-small,.pr-tech,.pr-size button{font-size:calc(14px*var(--prb));min-height:calc(40px*var(--prb));min-width:0}
+.pr-size button{min-width:calc(40px*var(--prb))}
+.pr-size span{font-size:calc(12px*var(--prb))}
+.pr-nav .sh-play{font-size:calc(15px*var(--prb));min-height:calc(40px*var(--prb));min-width:calc(48px*var(--prb))}
+.pr-dtitle{font-size:calc(15px*var(--prb))!important}

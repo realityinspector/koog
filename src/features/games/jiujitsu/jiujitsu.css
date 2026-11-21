@@ -84,4 +84,7 @@
 
 .bj-from { font-size: 14px; font-weight: 700; color: #cfc9ea; white-space: nowrap; }
 
-.bj-root[data-phase="menu"] .bj-card { overflow-y: auto; }
+.bj-root[data-phase="menu"] .bj-card { height: 100%; max-height: 100%; overflow: hidden; }
+.bj-root[data-phase="menu"] .bj-title, .bj-root[data-phase="menu"] .bj-beltrow, .bj-root[data-phase="menu"] .bj-row, .bj-root[data-phase="menu"] .bj-pick { flex-shrink: 0; }
+.bj-root[data-phase="menu"] .bj-sub { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.bj-root[data-phase="menu"] .gk-card { flex: 1 1 auto; min-height: 168px; overflow-y: auto; width: min(560px, 100%); margin-top: 0; }

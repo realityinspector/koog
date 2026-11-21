@@ -54,3 +54,16 @@
 
 /* the card grid never clips: when the cards are taller than the screen they start at the top and scroll (plain `center` pushed the first row out of reach) */
 .gm-menu { align-content: safe center; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+
+/* The pane above the keys is shorter than the window. A 250px card hid the second row's names. */
+.gm-menu { align-content: start; align-items: stretch; gap: 8px; min-height: 0; }
+.gm-card, .gm-card.gm-zombies, .gm-card.gm-bachdoom, .gm-card.gm-jiujitsu, .gm-card.gm-fashion {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-content: start; gap: 4px 8px;
+  min-height: 0; padding: 10px 12px;
+}
+.gm-ic { grid-row: 1; grid-column: 1; width: 32px; height: 32px; margin-bottom: 0; font-size: 20px; }
+.gm-tags { position: static; top: auto; right: auto; grid-row: 1; grid-column: 3; align-self: center; }
+.gm-card b { grid-row: 1; grid-column: 2; align-self: center; }
+.gm-blurb, .gm-skill, .gm-prog { grid-column: 1 / -1; }
+.gm-blurb { font-size: 13px; line-height: 1.35; }
+.gm-skill { margin-top: 0; padding-top: 2px; }

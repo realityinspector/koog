@@ -8,8 +8,9 @@ const SCALE_OPTS: ScaleType[] = ['major', 'minor', 'majorPentatonic', 'minorPent
 export function KeyPopover({ onClose }: { onClose: () => void }) {
   const { key, autoDetect, setKey, setAutoDetect } = useHarmonyStore()
   const ref = useRef<HTMLDivElement>(null)
-  const isCant = (t: number) => key.tonic === t && key.scale === 'majorPentatonic'
-  const cant = (t: number) => { setAutoDetect(false); setKey({ tonic: t, scale: 'majorPentatonic' }) }
+  // white keys are C major (F and B belong). Black keys are the five notes of F# major pentatonic.
+  const isCant = (t: number) => t === 0 ? key.tonic === 0 && key.scale === 'major' : key.tonic === 6 && key.scale === 'majorPentatonic'
+  const cant = (t: number) => { setAutoDetect(false); setKey(t === 0 ? { tonic: 0, scale: 'major' } : { tonic: 6, scale: 'majorPentatonic' }) }
 
   useEffect(() => {
     const down = (e: PointerEvent) => {
@@ -26,10 +27,10 @@ export function KeyPopover({ onClose }: { onClose: () => void }) {
     <div className="kp" ref={ref} role="dialog" aria-label="Key and scale">
       <div className="kp-row">
         <label className="kp-lbl" htmlFor="kp-tonic">Key</label>
-        <select id="kp-tonic" value={key.tonic} onChange={(e) => setKey({ ...key, tonic: +e.target.value })}>
+        <select id="kp-tonic" value={key.tonic} onChange={(e) => { setAutoDetect(false); setKey({ ...key, tonic: +e.target.value }) }}>
           {PC_NAMES.map((n, i) => <option key={n} value={i}>{n}</option>)}
         </select>
-        <select aria-label="Scale" value={key.scale} onChange={(e) => setKey({ ...key, scale: e.target.value as ScaleType })}>
+        <select aria-label="Scale" value={key.scale} onChange={(e) => { setAutoDetect(false); setKey({ ...key, scale: e.target.value as ScaleType }) }}>
           {SCALE_OPTS.map((s) => <option key={s} value={s}>{SCALE_LABEL[s]}</option>)}
         </select>
       </div>

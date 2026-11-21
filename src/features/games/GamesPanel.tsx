@@ -26,7 +26,7 @@ const GAMES: { id: GameId; icon: string; title: string; blurb: string; skill: st
   { id: 'memory', icon: '🃏', title: 'Phrase Match', blurb: 'Flip cards to hear short tunes, find the twins, then play each tune back on the keys to win the pair.', skill: 'Ear and memory for phrases' },
   { id: 'feast', icon: '🦃', title: 'Harvest Feast', blurb: 'Learn a Thanksgiving song step by step, from hunt-and-peck to master. Every phrase you nail puts a dish on the table.', skill: 'Memorize songs, one level at a time' },
   { id: 'tree', icon: '🎄', title: 'Light the Tree', blurb: 'Learn a Christmas song step by step, from hunt-and-peck to master. Every phrase hangs an ornament, and master puts the star on top.', skill: 'Memorize songs, one level at a time' },
-  { id: 'racer', icon: '🏁', title: 'Koogalien Racer', blurb: 'Hear a tune, play it back on the beat, and the car drives what you played: up turns right, down turns left, a wrong note goes off the road. Pick your vehicle by playing its note four times. Works with keys, drum pads or a DJ controller.', skill: 'Phrase memory, steering by pitch, timing' },
+  { id: 'racer', icon: '🏁', title: 'Koogalien Racer', blurb: 'Hear a tune, play it back on the beat, and the car drives what you played: up turns right, down turns left, a wrong note goes off the road.', skill: 'Phrase memory, steering by pitch, timing' },
   { id: 'bachdoom', icon: '💀', title: 'BachDoom', blurb: 'Clashing-note demons invade the cathedral. Only real music can stop them. Final boss: Bach\'s Prelude in C.', skill: 'Play real pieces, in time' },
 ]
 
@@ -107,7 +107,7 @@ export function GamesPanel() {
           {prog[g.id].played && prog[g.id].line && <span className="gm-prog">{prog[g.id].line}</span>}
         </button>
       ))}
-      <p className="gm-note">Tip: forearm slams fizzle, unless your BOOM meter is full. Charge it by playing in key.</p>
+      <p className="gm-note">Tip: in Zombie Lanes, Jiu-Jitsu Flow, Runway Remix, and BachDoom, a forearm slam fizzles unless the BOOM meter is full. Charge it by playing in key.</p>
     </div>
   )
 }

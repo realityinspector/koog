@@ -61,3 +61,8 @@
   .rc-dock { right: 50%; transform: translateX(50%); bottom: 22px; gap: 6px; } .rc-hint { display: none; } .rc-oops { font-size: 14px; bottom: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .rc-veh.pop .rc-vem { animation: none; } .rc-timer i { transition: none; } }
+/* the next step stays on screen; the cars scroll if the display is short */
+.rc-panel.rc-fit { overflow: hidden; padding-bottom: 12px; }
+.rc-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.rc-foot { flex: none; display: flex; align-items: center; gap: 12px; }
+.rc-foot .rc-coach { flex: 1; min-width: 0; }

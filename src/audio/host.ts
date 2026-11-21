@@ -1,10 +1,11 @@
 // The one shared audio host. One AudioContext, one master bus, per-source channels.
-//   channel.input -> capGain (cap x trim) -> master (app volume x mute x Boost, applied ONLY here) -> limiter -> makeup trim -> analyser -> destination
+//   channel.input -> capGain (cap x trim) -> master (app volume x mute) -> limiter -> makeup trim -> boost -> soft ceiling -> analyser -> destination
 // STABLE API: getCtx(), unlockHost(), createChannel(id, {cap, label}) / getChannel(id), masterBus, getNoise(ctx), listChannels().
 // State lives in import.meta.hot.data so editing this file never drops the context or a connected engine.
 // Legacy engines (DJ, beats, band, guide, loops, mimic, fx) still own their own contexts until they migrate.
 import { boostGain, outputScale, setBoost, useAudioSettings } from '../music/audioSettings'
 import { registerPanicTarget } from '../music/panic'
+import { desktopOn, meterFftSize } from '../desktop/perf'
 
 export interface Channel {
   id: string
@@ -23,6 +24,8 @@ interface Host {
   ctx: AudioContext
   master: GainNode
   limiter: DynamicsCompressorNode
+  /** +12 dB while Boost is on. Absent only on a context built before this graph. */
+  lift?: GainNode
   an: AnalyserNode
   buf: Float32Array<ArrayBuffer>
   chans: Map<string, ChanState>
@@ -37,17 +40,41 @@ const cur = (): Host | null => G.__koogHost ?? null
 /** Chrome's DynamicsCompressor adds automatic makeup gain (~2.2x at -12 dB / ratio 20); this trims it so quiet signals pass at 1x. */
 const MAKEUP_TRIM = 0.46
 
+/** Linear through ordinary levels. Above 0.8, bend toward full scale so Boost cannot hard-clip. No oversample: the master path keeps its block size. */
+function speakerCurve(): Float32Array<ArrayBuffer> {
+  const n = 2049
+  const curve = new Float32Array(n)
+  const knee = 0.8
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1
+    const a = Math.abs(x)
+    const y = a <= knee ? a : knee + (1 - knee) * Math.tanh((a - knee) / (1 - knee))
+    curve[i] = Math.sign(x) * y
+  }
+  return curve
+}
+
+/** Desktop shell passes the hardware buffer. Match it so Web Audio does not queue a second, longer block. The browser build keeps the interactive hint. */
+function latencyHint(): AudioContextLatencyCategory | number {
+  const n = window.koogDesktop?.bufferFrames
+  if (n === 128 || n === 256) return n / 48000
+  return 'interactive'
+}
+
 function build(): Host {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-  const ctx = new AC({ latencyHint: 'interactive' })
+  const ctx = new AC({ latencyHint: latencyHint() })
   const master = ctx.createGain()
-  master.gain.value = outputScale() * boostGain()
+  master.gain.value = outputScale()
   const limiter = ctx.createDynamicsCompressor()
   limiter.threshold.value = -12; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.003; limiter.release.value = 0.1
   const trim = ctx.createGain(); trim.gain.value = MAKEUP_TRIM
-  const an = ctx.createAnalyser(); an.fftSize = 1024
-  master.connect(limiter); limiter.connect(trim); trim.connect(an); trim.connect(ctx.destination)
-  return { ctx, master, limiter, an, buf: new Float32Array(1024), chans: new Map() }
+  const lift = ctx.createGain(); lift.gain.value = boostGain()
+  const clip = ctx.createWaveShaper(); clip.curve = speakerCurve()
+  const bins = meterFftSize(desktopOn())
+  const an = ctx.createAnalyser(); an.fftSize = bins
+  master.connect(limiter); limiter.connect(trim); trim.connect(lift); lift.connect(clip); clip.connect(an); clip.connect(ctx.destination)
+  return { ctx, master, limiter, lift, an, buf: new Float32Array(bins), chans: new Map() }
 }
 function host(): Host {
   let h = cur()
@@ -56,16 +83,26 @@ function host(): Host {
   return h
 }
 
+function ramp(g: AudioParam, v: number, t: number) {
+  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.setTargetAtTime(v, t, 0.02)
+}
 function applyMaster() {
   const h = cur(); if (!h) return
-  // Boost (x2) is applied here, BEFORE the limiter. Start from the value it has right now so a quick change never leaves an old ramp behind.
-  const g = h.master.gain, t = h.ctx.currentTime
-  g.cancelScheduledValues(t); g.setValueAtTime(g.value, t)
-  g.setTargetAtTime(outputScale() * boostGain(), t, 0.02)
+  const t = h.ctx.currentTime
+  // Volume and mute stay before the limiter. Boost is the lift after it, so a full mix can still get louder.
+  if (h.lift) { ramp(h.master.gain, outputScale(), t); ramp(h.lift.gain, boostGain(), t) }
+  else ramp(h.master.gain, outputScale() * boostGain(), t)
 }
 
 /** The shared AudioContext (created lazily; it may be suspended until a gesture calls unlockHost). */
 export const getCtx = (): AudioContext => host().ctx
+
+/** Desktop shell allows autoplay, so the context can be running before the first note. */
+export function warmDesktopAudio(): void {
+  if (!desktopOn()) return
+  const h = host()
+  if (h.ctx.state !== 'running') void h.ctx.resume().then(applyMaster).catch(() => { /* still waiting on the device */ })
+}
 
 /** Resume the shared context. Call it from a user gesture. Safe to call as often as you like. */
 export async function unlockHost(): Promise<void> {
@@ -92,11 +129,12 @@ export function createChannel(id: string, opts: { cap: number; label?: string })
   const ctx = h.ctx
   const input = ctx.createGain(); input.gain.value = 1
   const capGain = ctx.createGain(); capGain.gain.value = opts.cap
-  const an = ctx.createAnalyser(); an.fftSize = 1024
+  const bins = meterFftSize(desktopOn())
+  const an = ctx.createAnalyser(); an.fftSize = bins
   const ins = G.__koogInserts?.get(id) // Pedalboard insert (setChannelInsert): input -> insert -> capGain, so the cap still bounds the result
   if (ins && ins.ctx === ctx) { input.connect(ins.input); ins.output.connect(capGain) } else input.connect(capGain)
   capGain.connect(h.master); capGain.connect(an)
-  const st = { trim: 1, buf: new Float32Array(1024) } as ChanState
+  const st = { trim: 1, buf: new Float32Array(bins) } as ChanState
   const cap = Math.max(0, Math.min(1, opts.cap))
   capGain.gain.value = cap
   const ch: Channel = {
@@ -133,7 +171,7 @@ export const masterBus = {
   /** how many dB the limiter is pulling down right now (<= 0) */
   reduction: (): number => cur()?.limiter.reduction ?? 0,
   /** current master gain (volume x mute x Boost) */
-  gain: (): number => cur()?.master.gain.value ?? 0,
+  gain: (): number => { const h = cur(); return h ? h.master.gain.value * (h.lift ? h.lift.gain.value : 1) : 0 },
   /** the node every channel feeds (for the analyser/scope) */
   analyser: (): AnalyserNode => host().an,
 }

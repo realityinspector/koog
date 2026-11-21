@@ -115,7 +115,7 @@ export function Landing() {
       <section className="ld-local" aria-labelledby="local">
         <div>
           <h2 id="local">Runs best on your own computer</h2>
-          <p>This web demo uses the computer keyboard only. Run Koog locally and it works with USB-MIDI keyboards, foot pedals and controllers, keeps progress for each kid, and has the Idea box for requests.</p>
+          <p>This web demo uses the computer keyboard and a wireless game controller. Run Koog locally and it works with USB-MIDI keyboards, foot pedals and controllers, keeps progress for each kid, and has the Idea box for requests.</p>
           <p><code>npm install &amp;&amp; npm start</code></p>
         </div>
         <a className="ld-btn" href={GITHUB_URL} target="_blank" rel="noreferrer">Get it on GitHub</a>

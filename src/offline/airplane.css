@@ -1,0 +1,27 @@
+/* Airplane is on: the instrument shows it, and the play picture keeps its frame. */
+html[data-airplane="1"] .kg-app .kg-bezel {
+  outline: 2px solid rgba(142, 197, 255, .8);
+  outline-offset: -3px;
+}
+html[data-airplane="1"] .kg-app .kg-strip .kg-idea {
+  border-color: rgba(142, 197, 255, .8);
+  color: #e7f3ff;
+}
+.kg-air-note {
+  position: fixed;
+  z-index: 80;
+  left: 50%;
+  top: 58px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(12, 24, 48, .94);
+  border: 1px solid rgba(142, 197, 255, .8);
+  color: #e7f3ff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}

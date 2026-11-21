@@ -3,16 +3,17 @@
 // muted forces 0. computerSound = the MIDI keyboard also plays through the computer's speakers.
 // STABLE API: useAudioSettings with { volume, muted, computerSound }, setVolume, setMuted, setComputerSound,
 // outputScale() -> 0..1 to multiply into a master gain.
-// BOOST (quiet laptop speakers): a temporary +6 dB (x2) lift applied in the shared audio host BEFORE the limiter (src/audio/host.ts), so the
-// limiter and every channel's hard cap still stop clipping. It is never saved: a reload, panic, switching player, or BOOST_MAX_MS all turn it off.
+// BOOST (quiet laptop speakers): a temporary +12 dB (x4) lift applied in the shared audio host AFTER the limiter
+// (src/audio/host.ts), so loud parts can actually get louder. A soft ceiling there keeps the result inside full scale.
+// It is never saved: a reload, panic, switching player, or BOOST_MAX_MS all turn it off.
 import { create } from 'zustand'
 import { linkNote } from '../links/bus'
 import { useProfile } from '../profile/profile'
 
 /** how long Boost may stay on before it turns itself off (protects ears) */
 export const BOOST_MAX_MS = 60 * 60 * 1000
-/** the lift: +6 dB */
-export const BOOST_GAIN = 2
+/** the lift: +12 dB, after the limiter */
+export const BOOST_GAIN = 4
 
 export interface AudioSettings { volume: number; muted: boolean; computerSound: boolean; /** never saved */ boost: boolean }
 const KEY = 'koog.audio'
@@ -31,7 +32,7 @@ export const setMuted = (m: boolean) => { useAudioSettings.setState({ muted: m }
 export const setComputerSound = (on: boolean) => { useAudioSettings.setState({ computerSound: on }); save() }
 /** multiply this into an engine's master gain */
 export const outputScale = () => { const s = useAudioSettings.getState(); return s.muted ? 0 : s.volume }
-/** 1, or BOOST_GAIN while Boost is on (the audio host multiplies this into the master gain, before the limiter) */
+/** 1, or BOOST_GAIN while Boost is on (the audio host applies this after the limiter) */
 export const boostGain = () => (useAudioSettings.getState().boost ? BOOST_GAIN : 1)
 
 // Boost: on for at most `limitMs` (default BOOST_MAX_MS), then it turns itself off with a gentle toast. Never persisted.

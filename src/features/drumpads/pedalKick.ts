@@ -1,4 +1,4 @@
-// The foot pedal as a kick drum. pedal.ts calls these when its job is 'kick'; 'auto' picks kick while the drum page is on.
+// The foot pedal as a kick drum. pedal.ts calls these when its job is 'kick'. Automatic picks the kick while the drum pads are open and the loop station is closed.
 // The drum page is "on" when a DJ controller has the drums role / the Drums page is chosen (useDrumPage.on), or the on-screen drum pads are open.
 // No debounce and no timers: the key-down / CC-down goes straight to the engine with full velocity, so it records into the pattern (when REC is on)
 // exactly like a pad hit and lights the KICK pad. Holding the pedal never clears the kick row (it is not a held pad).

@@ -219,7 +219,7 @@ function Help() {
       <summary title="Every control on the DJ controller when it is the drum machine">How to drum on the controller</summary>
       <p className="dp-help-in">Set the DJ controller to <b>Drums</b> in the devices menu. The left four pads (deck A) and right four pads (deck B) match the pads on screen.</p>
       <dl>{HELP_MAP.map((h) => <div key={h.keys}><dt>{h.keys}</dt><dd>{h.does}</dd></div>)}</dl>
-      <p className="dp-help-in">The foot pedal plays the KICK while the drum pads are open (set it to Automatic or Kick drum).</p>
+      <p className="dp-help-in">The foot pedal plays the kick while the drum pads are open. On the loop station, the same pedal records and loops. Set it to Automatic or Kick drum.</p>
     </details>
   )
 }

@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useCal, openPanel, closePanel, startLearn, commit, redo, skip, goBack, finishLearning, finishPadMode, answerLed, skipLedTest, replayLed, save, resetDefaults, doExport, importText, reviewSummary, assignUnknown, labelOf, deviceName, hasSavedMap, untested } from './calibrate'
+
+/** Kid-facing name. The saved map still uses the raw device name. */
+function deviceLabel(name: string) {
+  const branded = /\b(numark|mixtrack|sony|playstation|dualsense|ps5)\b/i.test(name)
+  const s = name.replace(/\b(numark|mixtrack|sony|playstation|dualsense|ps5)\b/gi, ' ').replace(/\s+/g, ' ').trim()
+  if (!s || (branded && s.length < 4)) return 'DJ controller'
+  return s
+}
 import { useCoop, startCoop, cancelCoop, startSoundcheck, stopSoundcheck, KINDS, KIND_INFO, type CoopKind } from './coop'
 import { ControllerPic } from './Controller'
 import { currentMap, describeKey } from './map'
@@ -40,7 +48,7 @@ function Teach() {
         <div className="dj-say">
           <p className="dj-big">Let's teach Koog your DJ controller!</p>
           <p>I'll ask you to press or turn one thing at a time. You can skip any of them.</p>
-          <p className="dj-dim">Controller: <b>{s.device}</b> {hasSavedMap(s.device) ? '· already taught once' : ''}</p>
+          <p className="dj-dim">Controller: <b>{deviceLabel(s.device)}</b> {hasSavedMap(s.device) ? '· already taught once' : ''}</p>
           <div className="dj-acts"><button type="button" className="dj-b big" onClick={startLearn}>Start ▶</button></div>
           <Backup />
         </div>

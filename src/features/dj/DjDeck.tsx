@@ -4,14 +4,14 @@ import './pulse'
 import { MODES, dispatch, ensure, getDeckPos, getVersion, getView, subscribe, type DeckView } from './engine'
 import { useDuo, cancelChallenge, startChallenge } from './duo'
 import { useCoop } from './coop'
-import { useCal } from './calibrate'
+import { closePanel, useCal } from './calibrate'
 import { DjPanels, BandMenu, CoopCard } from './Panels'
 import { onBeat } from './clock'
 import { BEAT } from './synth'
 import { PC_NAMES, SCALE_LABEL } from '../../music/theory'
 import type { DeckId } from './map'
 import { SurfaceToggle } from '../controller/SurfaceToggle'
-import { loadDuoOpen, useDuoOpen } from './duoOpen'
+import { duoChoice, useDuoOpen } from './duoOpen'
 
 const PAD_LABELS = [['1', '2', '3', '4'], ['½', '1', '2', '4'], ['💥', '👏', '🎹', '⚡'], ['🥁', '🎸', '🎹', '🎤']]
 const PAD_TIPS = [['Jump to 1/4 of the song', 'Jump to 2/4', 'Jump to 3/4', 'Jump to 4/4'], ['Loop half a beat', 'Loop 1 beat', 'Loop 2 beats', 'Loop 4 beats'], ['Boom', 'Clap', 'Chord', 'Zap'], ['Drums on/off', 'Bass on/off', 'Synth on/off', 'Voice on/off']]
@@ -120,6 +120,7 @@ function Middle({ v }: { v: ReturnType<typeof getView> }) {
     <div className="dj-mid">
       <div className="dj-key" title="The DJ's track sets the key for the piano while a deck plays">🎧 DJ key <b>{keyText}</b>
         <button type="button" className="dj-go dj-band" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)} title="Team challenges, Soundcheck, and the controller helper">🤝</button>
+        <button type="button" className="dj-x sm dj-close" aria-label="Close DJ decks" title="Close" onClick={() => useDuoOpen.getState().setOpen(false)}>✕</button>
         {menu && <BandMenu onClose={() => setMenu(false)} />}
       </div>
       <label className="dj-xf" title="Crossfader: A on the left, B on the right">
@@ -162,6 +163,12 @@ export function DuoDeck({ chip = true }: { chip?: boolean } = {}) {
     if (open) d.setAttribute('data-duo-open', '1'); else d.removeAttribute('data-duo-open')
     return () => d.removeAttribute('data-duo-open')
   }, [open])
+  // closing the strip also closes a teach / knob / soundcheck dialog that was covering the display
+  const wasOpen = useRef(open)
+  useEffect(() => {
+    if (wasOpen.current && !open && useCal.getState().panel !== 'none') closePanel()
+    wasOpen.current = open
+  }, [open])
   // a panel (teach / knob check / soundcheck) covers the display: hide the visualizer's own buttons under it
   const panel = useCal((s) => s.panel)
   useEffect(() => {
@@ -171,7 +178,7 @@ export function DuoDeck({ chip = true }: { chip?: boolean } = {}) {
     return () => d.removeAttribute('data-dj-panel')
   }, [panel])
   // a controller press opens the strip once, so the DJ sees what the decks are doing
-  useEffect(() => { if (v.anyPlaying && !open && !loadDuoOpen()) setOpen(true) }, [v.anyPlaying, open, setOpen])
+  useEffect(() => { if (v.anyPlaying && !open && duoChoice() === null) setOpen(true) }, [v.anyPlaying, open, setOpen])
 
   // spin the jog rings with the music (off for prefers-reduced-motion)
   useEffect(() => {

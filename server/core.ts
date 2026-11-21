@@ -62,6 +62,7 @@ const INTEREST_HINTS: [RegExp, string[]][] = [
   [/doom|shoot|video ?game|gam(e|ing)|minecraft|fortnite|roblox|battle|boss|fight|dragon/, ['game-bachdoom', 'game-zombies', 'challenge-boss', 'song-pop-boss']],
   [/karate|judo|jiu|martial|wrestl|sport|belt/, ['game-jiujitsu']],
   [/fashion|dress|style|model|runway|cloth/, ['game-fashion']],
+  [/family band|sing-?along|karaoke|analog piano|analog guitar/, ['helper-family']],
   [/dance|disco|party|pop|edm|tiktok|radio|sing/, ['song-pop-dance', 'song-pop-edm', 'beat-disco', 'beat-pop']],
   [/drum|beat|rhythm|hip ?hop|rap|groove|funk/, ['beat-funk', 'beat-boombap', 'challenge-rhythm', 'song-pop-funk']],
   [/chill|lo-?fi|calm|relax|sleep|quiet|cozy/, ['beat-lofi', 'song-pop-lofi', 'song-gymnopedie', 'song-brahms']],

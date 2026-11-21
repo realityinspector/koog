@@ -10,7 +10,7 @@ const read = (): EggId[] => { const v = pload<unknown>(KEY, []); return Array.is
 interface EggState { found: EggId[]; last: EggId | null; lastN: number }
 const make = () => create<EggState>()(() => ({ found: read(), last: null, lastN: 0 }))
 export const useEggs: ReturnType<typeof make> = (import.meta.hot?.data.eggs as ReturnType<typeof make> | undefined) ?? make()
-const off = onProfileChange(() => useEggs.setState({ found: read() }))
+const off = onProfileChange(() => useEggs.setState({ found: read() }), 'eggStore')
 
 /** the dancer calls this when an egg fires. Returns true the first time this player finds it. */
 export function foundEgg(id: EggId): boolean {

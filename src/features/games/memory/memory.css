@@ -38,7 +38,9 @@
 .pm-over { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: rgba(14,8,40,.97); text-align: center; padding: 12px; overflow: hidden; }
 .pm-over h3 { margin: 0; font-size: 28px; } .pm-over p { margin: 0; font-size: 15px; } .pm-bestline { color: #ffe9a0; font-weight: 800; min-height: 1.2em; }
 .pm-over .pm-stars { font-size: 36px; } .pm-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.pm-confetti { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .pm-confetti i { position: absolute; top: -10%; left: calc(var(--i) * 12% + 4%); font-style: normal; font-size: 26px; animation: pm-fall 4s linear infinite; animation-delay: calc(var(--i) * -.5s); }
+.pm-over > :not(.pm-confetti) { position: relative; z-index: 1; align-self: center; background: #0e0828; }
 @keyframes pm-fall { to { transform: translateY(120cqh) rotate(40deg); } }
 
 @media (max-width: 600px) { .pm-levels { grid-template-columns: 1fr; } .pm-level { padding: 8px; } .pm-menu { gap: 8px; } .pm-menu h2 { font-size: 22px; } .pm-title { font-size: 14px; } }

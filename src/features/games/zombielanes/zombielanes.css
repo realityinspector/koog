@@ -93,4 +93,7 @@
 .zl-coach.oops { border-color: #ffb0a0; background: rgba(100, 40, 60, .92); }
 .zl-coach.good { border-color: #7dffb0; background: rgba(24, 80, 60, .92); }
 
-.zl-root[data-phase="menu"] .zl-card { overflow-y: auto; }
+.zl-root[data-phase="menu"] .zl-card { align-self: stretch; height: auto; max-height: 100%; min-height: 0; overflow: hidden; display: grid; grid-template-rows: minmax(0, 46%) minmax(0, 1fr) auto; align-items: stretch; justify-items: stretch; }
+.zl-root[data-phase="menu"] .zl-scroll { height: 100%; max-height: 100%; min-height: 0; overflow-y: auto; align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: inherit; }
+.zl-root[data-phase="menu"] .gk-card { height: 100%; max-height: calc(100% - 16px); min-height: 0; overflow-y: auto; align-self: start; width: auto; margin: 0; }
+.zl-root[data-phase="menu"] .zl-actions { align-self: end; position: relative; z-index: 2; }

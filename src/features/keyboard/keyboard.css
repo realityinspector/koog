@@ -3,6 +3,7 @@
 .kb-chord { font-size: 32px; font-weight: 800; background: var(--grad-rainbow); -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0; transition: opacity .35s; }
 .kb-chord.on { opacity: 1; }
 .kb-opts { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-2); flex-wrap: wrap; flex: none; margin: 0 0 4px; }
+.kb .kb-opts .kb-oct { font-size: 12px; color: #e4e0fa; white-space: nowrap; }
 /* opaque pills in their own slim row above the keys (specificity beats the old .kg-keybed .kb-toggle in instrument.css) */
 .kb .kb-opts .kb-toggle { display: inline-flex; align-items: center; gap: 6px; box-sizing: border-box; min-height: 28px; padding: 0 12px; border-radius: 999px; background: #120e26; border: 1px solid rgba(255, 255, 255, .2); color: #e4e0fa; font-size: 12px; line-height: 1; cursor: pointer; white-space: nowrap; }
 .kb .kb-opts .kb-toggle:hover { background: #1f1a3d; }

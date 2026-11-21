@@ -1,0 +1,47 @@
+/* The Koogalien Library. Calm: no flashing, no full-screen effects; the word being heard gets a steady underline (from the ribbon). */
+.kgl-lib{padding-bottom:60px}
+.kgl-intro{max-width:70ch;opacity:.92}
+.kgl-shelf{list-style:none;margin:12px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.kgl-book{width:100%;display:flex!important;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:8px!important;height:100%}
+.kgl-cover{width:100%;height:auto;aspect-ratio:100/140;border-radius:8px;display:block}
+.kgl-btitle{font-weight:700;line-height:1.2}
+.kgl-bauthor{font-size:13px;opacity:.8}
+.kgl-bmeta{font-size:12px;opacity:.85}
+.kgl-prog{display:block;width:100%;height:6px;background:#14121f;border-radius:3px;overflow:hidden}
+.kgl-prog i{display:block;height:100%;background:#8be0b4}
+.kgl-credit{font-size:13px;opacity:.75;margin:14px 0}
+.kgl-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.kgl-bt{flex:1;min-width:160px}.kgl-bt h1{margin:0;font-size:20px}.kgl-bt small{opacity:.8}
+.kgl-controls{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.kgl-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.kgl-play{min-width:130px;background:#2e7d5b!important;border-color:#8be0b4!important;font-weight:700}
+.kgl-seg{display:inline-flex}
+.kgl-seg button{border-radius:0!important;margin-left:-2px}
+.kgl-seg button:first-child{border-radius:10px 0 0 10px!important;margin-left:0}
+.kgl-seg button:last-child{border-radius:0 10px 10px 0!important}
+.kgl-seg button[aria-pressed=true]{background:#5a5390!important;border-color:#ffd54a!important;position:relative;z-index:1}
+.kgl-sel{display:inline-flex;gap:6px;align-items:center}
+.kgl-sel select{font:inherit;min-height:44px;max-width:240px;background:#2b2742;color:inherit;border:2px solid #5a5390;border-radius:10px;padding:4px 8px}
+.kgl-legend{list-style:none;margin:6px 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.kgl-badge{display:inline-flex;gap:6px;align-items:center;padding:3px 10px 3px 4px;border:2px solid var(--kc,#888);border-radius:999px;background:#26223d}
+.kgl-badge b{display:inline-block;min-width:1.5em;text-align:center;background:var(--kc,#aaa);color:#111;border-radius:50%}
+.kgl-badge small{opacity:.8}
+.kgl-ribbon{margin:6px 0}
+.kgl-ribbon .kgx-ribbon{height:250px;overflow:auto}
+.kgl-ribbon .kgx-cols{flex-wrap:nowrap}
+.kgl-ribbon .kgx-col{max-width:230px}
+.kgl-ribbon .kgx-cell.notes{max-width:210px}
+.kgl-status{margin:4px 0;font-size:14px;opacity:.9;min-height:1.4em}
+.kgl-text{position:relative;background:#1d1a30;border-radius:12px;padding:10px 16px;max-height:44vh;overflow:auto;line-height:1.65;font-size:17px}
+.kgl-text h2{margin:4px 0 8px;font-size:18px}
+.kgl-text p{margin:0 0 12px}
+.kgl-sent{cursor:pointer;border-radius:4px;padding:1px 2px}
+.kgl-sent:hover{background:#2b2742}
+.kgl-sent:focus-visible{outline:3px solid #ffd54a;outline-offset:1px}
+.kgl-sent.v1{border-bottom:2px solid #E69F00}.kgl-sent.v2{border-bottom:2px solid #56B4E9}.kgl-sent.v3{border-bottom:2px solid #009E73}
+.kgl-sent.kgl-cur{background:#3d3866;box-shadow:0 3px 0 #ffd54a}
+.kgl-along{background:#26223d;border:2px solid #ffd54a;border-radius:12px;padding:10px 14px;margin:8px 0}
+.kgl-want{font-weight:700;background:#fff8e1;color:#2a2340;border-radius:6px;padding:0 8px}
+.kgl-high{margin:12px 0}.kgl-high ul{padding-left:20px}
+@media (max-width:600px){.kgl-shelf{grid-template-columns:repeat(2,1fr)}.kgl-text{font-size:16px}}
+@media (prefers-reduced-motion:reduce){.kgl-lib *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

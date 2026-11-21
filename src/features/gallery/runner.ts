@@ -12,7 +12,8 @@ import { STOPS, TOTAL_SECONDS, stopIndex, type Stop } from './stops.data'
 import { ART_ROOMS, PIECES, type Piece } from './art.data'
 import { Run, perform, duck, inGhost } from './ghost'
 import { findSong, holidayPieces, isSeason, SEASONS, type Season } from './holiday'
-import { applyForGallery, galleryHooks, resetWorld, setGalleryHash } from '../../links/sync'
+import { applyForGallery, galleryHooks, galleryReturnHash, resetWorld, setGalleryHash } from '../../links/sync'
+import { galleryVoice, pictureOrdinal } from './voices'
 import { onNote } from '../../music/notes'
 import { flags } from '../../links/bus'
 import { isEmbed } from '../../web/webDemo'
@@ -42,14 +43,20 @@ const FADE = () => (reduced() ? 900 : 450)
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 // ---------- never persist ----------
-let shielded = false
-const held = new Map<string, string | null>()
+// The shield state lives on import.meta.hot.data: an edit of this file WHILE the gallery runs used to capture the already-patched
+// functions as "the originals", so unshield() put the wrappers back and every later save was silently held in memory (docs/STATE.md).
+type Shield = { shielded: boolean; held: Map<string, string | null>; orig: { set: Storage['setItem']; remove: Storage['removeItem']; get: Storage['getItem'] } | null }
+const sh: Shield = ((import.meta.hot?.data as { shield?: Shield } | undefined)?.shield) ?? { shielded: false, held: new Map(), orig: null }
+if (import.meta.hot) import.meta.hot.data.shield = sh
 const proto = typeof Storage !== 'undefined' ? Storage.prototype : null
-const orig = proto ? { set: proto.setItem, remove: proto.removeItem, get: proto.getItem } : null
+if (proto && !sh.orig) sh.orig = { set: proto.setItem, remove: proto.removeItem, get: proto.getItem }
+const orig = sh.orig
+const held = sh.held
+let shielded = sh.shielded
 /** Hold every localStorage write in memory. Reads see the held values, so the app behaves normally; nothing reaches the disk. */
 function shield() {
   if (shielded || !proto || !orig) return
-  shielded = true
+  shielded = sh.shielded = true
   proto.setItem = function (this: Storage, k: string, v: string) { if (this === localStorage) held.set(k, String(v)); else orig.set.call(this, k, v) }
   proto.removeItem = function (this: Storage, k: string) { if (this === localStorage) held.set(k, null); else orig.remove.call(this, k) }
   proto.getItem = function (this: Storage, k: string) { if (this === localStorage && held.has(k)) return held.get(k) ?? null; return orig.get.call(this, k) }
@@ -57,7 +64,7 @@ function shield() {
 function unshield() {
   if (!shielded || !proto || !orig) return
   proto.setItem = orig.set; proto.removeItem = orig.remove; proto.getItem = orig.get
-  shielded = false; held.clear()
+  shielded = sh.shielded = false; held.clear()
 }
 
 // ---------- the walk ----------
@@ -65,9 +72,26 @@ let token = 0
 let run: Run | null = null
 const killRun = () => { run?.kill(); run = null }
 
-function stateFor(s: Pick<Stop, 'state'>): KoogState {
-  const st = s.state
-  return { ...st, visual: st.visual ?? 'fireworks', palette: st.palette ?? 'rainbow', key: st.key ?? { tonic: 0, scale: 'major' }, sound: st.sound ?? 'koog' }
+function playItems() {
+  return STOPS.map((s) => ({ id: s.id, screen: s.state.screen, mode: s.state.mode, sound: s.state.sound }))
+}
+function artItems(): { id: string; screen?: string; mode?: string; sound?: string }[] {
+  return piecesFor(get().kind).map((p) => ({ id: p.id, screen: p.state?.screen ?? 'play', mode: p.state?.mode, sound: p.state?.sound }))
+}
+/** The synth for a play picture. A picture that already names a sound keeps it. The rest of the play screen takes the next voice in the cycle. */
+function stateFor(st: KoogState, id: string): KoogState {
+  const picture = st.screen === 'play' && st.mode !== 'boss'
+  const list = STOPS.some((x) => x.id === id) ? playItems() : artItems()
+  const ord = picture && !st.sound ? pictureOrdinal(list, id) : -1
+  const voice = !st.sound && ord >= 0 ? galleryVoice(ord) : undefined
+  return {
+    ...st,
+    visual: st.visual ?? 'fireworks',
+    palette: st.palette ?? 'rainbow',
+    key: st.key ?? { tonic: 0, scale: 'major' },
+    sound: st.sound ?? voice?.sound ?? 'koog',
+    preset: st.preset ?? voice?.preset,
+  }
 }
 
 function press(u: { sel: string; text?: string }) {
@@ -85,7 +109,7 @@ async function runStop(i: number) {
   await wait(FADE())
   if (my !== token) return
   resetWorld()
-  applyForGallery(stateFor(s))
+  applyForGallery(stateFor(s.state, s.id))
   await wait(900)
   if (my !== token) return
   ;(document.activeElement as HTMLElement | null)?.blur?.() // the app moves focus to a rail tab on screen changes: keep rings off the display
@@ -143,6 +167,18 @@ function resolvePiece(p: Piece) {
   const state = { ...(base?.state ?? { screen: 'play' as const }), ...p.state } as KoogState
   return { state, perf: p.perf ?? base?.perf ?? { k: 'none' as const }, ui: p.ui ?? base?.ui ?? [], seconds: p.seconds ?? base?.seconds ?? 16 }
 }
+/** What the placard says the picture is playing. Null when this stop is not a play picture. */
+export function stopVoice(s: Stop): { sound: string; preset?: string } | null {
+  if (s.state.screen !== 'play' || s.state.mode === 'boss') return null
+  const st = stateFor(s.state, s.id)
+  return { sound: st.sound ?? 'koog', preset: st.preset }
+}
+export function pieceVoice(p: Piece): { sound: string; preset?: string } | null {
+  const { state } = resolvePiece(p)
+  if (state.screen !== 'play' || state.mode === 'boss') return null
+  const st = stateFor(state, p.id)
+  return { sound: st.sound ?? 'koog', preset: st.preset }
+}
 /** how long a song takes (ms), so the progress line and the label know */
 function songMs(id: string, speed: number, lead: number) {
   const s = findSong(id)
@@ -178,7 +214,7 @@ async function runPiece(my: number) {
   await wait(ART_FADE())
   if (my !== token) return
   stopCamera(); resetWorld()
-  applyForGallery(stateFor({ state }))
+  applyForGallery(stateFor(state, p.id))
   await wait(1000)
   if (my !== token) return
   ;(document.activeElement as HTMLElement | null)?.blur?.()
@@ -320,7 +356,7 @@ export const toggle = () => { const p = get().phase; if (p === 'run') pause(); e
 export const again = () => { if (get().art) return; void runStop(0) }
 
 /** leave. If the tour ever started, reload so the page is exactly as it was (nothing was saved); otherwise just go. */
-export function exitGallery(target = '#/play') {
+export function exitGallery(target = galleryReturnHash()) {
   token++; killRun(); stopCamera(); resetDuck()
   try { resetWorld() } catch { /* ignore */ }
   unlisten(); flags.gallery = false

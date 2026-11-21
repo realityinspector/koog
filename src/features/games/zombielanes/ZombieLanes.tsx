@@ -47,6 +47,7 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
       {snap.phase === 'menu' && (
         <div className="zl-panel">
           <div className="zl-card">
+            <div className="zl-scroll">
             <h2 className="zl-title">🧟 Zombie Lanes</h2>
             <p className="zl-sub">Play the note on the zombie's sign to blast it before it eats your brains!</p>
             <div className="zl-modes" role="group" aria-label="Difficulty">
@@ -67,9 +68,10 @@ export function ZombieLanes({ onExit }: { onExit: () => void }) {
                 {bossPieces().map((p) => <option key={p.id} value={p.id}>{p.id === 'ode' ? 'Ode to Joy (default)' : p.title}</option>)}
               </select>
             </label>
-            <TurretKode />
             {snap.save.best[snap.mode] > 0 && <div className="zl-best">🏆 Best score: {snap.save.best[snap.mode].toLocaleString()}</div>}
-            <div className="zl-row">
+            </div>
+            <TurretKode />
+            <div className="zl-row zl-actions">
               <button className="zl-btn go" onClick={() => g()?.start(snap.mode, wave)}>▶ Start</button>
               <button className="zl-btn conga" onClick={() => g()?.startConga(snap.mode)} title="Memorize little tunes: a line of zombies carries each phrase">🪗 Conga lines</button>
               <button className="zl-btn ghost" onClick={onExit}>Back</button>

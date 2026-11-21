@@ -1,12 +1,23 @@
+import { useEffect } from 'react'
+import { useScreen } from '../../layout/screenStore'
+import { useDrumPage } from '../drumpads/drumSurface'
+import { useLoopsDock } from '../loopstation/LoopsDock'
+import { useLoopPage } from '../loopstation/loopSurface'
 import { PEDALS, pedalDef } from '../pedalboard/effects'
 import { selectPedal, useBoard } from '../pedalboard/boardEngine'
-import { LOOP_STYLES, PEDAL_ACTIONS, forgetPedal, learnPedal, pedalKeyLabel, setLoopStyle, setPedalAction, usePedal, type LoopStyle, type PedalAction } from './pedal'
+import { LOOP_STYLES, PEDAL_ACTIONS, forgetPedal, learnPedal, pedalJob, pedalKeyLabel, pedalNow, setLoopAlways, setLoopStyle, setPedalAction, usePedal, type LoopStyle, type PedalAction } from './pedal'
 
 /** Devices popover section: learn the USB foot pedal's key (a MIDI sustain pedal needs no setup) and pick its one job. */
 export function PedalSetup() {
-  const { code, action, learning, down, midi, loopStyle } = usePedal()
+  const { code, action, learning, down, midi, loopStyle, loopAlways } = usePedal()
+  useDrumPage((s) => s.on)
+  useLoopsDock((s) => s.open)
+  useScreen((s) => s.screen)
+  useLoopPage((s) => s.on)
   const styleDesc = LOOP_STYLES.find(([k]) => k === loopStyle)?.[2]
   const sel = useBoard((b) => b.selected)
+  // closing the devices menu unmounts this section; a half-finished learn would swallow the next key
+  useEffect(() => () => { if (usePedal.getState().learning) learnPedal(false) }, [])
   const desc = PEDAL_ACTIONS.find(([a]) => a === action)?.[2]
   const jobs = (
     <>
@@ -16,6 +27,7 @@ export function PedalSetup() {
         </select>
       </label>
       {desc && <p className="kg-dev-note">{desc}</p>}
+      <p className="kg-dev-note" data-pedal-now={pedalJob(action)}>{pedalNow(action)}</p>
       {action === 'stomp' && (
         <label className="kg-pedal-job">Which pedal
           <select value={sel} onChange={(e) => selectPedal(e.target.value)} aria-label="Which pedalboard pedal the foot pedal stomps">
@@ -31,6 +43,9 @@ export function PedalSetup() {
             </select>
           </label>
           {styleDesc && <p className="kg-dev-note" data-testid="pedal-style-note">{styleDesc}</p>}
+          <label className="kg-pedal-job" title="Off (the default): the pedal only runs the looper while the looper is on screen, so a tap in a game or a song never records a loop.">
+            <input type="checkbox" checked={!!loopAlways} onChange={(e) => setLoopAlways(e.target.checked)} aria-label="Pedal always runs the looper" /> Pedal always runs the looper (even when it is closed)
+          </label>
         </>
       )}
     </>
